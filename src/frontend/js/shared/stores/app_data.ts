@@ -13,6 +13,7 @@
 
 import type { WordStatus } from '@/types/globals';
 import { t } from '@shared/i18n/translator';
+import { routeLocal } from '@shared/offline/local/router';
 
 /**
  * Word statuses — localized labels.
@@ -71,6 +72,16 @@ export async function fetchTermTags(refresh = false): Promise<string[]> {
     return termTagsCache;
   }
 
+  // Local-first mode serves tags from the on-device DB (no server). When it is
+  // off, routeLocal returns unhandled and we use the original network path.
+  const local = await routeLocal('GET', '/tags/term', undefined);
+  if (local.handled) {
+    if (!local.error && Array.isArray(local.data)) {
+      termTagsCache = local.data as string[];
+    }
+    return termTagsCache ?? [];
+  }
+
   try {
     const response = await fetch('/api/v1/tags/term');
     if (!response.ok) {
@@ -95,6 +106,16 @@ export async function fetchTermTags(refresh = false): Promise<string[]> {
 export async function fetchTextTags(refresh = false): Promise<string[]> {
   if (!refresh && textTagsCache !== null) {
     return textTagsCache;
+  }
+
+  // Local-first mode serves tags from the on-device DB (no server). When it is
+  // off, routeLocal returns unhandled and we use the original network path.
+  const local = await routeLocal('GET', '/tags/text', undefined);
+  if (local.handled) {
+    if (!local.error && Array.isArray(local.data)) {
+      textTagsCache = local.data as string[];
+    }
+    return textTagsCache ?? [];
   }
 
   try {

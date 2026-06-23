@@ -98,10 +98,16 @@ describe('reading path', () => {
     const cat = before.words.find((w) => w.textLc === 'cat')!;
     await createQuick(textId, cat.position, 99);
 
+    // Per-text map keyed by text id (the shape the library list consumes).
     const stats = await getStatistics([textId]);
-    expect(stats.wordCounts.total).toBeGreaterThan(0);
-    expect(stats.wordCounts.wellKnown).toBe(2); // both "cat" occurrences
-    expect(stats.wordCounts.unknown).toBeGreaterThan(0);
+    const textStats = stats[String(textId)];
+    expect(textStats.total).toBeGreaterThan(0);
+    expect(textStats.statusCounts['99']).toBe(2); // both "cat" occurrences
+    expect(textStats.unknown).toBeGreaterThan(0);
+    expect(textStats.saved).toBe(textStats.total - textStats.unknown);
+    expect(textStats.unknownPercent).toBe(
+      Math.round((textStats.unknown / textStats.total) * 100)
+    );
   });
 
   it('marks all unknown words well-known', async () => {

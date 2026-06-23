@@ -63,6 +63,8 @@ import {
 import { getNavbarData } from './repositories/navbar';
 import { getSentencesWithTerm } from './repositories/sentences';
 import { setSetting, setCurrentLanguageId } from './repositories/settings';
+import { getAllTags, getAllTermTags, getAllTextTags } from './repositories/tags';
+import { getI18nBundle } from './i18n';
 import type {
   TextCreateRequest,
 } from '@modules/text/api/texts_api';
@@ -140,6 +142,10 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   if (path === '/navbar') {
     return wrap(await getNavbarData());
   }
+  if (path === '/i18n' || path.startsWith('/i18n/')) {
+    // Only English is bundled; any requested locale resolves to it offline.
+    return wrap(getI18nBundle());
+  }
   if (path === '/languages') {
     return wrap(await listLanguages());
   }
@@ -199,6 +205,15 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   }
   if (path === '/terms/filter-options') {
     return wrap(await getFilterOptions(p.language_id != null ? num(p.language_id) : null));
+  }
+  if (path === '/tags') {
+    return wrap(await getAllTags());
+  }
+  if (path === '/tags/term') {
+    return wrap(await getAllTermTags());
+  }
+  if (path === '/tags/text') {
+    return wrap(await getAllTextTags());
   }
   if (path === '/review/config') {
     return wrap(

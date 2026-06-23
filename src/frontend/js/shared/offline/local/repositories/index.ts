@@ -10,6 +10,7 @@ export * as texts from './texts';
 export * as terms from './terms';
 export * as review from './review';
 export * as words from './words';
+export * as tags from './tags';
 export { getNavbarData } from './navbar';
 export { getSentencesWithTerm } from './sentences';
 export {

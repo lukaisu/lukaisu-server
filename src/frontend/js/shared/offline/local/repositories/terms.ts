@@ -18,6 +18,7 @@ import {
   unlinkWordOccurrences,
   type WordFields,
 } from './helpers';
+import { getWordTagNames } from './tags';
 import type {
   TermStatusResponse,
   TermQuickCreateResponse,
@@ -38,7 +39,10 @@ async function getOccurrence(
 }
 
 /** Build the `term` payload returned by create/update-full. */
-function termPayload(word: LocalWord): NonNullable<TermFullResponse['term']> {
+function termPayload(
+  word: LocalWord,
+  tags: string[] = []
+): NonNullable<TermFullResponse['term']> {
   return {
     id: word.id ?? 0,
     text: word.text,
@@ -50,7 +54,7 @@ function termPayload(word: LocalWord): NonNullable<TermFullResponse['term']> {
     romanization: word.romanization,
     sentence: word.sentence,
     status: word.status,
-    tags: [],
+    tags,
   };
 }
 
@@ -186,7 +190,7 @@ export async function createFull(
   await linkWordOccurrences(id, occ.langId, occ.textLc);
   await setWordTags(id, req.tags);
   const saved = await localDb.words.get(id);
-  return { success: true, term: termPayload(saved ?? row) };
+  return { success: true, term: termPayload(saved ?? row, await getWordTagNames(id)) };
 }
 
 /** Update a fully-specified word by id. */
@@ -216,7 +220,7 @@ export async function updateFull(
   }
   await setWordTags(termId, req.tags);
   const saved = await localDb.words.get(termId);
-  return { success: true, term: termPayload(saved ?? word) };
+  return { success: true, term: termPayload(saved ?? word, await getWordTagNames(termId)) };
 }
 
 /** Delete a term and unlink its occurrences. */
@@ -267,6 +271,7 @@ export async function getForEdit(
   }
 
   const allTags = (await localDb.tags.toArray()).map((t) => t.text);
+  const termTags = word?.id != null ? await getWordTagNames(word.id) : [];
 
   return {
     isNew: !word,
@@ -282,7 +287,7 @@ export async function getForEdit(
       sentence,
       notes: word?.notes ?? '',
       status: word?.status ?? 1,
-      tags: [],
+      tags: termTags,
     },
     language: {
       id: language.id ?? 0,

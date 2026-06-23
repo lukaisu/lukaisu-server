@@ -8,6 +8,7 @@
 import { localDb, type LocalWord } from '../schema';
 import { calculateScore, calculateTomorrowScore, dayDiff } from '../review-scoring';
 import { applyStatus, nowMs } from './helpers';
+import { buildWordTagIndex, buildTagNameIndex } from './tags';
 import type {
   WordListFilters,
   WordListResponse,
@@ -27,7 +28,13 @@ const STATUS_LABELS: Record<number, string> = {
   99: 'Well known',
 };
 
-function toItem(word: LocalWord, langName: string, rtl: boolean, now: Date): WordItem {
+function toItem(
+  word: LocalWord,
+  langName: string,
+  rtl: boolean,
+  now: Date,
+  tags: string
+): WordItem {
   const days = dayDiff(now, new Date(word.statusChanged));
   return {
     id: word.id ?? 0,
@@ -42,12 +49,29 @@ function toItem(word: LocalWord, langName: string, rtl: boolean, now: Date): Wor
     days: String(days),
     score: calculateScore(word.status, days),
     score2: calculateTomorrowScore(word.status, days),
-    tags: '',
+    tags,
     langId: word.langId,
     langName,
     rightToLeft: rtl,
     ttsClass: null,
   };
+}
+
+/** Parse a tag filter id; '' / null / non-numeric mean "no filter". */
+function tagFilterValue(value: number | string | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const n = Number(value);
+  return Number.isNaN(n) ? null : n;
+}
+
+/** Whether a word's tag ids satisfy one filter (-1 = "untagged"). */
+function matchesTag(tagIds: number[], filter: number): boolean {
+  if (filter === -1) {
+    return tagIds.length === 0;
+  }
+  return tagIds.includes(filter);
 }
 
 /** Filter + paginate the vocabulary list. */
@@ -77,12 +101,31 @@ export async function getList(filters: WordListFilters): Promise<WordListRespons
     );
   }
 
+  // Tag filter (mirrors WordListFilterBuilder::buildTagCondition): tag1/tag2 are
+  // tag ids (-1 = "untagged"), combined by tag12 (1 = AND, 0/absent = OR).
+  const wordTagIndex = await buildWordTagIndex();
+  const tag1 = tagFilterValue(filters.tag1);
+  const tag2 = tagFilterValue(filters.tag2);
+  if (tag1 != null || tag2 != null) {
+    const andLogic = Number(filters.tag12 ?? 0) === 1;
+    words = words.filter((w) => {
+      const ids = wordTagIndex.get(w.id ?? -1) ?? [];
+      const m1 = tag1 != null ? matchesTag(ids, tag1) : null;
+      const m2 = tag2 != null ? matchesTag(ids, tag2) : null;
+      if (m1 != null && m2 != null) {
+        return andLogic ? m1 && m2 : m1 || m2;
+      }
+      return (m1 ?? m2) ?? true;
+    });
+  }
+
   words.sort((a, b) => a.textLc.localeCompare(b.textLc));
 
   const langNames = new Map<number, { name: string; rtl: boolean }>();
   for (const l of await localDb.languages.toArray()) {
     langNames.set(l.id ?? 0, { name: l.name, rtl: l.rightToLeft });
   }
+  const tagNames = await buildTagNameIndex();
 
   const page = Math.max(1, filters.page ?? 1);
   const perPage = Math.max(1, filters.per_page ?? 100);
@@ -91,7 +134,11 @@ export async function getList(filters: WordListFilters): Promise<WordListRespons
   const now = new Date();
   const items = words.slice(start, start + perPage).map((w) => {
     const meta = langNames.get(w.langId) ?? { name: '', rtl: false };
-    return toItem(w, meta.name, meta.rtl, now);
+    const tags = (wordTagIndex.get(w.id ?? -1) ?? [])
+      .map((id) => tagNames.get(id))
+      .filter((name): name is string => name != null && name !== '')
+      .join(', ');
+    return toItem(w, meta.name, meta.rtl, now, tags);
   });
 
   return {

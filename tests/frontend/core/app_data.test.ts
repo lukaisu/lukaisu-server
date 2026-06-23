@@ -11,12 +11,18 @@ import {
   clearTagCaches,
   initTagsData,
 } from '../../../src/frontend/js/shared/stores/app_data';
+import { setLocalFirst } from '../../../src/frontend/js/shared/offline/local/router';
 
 describe('app_data.ts', () => {
   beforeEach(() => {
     // Clear caches before each test
     clearTagCaches();
     vi.clearAllMocks();
+    // These tests exercise the network path; fetchTermTags/fetchTextTags now
+    // consult routeLocal first, so force local-first OFF here. Otherwise the
+    // flag can leak ON from offline tests sharing the worker and routeLocal
+    // would serve tags from the on-device DB instead of the mocked fetch.
+    setLocalFirst(false);
   });
 
   afterEach(() => {

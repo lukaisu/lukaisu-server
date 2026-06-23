@@ -95,6 +95,15 @@ describe('local-first seam', () => {
     expect(res.data?.showAdminItems).toBe(false);
   });
 
+  it('serves the bundled English i18n bundle offline so labels resolve', async () => {
+    setLocalFirst(true);
+    const res = await apiGet<{ locale: string; messages: Record<string, string> }>('/i18n');
+    expect(res.error).toBeUndefined();
+    expect(res.data?.locale).toBe('en');
+    // Flat "namespace.key" map the translator merges (e.g. the navbar labels).
+    expect(res.data?.messages['navbar.texts']).toBeTruthy();
+  });
+
   it('switches the current language offline via the navbar (setLangAsync)', async () => {
     setLocalFirst(true);
     await seedIfNeeded();

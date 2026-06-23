@@ -12,6 +12,7 @@
  */
 
 import { listLanguages } from './languages';
+import { LUKAISU_LOGO_DATA_URI } from '../logo';
 import type { NavbarData } from '@shared/components/navbar_renderer';
 
 /** Build the navbar chrome from the local languages + current-language setting. */
@@ -19,7 +20,8 @@ export async function getNavbarData(): Promise<NavbarData> {
   const { languages, currentLanguageId } = await listLanguages();
   return {
     basePath: '',
-    logoUrl: '/assets/images/lukaisu_icon_48.png',
+    // Inline data URI: the app build ships no image files, so a URL would 404.
+    logoUrl: LUKAISU_LOGO_DATA_URI,
     languages: languages.map((l) => ({ id: l.id, name: l.name })),
     currentLanguageId,
     isMultiUser: false,

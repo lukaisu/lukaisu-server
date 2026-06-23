@@ -22,11 +22,11 @@ import {
   languageToParserConfig,
   nowMs,
 } from './helpers';
+import { setTextTags, getTextTagNames, clearTextTags } from './tags';
 import type {
   TextCreateRequest,
   TextCreateResponse,
   TextWordsResponse,
-  TextStatistics,
   MarkAllResponse,
   MarkedWordData,
 } from '@modules/text/api/texts_api';
@@ -107,6 +107,7 @@ export async function createText(
     deletedAt: null,
   });
   await storeParsedText(id, language, req.text);
+  await setTextTags(id as number, req.tags);
   return { id };
 }
 
@@ -163,18 +164,28 @@ export async function getTextWords(
   };
 }
 
-/** Aggregate word-status statistics across one or more texts. */
+/** Per-text word-status statistics (the library list's `TextStats` shape). */
+export interface LibraryTextStats {
+  total: number;
+  saved: number;
+  unknown: number;
+  unknownPercent: number;
+  /** Running-word counts per status string ("1".."5","98","99"); 0 is `unknown`. */
+  statusCounts: Record<string, number>;
+}
+
+/**
+ * Word-status counts for one or more texts, keyed by text id as a string.
+ *
+ * Mirrors the server's `/texts/statistics` response: the library page iterates
+ * the result with `Object.entries` and reads `total`/`saved`/`unknown`/
+ * `unknownPercent`/`statusCounts` per text, so this returns a per-text map (not
+ * an aggregate). Counts are over running words (word occurrences).
+ */
 export async function getStatistics(
   textIds: number[]
-): Promise<TextStatistics> {
-  let total = 0;
-  let unknown = 0;
-  let learning = 0;
-  let learned = 0;
-  let wellKnown = 0;
-  let ignored = 0;
-  const uniqueTerms = new Set<string>();
-  const statusBreakdown: Record<number, number> = {};
+): Promise<Record<string, LibraryTextStats>> {
+  const result: Record<string, LibraryTextStats> = {};
 
   for (const textId of textIds) {
     const occ = await localDb.occurrences
@@ -191,38 +202,32 @@ export async function getStatistics(
         wordsById.set(w.id, w);
       }
     }
+
+    let total = 0;
+    let unknown = 0;
+    const statusCounts: Record<string, number> = {};
     for (const o of occ) {
       total += 1;
-      uniqueTerms.add(o.textLc);
       const word = o.woId != null ? wordsById.get(o.woId) : undefined;
       const status = word ? word.status : WordStatus.UNKNOWN;
-      statusBreakdown[status] = (statusBreakdown[status] ?? 0) + 1;
-      if (!word) {
+      if (status === WordStatus.UNKNOWN) {
         unknown += 1;
-      } else if (status === WordStatus.WELL_KNOWN) {
-        wellKnown += 1;
-      } else if (status === WordStatus.IGNORED) {
-        ignored += 1;
-      } else if (status === WordStatus.LEARNED) {
-        learned += 1;
       } else {
-        learning += 1;
+        const key = String(status);
+        statusCounts[key] = (statusCounts[key] ?? 0) + 1;
       }
     }
+
+    result[String(textId)] = {
+      total,
+      saved: total - unknown,
+      unknown,
+      unknownPercent: total > 0 ? Math.round((unknown / total) * 100) : 0,
+      statusCounts,
+    };
   }
 
-  return {
-    wordCounts: {
-      total,
-      unique: uniqueTerms.size,
-      unknown,
-      learning,
-      learned,
-      wellKnown,
-      ignored,
-    },
-    statusBreakdown,
-  };
+  return result;
 }
 
 /** A library list item (mirrors `texts_grouped_app`'s `TextItem`). */
@@ -284,17 +289,22 @@ async function listTextsByLanguage(
   const currentPage = Math.max(1, Math.min(page || 1, totalPages));
   const start = (currentPage - 1) * perPageClamped;
 
-  return {
-    texts: sorted.slice(start, start + perPageClamped).map((t) => ({
+  const pageItems = sorted.slice(start, start + perPageClamped);
+  const texts = await Promise.all(
+    pageItems.map(async (t) => ({
       id: t.id ?? 0,
       title: t.title,
       has_audio: !!(t.audioUri && t.audioUri !== ''),
       source_uri: t.sourceUri ?? '',
       has_source: !!(t.sourceUri && t.sourceUri !== ''),
-      // Annotated texts and text tags are not modelled locally yet.
+      // Annotated texts are not modelled locally yet.
       annotated: false,
-      taglist: '',
-    })),
+      taglist: (await getTextTagNames(t.id ?? 0)).join(', '),
+    }))
+  );
+
+  return {
+    texts,
     pagination: {
       current_page: currentPage,
       per_page: perPageClamped,
@@ -341,6 +351,7 @@ export async function bulkAction(
     for (const id of ids) {
       await localDb.occurrences.where('textId').equals(id).delete();
       await localDb.sentences.where('textId').equals(id).delete();
+      await clearTextTags(id);
     }
   }
   return { count: ids.length };
