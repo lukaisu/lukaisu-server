@@ -1,0 +1,44 @@
+<?php
+
+/**
+ * Middleware Interface
+ *
+ * PHP version 8.1
+ *
+ * @category Lukaisu
+ * @package  Lukaisu\Shared\Infrastructure\Routing\Middleware
+ * @author   HugoFara <hugo.farajallah@protonmail.com>
+ * @license  Unlicense <http://unlicense.org/>
+ * @link     https://hugofara.github.io/lukaisu-server/developer/api
+ * @since    3.0.0
+ */
+
+declare(strict_types=1);
+
+namespace Lukaisu\Shared\Infrastructure\Routing\Middleware;
+
+/**
+ * Interface for route middleware.
+ *
+ * Middleware can inspect and modify requests before they reach controllers,
+ * and can halt request processing (e.g., for authentication failures).
+ *
+ * @category Lukaisu
+ * @package  Lukaisu\Shared\Infrastructure\Routing\Middleware
+ * @author   HugoFara <hugo.farajallah@protonmail.com>
+ * @license  Unlicense <http://unlicense.org/>
+ * @link     https://hugofara.github.io/lukaisu-server/developer/api
+ * @since    3.0.0
+ */
+interface MiddlewareInterface
+{
+    /**
+     * Handle the incoming request.
+     *
+     * Return true to continue to the next middleware/controller.
+     * Return false to halt request processing (middleware should handle response).
+     *
+     * @return bool True if the request should continue, false to halt
+     */
+    public function handle(): bool;
+}

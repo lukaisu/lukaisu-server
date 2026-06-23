@@ -1,0 +1,224 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Lukaisu\Tests\Modules\User\UseCases;
+
+use DateTimeImmutable;
+use Lukaisu\Modules\User\Application\Services\PasswordHasher;
+use Lukaisu\Modules\User\Application\UseCases\ChangePassword;
+use Lukaisu\Modules\User\Domain\User;
+use Lukaisu\Modules\User\Domain\UserRepositoryInterface;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Unit tests for the ChangePassword use case.
+ */
+class ChangePasswordTest extends TestCase
+{
+    /** @var UserRepositoryInterface&MockObject */
+    private UserRepositoryInterface $repository;
+
+    /** @var PasswordHasher&MockObject */
+    private PasswordHasher $passwordHasher;
+
+    private ChangePassword $useCase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->repository = $this->createMock(UserRepositoryInterface::class);
+        $this->passwordHasher = $this->createMock(PasswordHasher::class);
+        $this->useCase = new ChangePassword($this->repository, $this->passwordHasher);
+    }
+
+    /**
+     * Create a reconstituted user with a known password hash.
+     */
+    private function createUserWithPassword(string $passwordHash = 'existing_hash'): User
+    {
+        return User::reconstitute(
+            1,
+            'testuser',
+            'test@example.com',
+            $passwordHash,
+            null,               // apiToken
+            null,               // apiTokenExpires
+            null,               // rememberToken
+            null,               // rememberTokenExpires
+            null,               // passwordResetToken
+            null,               // passwordResetTokenExpires
+            new DateTimeImmutable('-1 day'), // emailVerifiedAt
+            null,               // emailVerificationToken
+            null,               // emailVerificationTokenExpires
+            null,               // wordPressId
+            null,               // googleId
+            null,               // microsoftId
+            new DateTimeImmutable('-30 days'), // created
+            null,               // lastLogin
+            true,               // isActive
+            'user'              // role
+        );
+    }
+
+    // =========================================================================
+    // execute() Tests
+    // =========================================================================
+
+    public function testWrongCurrentPasswordThrows(): void
+    {
+        $user = $this->createUserWithPassword('existing_hash');
+
+        $this->passwordHasher->expects($this->once())
+            ->method('verify')
+            ->with('wrong_password', 'existing_hash')
+            ->willReturn(false);
+
+        // Should not proceed to validate strength or save
+        $this->passwordHasher->expects($this->never())
+            ->method('validateStrength');
+
+        $this->repository->expects($this->never())
+            ->method('save');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Current password is incorrect');
+
+        $this->useCase->execute($user, 'wrong_password', 'NewPassword123!');
+    }
+
+    public function testWeakNewPasswordThrows(): void
+    {
+        $user = $this->createUserWithPassword('existing_hash');
+
+        $this->passwordHasher->expects($this->once())
+            ->method('verify')
+            ->with('correct_password', 'existing_hash')
+            ->willReturn(true);
+
+        $this->passwordHasher->expects($this->once())
+            ->method('validateStrength')
+            ->with('weak')
+            ->willReturn([
+                'valid' => false,
+                'errors' => ['Password must be at least 8 characters']
+            ]);
+
+        // Should not proceed to hash or save
+        $this->passwordHasher->expects($this->never())
+            ->method('hash');
+
+        $this->repository->expects($this->never())
+            ->method('save');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Password must be at least 8 characters');
+
+        $this->useCase->execute($user, 'correct_password', 'weak');
+    }
+
+    public function testSuccessfulPasswordChange(): void
+    {
+        $user = $this->createUserWithPassword('existing_hash');
+
+        $this->passwordHasher->expects($this->once())
+            ->method('verify')
+            ->with('correct_password', 'existing_hash')
+            ->willReturn(true);
+
+        $this->passwordHasher->expects($this->once())
+            ->method('validateStrength')
+            ->with('NewStrongPass123!')
+            ->willReturn(['valid' => true, 'errors' => []]);
+
+        $this->passwordHasher->expects($this->once())
+            ->method('hash')
+            ->with('NewStrongPass123!')
+            ->willReturn('new_hashed_password');
+
+        $this->repository->expects($this->once())
+            ->method('save')
+            ->with($this->callback(function (User $savedUser) {
+                return $savedUser->passwordHash() === 'new_hashed_password';
+            }));
+
+        $this->useCase->execute($user, 'correct_password', 'NewStrongPass123!');
+
+        $this->assertEquals('new_hashed_password', $user->passwordHash());
+    }
+
+    public function testCurrentPasswordVerifiedFirst(): void
+    {
+        $user = $this->createUserWithPassword('existing_hash');
+
+        $this->passwordHasher->expects($this->once())
+            ->method('verify')
+            ->with('wrong_password', 'existing_hash')
+            ->willReturn(false);
+
+        // validateStrength should never be called if current password is wrong
+        $this->passwordHasher->expects($this->never())
+            ->method('validateStrength');
+
+        $this->passwordHasher->expects($this->never())
+            ->method('hash');
+
+        $this->repository->expects($this->never())
+            ->method('save');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->useCase->execute($user, 'wrong_password', 'NewStrongPass123!');
+    }
+
+    /**
+     * Phase 6.2: a successful change must wipe the remember-me cookie token
+     * and the API bearer token. Otherwise the attacker who set them up on a
+     * shared/compromised browser still gets in after the victim "secures"
+     * the account by changing the password.
+     */
+    public function testSuccessfulChangeInvalidatesRememberAndApiTokens(): void
+    {
+        $user = User::reconstitute(
+            1,
+            'testuser',
+            'test@example.com',
+            'existing_hash',
+            'old_api_token',                // apiToken
+            new DateTimeImmutable('+1 day'), // apiTokenExpires
+            'old_remember_token',           // rememberToken
+            new DateTimeImmutable('+30 days'), // rememberTokenExpires
+            null,
+            null,
+            new DateTimeImmutable('-1 day'),
+            null,
+            null,
+            null,
+            null,
+            null,
+            new DateTimeImmutable('-30 days'),
+            null,
+            true,
+            'user'
+        );
+
+        $this->passwordHasher->method('verify')->willReturn(true);
+        $this->passwordHasher->method('validateStrength')
+            ->willReturn(['valid' => true, 'errors' => []]);
+        $this->passwordHasher->method('hash')->willReturn('new_hashed_password');
+
+        $this->repository->expects($this->once())
+            ->method('save')
+            ->with($this->callback(function (User $savedUser) {
+                return $savedUser->passwordHash() === 'new_hashed_password'
+                    && $savedUser->rememberToken() === null
+                    && $savedUser->apiToken() === null;
+            }));
+
+        $this->useCase->execute($user, 'correct_password', 'NewStrongPass123!');
+
+        $this->assertNull($user->rememberToken(), 'remember-me token must be wiped');
+        $this->assertNull($user->apiToken(), 'API token must be wiped');
+    }
+}

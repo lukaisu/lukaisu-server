@@ -1,0 +1,384 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Lukaisu\Tests\Modules\User\Http;
+
+use Lukaisu\Shared\Infrastructure\Bootstrap\EnvLoader;
+use Lukaisu\Shared\Infrastructure\Globals;
+use Lukaisu\Modules\User\Application\Services\WordPressAuthService;
+use Lukaisu\Modules\User\Application\UserFacade;
+use Lukaisu\Modules\User\Http\WordPressController;
+use Lukaisu\Modules\User\Infrastructure\MySqlUserRepository;
+use Lukaisu\Shared\Infrastructure\Database\Configuration;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Unit tests for the WordPressController class.
+ *
+ * Tests controller initialization and service integration.
+ * Note: Full integration tests require WordPress to be installed.
+ */
+class WordPressControllerTest extends TestCase
+{
+    private static bool $dbConnected = false;
+    private array $originalRequest;
+    private array $originalServer;
+    private array $originalGet;
+    private array $originalPost;
+    private array $originalSession;
+
+    public static function setUpBeforeClass(): void
+    {
+        $config = EnvLoader::getDatabaseConfig();
+        $testDbname = "test_" . $config['dbname'];
+
+        if (!Globals::getDbConnection()) {
+            try {
+                $connection = Configuration::connect(
+                    $config['server'],
+                    $config['userid'],
+                    $config['passwd'],
+                    $testDbname,
+                    $config['socket'] ?? ''
+                );
+                Globals::setDbConnection($connection);
+                self::$dbConnected = true;
+            } catch (\Exception $e) {
+                self::$dbConnected = false;
+            }
+        } else {
+            self::$dbConnected = true;
+        }
+    }
+
+    protected function setUp(): void
+    {
+        // Save original superglobals
+        $this->originalRequest = $_REQUEST;
+        $this->originalServer = $_SERVER;
+        $this->originalGet = $_GET;
+        $this->originalPost = $_POST;
+        $this->originalSession = $_SESSION ?? [];
+
+        // Reset superglobals
+        $_REQUEST = [];
+        $_SERVER = ['REQUEST_METHOD' => 'GET'];
+        $_GET = [];
+        $_POST = [];
+        $_SESSION = [];
+    }
+
+    protected function tearDown(): void
+    {
+        // Restore superglobals
+        $_REQUEST = $this->originalRequest;
+        $_SERVER = $this->originalServer;
+        $_GET = $this->originalGet;
+        $_POST = $this->originalPost;
+        $_SESSION = $this->originalSession;
+    }
+
+    /**
+     * Create a WordPressAuthService instance for testing.
+     */
+    private function createAuthService(): WordPressAuthService
+    {
+        $repository = new MySqlUserRepository();
+        $userFacade = new UserFacade($repository);
+        return new WordPressAuthService($userFacade);
+    }
+
+    // ===== Constructor tests =====
+
+    public function testControllerCanBeInstantiated(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+
+        $this->assertInstanceOf(WordPressController::class, $controller);
+    }
+
+    public function testControllerHasWordPressAuthService(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        $this->assertInstanceOf(WordPressAuthService::class, $service);
+    }
+
+    // ===== Method existence tests =====
+
+    public function testControllerHasStartMethod(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+
+        $this->assertTrue(method_exists($controller, 'start'));
+    }
+
+    public function testControllerHasStopMethod(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+
+        $this->assertTrue(method_exists($controller, 'stop'));
+    }
+
+    public function testControllerHasGetWordPressAuthServiceMethod(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+
+        $this->assertTrue(method_exists($controller, 'getWordPressAuthService'));
+    }
+
+    // ===== Service tests =====
+
+    public function testWordPressAuthServiceValidateRedirectUrlReturnsDefault(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        $result = $service->validateRedirectUrl(null);
+
+        $this->assertEquals('index.php', $result);
+    }
+
+    public function testWordPressAuthServiceValidateRedirectUrlReturnsDefaultForEmpty(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        $result = $service->validateRedirectUrl('');
+
+        $this->assertEquals('index.php', $result);
+    }
+
+    public function testWordPressAuthServiceValidateRedirectUrlReturnsDefaultForNonexistent(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        $result = $service->validateRedirectUrl('nonexistent_file_12345.php');
+
+        $this->assertEquals('index.php', $result);
+    }
+
+    public function testWordPressAuthServiceGetLoginUrl(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        $result = $service->getLoginUrl();
+
+        $this->assertStringContainsString('wp-login.php', $result);
+        $this->assertStringContainsString('redirect_to', $result);
+    }
+
+    public function testWordPressAuthServiceGetLoginUrlWithCustomRedirect(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        $result = $service->getLoginUrl('./custom/path.php');
+
+        $this->assertStringContainsString('wp-login.php', $result);
+        $this->assertStringContainsString(urlencode('./custom/path.php'), $result);
+    }
+
+    public function testWordPressAuthServiceIsUserLoggedInReturnsFalseWithoutWordPress(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        // Without WordPress loaded, this should return false
+        $result = $service->isUserLoggedIn();
+
+        $this->assertFalse($result);
+    }
+
+    public function testWordPressAuthServiceGetCurrentUserIdReturnsNullWithoutWordPress(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        // Without WordPress loaded, this should return null
+        $result = $service->getCurrentUserId();
+
+        $this->assertNull($result);
+    }
+
+    public function testWordPressAuthServiceLoadWordPressReturnsFalseWhenNotInstalled(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        // In test environment, WordPress is typically not installed
+        $result = $service->loadWordPress();
+
+        // This will be false unless WordPress is actually installed
+        $this->assertIsBool($result);
+    }
+
+    public function testWordPressAuthServiceSessionUserOperations(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        // Initially null
+        $this->assertNull($service->getSessionUser());
+
+        // Set user
+        $service->setSessionUser(123);
+        $this->assertEquals(123, $service->getSessionUser());
+
+        // Clear user
+        $service->clearSessionUser();
+        $this->assertNull($service->getSessionUser());
+    }
+
+    public function testWordPressAuthServiceHandleStartWithoutWordPress(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        $result = $service->handleStart(null);
+
+        // Without WordPress, should fail or redirect to login
+        $this->assertArrayHasKey('success', $result);
+        $this->assertArrayHasKey('redirect', $result);
+        $this->assertArrayHasKey('error', $result);
+    }
+
+    public function testWordPressAuthServiceHandleStop(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        $result = $service->handleStop();
+
+        $this->assertArrayHasKey('success', $result);
+        $this->assertArrayHasKey('redirect', $result);
+        $this->assertTrue($result['success']);
+        $this->assertStringContainsString('wp-login.php', $result['redirect']);
+    }
+
+    // ===== Start session tests =====
+
+    public function testWordPressAuthServiceStartSession(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        // Note: This test might behave differently depending on whether
+        // a session is already active
+        $controller = new WordPressController($this->createAuthService());
+        $service = $controller->getWordPressAuthService();
+
+        $result = $service->startSession();
+
+        $this->assertArrayHasKey('success', $result);
+        $this->assertArrayHasKey('error', $result);
+
+        // Result depends on session state
+        $this->assertIsBool($result['success']);
+    }
+
+    // ===== Route parameter tests =====
+
+    public function testStartMethodAcceptsArrayParams(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+
+        // Test that start() accepts an array parameter
+        $reflection = new \ReflectionMethod($controller, 'start');
+        $params = $reflection->getParameters();
+
+        $this->assertCount(1, $params);
+        $this->assertEquals('params', $params[0]->getName());
+        $this->assertEquals('array', $params[0]->getType()->getName());
+    }
+
+    public function testStopMethodAcceptsArrayParams(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        $controller = new WordPressController($this->createAuthService());
+
+        // Test that stop() accepts an array parameter
+        $reflection = new \ReflectionMethod($controller, 'stop');
+        $params = $reflection->getParameters();
+
+        $this->assertCount(1, $params);
+        $this->assertEquals('params', $params[0]->getName());
+        $this->assertEquals('array', $params[0]->getType()->getName());
+    }
+}

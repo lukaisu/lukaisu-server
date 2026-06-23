@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * Status Change Config View - JavaScript config for status change page
+ *
+ * Variables expected:
+ * - $wordId: int - Word ID
+ * - $newStatus: int - New status
+ * - $statusChange: int - Status change direction
+ * - $testStatus: array - Test progress data
+ * - $ajax: bool - Whether using AJAX mode
+ * - $waitTime: int - Wait time before reload
+ *
+ * PHP version 8.1
+ *
+ * @category Lukaisu
+ * @package  Lukaisu\Views
+ * @author   HugoFara <hugo.farajallah@protonmail.com>
+ * @license  Unlicense <http://unlicense.org/>
+ * @link     https://hugofara.github.io/lukaisu-server/developer/api
+ * @since    3.0.0
+ */
+
+declare(strict_types=1);
+
+namespace Lukaisu\Views\Review;
+
+?>
+<script type="application/json" data-lukaisu-status-change-result-config>
+<?php echo json_encode([
+    'wordId' => $wordId,
+    'newStatus' => $newStatus,
+    'statusChange' => $statusChange,
+    'testStatus' => $testStatus,
+    'ajax' => $ajax,
+    'waitTime' => $waitTime
+], JSON_HEX_TAG | JSON_HEX_AMP); ?>
+</script>

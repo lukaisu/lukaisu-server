@@ -1,0 +1,430 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Lukaisu\Tests\Core\Database;
+
+use Lukaisu\Shared\Infrastructure\Bootstrap\EnvLoader;
+use Lukaisu\Shared\Infrastructure\Globals;
+use Lukaisu\Shared\Infrastructure\Database\QueryBuilder;
+use Lukaisu\Shared\Infrastructure\Database\UserScopedQuery;
+use Lukaisu\Shared\Infrastructure\Database\Configuration;
+use Lukaisu\Shared\Infrastructure\Database\Connection;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Unit tests for QueryBuilder user scope filtering.
+ *
+ * Tests automatic user_id filtering when multi-user mode is enabled.
+ */
+class QueryBuilderUserScopeTest extends TestCase
+{
+    private static bool $dbConnected = false;
+
+    public static function setUpBeforeClass(): void
+    {
+        $config = EnvLoader::getDatabaseConfig();
+        $testDbname = "test_" . $config['dbname'];
+
+        if (!Globals::getDbConnection()) {
+            try {
+                $connection = Configuration::connect(
+                    $config['server'],
+                    $config['userid'],
+                    $config['passwd'],
+                    $testDbname,
+                    $config['socket'] ?? ''
+                );
+                Globals::setDbConnection($connection);
+                self::$dbConnected = true;
+            } catch (\Exception $e) {
+                self::$dbConnected = false;
+            }
+        } else {
+            self::$dbConnected = true;
+        }
+    }
+
+    protected function setUp(): void
+    {
+        // Reset multi-user state before each test
+        Globals::setMultiUserEnabled(false);
+        Globals::setCurrentUserId(null);
+        Globals::setCurrentUserIsAdmin(false);
+    }
+
+    protected function tearDown(): void
+    {
+        // Reset state after each test
+        Globals::setMultiUserEnabled(false);
+        Globals::setCurrentUserId(null);
+        Globals::setCurrentUserIsAdmin(false);
+    }
+
+    // =========================================================================
+    // withoutUserScope() tests
+    // =========================================================================
+
+    public function testWithoutUserScopeReturnsSelf(): void
+    {
+        $qb = QueryBuilder::table('words');
+        $result = $qb->withoutUserScope();
+
+        $this->assertSame($qb, $result);
+    }
+
+    public function testWithoutUserScopeDisablesFiltering(): void
+    {
+        // Enable multi-user mode with admin user (required for withoutUserScope)
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+        Globals::setCurrentUserIsAdmin(true);
+
+        // Without user scope, query should not have user filter
+        $sql = QueryBuilder::table('words')
+            ->withoutUserScope()
+            ->toSql();
+
+        $this->assertStringNotContainsString('WoUsID', $sql);
+    }
+
+    public function testWithoutUserScopeThrowsForNonAdmin(): void
+    {
+        // Enable multi-user mode without admin privileges
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+        Globals::setCurrentUserIsAdmin(false);
+
+        $this->expectException(\Lukaisu\Shared\Infrastructure\Exception\AuthException::class);
+        $this->expectExceptionMessage('You do not have permission to access cross-user data.');
+
+        QueryBuilder::table('words')->withoutUserScope();
+    }
+
+    public function testWithoutUserScopeAllowedWhenMultiUserDisabled(): void
+    {
+        // When multi-user mode is disabled, any user can call withoutUserScope
+        Globals::setMultiUserEnabled(false);
+        Globals::setCurrentUserId(42);
+        Globals::setCurrentUserIsAdmin(false);
+
+        $qb = QueryBuilder::table('words');
+        $result = $qb->withoutUserScope();
+
+        $this->assertSame($qb, $result);
+    }
+
+    // =========================================================================
+    // applyUserScope() tests - via get()
+    // =========================================================================
+
+    public function testUserScopeNotAppliedWhenDisabled(): void
+    {
+        Globals::setMultiUserEnabled(false);
+        Globals::setCurrentUserId(42);
+
+        // Build query without executing
+        $qb = QueryBuilder::table('words');
+        $sql = $qb->toSql();
+
+        // Should not contain user filter when multi-user is disabled
+        $this->assertStringNotContainsString('WoUsID', $sql);
+    }
+
+    public function testUserScopeNotAppliedWhenNoUser(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(null);
+
+        $sql = QueryBuilder::table('words')->toSql();
+
+        // Should not contain user filter when no user is authenticated
+        $this->assertStringNotContainsString('WoUsID', $sql);
+    }
+
+    public function testUserScopeNotAppliedToNonScopedTable(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        // 'sentences' is not a user-scoped table
+        $sql = QueryBuilder::table('sentences')->toSql();
+
+        $this->assertStringNotContainsString('UsID', $sql);
+    }
+
+    public function testUserScopeAppliedToWordsTable(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        // Use getPrepared to trigger applyUserScope
+        $qb = QueryBuilder::table('words');
+
+        // Access the toSqlPrepared after applyUserScope is called
+        // We need to mock this or call get() to trigger it
+        // For now, test via prepared statement method
+        $sql = $qb->where('WoID', '>', 0)->toSqlPrepared();
+        $bindings = $qb->getBindings();
+
+        // The applyUserScope is called in getPrepared, not toSqlPrepared
+        // So we check the SQL generation behavior
+        $this->assertStringContainsString('WoID', $sql);
+    }
+
+    public function testUserScopeAppliedToLanguagesTable(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(5);
+
+        // languages table should use LgUsID
+        $this->assertTrue(UserScopedQuery::isUserScopedTable('languages'));
+        $this->assertEquals('LgUsID', UserScopedQuery::getUserIdColumn('languages'));
+    }
+
+    public function testUserScopeAppliedToTextsTable(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(5);
+
+        $this->assertTrue(UserScopedQuery::isUserScopedTable('texts'));
+        $this->assertEquals('TxUsID', UserScopedQuery::getUserIdColumn('texts'));
+    }
+
+    /**
+     * Note: archived_texts table no longer exists - it's merged into texts with TxArchivedAt column.
+     */
+    public function testArchivedTextsNoLongerSeparateTable(): void
+    {
+        // archived_texts is not a separate table anymore
+        $this->assertFalse(UserScopedQuery::isUserScopedTable('archived_texts'));
+        $this->assertNull(UserScopedQuery::getUserIdColumn('archived_texts'));
+    }
+
+    public function testUserScopeAppliedToTagsTable(): void
+    {
+        $this->assertTrue(UserScopedQuery::isUserScopedTable('tags'));
+        $this->assertEquals('TgUsID', UserScopedQuery::getUserIdColumn('tags'));
+    }
+
+    public function testUserScopeAppliedToTextTagsTable(): void
+    {
+        $this->assertTrue(UserScopedQuery::isUserScopedTable('text_tags'));
+        $this->assertEquals('T2UsID', UserScopedQuery::getUserIdColumn('text_tags'));
+    }
+
+    public function testUserScopeAppliedToNewsfeedsTable(): void
+    {
+        $this->assertTrue(UserScopedQuery::isUserScopedTable('news_feeds'));
+        $this->assertEquals('NfUsID', UserScopedQuery::getUserIdColumn('news_feeds'));
+    }
+
+    public function testUserScopeAppliedToSettingsTable(): void
+    {
+        $this->assertTrue(UserScopedQuery::isUserScopedTable('settings'));
+        $this->assertEquals('StUsID', UserScopedQuery::getUserIdColumn('settings'));
+    }
+
+    public function testUserScopeAppliedToBooksTable(): void
+    {
+        $this->assertTrue(UserScopedQuery::isUserScopedTable('books'));
+        $this->assertEquals('BkUsID', UserScopedQuery::getUserIdColumn('books'));
+    }
+
+    public function testUserScopeAppliedToLocalDictionariesTable(): void
+    {
+        $this->assertTrue(UserScopedQuery::isUserScopedTable('local_dictionaries'));
+        $this->assertEquals('LdUsID', UserScopedQuery::getUserIdColumn('local_dictionaries'));
+    }
+
+    // =========================================================================
+    // UserScopedQuery helper tests
+    // =========================================================================
+
+    public function testUserScopedQueryForTableReturnsEmptyWhenDisabled(): void
+    {
+        Globals::setMultiUserEnabled(false);
+        Globals::setCurrentUserId(42);
+
+        $condition = UserScopedQuery::forTable('words');
+        $this->assertEquals('', $condition);
+    }
+
+    public function testUserScopedQueryForTableReturnsEmptyWhenNoUser(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(null);
+
+        $condition = UserScopedQuery::forTable('words');
+        $this->assertEquals('', $condition);
+    }
+
+    public function testUserScopedQueryForTableReturnsEmptyForNonScopedTable(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $condition = UserScopedQuery::forTable('sentences');
+        $this->assertEquals('', $condition);
+    }
+
+    public function testUserScopedQueryForTableReturnsCondition(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $condition = UserScopedQuery::forTable('words');
+        $this->assertEquals(' AND WoUsID = 42', $condition);
+    }
+
+    public function testUserScopedQueryForTableWithAlias(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $condition = UserScopedQuery::forTable('words', 'w');
+        $this->assertEquals(' AND w.WoUsID = 42', $condition);
+    }
+
+    public function testUserScopedQueryForTablePrepared(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $bindings = [];
+        $condition = UserScopedQuery::forTablePrepared('words', $bindings);
+
+        $this->assertEquals(' AND WoUsID = ?', $condition);
+        $this->assertEquals([42], $bindings);
+    }
+
+    public function testUserScopedQueryForTablePreparedWithAlias(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $bindings = [];
+        $condition = UserScopedQuery::forTablePrepared('words', $bindings, 'w');
+
+        $this->assertEquals(' AND w.WoUsID = ?', $condition);
+        $this->assertEquals([42], $bindings);
+    }
+
+    public function testUserScopedQueryWhereClause(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $where = UserScopedQuery::whereClause('words');
+        $this->assertEquals('WHERE WoUsID = 42', $where);
+    }
+
+    public function testUserScopedQueryWhereClauseWithAlias(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $where = UserScopedQuery::whereClause('words', 'w');
+        $this->assertEquals('WHERE w.WoUsID = 42', $where);
+    }
+
+    public function testUserScopedQueryWhereClausePrepared(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $bindings = [];
+        $where = UserScopedQuery::whereClausePrepared('words', $bindings);
+
+        $this->assertEquals('WHERE WoUsID = ?', $where);
+        $this->assertEquals([42], $bindings);
+    }
+
+    public function testUserScopedQueryGetUserIdForInsert(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $userId = UserScopedQuery::getUserIdForInsert('words');
+        $this->assertEquals(42, $userId);
+    }
+
+    public function testUserScopedQueryGetUserIdForInsertReturnsNullWhenDisabled(): void
+    {
+        Globals::setMultiUserEnabled(false);
+        Globals::setCurrentUserId(42);
+
+        $userId = UserScopedQuery::getUserIdForInsert('words');
+        $this->assertNull($userId);
+    }
+
+    public function testUserScopedQueryGetUserIdForInsertReturnsNullForNonScopedTable(): void
+    {
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(42);
+
+        $userId = UserScopedQuery::getUserIdForInsert('sentences');
+        $this->assertNull($userId);
+    }
+
+    public function testGetUserScopedTablesReturnsAllTables(): void
+    {
+        $tables = UserScopedQuery::getUserScopedTables();
+
+        $this->assertArrayHasKey('languages', $tables);
+        $this->assertArrayHasKey('texts', $tables);
+        // archived_texts merged into texts table
+        $this->assertArrayNotHasKey('archived_texts', $tables);
+        $this->assertArrayHasKey('words', $tables);
+        $this->assertArrayHasKey('tags', $tables);
+        $this->assertArrayHasKey('text_tags', $tables);
+        $this->assertArrayHasKey('news_feeds', $tables);
+        $this->assertArrayHasKey('settings', $tables);
+
+        $this->assertEquals('LgUsID', $tables['languages']);
+        $this->assertEquals('TxUsID', $tables['texts']);
+        $this->assertEquals('WoUsID', $tables['words']);
+        $this->assertEquals('TgUsID', $tables['tags']);
+        $this->assertEquals('T2UsID', $tables['text_tags']);
+        $this->assertEquals('NfUsID', $tables['news_feeds']);
+        $this->assertEquals('StUsID', $tables['settings']);
+    }
+
+    // =========================================================================
+    // Integration tests (require database)
+    // =========================================================================
+
+    /**
+     * Test that user scope is properly injected in WHERE clause when querying.
+     *
+     * This test requires the database to have the user_id columns added.
+     * It may be skipped if the migration hasn't been applied yet.
+     */
+    public function testUserScopeInSelectQuery(): void
+    {
+        if (!self::$dbConnected) {
+            $this->markTestSkipped('Database connection required');
+        }
+
+        // This test verifies the SQL generation rather than actual DB interaction
+        // since the user_id columns may not exist in the test database yet
+
+        Globals::setMultiUserEnabled(true);
+        Globals::setCurrentUserId(123);
+
+        // Create a QueryBuilder and verify the user scope is applied
+        $qb = QueryBuilder::table('tags');
+
+        // The applyUserScope is called when get/first/count are called
+        // We can verify the behavior by examining the internal state
+        // after calling these methods
+
+        // For now, verify the helper returns correct values
+        $this->assertEquals('TgUsID', UserScopedQuery::getUserIdColumn('tags'));
+        $this->assertEquals(123, UserScopedQuery::getUserIdForInsert('tags'));
+    }
+}

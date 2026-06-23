@@ -1,0 +1,64 @@
+# Getting Started with Lukaisu Server
+
+> **THIS IS A THIRD PARTY VERSION** - IT DIFFERS IN MANY RESPECTS FROM THE OFFICIAL Lukaisu Server VERSION! See the [new features](../reference/new-features.md) for more information.
+
+## What is Lukaisu Server?
+
+_Lukaisu Server_ (Lukaisu Server) is a tool for Language Learning by reading texts. It was originally created by [lang-learn-guy](https://sourceforge.net/u/lang-learn-guy/) and published on [SourceForge](https://sourceforge.net/projects/learning-with-texts), where it is still available. This repository is a community-maintained fork; a snapshot of the original code is also preserved on its [`official` branch](https://github.com/lukaisu/lukaisu-server/tree/official).
+It is inspired by:
+
+* [Stephen Krashen's](http://sdkrashen.com) principles in Second Language Acquisition,
+* Steve Kaufmann's [LingQ](http://lingq.com) System and
+* Ideas from Khatzumoto, published at ["AJATT - All Japanese All The Time"](http://www.alljapaneseallthetime.com).
+
+You define languages you want to learn and import texts you want to use for learning. While listening to the optional audio, you read the text, save and review "terms" (words or multi word expressions, 2 to 9 words).
+
+In new texts all your previously saved words and expressions are displayed according to their current learn statuses, tooltips show translations and romanizations (readings), editing, changing the status, dictionary lookup, etc. is just a click away.
+
+Import of terms in TSV/CSV format, export in TSV format, and export to [Anki](http://ankisrs.net) (prepared for cloze tests), are also possible.
+
+## Requirements
+
+To run Lukaisu Server, you'll need:
+
+1. **A modern web browser**. Do not use Internet Explorer, any other browser (Chrome, Firefox, Safari or Edge) should be fine.
+2. **A local web server**.
+    An easy way to install a local web server are preconfigured packages like
+    * [EasyPHP](http://www.easyphp.org/) or [XAMPP](https://www.apachefriends.org/download.html) (Windows), or
+    * [MAMP](http://mamp.info/en/index.html) (macOS), or
+    * a [LAMP (Linux-Apache-MariaDB-PHP) server](http://en.wikipedia.org/wiki/LAMP_%28software_bundle%29) (Linux).
+3. **The Lukaisu Server Application**. The latest version  _lukaisu-server\_v\_x\_y.zip_ can be downloaded at <https://github.com/lukaisu/lukaisu-server/archive/refs/heads/main.zip>. View the [installation guide](installation.md).
+
+## History
+
+### Original Author: lang-learn-guy
+
+Lukaisu Server was originally created by [lang-learn-guy](https://sourceforge.net/u/lang-learn-guy/) and is hosted on SourceForge at [sourceforge.net/projects/learning-with-texts](https://sourceforge.net/projects/learning-with-texts), where it remains available and maintained by its author (also on GitHub as [hapepo23/learning-with-texts](https://github.com/hapepo23/learning-with-texts)). This repository is an independent community fork; a snapshot of the original code is preserved on its [`official` branch](https://github.com/lukaisu/lukaisu-server/tree/official) for convenience.
+
+* I started this software application in 2010 as a hobby project for my personal learning (reading & listening to foreign texts, saving & reviewing new words and expressions).
+* In June 2011, I decided to publish the software in the hope that it will be useful to other language learners around the world.
+* The software is 100 % free, open source, and in the public domain. You may do with it what you like: use it, improve it, change it, publish an improved version, even use it within a commercial product.
+* English is not my mother tongue - so please forgive me any mistakes.
+* A piece of software will be never completely free of "bugs" - please inform me of any problem you will encounter. Your feedback and ideas are always welcome.
+* My programming style is quite chaotic, and my software is mostly undocumented. This will annoy people with much better programming habits than mine, but please bear in mind that Lukaisu Server is a one-man hobby project and completely free.
+* Thank you for your attention. I hope you will enjoy this application as I do every day.
+
+### Community Version: [HugoFara](https://github.com/HugoFara) (GitHub version maintainer)
+
+I started using Lukaisu Server in 2021, and continued its development almost instantly. I felt that the core idea was very good, but its implementation seemed unadapted, and the code was quite obfuscated. While I do not have any official responsibility to Lukaisu Server (we don't have any kind of official agreement with lang-learn-guy), I am the the _de facto_ maintainer of the community version. I dedicated myself to the following points (see the [GitHub post](https://github.com/lukaisu/lukaisu-server/discussions/6)):
+
+* Make Lukaisu Server Open Source: document and refactor code
+* Meet the HTML5 standards: the interface was relying on deprecated systems like frames, making it difficult to use on small screens.
+* Simplify users' lives: avoid complex installation or procedures whenever possible.
+
+If you spot any problem, please post any [issue on GitHub](https://github.com/lukaisu/lukaisu-server/issues), and we will look at it.
+
+While work is not yet finished, I also aim to expand Lukaisu Server:
+
+* Better UI: custom themes and better default appearance
+* Better UX: the majority of web browsing is now done through mobile devices. It means less content at once and more intuitive behaviors.
+* Sounds: language learning is not just language reading.
+  * Text-to-speech features.
+  * Motivational sounds when testing terms to makes things more lively.
+
+But there is much more! The community version of Lukaisu Server is no longer the feat of one man, it belongs to everyone. As such, it gets well easier to implement new features, discuss and exchange code and ideas. I don't know if Lukaisu Server contains _your_ killer feature, but I can say that it _can be implemented_ with this version. Enjoy!

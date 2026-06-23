@@ -1,0 +1,384 @@
+<?php
+
+/**
+ * \file
+ * \brief Language Controller - Language configuration
+ *
+ * PHP version 8.1
+ *
+ * @category Lukaisu
+ * @package  Lukaisu\Modules\Language\Http
+ * @author   HugoFara <hugo.farajallah@protonmail.com>
+ * @license Unlicense <http://unlicense.org/>
+ * @link    https://hugofara.github.io/lukaisu-server/developer/api
+ * @since   3.0.0
+ */
+
+declare(strict_types=1);
+
+namespace Lukaisu\Modules\Language\Http;
+
+use Lukaisu\Shared\Http\BaseController;
+use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
+use Lukaisu\Shared\UI\Helpers\FormHelper;
+use Lukaisu\Shared\UI\Helpers\IconHelper;
+use Lukaisu\Shared\Infrastructure\Database\Settings;
+use Lukaisu\Modules\Language\Application\LanguageFacade;
+use Lukaisu\Modules\Language\Domain\Language;
+use Lukaisu\Shared\Infrastructure\Language\LanguagePresets;
+use Lukaisu\Shared\Infrastructure\Http\UrlUtilities;
+use Lukaisu\Modules\Language\Infrastructure\Parser\ParserRegistry;
+use Lukaisu\Modules\Dictionary\Application\DictionaryFacade;
+use Lukaisu\Shared\Infrastructure\Globals;
+
+/**
+ * Controller for language configuration.
+ *
+ * Handles:
+ * - Language listing and management
+ * - Language creation and editing
+ * - Language deletion
+ * - Text reparsing
+ * - Language pair selection
+ *
+ * @category Lukaisu
+ * @package  Lukaisu
+ * @author   HugoFara <hugo.farajallah@protonmail.com>
+ * @license  Unlicense <http://unlicense.org/>
+ * @link     https://hugofara.github.io/lukaisu-server/developer/api
+ * @since    3.0.0
+ */
+class LanguageController extends BaseController
+{
+    private LanguageFacade $languageFacade;
+    private DictionaryFacade $dictionaryFacade;
+
+    /**
+     * Create a new LanguageController.
+     *
+     * @param LanguageFacade   $languageFacade   Language facade for language operations
+     * @param DictionaryFacade $dictionaryFacade Dictionary facade for local dictionaries
+     */
+    public function __construct(LanguageFacade $languageFacade, DictionaryFacade $dictionaryFacade)
+    {
+        parent::__construct();
+        $this->languageFacade = $languageFacade;
+        $this->dictionaryFacade = $dictionaryFacade;
+    }
+
+    /**
+     * Show new language form.
+     *
+     * Route: GET /languages/new
+     *
+     * @param array $params Route parameters
+     *
+     * @return void
+     */
+    public function new(array $params): void
+    {
+        // Handle new language creation with redirect (before any output)
+        if ($this->param('op') === 'Save') {
+            $result = $this->languageFacade->create();
+            if ($result['success']) {
+                // Set the newly created language as the current language
+                Settings::save('currentlanguage', (string)$result['id']);
+                // Redirect to starter vocabulary page after successful language creation
+                header('Location: ' . url('/languages/' . $result['id'] . '/starter-vocab'));
+                exit;
+            }
+            // On error, fall through to show the form with error message
+        }
+
+        PageLayoutHelper::renderPageStart(__('language.page_title'), true);
+        $this->showNewForm();
+        PageLayoutHelper::renderPageEnd();
+    }
+
+    /**
+     * Edit language form.
+     *
+     * Route: GET/POST /languages/{id}/edit
+     *
+     * @param int $id Language ID from route parameter
+     *
+     * @return void
+     */
+    public function edit(int $id): void
+    {
+        PageLayoutHelper::renderPageStart(__('language.page_title'), true);
+
+        $message = '';
+
+        // Handle update operation
+        $op = $this->param('op');
+        if ($op === 'Change') {
+            $lgId = $this->paramInt('LgID', 0) ?? 0;
+            $result = $this->languageFacade->update($lgId);
+            if ($result['error'] !== null) {
+                $message = $result['error'];
+            } elseif ($result['reparsed'] !== null) {
+                $message = __('language.flash.updated_with_reparse', ['count' => $result['reparsed']]);
+            } else {
+                $message = __('language.flash.updated_no_reparse');
+            }
+            // After successful update, redirect to languages list
+            if ($result['error'] === null) {
+                header('Location: ' . url('/languages'));
+                exit;
+            }
+        }
+
+        $this->showEditForm($id);
+
+        PageLayoutHelper::renderPageEnd();
+    }
+
+    /**
+     * Delete a language.
+     *
+     * Route: DELETE /languages/{id}
+     *
+     * @param int $id Language ID from route parameter
+     *
+     * @return void
+     */
+    public function delete(int $id): void
+    {
+        $result = $this->languageFacade->delete($id);
+        $error = $result['error'];
+
+        if ($error !== null) {
+            // Error - redirect back with error message
+            header('Location: ' . url('/languages') . '?error=' . urlencode($error));
+        } else {
+            // Success - redirect to languages list
+            header('Location: ' . url('/languages'));
+        }
+        exit;
+    }
+
+    /**
+     * Refresh (reparse) all texts for a language.
+     *
+     * Route: POST /languages/{id}/refresh
+     *
+     * @param int $id Language ID from route parameter
+     *
+     * @return void
+     */
+    public function refresh(int $id): void
+    {
+        $result = $this->languageFacade->refresh($id);
+
+        $message = __('language.flash.refresh_summary', [
+            'sentencesDeleted' => $result['sentencesDeleted'],
+            'textItemsDeleted' => $result['textItemsDeleted'],
+            'sentencesAdded' => $result['sentencesAdded'],
+            'textItemsAdded' => $result['textItemsAdded'],
+        ]);
+
+        // Redirect to languages list with message
+        header('Location: ' . url('/languages') . '?message=' . urlencode($message));
+        exit;
+    }
+
+    /**
+     * Languages index page - shows language list.
+     *
+     * Route: GET /languages
+     *
+     * @param array $params Route parameters
+     *
+     * @return void
+     */
+    public function index(array $params): void
+    {
+        PageLayoutHelper::renderPageStart(__('language.page_title'), true);
+
+        // Check for message from redirect (e.g., after refresh/delete)
+        $message = $this->hasParam('message') ? $this->param('message') :
+                   ($this->hasParam('error') ? $this->param('error') : '');
+
+        $this->showList($message);
+
+        PageLayoutHelper::renderPageEnd();
+    }
+
+    /**
+     * Show the list of languages.
+     *
+     * @param string $message Optional message to display
+     *
+     * @return void
+     */
+    private function showList(string $message): void
+    {
+        $this->message($message, false);
+
+        $currentLanguageId = (int) Settings::get('currentlanguage');
+        $languages = $this->languageFacade->getLanguagesWithStats();
+
+        include __DIR__ . '/../Views/index.php';
+    }
+
+    /**
+     * Show the new language form.
+     *
+     * @return void
+     */
+    private function showNewForm(): void
+    {
+        $currentNativeLanguage = Settings::get('currentnativelanguage');
+        $languageOptions = $this->getWizardSelectOptions($currentNativeLanguage);
+        $languageOptionsEmpty = $this->getWizardSelectOptions('');
+        $languageDefsJson = json_encode(LanguagePresets::getAll());
+        $languagePresetsArray = $this->getLanguagePresetsArray();
+
+        ?>
+        <h2>
+            <?php echo __('language.form.new_title'); ?>
+            <a target="_blank" href="docs/info.html#howtolang">
+                <?php echo IconHelper::render(
+                    'help-circle',
+                    ['title' => __('language.form.help'), 'alt' => __('language.form.help')]
+                ); ?>
+            </a>
+        </h2>
+        <?php
+
+        include __DIR__ . '/../Views/wizard.php';
+
+        $languageEntity = $this->languageFacade->createEmptyLanguage();
+        $language = $this->languageFacade->toViewObject($languageEntity);
+        $sourceLg = '';
+        $targetLg = '';
+        $isNew = true;
+
+        $this->prepareLanguageCodes($languageEntity, $currentNativeLanguage, $sourceLg, $targetLg);
+
+        $allLanguages = $this->languageFacade->getAllLanguages();
+        $parserInfo = (new ParserRegistry())->getParserInfo();
+        $isAdmin = false;
+        $dictionaries = [];
+
+        include __DIR__ . '/../Views/form.php';
+    }
+
+    /**
+     * Show the edit language form.
+     *
+     * @param int $lid Language ID
+     *
+     * @return void
+     */
+    private function showEditForm(int $lid): void
+    {
+        $languageEntity = $this->languageFacade->getById($lid);
+
+        if ($languageEntity === null) {
+            echo '<div class="notification is-danger">' .
+                '<button class="delete" aria-label="close"></button>' .
+                __('language.errors.language_not_found') . '</div>';
+            return;
+        }
+
+        $language = $this->languageFacade->toViewObject($languageEntity);
+        $currentNativeLanguage = Settings::get('currentnativelanguage');
+        $sourceLg = '';
+        $targetLg = '';
+        $isNew = false;
+
+        $this->prepareLanguageCodes($languageEntity, $currentNativeLanguage, $sourceLg, $targetLg);
+
+        $allLanguages = $this->languageFacade->getAllLanguages();
+        $parserInfo = (new ParserRegistry())->getParserInfo();
+
+        // Dictionary data (all users can see their dictionaries)
+        $isAdmin = !Globals::isMultiUserEnabled() || Globals::isCurrentUserAdmin();
+        $dictionaries = $this->dictionaryFacade->getAllForLanguage($lid);
+
+        ?>
+    <h2><?php echo __('language.form.edit_title'); ?>
+        <a target="_blank" href="docs/info.html#howtolang">
+            <?php echo IconHelper::render(
+                'help-circle',
+                ['title' => __('language.form.help'), 'alt' => __('language.form.help')]
+            ); ?>
+        </a>
+    </h2>
+        <?php
+
+        include __DIR__ . '/../Views/form.php';
+    }
+
+    /**
+     * Prepare source and target language codes for the form.
+     *
+     * @param Language $language              Language object
+     * @param string   $currentNativeLanguage Current native language
+     * @param string   &$sourceLg             Output source language code
+     * @param string   &$targetLg             Output target language code
+     *
+     * @return void
+     */
+    private function prepareLanguageCodes(
+        Language $language,
+        string $currentNativeLanguage,
+        string &$sourceLg,
+        string &$targetLg
+    ): void {
+        if (array_key_exists($currentNativeLanguage, LanguagePresets::getAll())) {
+            $targetLg = LanguagePresets::getAll()[$currentNativeLanguage][1];
+        }
+
+        $langName = $language->name();
+        if ($langName) {
+            if (array_key_exists($langName, LanguagePresets::getAll())) {
+                $sourceLg = LanguagePresets::getAll()[$langName][1];
+            }
+            $lgFromDict = UrlUtilities::langFromDict($language->translatorUri());
+            if ($lgFromDict != '' && $lgFromDict != $sourceLg) {
+                $sourceLg = $lgFromDict;
+            }
+
+            $targetFromDict = UrlUtilities::targetLangFromDict($language->translatorUri());
+            if ($targetFromDict != '' && $targetFromDict != $targetLg) {
+                $targetLg = $targetFromDict;
+            }
+        }
+    }
+
+    /**
+     * Generate wizard select options HTML.
+     *
+     * @param string $selected Currently selected value
+     *
+     * @return string HTML options
+     */
+    private function getWizardSelectOptions(string $selected): string
+    {
+        $r = '<option value=""' . FormHelper::getSelected($selected, '') . '>[Choose...]</option>';
+        $keys = array_keys(LanguagePresets::getAll());
+        foreach ($keys as $item) {
+            $r .= '<option value="' . $item . '"' .
+                FormHelper::getSelected($selected, $item) . '>' . $item . '</option>';
+        }
+        return $r;
+    }
+
+    /**
+     * Get language presets as array for searchable select.
+     *
+     * @return array<int, array{id: int|string, name: string}>
+     */
+    private function getLanguagePresetsArray(): array
+    {
+        $presets = [];
+        $keys = array_keys(LanguagePresets::getAll());
+        foreach ($keys as $item) {
+            $presets[] = ['id' => $item, 'name' => $item];
+        }
+        return $presets;
+    }
+}

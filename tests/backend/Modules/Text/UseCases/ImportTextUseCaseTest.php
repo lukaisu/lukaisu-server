@@ -1,0 +1,100 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Lukaisu\Tests\Modules\Text\UseCases;
+
+use Lukaisu\Modules\Language\Domain\ValueObject\LanguageId;
+use Lukaisu\Modules\Text\Application\UseCases\ImportText;
+use Lukaisu\Modules\Text\Domain\Text;
+use Lukaisu\Modules\Text\Domain\TextRepositoryInterface;
+use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+
+/**
+ * Unit tests for the ImportText use case.
+ *
+ * Tests the text import pipeline including text validation,
+ * creation, and long text splitting.
+ *
+ */
+#[CoversClass(ImportText::class)]
+class ImportTextUseCaseTest extends TestCase
+{
+    /** @var TextRepositoryInterface&MockObject */
+    private TextRepositoryInterface $textRepository;
+
+    private ImportText $importText;
+
+    protected function setUp(): void
+    {
+        $this->textRepository = $this->createMock(TextRepositoryInterface::class);
+        $this->importText = new ImportText($this->textRepository);
+    }
+
+    // =====================
+    // TEXT VALIDATION TESTS
+    // =====================
+
+    public function testValidateTextLengthReturnsTrueForValidLength(): void
+    {
+        $text = str_repeat('a', 65000);
+        $this->assertTrue($this->importText->validateTextLength($text));
+    }
+
+    public function testValidateTextLengthReturnsFalseForTooLongText(): void
+    {
+        $text = str_repeat('a', 65001);
+        $this->assertFalse($this->importText->validateTextLength($text));
+    }
+
+    public function testValidateTextLengthReturnsTrueForEmptyText(): void
+    {
+        $this->assertTrue($this->importText->validateTextLength(''));
+    }
+
+    public function testValidateTextLengthHandlesMultibyteCharacters(): void
+    {
+        // UTF-8: Each character can be 1-4 bytes
+        // 日本 = 6 bytes (2 characters * 3 bytes each)
+        $text = str_repeat('日本', 10000); // 60000 bytes
+        $this->assertTrue($this->importText->validateTextLength($text));
+    }
+
+    // ========================
+    // TEXT LENGTH BOUNDARY TESTS
+    // ========================
+
+    public function testValidateTextLengthAtExactBoundary(): void
+    {
+        $text = str_repeat('a', 65000);
+        $this->assertTrue($this->importText->validateTextLength($text));
+
+        $text = str_repeat('a', 65000) . 'b';
+        $this->assertFalse($this->importText->validateTextLength($text));
+    }
+
+    // ================================
+    // DATA PROVIDER FOR BOUNDARY TESTS
+    // ================================
+    #[DataProvider('textLengthProvider')]
+    public function testValidateTextLengthWithVariousLengths(int $length, bool $expected): void
+    {
+        $text = str_repeat('x', $length);
+        $this->assertEquals($expected, $this->importText->validateTextLength($text));
+    }
+
+    public static function textLengthProvider(): array
+    {
+        return [
+            'empty' => [0, true],
+            'short' => [100, true],
+            'medium' => [10000, true],
+            'at_limit' => [65000, true],
+            'over_limit' => [65001, false],
+            'way_over_limit' => [100000, false],
+        ];
+    }
+}

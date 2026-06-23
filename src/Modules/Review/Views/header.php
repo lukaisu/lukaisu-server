@@ -1,0 +1,65 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Test Header Navigation Row View
+ *
+ * Variables expected:
+ * - $textId: int|null - Text ID if testing from a text
+ *
+ * PHP version 8.1
+ *
+ * @category Lukaisu
+ * @package  Lukaisu\Views
+ * @author   HugoFara <hugo.farajallah@protonmail.com>
+ * @license  Unlicense <http://unlicense.org/>
+ * @link     https://hugofara.github.io/lukaisu-server/developer/api
+ * @since    3.0.0
+ *
+ * @var int|null $textId
+ */
+
+namespace Lukaisu\Views\Review;
+
+use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
+
+/** @var int|null $textId */
+assert(is_string($navLinksHtml));
+assert(is_string($annotationLinkHtml));
+
+?>
+<div class="flex-header">
+    <div>
+        <a href="/texts" target="_top">
+            <?php echo PageLayoutHelper::buildLogo(); ?>
+        </a>
+    </div>
+    <?php if ($textId !== null) : ?>
+    <div>
+        <?php echo $navLinksHtml; ?>
+    </div>
+    <div>
+        <?php
+        $readLabel = __('review.table.read');
+        $printLabel = __('review.table.print');
+        ?>
+        <a href="/text/<?php echo $textId; ?>/read" target="_top">
+            <?php echo \Lukaisu\Shared\UI\Helpers\IconHelper::render(
+                'book-open',
+                ['title' => $readLabel, 'alt' => $readLabel]
+            ); ?>
+        </a>
+        <a href="/text/<?php echo $textId; ?>/print-plain" target="_top">
+            <?php echo \Lukaisu\Shared\UI\Helpers\IconHelper::render(
+                'printer',
+                ['title' => $printLabel, 'alt' => $printLabel]
+            ); ?>
+        </a>
+        <?php echo $annotationLinkHtml; ?>
+    </div>
+    <?php endif; ?>
+    <div>
+        <?php echo PageLayoutHelper::buildNavbarPlaceholder(); ?>
+    </div>
+</div>

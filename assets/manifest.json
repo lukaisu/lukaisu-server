@@ -1,0 +1,53 @@
+{
+  "name": "Lukaisu Server",
+  "short_name": "Lukaisu Server",
+  "description": "A self-hosted language learning application for reading-based vocabulary acquisition",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3273dc",
+  "orientation": "any",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/assets/images/lukaisu_icon_48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/lukaisu_icon_180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/lukaisu_icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/lukaisu_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Texts",
+      "short_name": "Texts",
+      "description": "View and manage your texts",
+      "url": "/texts",
+      "icons": [{ "src": "/assets/images/lukaisu_icon_48.png", "sizes": "48x48" }]
+    },
+    {
+      "name": "Vocabulary",
+      "short_name": "Words",
+      "description": "Review your vocabulary",
+      "url": "/words/edit",
+      "icons": [{ "src": "/assets/images/lukaisu_icon_48.png", "sizes": "48x48" }]
+    }
+  ]
+}

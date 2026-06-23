@@ -1,0 +1,28 @@
+Lukaisu Server
+==============
+
+Lukaisu Server is the self-hosted backend for the Lukaisu reading app
+(https://github.com/lukaisu/lukaisu).
+
+Attribution / provenance
+------------------------
+
+Lukaisu Server is a fork derived from "Learning with Texts" (LWT) at version
+3.2.0:
+
+  - Immediate upstream: Learning with Texts (LWT), community-maintained by
+    HugoFara and contributors — https://github.com/HugoFara/lwt
+  - Original work: "Learning with Texts" by lang-learn-guy, first released in
+    2011 — https://sourceforge.net/projects/learning-with-texts
+
+The project was rebranded from LWT to Lukaisu Server throughout (PHP namespace,
+package identity, runtime keys, assets, and documentation). The functional code
+at the 0.1.0 baseline corresponds to LWT 3.2.0.
+
+License
+-------
+
+Like its upstream, Lukaisu Server is released into the public domain under the
+Unlicense. See the LICENSE file for the full text. The Unlicense imposes no
+attribution requirement; this NOTICE is provided as a courtesy to credit the
+original authors.

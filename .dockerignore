@@ -1,0 +1,27 @@
+# Folder that shoud not be included in the image
+
+.github/*
+docker/*
+# Documentation
+docs/*
+!docs/**/index.html
+!docs/**/info.html
+# NPM, for debugging only
+node_modules/*
+# Phive products
+.phive/*
+tools/*
+
+# phpDocumentor cache
+.phpdoc/*
+
+.dockerignore
+.env
+.git
+.gitignore
+
+# Media files for Lukaisu Server
+media/*
+
+# Database data directory (created by docker-compose)
+lukaisu_db_data/*

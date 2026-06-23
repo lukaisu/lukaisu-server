@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<ruleset name="Lukaisu Server Coding Standard">
+    <description>PHP CodeSniffer configuration for Lukaisu Server</description>
+
+    <!-- Use PSR-12 as the base standard -->
+    <rule ref="PSR12"/>
+
+    <!-- Only check PHP files -->
+    <arg name="extensions" value="php"/>
+
+    <!-- Allow multiple classes per file in tests (for test helpers/stubs) -->
+    <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+
+    <!-- Allow side effects in specific file types -->
+    <rule ref="PSR1.Files.SideEffects">
+        <!-- Tests often need bootstrap/setup code -->
+        <exclude-pattern>*/tests/*</exclude-pattern>
+        <!-- View files intentionally mix declarations and output -->
+        <exclude-pattern>*/Views/*</exclude-pattern>
+        <!-- Tools are standalone scripts -->
+        <exclude-pattern>*/tools/*</exclude-pattern>
+        <!-- Bootstrap files intentionally have side effects -->
+        <exclude-pattern>*/Bootstrap/*</exclude-pattern>
+    </rule>
+
+    <!-- Exclude directories -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/dist/*</exclude-pattern>
+    <exclude-pattern>*/docs/*</exclude-pattern>
+
+    <!-- Show progress and use colors -->
+    <arg value="ps"/>
+    <arg name="colors"/>
+
+    <!-- Default paths to check -->
+    <file>src</file>
+    <file>tests</file>
+</ruleset>

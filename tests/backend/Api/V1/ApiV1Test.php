@@ -1,0 +1,220 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Lukaisu\Tests\Api\V1;
+
+use Lukaisu\Api\V1\ApiV1;
+use Lukaisu\Shared\Infrastructure\Globals;
+use Lukaisu\Shared\Infrastructure\Container\Container;
+use Lukaisu\Shared\Infrastructure\Container\CoreServiceProvider;
+use Lukaisu\Shared\Infrastructure\Container\ControllerServiceProvider;
+use Lukaisu\Shared\Infrastructure\Container\RepositoryServiceProvider;
+use Lukaisu\Modules\Text\TextServiceProvider;
+use Lukaisu\Modules\Language\LanguageServiceProvider;
+use Lukaisu\Modules\Feed\FeedServiceProvider;
+use Lukaisu\Modules\Vocabulary\VocabularyServiceProvider;
+use Lukaisu\Modules\Tags\TagsServiceProvider;
+use Lukaisu\Modules\Review\ReviewServiceProvider;
+use Lukaisu\Modules\Admin\AdminServiceProvider;
+use Lukaisu\Modules\User\UserServiceProvider;
+use Lukaisu\Modules\Dictionary\DictionaryServiceProvider;
+use Lukaisu\Modules\Book\BookServiceProvider;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Unit tests for the ApiV1 class.
+ *
+ * Tests main API V1 handler functionality.
+ */
+class ApiV1Test extends TestCase
+{
+    private ApiV1 $api;
+    private static bool $providersRegistered = false;
+
+    public static function setUpBeforeClass(): void
+    {
+        if (!defined('LUKAISU_TEST_DB_AVAILABLE') || !LUKAISU_TEST_DB_AVAILABLE) {
+            return;
+        }
+
+        if (!self::$providersRegistered) {
+            $container = Container::getInstance();
+
+            $providers = [
+                new CoreServiceProvider(),
+                new ControllerServiceProvider(),
+                new RepositoryServiceProvider(),
+                new TextServiceProvider(),
+                new LanguageServiceProvider(),
+                new FeedServiceProvider(),
+                new VocabularyServiceProvider(),
+                new TagsServiceProvider(),
+                new ReviewServiceProvider(),
+                new AdminServiceProvider(),
+                new UserServiceProvider(),
+                new DictionaryServiceProvider(),
+                new BookServiceProvider(),
+            ];
+
+            foreach ($providers as $provider) {
+                $provider->register($container);
+            }
+            foreach ($providers as $provider) {
+                $provider->boot($container);
+            }
+
+            self::$providersRegistered = true;
+        }
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        if (!defined('LUKAISU_TEST_DB_AVAILABLE') || !LUKAISU_TEST_DB_AVAILABLE) {
+            $this->markTestSkipped('Database connection required');
+        }
+        $this->api = new ApiV1();
+    }
+
+    // ===== Class structure tests =====
+
+    /**
+     * Test that ApiV1 class can be instantiated.
+     */
+    public function testCanInstantiate(): void
+    {
+        $this->assertInstanceOf(ApiV1::class, $this->api);
+    }
+
+    /**
+     * Test that ApiV1 class has the required methods.
+     */
+    public function testClassHasRequiredMethods(): void
+    {
+        $reflection = new \ReflectionClass(ApiV1::class);
+
+        // Public instance method
+        $this->assertTrue($reflection->hasMethod('handle'));
+
+        // Public static method
+        $this->assertTrue($reflection->hasMethod('handleRequest'));
+        $this->assertTrue($reflection->getMethod('handleRequest')->isStatic());
+    }
+
+    /**
+     * Test handle method signature.
+     */
+    public function testHandleMethodSignature(): void
+    {
+        $reflection = new \ReflectionMethod(ApiV1::class, 'handle');
+        $params = $reflection->getParameters();
+
+        $this->assertCount(3, $params);
+        $this->assertEquals('method', $params[0]->getName());
+        $this->assertEquals('uri', $params[1]->getName());
+        $this->assertEquals('postData', $params[2]->getName());
+    }
+
+    /**
+     * Test that constructor accepts optional Container parameter.
+     */
+    public function testConstructorAcceptsContainer(): void
+    {
+        $reflection = new \ReflectionClass(ApiV1::class);
+
+        $this->assertTrue(
+            $reflection->hasProperty('container'),
+            "ApiV1 should have a container property"
+        );
+
+        $constructor = $reflection->getConstructor();
+        $this->assertNotNull($constructor);
+        $params = $constructor->getParameters();
+        $this->assertCount(1, $params);
+        $this->assertEquals('container', $params[0]->getName());
+        $this->assertTrue($params[0]->allowsNull());
+    }
+
+    /**
+     * Test VERSION constant exists.
+     */
+    public function testVersionConstantExists(): void
+    {
+        $reflection = new \ReflectionClass(ApiV1::class);
+        $this->assertTrue($reflection->hasConstant('VERSION'));
+    }
+
+    /**
+     * Test RELEASE_DATE constant exists.
+     */
+    public function testReleaseDateConstantExists(): void
+    {
+        $reflection = new \ReflectionClass(ApiV1::class);
+        $this->assertTrue($reflection->hasConstant('RELEASE_DATE'));
+    }
+
+    /**
+     * Test HANDLER_MAP constant exists and has expected entries.
+     */
+    public function testHandlerMapConstantExists(): void
+    {
+        $reflection = new \ReflectionClass(ApiV1::class);
+        $this->assertTrue($reflection->hasConstant('HANDLER_MAP'));
+
+        $constant = $reflection->getReflectionConstant('HANDLER_MAP');
+        $this->assertNotFalse($constant);
+        $map = $constant->getValue();
+        $this->assertIsArray($map);
+
+        // Verify key route entries exist
+        $expectedRoutes = [
+            'auth', 'languages', 'review', 'settings', 'tags',
+            'terms', 'word-families', 'texts', 'feeds', 'books',
+            'local-dictionaries', 'youtube', 'tts', 'whisper',
+        ];
+
+        foreach ($expectedRoutes as $route) {
+            $this->assertArrayHasKey(
+                $route,
+                $map,
+                "HANDLER_MAP should contain route: $route"
+            );
+        }
+    }
+
+    /**
+     * Test PUBLIC_ENDPOINTS constant exists.
+     */
+    public function testPublicEndpointsConstantExists(): void
+    {
+        $reflection = new \ReflectionClass(ApiV1::class);
+        $this->assertTrue($reflection->hasConstant('PUBLIC_ENDPOINTS'));
+    }
+
+    // ===== Key private methods exist =====
+
+    /**
+     * Test that key private methods exist.
+     */
+    public function testPrivateMethodsExist(): void
+    {
+        $reflection = new \ReflectionClass(ApiV1::class);
+
+        $expectedMethods = [
+            'dispatch',
+            'handleInlineEndpoints',
+            'handleSentencesGet',
+            'isPublicEndpoint',
+            'validateAuth',
+            'parseQueryParams',
+        ];
+
+        foreach ($expectedMethods as $methodName) {
+            $this->assertTrue(
+                $reflection->hasMethod($methodName),
+                "ApiV1 should have method: $methodName"
+            );
+        }
+    }
+}
