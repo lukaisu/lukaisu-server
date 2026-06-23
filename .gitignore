@@ -78,6 +78,7 @@ coverage.xml
 /cypress/videos/
 /cypress/downloads/
 /cypress/coverage/
+/cypress/app-e2e/.last-run-*.txt
 
 # Lighthouse reports
 /lighthouse-reports/

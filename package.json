@@ -54,6 +54,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "e2e": "cypress run",
+    "e2e:app": "cypress run --config-file cypress.app.config.ts",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "docs:dev": "node scripts/docs-pre-build.js && vitepress dev docs-src",
