@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vite
 // Mock dependencies
 vi.mock('../../../src/frontend/js/shared/api/client', () => ({
   apiPut: vi.fn().mockResolvedValue({ data: { count: 5 } }),
+  apiPost: vi.fn().mockResolvedValue({ data: { message: 'ok' } }),
   getCsrfToken: vi.fn().mockReturnValue('test-csrf-token')
 }));
 
@@ -17,7 +18,7 @@ import {
   iknowall,
   validateTablePrefix
 } from '../../../src/frontend/js/modules/language/stores/language_settings';
-import { apiPut } from '../../../src/frontend/js/shared/api/client';
+import { apiPut, apiPost } from '../../../src/frontend/js/shared/api/client';
 
 describe('core/language_settings.ts', () => {
   const originalLocation = window.location;
@@ -77,10 +78,9 @@ describe('core/language_settings.ts', () => {
 
       await setLang(select, '/texts');
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': 'test-csrf-token' },
-        body: JSON.stringify({ key: 'currentlanguage', value: '2' })
+      expect(apiPost).toHaveBeenCalledWith('/settings', {
+        key: 'currentlanguage',
+        value: '2'
       });
       expect(locationHrefSpy).toHaveBeenCalledWith('/texts');
     });
@@ -96,10 +96,9 @@ describe('core/language_settings.ts', () => {
 
       await setLang(select, '/home');
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': 'test-csrf-token' },
-        body: JSON.stringify({ key: 'currentlanguage', value: '1' })
+      expect(apiPost).toHaveBeenCalledWith('/settings', {
+        key: 'currentlanguage',
+        value: '1'
       });
       expect(locationHrefSpy).toHaveBeenCalledWith('/home');
     });
@@ -115,10 +114,9 @@ describe('core/language_settings.ts', () => {
 
       await setLang(select, '/texts');
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': 'test-csrf-token' },
-        body: JSON.stringify({ key: 'currentlanguage', value: '' })
+      expect(apiPost).toHaveBeenCalledWith('/settings', {
+        key: 'currentlanguage',
+        value: ''
       });
       expect(locationHrefSpy).toHaveBeenCalledWith('/texts');
     });
@@ -158,17 +156,16 @@ describe('core/language_settings.ts', () => {
     it('calls API with correct parameters', async () => {
       await setLangAsync('5');
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': 'test-csrf-token' },
-        body: JSON.stringify({ key: 'currentlanguage', value: '5' })
+      expect(apiPost).toHaveBeenCalledWith('/settings', {
+        key: 'currentlanguage',
+        value: '5'
       });
     });
 
-    it('throws error on non-ok response', async () => {
-      fetchMock.mockResolvedValueOnce({ ok: false, status: 500 });
+    it('throws error when the API returns an error', async () => {
+      vi.mocked(apiPost).mockResolvedValueOnce({ error: 'Server error' });
 
-      await expect(setLangAsync('1')).rejects.toThrow('HTTP error! status: 500');
+      await expect(setLangAsync('1')).rejects.toThrow('Server error');
     });
   });
 
@@ -180,10 +177,9 @@ describe('core/language_settings.ts', () => {
     it('calls API and redirects to specified URL', async () => {
       await resetAll('/texts');
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': 'test-csrf-token' },
-        body: JSON.stringify({ key: 'currentlanguage', value: '' })
+      expect(apiPost).toHaveBeenCalledWith('/settings', {
+        key: 'currentlanguage',
+        value: ''
       });
       expect(locationHrefSpy).toHaveBeenCalledWith('/texts');
     });
@@ -215,17 +211,16 @@ describe('core/language_settings.ts', () => {
     it('calls API with empty language value', async () => {
       await resetAllAsync();
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': 'test-csrf-token' },
-        body: JSON.stringify({ key: 'currentlanguage', value: '' })
+      expect(apiPost).toHaveBeenCalledWith('/settings', {
+        key: 'currentlanguage',
+        value: ''
       });
     });
 
-    it('throws error on non-ok response', async () => {
-      fetchMock.mockResolvedValueOnce({ ok: false, status: 500 });
+    it('throws error when the API returns an error', async () => {
+      vi.mocked(apiPost).mockResolvedValueOnce({ error: 'Server error' });
 
-      await expect(resetAllAsync()).rejects.toThrow('HTTP error! status: 500');
+      await expect(resetAllAsync()).rejects.toThrow('Server error');
     });
   });
 
@@ -461,10 +456,9 @@ describe('core/language_settings.ts', () => {
       await vi.waitFor(() => {
         expect(locationHrefSpy).toHaveBeenCalledWith('/home');
       });
-      expect(fetchMock).toHaveBeenCalledWith('/api/v1/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': 'test-csrf-token' },
-        body: JSON.stringify({ key: 'currentlanguage', value: '2' })
+      expect(apiPost).toHaveBeenCalledWith('/settings', {
+        key: 'currentlanguage',
+        value: '2'
       });
     });
 
@@ -484,7 +478,7 @@ describe('core/language_settings.ts', () => {
       await vi.waitFor(() => {
         expect(locationHrefSpy).toHaveBeenCalledWith('/');
       });
-      expect(fetchMock).toHaveBeenCalled();
+      expect(apiPost).toHaveBeenCalled();
     });
   });
 

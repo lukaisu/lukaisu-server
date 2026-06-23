@@ -9,10 +9,13 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { localDb } from '@shared/offline/local/schema';
 import { setLocalFirst, isLocalFirst } from '@shared/offline/local/router';
-import { seedIfNeeded } from '@shared/offline/local/repositories';
+import { seedIfNeeded, getCurrentLanguageId } from '@shared/offline/local/repositories';
+import { apiGet } from '@shared/api/client';
+import type { NavbarData } from '@shared/components/navbar_renderer';
 import { LanguagesApi } from '@modules/language/api/languages_api';
 import { TextsApi } from '@modules/text/api/texts_api';
 import { TermsApi } from '@modules/vocabulary/api/terms_api';
+import { setLangAsync } from '@modules/language/stores/language_settings';
 
 beforeEach(async () => {
   await Promise.all(localDb.tables.map((t) => t.clear()));
@@ -60,5 +63,46 @@ describe('local-first seam', () => {
     const after = await TextsApi.getWords(textId);
     const updated = after.data!.words.find((w) => w.position === target.position)!;
     expect(updated.status).toBe(99);
+  });
+
+  it('serves the global navbar chrome from the local DB', async () => {
+    setLocalFirst(true);
+    await seedIfNeeded();
+    const res = await apiGet<NavbarData>('/navbar');
+    expect(res.error).toBeUndefined();
+    expect(res.data?.languages.length ?? 0).toBeGreaterThan(0);
+    // Server-only menu sections stay hidden offline.
+    expect(res.data?.isMultiUser).toBe(false);
+    expect(res.data?.showAdminItems).toBe(false);
+  });
+
+  it('switches the current language offline via the navbar (setLangAsync)', async () => {
+    setLocalFirst(true);
+    await seedIfNeeded();
+    const langs = await localDb.languages.toArray();
+    const target = langs[langs.length - 1].id as number;
+    await setLangAsync(String(target));
+    expect(await getCurrentLanguageId()).toBe(target);
+  });
+
+  it('returns example sentences for a term through the local seam', async () => {
+    setLocalFirst(true);
+    await seedIfNeeded();
+    const text = await localDb.texts.toCollection().first();
+    const occ = await localDb.occurrences
+      .where('textId')
+      .equals(text!.id as number)
+      .and((o) => o.isWord)
+      .first();
+
+    const res = await apiGet<[string, string][]>('/sentences-with-term', {
+      language_id: text!.langId,
+      term_lc: occ!.textLc
+    });
+    expect(res.error).toBeUndefined();
+    expect(res.data?.length ?? 0).toBeGreaterThan(0);
+    // [0] = display HTML (term in <b>), [1] = copy text (term in {…}).
+    expect(res.data![0][0]).toContain('<b>');
+    expect(res.data![0][1]).toContain('{');
   });
 });

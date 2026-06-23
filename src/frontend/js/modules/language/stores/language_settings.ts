@@ -7,7 +7,7 @@
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';
-import { apiPut, getCsrfToken } from '@shared/api/client';
+import { apiPost, apiPut } from '@shared/api/client';
 
 /**
  * Statistics for a text showing word status counts.
@@ -71,25 +71,16 @@ export async function setLang(ctl: HTMLSelectElement, url: string): Promise<void
  * @returns Promise with the API response
  */
 export async function setLangAsync(languageId: string): Promise<LanguageChangeResponse> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const csrf = getCsrfToken();
-  if (csrf) {
-    headers['X-CSRF-TOKEN'] = csrf;
-  }
-  const response = await fetch('/api/v1/settings', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      key: 'currentlanguage',
-      value: languageId
-    })
+  // Goes through apiPost so the local-first router can serve it on-device when
+  // no server is connected; in server mode apiPost still attaches CSRF/auth.
+  const res = await apiPost<LanguageChangeResponse>('/settings', {
+    key: 'currentlanguage',
+    value: languageId
   });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  if (res.error) {
+    throw new Error(res.error);
   }
-
-  return response.json();
+  return res.data ?? {};
 }
 
 /**
@@ -98,25 +89,15 @@ export async function setLangAsync(languageId: string): Promise<LanguageChangeRe
  * @returns Promise with the API response
  */
 export async function resetAllAsync(): Promise<LanguageChangeResponse> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const csrf = getCsrfToken();
-  if (csrf) {
-    headers['X-CSRF-TOKEN'] = csrf;
-  }
-  const response = await fetch('/api/v1/settings', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      key: 'currentlanguage',
-      value: ''
-    })
+  // See setLangAsync: route through apiPost so this also works offline.
+  const res = await apiPost<LanguageChangeResponse>('/settings', {
+    key: 'currentlanguage',
+    value: ''
   });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  if (res.error) {
+    throw new Error(res.error);
   }
-
-  return response.json();
+  return res.data ?? {};
 }
 
 /**

@@ -58,6 +58,9 @@ import {
   inlineEdit,
   bulkAction as wordsBulkAction,
 } from './repositories/words';
+import { getNavbarData } from './repositories/navbar';
+import { getSentencesWithTerm } from './repositories/sentences';
+import { setSetting, setCurrentLanguageId } from './repositories/settings';
 import type {
   TextCreateRequest,
 } from '@modules/text/api/texts_api';
@@ -132,6 +135,9 @@ function wrap(result: unknown): LocalRouteResult {
 const NOT_HANDLED: LocalRouteResult = { handled: false };
 
 async function routeGet(path: string, p: Record<string, unknown>): Promise<LocalRouteResult> {
+  if (path === '/navbar') {
+    return wrap(await getNavbarData());
+  }
   if (path === '/languages') {
     return wrap(await listLanguages());
   }
@@ -161,6 +167,13 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
     return wrap(
       await getForEdit(num(p.term_id), num(p.ord), p.wid != null ? num(p.wid) : undefined)
     );
+  }
+  m = path.match(/^\/sentences-with-term\/(\d+)$/);
+  if (m) {
+    return wrap(await getSentencesWithTerm(num(p.language_id), str(p.term_lc), num(m[1])));
+  }
+  if (path === '/sentences-with-term') {
+    return wrap(await getSentencesWithTerm(num(p.language_id), str(p.term_lc)));
   }
   if (path === '/terms/list') {
     return wrap(await getList(p as WordListFilters));
@@ -199,6 +212,17 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
 }
 
 async function routePost(path: string, p: Record<string, unknown>): Promise<LocalRouteResult> {
+  if (path === '/settings') {
+    const key = str(p.key);
+    const value = str(p.value);
+    if (key === 'currentlanguage') {
+      // The navbar's language switcher (setLangAsync) posts the chosen id here.
+      await setCurrentLanguageId(value ? num(value) : 0);
+    } else {
+      await setSetting(key, value);
+    }
+    return { handled: true, data: { message: 'Setting updated' } };
+  }
   if (path === '/languages') {
     return wrap(await createLanguage(p as unknown as LanguageCreateRequest));
   }
