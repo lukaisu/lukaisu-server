@@ -17,12 +17,36 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import { getAuthToken, isAuthOptional } from '@shared/api/client';
+import { getApiServer, getAuthToken, isAuthOptional } from '@shared/api/client';
+import { setLocalFirst } from '@shared/offline/local/router';
+import { seedIfNeeded } from '@shared/offline/local/repositories';
 import { installLinkRouter, pageUrl } from './router';
 
 export interface BootOptions {
   /** Surfaces require a signed-in session; the connect page does not. */
   requireAuth: boolean;
+}
+
+/**
+ * Choose the data source for this launch and seed the on-device DB on first
+ * run. With no server configured the app is fully local-first (the F-Droid /
+ * offline case); once a server is connected it falls back to server-backed mode
+ * (local⇄server sync is a later milestone). Idempotent — safe on every page.
+ *
+ * @returns true when running fully on-device (no server).
+ */
+export async function initDataMode(): Promise<boolean> {
+  const hasServer = getApiServer() !== '';
+  setLocalFirst(!hasServer);
+  if (hasServer) {
+    return false;
+  }
+  try {
+    await seedIfNeeded();
+  } catch (error) {
+    console.error('[lukaisu] local seed failed', error);
+  }
+  return true;
 }
 
 /**
@@ -54,9 +78,13 @@ export function fillIdTokens(textId: number, langId: number): void {
 }
 
 export async function bootAppPage(opts: BootOptions): Promise<void> {
-  // 1. Auth gate. A bearer token (multi-user) OR a server known to need no
-  //    login (single-user self-host, see probeAuthRequirement) both pass.
-  if (opts.requireAuth && !getAuthToken() && !isAuthOptional()) {
+  // 0. Pick local-first vs server-backed mode and seed on first run.
+  const localFirst = await initDataMode();
+
+  // 1. Auth gate (server mode only). Local-first owns its data on-device, so it
+  //    never needs a session. In server mode, a bearer token (multi-user) OR a
+  //    server known to need no login (single-user self-host) both pass.
+  if (opts.requireAuth && !localFirst && !getAuthToken() && !isAuthOptional()) {
     window.location.replace(pageUrl.connect());
     return;
   }

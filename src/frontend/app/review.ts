@@ -17,7 +17,7 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import { bootAppPage, injectConfig } from './boot';
+import { bootAppPage, initDataMode, injectConfig } from './boot';
 import { ReviewApi } from '@modules/review/api/review_api';
 import { initReviewApp } from '@modules/review/components/review_view';
 
@@ -40,6 +40,10 @@ document.addEventListener(
 );
 
 async function start(): Promise<void> {
+  // Resolve local-first vs server mode (and seed on first run) before the first
+  // API call, so this page works even when opened directly.
+  await initDataMode();
+
   const res = await ReviewApi.getReviewConfig({ text, lang, selection });
   // initReviewApp reads #review-config; supply the fetched config, or surface a
   // load error through the same channel (it renders config.error if present).

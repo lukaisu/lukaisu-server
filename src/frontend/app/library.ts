@@ -10,10 +10,14 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import { bootAppPage, injectConfig } from './boot';
+import { bootAppPage, initDataMode, injectConfig } from './boot';
 import { LanguagesApi } from '@modules/language/api/languages_api';
 
 async function start(): Promise<void> {
+  // Resolve local-first vs server mode (and seed on first run) before the first
+  // API call, so this page works even when opened directly.
+  await initDataMode();
+
   const res = await LanguagesApi.list();
   const languages = res.data?.languages ?? [];
   const ids = new Set(languages.map((l) => l.id));

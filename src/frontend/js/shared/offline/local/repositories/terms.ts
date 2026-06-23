@@ -1,0 +1,296 @@
+/**
+ * Term (word) repository — the save/learn side of the read path: quick status
+ * marks, quick-create, full create/update, translations and deletion. New and
+ * changed words are linked to their text occurrences so the reader updates.
+ *
+ * @license Unlicense <http://unlicense.org/>
+ */
+
+import { localDb, type LocalOccurrence, type LocalWord } from '../schema';
+import { nextStatus } from '../review-scoring';
+import { toClassName } from '../class-name';
+import {
+  applyStatus,
+  buildWordRow,
+  findWord,
+  linkWordOccurrences,
+  nowMs,
+  unlinkWordOccurrences,
+  type WordFields,
+} from './helpers';
+import type {
+  TermStatusResponse,
+  TermQuickCreateResponse,
+  TermTranslationResponse,
+  TermDeleteResponse,
+  TermCreateFullRequest,
+  TermUpdateFullRequest,
+  TermFullResponse,
+  TermForEditResponse,
+} from '@modules/vocabulary/api/terms_api';
+
+/** Fetch a single occurrence by text + position. */
+async function getOccurrence(
+  textId: number,
+  position: number
+): Promise<LocalOccurrence | undefined> {
+  return localDb.occurrences.where('[textId+order]').equals([textId, position]).first();
+}
+
+/** Build the `term` payload returned by create/update-full. */
+function termPayload(word: LocalWord): NonNullable<TermFullResponse['term']> {
+  return {
+    id: word.id ?? 0,
+    text: word.text,
+    textLc: word.textLc,
+    lemma: word.lemma,
+    lemmaLc: word.lemmaLc,
+    hex: toClassName(word.textLc),
+    translation: word.translation,
+    romanization: word.romanization,
+    sentence: word.sentence,
+    status: word.status,
+    tags: [],
+  };
+}
+
+/** Replace a word's tags (create missing tag rows as needed). */
+async function setWordTags(woId: number, tags: string[] | undefined): Promise<void> {
+  if (!tags) {
+    return;
+  }
+  await localDb.wordTags.where('woId').equals(woId).delete();
+  for (const text of tags) {
+    const name = text.trim();
+    if (name === '') {
+      continue;
+    }
+    let tag = await localDb.tags.where('text').equals(name).first();
+    if (!tag) {
+      const id = (await localDb.tags.add({ text: name, comment: '' })) as number;
+      tag = { id, text: name, comment: '' };
+    }
+    if (tag.id != null) {
+      await localDb.wordTags.add({ woId, tgId: tag.id });
+    }
+  }
+}
+
+/** Set a term's status to an absolute value. */
+export async function setStatus(
+  termId: number,
+  status: number
+): Promise<TermStatusResponse> {
+  const result = await applyStatus(termId, status);
+  if (result == null) {
+    return { error: 'Term not found' };
+  }
+  return { set: status };
+}
+
+/** Nudge a term's status up or down by one learning level. */
+export async function incrementStatus(
+  termId: number,
+  direction: 'up' | 'down'
+): Promise<TermStatusResponse> {
+  const word = await localDb.words.get(termId);
+  if (!word) {
+    return { error: 'Term not found' };
+  }
+  const next = nextStatus(word.status, direction === 'up');
+  await applyStatus(termId, next);
+  return { set: next, increment: direction };
+}
+
+/**
+ * Quick-create a word at a text position with a terminal status (98 ignored /
+ * 99 well-known), with no translation needed.
+ */
+export async function createQuick(
+  textId: number,
+  position: number,
+  status: 98 | 99
+): Promise<TermQuickCreateResponse> {
+  const occ = await getOccurrence(textId, position);
+  if (!occ) {
+    return { error: 'Word position not found' };
+  }
+  const existing = await findWord(occ.langId, occ.textLc);
+  if (existing && existing.id != null) {
+    await applyStatus(existing.id, status);
+    return { term_id: existing.id, term_lc: occ.textLc };
+  }
+  const id = (await localDb.words.add(
+    buildWordRow(occ.langId, occ.text, status)
+  )) as number;
+  await linkWordOccurrences(id, occ.langId, occ.textLc);
+  return { term_id: id, term_lc: occ.textLc };
+}
+
+/** Update an existing term's translation. */
+export async function updateTranslation(
+  termId: number,
+  translation: string
+): Promise<TermTranslationResponse> {
+  const word = await localDb.words.get(termId);
+  if (!word) {
+    return { error: 'Term not found' };
+  }
+  await localDb.words.update(termId, { translation, updatedAt: nowMs() });
+  return { update: translation, term_id: termId, term_lc: word.textLc };
+}
+
+/** Create a word (status 1) with a translation, outside the reader. */
+export async function addWithTranslation(
+  text: string,
+  langId: number,
+  translation: string
+): Promise<TermTranslationResponse> {
+  const textLc = text.toLowerCase();
+  const existing = await findWord(langId, textLc);
+  if (existing && existing.id != null) {
+    await localDb.words.update(existing.id, { translation, updatedAt: nowMs() });
+    return { update: translation, term_id: existing.id, term_lc: textLc };
+  }
+  const id = (await localDb.words.add(
+    buildWordRow(langId, text, 1, { translation })
+  )) as number;
+  await linkWordOccurrences(id, langId, textLc);
+  return { add: translation, term_id: id, term_lc: textLc };
+}
+
+/** Create a fully-specified word from a text position. */
+export async function createFull(
+  req: TermCreateFullRequest
+): Promise<TermFullResponse> {
+  const occ = await getOccurrence(req.textId, req.position);
+  if (!occ) {
+    return { error: 'Word position not found' };
+  }
+  const fields: WordFields = {
+    translation: req.translation,
+    romanization: req.romanization,
+    sentence: req.sentence,
+    notes: req.notes,
+    lemma: req.lemma,
+  };
+  const existing = await findWord(occ.langId, occ.textLc);
+  const row = buildWordRow(occ.langId, occ.text, req.status, fields);
+  let id: number;
+  if (existing && existing.id != null) {
+    id = existing.id;
+    await localDb.words.update(id, { ...row, created: existing.created });
+  } else {
+    id = (await localDb.words.add(row)) as number;
+  }
+  await linkWordOccurrences(id, occ.langId, occ.textLc);
+  await setWordTags(id, req.tags);
+  const saved = await localDb.words.get(id);
+  return { success: true, term: termPayload(saved ?? row) };
+}
+
+/** Update a fully-specified word by id. */
+export async function updateFull(
+  termId: number,
+  req: TermUpdateFullRequest
+): Promise<TermFullResponse> {
+  const word = await localDb.words.get(termId);
+  if (!word) {
+    return { error: 'Term not found' };
+  }
+  const now = nowMs();
+  const statusChanged = req.status !== word.status ? now : word.statusChanged;
+  await localDb.words.update(termId, {
+    translation: req.translation,
+    romanization: req.romanization ?? '',
+    sentence: req.sentence ?? '',
+    notes: req.notes ?? '',
+    lemma: req.lemma ?? '',
+    lemmaLc: (req.lemma ?? '').toLowerCase(),
+    status: req.status,
+    statusChanged,
+    updatedAt: now,
+  });
+  if (req.status !== word.status) {
+    await applyStatus(termId, req.status);
+  }
+  await setWordTags(termId, req.tags);
+  const saved = await localDb.words.get(termId);
+  return { success: true, term: termPayload(saved ?? word) };
+}
+
+/** Delete a term and unlink its occurrences. */
+export async function deleteTerm(termId: number): Promise<TermDeleteResponse> {
+  const word = await localDb.words.get(termId);
+  if (!word) {
+    return { error: 'Term not found' };
+  }
+  await unlinkWordOccurrences(termId);
+  await localDb.wordTags.where('woId').equals(termId).delete();
+  await localDb.words.delete(termId);
+  return { deleted: true };
+}
+
+/** Build the edit-form payload for a (possibly new) word at a text position. */
+export async function getForEdit(
+  textId: number,
+  position: number,
+  wordId?: number
+): Promise<TermForEditResponse | { error: string }> {
+  const occ = await getOccurrence(textId, position);
+  const text = await localDb.texts.get(textId);
+  if (!text) {
+    return { error: 'Text not found' };
+  }
+  const language = await localDb.languages.get(text.langId);
+  if (!language) {
+    return { error: 'Language not found' };
+  }
+
+  let word: LocalWord | undefined;
+  if (wordId) {
+    word = await localDb.words.get(wordId);
+  } else if (occ) {
+    word = await findWord(occ.langId, occ.textLc);
+  }
+
+  const termText = word?.text ?? occ?.text ?? '';
+  const termLc = word?.textLc ?? occ?.textLc ?? '';
+
+  // Example sentence: the occurrence's sentence with the term marked as {term}.
+  let sentence = word?.sentence ?? '';
+  if (!sentence && occ) {
+    const se = await localDb.sentences.get(occ.sentenceId);
+    if (se) {
+      sentence = se.text.replace(termText, `{${termText}}`);
+    }
+  }
+
+  const allTags = (await localDb.tags.toArray()).map((t) => t.text);
+
+  return {
+    isNew: !word,
+    term: {
+      id: word?.id ?? null,
+      text: termText,
+      textLc: termLc,
+      lemma: word?.lemma ?? '',
+      lemmaLc: word?.lemmaLc ?? '',
+      hex: toClassName(termLc),
+      translation: word?.translation ?? '',
+      romanization: word?.romanization ?? '',
+      sentence,
+      notes: word?.notes ?? '',
+      status: word?.status ?? 1,
+      tags: [],
+    },
+    language: {
+      id: language.id ?? 0,
+      name: language.name,
+      showRomanization: language.showRomanization,
+      translateUri: language.translatorUri,
+    },
+    allTags,
+    similarTerms: [],
+  };
+}

@@ -8,6 +8,8 @@
  * @since   3.0.0
  */
 
+import { routeLocal } from '@shared/offline/local/router';
+
 /**
  * Standard response wrapper for all API calls.
  */
@@ -498,6 +500,10 @@ export async function apiGet<T>(
   endpoint: string,
   params?: Record<string, string | number | boolean | undefined>
 ): Promise<ApiResponse<T>> {
+  const local = await routeLocal('GET', endpoint, params);
+  if (local.handled) {
+    return local.error ? { error: local.error } : { data: local.data as T };
+  }
   try {
     const response = await apiFetch(buildUrl(endpoint, params), {
       method: 'GET',
@@ -534,6 +540,10 @@ export async function apiPost<T>(
   endpoint: string,
   body: Record<string, unknown>
 ): Promise<ApiResponse<T>> {
+  const local = await routeLocal('POST', endpoint, body);
+  if (local.handled) {
+    return local.error ? { error: local.error } : { data: local.data as T };
+  }
   try {
     const response = await apiFetch(defaultConfig.baseUrl + endpoint, {
       method: 'POST',
@@ -571,6 +581,10 @@ export async function apiPut<T>(
   endpoint: string,
   body: Record<string, unknown>
 ): Promise<ApiResponse<T>> {
+  const local = await routeLocal('PUT', endpoint, body);
+  if (local.handled) {
+    return local.error ? { error: local.error } : { data: local.data as T };
+  }
   try {
     const response = await apiFetch(defaultConfig.baseUrl + endpoint, {
       method: 'PUT',
@@ -607,6 +621,10 @@ export async function apiDelete<T>(
   endpoint: string,
   body?: Record<string, unknown>
 ): Promise<ApiResponse<T>> {
+  const local = await routeLocal('DELETE', endpoint, body);
+  if (local.handled) {
+    return local.error ? { error: local.error } : { data: local.data as T };
+  }
   try {
     const options: RequestInit = {
       method: 'DELETE',
@@ -647,6 +665,10 @@ export async function apiPostForm<T>(
   endpoint: string,
   data: Record<string, string | number | boolean>
 ): Promise<ApiResponse<T>> {
+  const local = await routeLocal('POST', endpoint, data);
+  if (local.handled) {
+    return local.error ? { error: local.error } : { data: local.data as T };
+  }
   try {
     const formData = new URLSearchParams();
     Object.entries(data).forEach(([key, value]) => {
