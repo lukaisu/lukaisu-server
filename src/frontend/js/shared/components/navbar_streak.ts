@@ -8,6 +8,7 @@
  */
 
 import Alpine from 'alpinejs';
+import { routeLocal } from '@shared/offline/local/router';
 
 interface NavbarStreakState {
   streak: number;
@@ -19,14 +20,24 @@ function navbarStreak(): NavbarStreakState {
     streak: 0,
 
     init() {
-      fetch('/api/v1/activity/streak')
-        .then(r => r.json())
-        .then((data: { current_streak?: number }) => {
+      // Local-first mode computes the streak from the on-device DB (no server);
+      // otherwise fall back to the original network fetch.
+      void (async () => {
+        const local = await routeLocal('GET', '/activity/streak', undefined);
+        if (local.handled) {
+          if (!local.error && local.data && typeof local.data === 'object') {
+            this.streak = (local.data as { current_streak?: number }).current_streak ?? 0;
+          }
+          return;
+        }
+        try {
+          const response = await fetch('/api/v1/activity/streak');
+          const data = (await response.json()) as { current_streak?: number };
           this.streak = data.current_streak ?? 0;
-        })
-        .catch(() => {
-          // Silently ignore — streak is non-critical
-        });
+        } catch {
+          // Silently ignore — streak is non-critical.
+        }
+      })();
     },
   };
 }

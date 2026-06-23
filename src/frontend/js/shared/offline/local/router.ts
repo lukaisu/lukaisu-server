@@ -64,6 +64,7 @@ import { getNavbarData } from './repositories/navbar';
 import { getSentencesWithTerm } from './repositories/sentences';
 import { setSetting, setCurrentLanguageId } from './repositories/settings';
 import { getAllTags, getAllTermTags, getAllTextTags } from './repositories/tags';
+import { getStreak } from './repositories/activity';
 import { getI18nBundle } from './i18n';
 import type {
   LanguageCreateRequest,
@@ -211,6 +212,9 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   }
   if (path === '/tags/text') {
     return wrap(await getAllTextTags());
+  }
+  if (path === '/activity/streak') {
+    return wrap(await getStreak());
   }
   if (path === '/review/config') {
     return wrap(

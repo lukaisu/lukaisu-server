@@ -11,6 +11,7 @@ export * as terms from './terms';
 export * as review from './review';
 export * as words from './words';
 export * as tags from './tags';
+export * as activity from './activity';
 export { getNavbarData } from './navbar';
 export { getSentencesWithTerm } from './sentences';
 export {
