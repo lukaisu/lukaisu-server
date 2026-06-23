@@ -66,9 +66,6 @@ import { setSetting, setCurrentLanguageId } from './repositories/settings';
 import { getAllTags, getAllTermTags, getAllTextTags } from './repositories/tags';
 import { getI18nBundle } from './i18n';
 import type {
-  TextCreateRequest,
-} from '@modules/text/api/texts_api';
-import type {
   LanguageCreateRequest,
 } from '@modules/language/api/languages_api';
 import type {
@@ -279,7 +276,21 @@ async function routePost(path: string, p: Record<string, unknown>): Promise<Loca
     };
   }
   if (path === '/texts') {
-    return wrap(await createText(p as unknown as TextCreateRequest));
+    // TextsApi.create posts the server contract's snake_case body
+    // (language_id / source_uri / audio_uri); accept that and the camelCase
+    // TextCreateRequest shape so both callers work on-device.
+    const sourceUri = p.source_uri ?? p.sourceUri;
+    const audioUri = p.audio_uri ?? p.audioUri;
+    return wrap(
+      await createText({
+        title: str(p.title),
+        langId: num(p.language_id ?? p.langId),
+        text: str(p.text),
+        sourceUri: sourceUri != null ? str(sourceUri) : undefined,
+        audioUri: audioUri != null ? str(audioUri) : undefined,
+        tags: Array.isArray(p.tags) ? (p.tags as string[]) : undefined,
+      })
+    );
   }
   if (path === '/terms') {
     return wrap(

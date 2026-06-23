@@ -71,4 +71,33 @@ describe('offline milestone — bundled app, no server', () => {
       cy.writeFile('cypress/app-e2e/.last-run-api-attempts.txt', summary);
     });
   });
+
+  it('creates a language and pastes a text with no server', () => {
+    cy.clearLocalStorage();
+    // Unique name so the spec is re-runnable against a persisted IndexedDB.
+    const langName = `E2E ${Date.now()}`;
+
+    // Add a language from a preset (server form does a native POST; this one
+    // drives the API client into IndexedDB). English so the Latin sample below
+    // parses into words; rename it uniquely so the spec re-runs cleanly.
+    cy.visit('/language.html');
+    cy.get('#nl-preset', { timeout: 20000 }).should('exist').select('English');
+    cy.get('#nl-name').clear().type(langName);
+    cy.get('#nl-submit').click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+
+    // Paste a text in that language.
+    cy.visit('/text.html');
+    cy.get('#nt-lang', { timeout: 20000 }).find('option').should('have.length.greaterThan', 0);
+    cy.get('#nt-lang').select(langName);
+    cy.get('#nt-title').type('My pasted text');
+    cy.get('#nt-text').type('The quick brown fox jumps over the lazy dog.');
+    cy.get('#nt-submit').click();
+
+    // Lands in the reader with the pasted (not seeded) text parsed + highlighted.
+    cy.location('pathname', { timeout: 20000 }).should('include', 'read.html');
+    cy.get('.word.status0', { timeout: 20000 }).its('length').should('be.greaterThan', 0);
+    cy.contains('.word', 'quick').should('exist');
+    cy.screenshot('04-pasted-text', { capture: 'viewport' });
+  });
 });

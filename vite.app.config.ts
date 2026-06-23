@@ -95,7 +95,9 @@ export default defineConfig({
         index: resolve(__dirname, 'src/frontend/app/index.html'),
         library: resolve(__dirname, 'src/frontend/app/library.html'),
         read: resolve(__dirname, 'src/frontend/app/read.html'),
-        review: resolve(__dirname, 'src/frontend/app/review.html')
+        review: resolve(__dirname, 'src/frontend/app/review.html'),
+        language: resolve(__dirname, 'src/frontend/app/language.html'),
+        text: resolve(__dirname, 'src/frontend/app/text.html')
       }
     }
   }

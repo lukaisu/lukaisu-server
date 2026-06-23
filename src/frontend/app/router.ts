@@ -34,6 +34,12 @@ export const pageUrl = {
   review(params: URLSearchParams): string {
     const query = params.toString();
     return query ? `review.html?${query}` : 'review.html';
+  },
+  newLanguage(): string {
+    return 'language.html';
+  },
+  newText(): string {
+    return 'text.html';
   }
 };
 
@@ -50,6 +56,15 @@ export function bundledPageFor(path: string): string | null {
   }
   if (pathname === '/connect') {
     return pageUrl.connect();
+  }
+  // Create surfaces: the navbar "+" and library "new text" links point here.
+  // The server-rendered forms can't run offline, so route to the bundled
+  // API-client forms instead.
+  if (pathname === '/languages/new') {
+    return pageUrl.newLanguage();
+  }
+  if (pathname === '/texts/new') {
+    return pageUrl.newText();
   }
   // /text/{id}/read
   const readMatch = pathname.match(/^\/text\/(\d+)\/read$/);
