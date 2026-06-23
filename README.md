@@ -38,6 +38,19 @@ pre-enriched from [Wiktionary](https://www.wiktionary.org/).
 > Lukaisu Server exists as the dedicated server for the Lukaisu app; see
 > [NOTICE](NOTICE) for full attribution.
 
+> [!IMPORTANT]
+> **Local-first direction.** Lukaisu Server is being reshaped into an
+> **optional, Python-first server**. The goal: the
+> [Lukaisu app](https://github.com/lukaisu/lukaisu) works fully offline with
+> **no server** — create a language, import a text, read with word-status
+> highlighting, save words, and review — all on-device. When a server *is*
+> connected, an optional **Python edge service** (`services/nlp/`) does only the
+> work a phone can't: CJK tokenization, lemmatization, TTS, transcription, and
+> outbound content fetches (Project Gutenberg, GDL, Internet Archive, RSS,
+> web/EPUB/YouTube). The PHP backend documented below remains runnable as the
+> legacy full-stack server during the transition.
+> See [docs-src/server/local-first.md](docs-src/server/local-first.md).
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
@@ -166,6 +179,7 @@ Documentation sources live in [`docs-src/`](docs-src/):
 
 - **[User Guide](docs-src/guide/getting-started.md)** — Getting started and usage
 - **[Developer Docs](docs-src/developer/)** — Architecture and contribution guide
+- **[Server (Local-First)](docs-src/server/local-first.md)** — The optional Python edge service, its [HTTP contract](docs-src/server/http-contract.md), and the sync/auth design
 - **[CLAUDE.md](CLAUDE.md)** — Architecture overview and common commands
 
 ## Contributing

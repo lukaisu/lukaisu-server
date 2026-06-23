@@ -15,7 +15,9 @@ export default defineConfig({
   ignoreDeadLinks: [
     /^http:\/\/localhost/,
     /CHANGELOG$/,
-    /^\/api\//
+    /^\/api\//,
+    // Server docs link to source files outside the docs root (the Python edge).
+    /services\/nlp/
   ],
 
   head: [
@@ -41,10 +43,22 @@ export default defineConfig({
       },
       { text: 'Reference', link: '/reference/features' },
       { text: 'Developer', link: '/developer/api' },
+      { text: 'Server', link: '/server/local-first' },
       { text: 'Changelog', link: '/changelog' }
     ],
 
     sidebar: {
+      '/server/': [
+        {
+          text: 'Server (Local-First)',
+          items: [
+            { text: 'Local-First Migration', link: '/server/local-first' },
+            { text: 'Edge HTTP Contract', link: '/server/http-contract' },
+            { text: 'Sync Contract (design)', link: '/server/sync-contract' },
+            { text: 'Auth (design note)', link: '/server/auth' }
+          ]
+        }
+      ],
       '/guide/': [
         {
           text: 'Getting Started',

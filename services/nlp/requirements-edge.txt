@@ -1,0 +1,20 @@
+# Minimal "outbound edge only" dependency set.
+#
+# Installs the web framework + the network integrations (content discovery,
+# RSS, web/EPUB/YouTube extraction) WITHOUT the heavy NLP stack (spaCy,
+# Whisper, Piper, MeCab). Use this to run a light server that only does the
+# outbound work a phone can't do, while CJK parsing falls back to the
+# on-device character parser. Build with `--build-arg EDGE_ONLY=1`.
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+httpx>=0.27.0
+python-multipart>=0.0.6
+
+feedparser>=6.0.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+trafilatura>=1.8.0
+ebooklib>=0.18
+youtube-transcript-api>=0.6.2
