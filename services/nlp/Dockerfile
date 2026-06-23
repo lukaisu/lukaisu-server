@@ -28,6 +28,14 @@ RUN if [ -n "$EDGE_ONLY" ]; then \
 
 COPY app/ ./app/
 
+# The Debian mecab package installs its config at /etc/mecabrc, but
+# mecab-python3's Tagger() defaults to /usr/local/etc/mecabrc and dies with
+# "[ifs] no such file or directory: /usr/local/etc/mecabrc" if it's missing.
+# Point it at the real path. (Unused in EDGE_ONLY builds — MeCab isn't installed
+# and the parse router never mounts — so setting it unconditionally is harmless.)
+# Placed after the pip layer so editing it never busts the heavy NLP install cache.
+ENV MECABRC=/etc/mecabrc
+
 # Create voices directory
 RUN mkdir -p /app/voices
 
