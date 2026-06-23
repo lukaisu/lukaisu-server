@@ -29,6 +29,8 @@ import {
   getTextWords,
   createText,
   getStatistics,
+  getTextsByLanguage,
+  getArchivedTextsByLanguage,
   bulkAction as textBulkAction,
   markAllWellKnown,
   markAllIgnored,
@@ -155,6 +157,23 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   m = path.match(/^\/texts\/(\d+)\/words$/);
   if (m) {
     return wrap(await getTextWords(num(m[1])));
+  }
+  m = path.match(/^\/texts\/by-language\/(\d+)$/);
+  if (m) {
+    return wrap(
+      await getTextsByLanguage(num(m[1]), num(p.page) || 1, num(p.per_page) || 10, num(p.sort) || 1)
+    );
+  }
+  m = path.match(/^\/texts\/archived-by-language\/(\d+)$/);
+  if (m) {
+    return wrap(
+      await getArchivedTextsByLanguage(
+        num(m[1]),
+        num(p.page) || 1,
+        num(p.per_page) || 10,
+        num(p.sort) || 1
+      )
+    );
   }
   if (path === '/texts/statistics') {
     const ids = str(p.text_ids)

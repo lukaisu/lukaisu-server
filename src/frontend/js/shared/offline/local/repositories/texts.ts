@@ -6,7 +6,7 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import { localDb, type LocalLanguage, type LocalWord } from '../schema';
+import { localDb, type LocalLanguage, type LocalText, type LocalWord } from '../schema';
 import { parseText } from '../parser';
 import {
   buildStructures,
@@ -223,6 +223,105 @@ export async function getStatistics(
     },
     statusBreakdown,
   };
+}
+
+/** A library list item (mirrors `texts_grouped_app`'s `TextItem`). */
+export interface LibraryTextItem {
+  id: number;
+  title: string;
+  has_audio: boolean;
+  source_uri: string;
+  has_source: boolean;
+  annotated: boolean;
+  taglist: string;
+}
+
+/** Paginated text list, matching the `/texts/by-language` response shape. */
+export interface TextsByLanguageResult {
+  texts: LibraryTextItem[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    total_pages: number;
+  };
+}
+
+/** Order texts like the server's sort map `['TxTitle','TxID desc','TxID asc']`. */
+function sortTexts(texts: LocalText[], sort: number): LocalText[] {
+  const arr = [...texts];
+  switch (sort) {
+    case 2: // newest first (TxID desc)
+      return arr.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+    case 3: // oldest first (TxID asc)
+      return arr.sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
+    case 1:
+    default: // title A–Z (TxTitle)
+      return arr.sort((a, b) => a.title.localeCompare(b.title));
+  }
+}
+
+/** Page through a language's active or archived texts for the library list. */
+async function listTextsByLanguage(
+  langId: number,
+  page: number,
+  perPage: number,
+  sort: number,
+  archived: boolean
+): Promise<TextsByLanguageResult> {
+  const all = await localDb.texts
+    .where('langId')
+    .equals(langId)
+    .and(
+      (t) => t.deletedAt == null && (archived ? t.archivedAt != null : t.archivedAt == null)
+    )
+    .toArray();
+
+  const sorted = sortTexts(all, sort);
+  const total = sorted.length;
+  const perPageClamped = Math.max(1, Math.min(100, perPage || 10));
+  const totalPages = Math.max(1, Math.ceil(total / perPageClamped));
+  const currentPage = Math.max(1, Math.min(page || 1, totalPages));
+  const start = (currentPage - 1) * perPageClamped;
+
+  return {
+    texts: sorted.slice(start, start + perPageClamped).map((t) => ({
+      id: t.id ?? 0,
+      title: t.title,
+      has_audio: !!(t.audioUri && t.audioUri !== ''),
+      source_uri: t.sourceUri ?? '',
+      has_source: !!(t.sourceUri && t.sourceUri !== ''),
+      // Annotated texts and text tags are not modelled locally yet.
+      annotated: false,
+      taglist: '',
+    })),
+    pagination: {
+      current_page: currentPage,
+      per_page: perPageClamped,
+      total,
+      total_pages: totalPages,
+    },
+  };
+}
+
+/** Active texts for a language (the library landing list). */
+export function getTextsByLanguage(
+  langId: number,
+  page: number,
+  perPage: number,
+  sort: number
+): Promise<TextsByLanguageResult> {
+  return listTextsByLanguage(langId, page, perPage, sort, false);
+}
+
+/** Archived texts for a language. */
+export function getArchivedTextsByLanguage(
+  langId: number,
+  page: number,
+  perPage: number,
+  sort: number
+): Promise<TextsByLanguageResult> {
+  return listTextsByLanguage(langId, page, perPage, sort, true);
 }
 
 /** Archive or delete a set of texts (soft-delete / tombstone). */

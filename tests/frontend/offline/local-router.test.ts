@@ -65,6 +65,25 @@ describe('local-first seam', () => {
     expect(updated.status).toBe(99);
   });
 
+  it('lists a language’s texts through TextsApi-style /texts/by-language', async () => {
+    setLocalFirst(true);
+    await seedIfNeeded();
+    const text = await localDb.texts.toCollection().first();
+    const langId = text!.langId;
+
+    // The library page calls this endpoint directly via apiGet; without a local
+    // route it falls through to the network and the list spins forever.
+    const res = await apiGet<{
+      texts: Array<{ id: number; title: string }>;
+      pagination: { current_page: number; total: number; total_pages: number };
+    }>(`/texts/by-language/${langId}`, { page: 1, per_page: 10, sort: 1 });
+
+    expect(res.error).toBeUndefined();
+    expect(res.data?.texts.length ?? 0).toBeGreaterThan(0);
+    expect(res.data?.pagination.total ?? 0).toBeGreaterThan(0);
+    expect(res.data?.pagination.current_page).toBe(1);
+  });
+
   it('serves the global navbar chrome from the local DB', async () => {
     setLocalFirst(true);
     await seedIfNeeded();
