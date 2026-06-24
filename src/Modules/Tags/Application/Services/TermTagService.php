@@ -97,7 +97,7 @@ class TermTagService
     public static function saveWordTagsFromArray(int $wordId, array $tagNames): void
     {
         // Delegate to the user-scoped association. The previous raw-SQL path
-        // inserted into `tags` without TgUsID and linked by `TgText` lookup,
+        // inserted into `tags` without user_id and linked by `text` lookup,
         // which silently picked up other users' tags with the same name.
         self::saveWordTags($wordId, $tagNames);
     }
@@ -250,15 +250,15 @@ class TermTagService
         $inClause = Connection::buildPreparedInClause($ids, $bindings);
         $sql = 'SELECT id
             FROM words
-            LEFT JOIN word_tag_map ON id = WtWoID AND WtTgID = ?
-            WHERE WtTgID IS NULL AND id IN ' . $inClause
+            LEFT JOIN word_tag_map ON id = word_id AND tag_id = ?
+            WHERE tag_id IS NULL AND id IN ' . $inClause
             . UserScopedQuery::forTablePrepared('words', $bindings, 'words');
         $rows = Connection::preparedFetchAll($sql, $bindings);
 
         $count = 0;
         foreach ($rows as $record) {
             Connection::preparedExecute(
-                'INSERT IGNORE INTO word_tag_map (WtWoID, WtTgID) VALUES(?, ?)',
+                'INSERT IGNORE INTO word_tag_map (word_id, tag_id) VALUES(?, ?)',
                 [(int)$record['id'], $tagId]
             );
             $count++;
@@ -285,9 +285,9 @@ class TermTagService
         $userScope = UserScopedQuery::forTablePrepared('tags', $bindings);
         /** @var int|string|null $tagIdRaw */
         $tagIdRaw = Connection::preparedFetchValue(
-            'SELECT TgID FROM tags WHERE TgText = ?' . $userScope,
+            'SELECT id FROM tags WHERE text = ?' . $userScope,
             $bindings,
-            'TgID'
+            'id'
         );
 
         if ($tagIdRaw === null) {
@@ -305,8 +305,8 @@ class TermTagService
         foreach ($rows as $record) {
             $count++;
             QueryBuilder::table('word_tag_map')
-                ->where('WtWoID', '=', (int)$record['id'])
-                ->where('WtTgID', '=', $tagId)
+                ->where('word_id', '=', (int)$record['id'])
+                ->where('tag_id', '=', $tagId)
                 ->delete();
         }
 
@@ -336,30 +336,30 @@ class TermTagService
 
         if ($langId === '') {
             $bindings = [];
-            $sql = "SELECT TgID, TgText
+            $sql = "SELECT tags.id, tags.text
                 FROM words, tags, word_tag_map
-                WHERE TgID = WtTgID AND WtWoID = id"
+                WHERE tags.id = tag_id AND word_id = words.id"
                 . UserScopedQuery::forTablePrepared('words', $bindings)
                 . UserScopedQuery::forTablePrepared('tags', $bindings)
-                . " GROUP BY TgID
-                ORDER BY UPPER(TgText)";
+                . " GROUP BY tags.id
+                ORDER BY UPPER(tags.text)";
         } else {
             $bindings = [$langId];
-            $sql = "SELECT TgID, TgText
+            $sql = "SELECT tags.id, tags.text
                 FROM words, tags, word_tag_map
-                WHERE TgID = WtTgID AND WtWoID = id AND language_id = ?"
+                WHERE tags.id = tag_id AND word_id = words.id AND language_id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings)
                 . UserScopedQuery::forTablePrepared('tags', $bindings)
-                . " GROUP BY TgID
-                ORDER BY UPPER(TgText)";
+                . " GROUP BY tags.id
+                ORDER BY UPPER(tags.text)";
         }
         $rows = Connection::preparedFetchAll($sql, $bindings);
 
         $count = 0;
         foreach ($rows as $record) {
             $count++;
-            $tagId = (int) $record['TgID'];
-            $tagText = (string) ($record['TgText'] ?? '');
+            $tagId = (int) $record['id'];
+            $tagText = (string) ($record['text'] ?? '');
             $html .= '<option value="' . $tagId . '"' .
                 FormHelper::getSelected($selected, $tagId) . '>' .
                 htmlspecialchars($tagText, ENT_QUOTES, 'UTF-8') . '</option>';
@@ -386,27 +386,27 @@ class TermTagService
      */
     public static function getOrCreateTermTag(string $tagText): ?int
     {
-        // Look up by user scope so we never reuse another user's TgID — that
+        // Look up by user scope so we never reuse another user's id — that
         // would attach foreign tags to the caller's words and pollute the
         // foreign user's tag-to-word membership.
         $bindings = [$tagText];
         $userScope = UserScopedQuery::forTablePrepared('tags', $bindings);
         /** @var int|string|null $tagIdRaw */
         $tagIdRaw = Connection::preparedFetchValue(
-            'SELECT TgID FROM tags WHERE TgText = ?' . $userScope,
+            'SELECT id FROM tags WHERE text = ?' . $userScope,
             $bindings,
-            'TgID'
+            'id'
         );
 
         if ($tagIdRaw === null) {
-            QueryBuilder::table('tags')->insertPrepared(['TgText' => $tagText]);
+            QueryBuilder::table('tags')->insertPrepared(['text' => $tagText]);
             $bindings = [$tagText];
             $userScope = UserScopedQuery::forTablePrepared('tags', $bindings);
             /** @var int|string|null $tagIdRaw */
             $tagIdRaw = Connection::preparedFetchValue(
-                'SELECT TgID FROM tags WHERE TgText = ?' . $userScope,
+                'SELECT id FROM tags WHERE text = ?' . $userScope,
                 $bindings,
-                'TgID'
+                'id'
             );
         }
 

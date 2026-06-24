@@ -216,13 +216,13 @@ class BuildTextFiltersTest extends TestCase
     public function testBuildTextTagHavingClauseDelegates(): void
     {
         $result = $this->filters->buildTextTagHavingClause('5', '', '');
-        $this->assertStringContainsString('TtT2ID', $result);
+        $this->assertStringContainsString('text_tag_id', $result);
     }
 
     public function testBuildArchivedTagHavingClauseDelegates(): void
     {
         $result = $this->filters->buildArchivedTagHavingClause('5', '', '');
-        $this->assertStringContainsString('TtT2ID', $result);
+        $this->assertStringContainsString('text_tag_id', $result);
     }
 
     // =========================================================================

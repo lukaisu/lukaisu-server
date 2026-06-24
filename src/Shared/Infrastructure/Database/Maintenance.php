@@ -65,8 +65,8 @@ class Maintenance
         self::adjustAutoIncrement('sentences', 'SeID');
         self::adjustAutoIncrement('texts', 'TxID');
         self::adjustAutoIncrement('words', 'id');
-        self::adjustAutoIncrement('tags', 'TgID');
-        self::adjustAutoIncrement('text_tags', 'T2ID');
+        self::adjustAutoIncrement('tags', 'id');
+        self::adjustAutoIncrement('text_tags', 'id');
         self::adjustAutoIncrement('news_feeds', 'id');
         self::adjustAutoIncrement('feed_links', 'id');
         // SHOW TABLE STATUS queries physical table names, not logical table names

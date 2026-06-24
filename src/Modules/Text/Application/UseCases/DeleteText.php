@@ -164,7 +164,7 @@ class DeleteText
             "DELETE text_tag_map
             FROM (
                 text_tag_map
-                LEFT JOIN texts ON TtTxID = TxID
+                LEFT JOIN texts ON text_id = TxID
             )
             WHERE TxID IS NULL"
             . UserScopedQuery::forTablePrepared('text_tag_map', $bindings, '', 'texts'),

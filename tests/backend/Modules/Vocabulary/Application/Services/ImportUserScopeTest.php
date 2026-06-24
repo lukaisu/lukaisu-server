@@ -104,8 +104,8 @@ class ImportUserScopeTest extends TestCase
         $this->assertStringContainsString(
             "UserScopedQuery::insertColumn('tags')",
             $source,
-            'handleTagsImport must stamp TgUsID on the INSERT IGNORE INTO'
-            . ' tags. Pre-fix the new tags landed with TgUsID NULL and'
+            'handleTagsImport must stamp user_id on the INSERT IGNORE INTO'
+            . ' tags. Pre-fix the new tags landed with user_id NULL and'
             . ' never appeared on the user\'s tag page.'
         );
         $this->assertStringContainsString(
@@ -151,8 +151,8 @@ class ImportUserScopeTest extends TestCase
         $this->assertStringContainsString(
             "UserScopedQuery::insertColumn('tags')",
             $source,
-            'importTagsOnly must stamp TgUsID on the INSERT IGNORE INTO'
-            . ' tags. Pre-fix the new tags landed with TgUsID NULL.'
+            'importTagsOnly must stamp user_id on the INSERT IGNORE INTO'
+            . ' tags. Pre-fix the new tags landed with user_id NULL.'
         );
         $this->assertStringContainsString(
             "UserScopedQuery::insertValue('tags')",

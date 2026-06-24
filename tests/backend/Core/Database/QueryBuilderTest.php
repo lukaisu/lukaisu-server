@@ -40,7 +40,7 @@ class QueryBuilderTest extends TestCase
 
         // Clean up test data
         $prefix = '';
-        Connection::query("DELETE FROM {$prefix}tags WHERE TgText LIKE 'test_qb_%'");
+        Connection::query("DELETE FROM {$prefix}tags WHERE text LIKE 'test_qb_%'");
         Connection::query("DELETE FROM {$prefix}settings WHERE StKey LIKE 'test_qb_%'");
     }
 
@@ -73,99 +73,99 @@ class QueryBuilderTest extends TestCase
 
     public function testSelectWithSingleColumn(): void
     {
-        $sql = QueryBuilder::table('tags')->select('TgText')->toSql();
-        $this->assertStringContainsString('SELECT TgText', $sql);
+        $sql = QueryBuilder::table('tags')->select('text')->toSql();
+        $this->assertStringContainsString('SELECT text', $sql);
     }
 
     public function testSelectWithMultipleColumns(): void
     {
-        $sql = QueryBuilder::table('tags')->select(['TgID', 'TgText'])->toSql();
-        $this->assertStringContainsString('SELECT TgID, TgText', $sql);
+        $sql = QueryBuilder::table('tags')->select(['id', 'text'])->toSql();
+        $this->assertStringContainsString('SELECT id, text', $sql);
     }
 
     // ===== distinct() tests =====
 
     public function testDistinct(): void
     {
-        $sql = QueryBuilder::table('tags')->select('TgText')->distinct()->toSql();
-        $this->assertStringContainsString('SELECT DISTINCT TgText', $sql);
+        $sql = QueryBuilder::table('tags')->select('text')->distinct()->toSql();
+        $this->assertStringContainsString('SELECT DISTINCT text', $sql);
     }
 
     // ===== where() tests =====
 
     public function testWhereWithEquality(): void
     {
-        $sql = QueryBuilder::table('tags')->where('TgID', '=', 1)->toSql();
-        $this->assertStringContainsString("WHERE TgID = 1", $sql);
+        $sql = QueryBuilder::table('tags')->where('id', '=', 1)->toSql();
+        $this->assertStringContainsString("WHERE id = 1", $sql);
     }
 
     public function testWhereWithImplicitEquality(): void
     {
-        $sql = QueryBuilder::table('tags')->where('TgID', 1)->toSql();
-        $this->assertStringContainsString("WHERE TgID = 1", $sql);
+        $sql = QueryBuilder::table('tags')->where('id', 1)->toSql();
+        $this->assertStringContainsString("WHERE id = 1", $sql);
     }
 
     public function testWhereWithNotEquals(): void
     {
-        $sql = QueryBuilder::table('tags')->where('TgID', '!=', 1)->toSql();
-        $this->assertStringContainsString("WHERE TgID != 1", $sql);
+        $sql = QueryBuilder::table('tags')->where('id', '!=', 1)->toSql();
+        $this->assertStringContainsString("WHERE id != 1", $sql);
     }
 
     public function testWhereWithGreaterThan(): void
     {
-        $sql = QueryBuilder::table('tags')->where('TgID', '>', 5)->toSql();
-        $this->assertStringContainsString("WHERE TgID > 5", $sql);
+        $sql = QueryBuilder::table('tags')->where('id', '>', 5)->toSql();
+        $this->assertStringContainsString("WHERE id > 5", $sql);
     }
 
     public function testWhereWithLessThan(): void
     {
-        $sql = QueryBuilder::table('tags')->where('TgID', '<', 10)->toSql();
-        $this->assertStringContainsString("WHERE TgID < 10", $sql);
+        $sql = QueryBuilder::table('tags')->where('id', '<', 10)->toSql();
+        $this->assertStringContainsString("WHERE id < 10", $sql);
     }
 
     public function testWhereWithLike(): void
     {
-        $sql = QueryBuilder::table('tags')->where('TgText', 'LIKE', 'test%')->toSql();
-        $this->assertStringContainsString("WHERE TgText LIKE 'test%'", $sql);
+        $sql = QueryBuilder::table('tags')->where('text', 'LIKE', 'test%')->toSql();
+        $this->assertStringContainsString("WHERE text LIKE 'test%'", $sql);
     }
 
     public function testMultipleWheres(): void
     {
         $sql = QueryBuilder::table('tags')
-            ->where('TgID', '>', 1)
-            ->where('TgText', 'LIKE', 'test%')
+            ->where('id', '>', 1)
+            ->where('text', 'LIKE', 'test%')
             ->toSql();
 
-        $this->assertStringContainsString("WHERE TgID > 1 AND TgText LIKE 'test%'", $sql);
+        $this->assertStringContainsString("WHERE id > 1 AND text LIKE 'test%'", $sql);
     }
 
     public function testWhereWithBooleanTrue(): void
     {
 
-        $sql = QueryBuilder::table('tags')->where('TgID', '=', true)->toSql();
-        $this->assertStringContainsString("WHERE TgID = 1", $sql);
+        $sql = QueryBuilder::table('tags')->where('id', '=', true)->toSql();
+        $this->assertStringContainsString("WHERE id = 1", $sql);
     }
 
     public function testWhereWithBooleanFalse(): void
     {
 
-        $sql = QueryBuilder::table('tags')->where('TgID', '=', false)->toSql();
-        $this->assertStringContainsString("WHERE TgID = 0", $sql);
+        $sql = QueryBuilder::table('tags')->where('id', '=', false)->toSql();
+        $this->assertStringContainsString("WHERE id = 0", $sql);
     }
 
     public function testWhereWithFloat(): void
     {
 
-        $sql = QueryBuilder::table('tags')->where('TgID', '>', 3.14)->toSql();
-        $this->assertStringContainsString("WHERE TgID > 3.14", $sql);
+        $sql = QueryBuilder::table('tags')->where('id', '>', 3.14)->toSql();
+        $this->assertStringContainsString("WHERE id > 3.14", $sql);
     }
 
     public function testWhereWithNull(): void
     {
 
         // When using null with =, it should produce IS NULL
-        $sql = QueryBuilder::table('tags')->whereNull('TgComment')->toSql();
-        $this->assertStringContainsString("WHERE TgComment IS NULL", $sql);
+        $sql = QueryBuilder::table('tags')->whereNull('comment')->toSql();
+        $this->assertStringContainsString("WHERE comment IS NULL", $sql);
     }
 
     // ===== orWhere() tests =====
@@ -173,47 +173,47 @@ class QueryBuilderTest extends TestCase
     public function testOrWhere(): void
     {
         $sql = QueryBuilder::table('tags')
-            ->where('TgID', 1)
-            ->orWhere('TgID', 2)
+            ->where('id', 1)
+            ->orWhere('id', 2)
             ->toSql();
 
-        $this->assertStringContainsString("WHERE TgID = 1 OR TgID = 2", $sql);
+        $this->assertStringContainsString("WHERE id = 1 OR id = 2", $sql);
     }
 
     // ===== whereIn() tests =====
 
     public function testWhereIn(): void
     {
-        $sql = QueryBuilder::table('tags')->whereIn('TgID', [1, 2, 3])->toSql();
-        $this->assertStringContainsString("WHERE TgID IN (1, 2, 3)", $sql);
+        $sql = QueryBuilder::table('tags')->whereIn('id', [1, 2, 3])->toSql();
+        $this->assertStringContainsString("WHERE id IN (1, 2, 3)", $sql);
     }
 
     public function testWhereNotIn(): void
     {
-        $sql = QueryBuilder::table('tags')->whereNotIn('TgID', [1, 2])->toSql();
-        $this->assertStringContainsString("WHERE TgID NOT IN (1, 2)", $sql);
+        $sql = QueryBuilder::table('tags')->whereNotIn('id', [1, 2])->toSql();
+        $this->assertStringContainsString("WHERE id NOT IN (1, 2)", $sql);
     }
 
     // ===== whereNull() tests =====
 
     public function testWhereNull(): void
     {
-        $sql = QueryBuilder::table('tags')->whereNull('TgComment')->toSql();
-        $this->assertStringContainsString("WHERE TgComment IS NULL", $sql);
+        $sql = QueryBuilder::table('tags')->whereNull('comment')->toSql();
+        $this->assertStringContainsString("WHERE comment IS NULL", $sql);
     }
 
     public function testWhereNotNull(): void
     {
-        $sql = QueryBuilder::table('tags')->whereNotNull('TgComment')->toSql();
-        $this->assertStringContainsString("WHERE TgComment IS NOT NULL", $sql);
+        $sql = QueryBuilder::table('tags')->whereNotNull('comment')->toSql();
+        $this->assertStringContainsString("WHERE comment IS NOT NULL", $sql);
     }
 
     // ===== whereRaw() tests =====
 
     public function testWhereRaw(): void
     {
-        $sql = QueryBuilder::table('tags')->whereRaw("TgID > 5 AND TgText != ''")->toSql();
-        $this->assertStringContainsString("WHERE TgID > 5 AND TgText != ''", $sql);
+        $sql = QueryBuilder::table('tags')->whereRaw("id > 5 AND text != ''")->toSql();
+        $this->assertStringContainsString("WHERE id > 5 AND text != ''", $sql);
     }
 
     // ===== join() tests =====
@@ -222,29 +222,29 @@ class QueryBuilderTest extends TestCase
     {
         $prefix = '';
         $sql = QueryBuilder::table('tags')
-            ->join('word_tag_map', 'tags.TgID', '=', 'word_tag_map.WtTgID')
+            ->join('word_tag_map', 'tags.id', '=', 'word_tag_map.tag_id')
             ->toSql();
 
         $this->assertStringContainsString("INNER JOIN {$prefix}word_tag_map", $sql);
-        $this->assertStringContainsString("ON tags.TgID = word_tag_map.WtTgID", $sql);
+        $this->assertStringContainsString("ON tags.id = word_tag_map.tag_id", $sql);
     }
 
     public function testJoinWithImplicitEquality(): void
     {
         $prefix = '';
         $sql = QueryBuilder::table('tags')
-            ->join('word_tag_map', 'tags.TgID', 'word_tag_map.WtTgID')
+            ->join('word_tag_map', 'tags.id', 'word_tag_map.tag_id')
             ->toSql();
 
         $this->assertStringContainsString("INNER JOIN {$prefix}word_tag_map", $sql);
-        $this->assertStringContainsString("ON tags.TgID = word_tag_map.WtTgID", $sql);
+        $this->assertStringContainsString("ON tags.id = word_tag_map.tag_id", $sql);
     }
 
     public function testLeftJoin(): void
     {
         $prefix = '';
         $sql = QueryBuilder::table('tags')
-            ->leftJoin('word_tag_map', 'tags.TgID', 'word_tag_map.WtTgID')
+            ->leftJoin('word_tag_map', 'tags.id', 'word_tag_map.tag_id')
             ->toSql();
 
         $this->assertStringContainsString("LEFT JOIN {$prefix}word_tag_map", $sql);
@@ -254,7 +254,7 @@ class QueryBuilderTest extends TestCase
     {
         $prefix = '';
         $sql = QueryBuilder::table('tags')
-            ->rightJoin('word_tag_map', 'tags.TgID', 'word_tag_map.WtTgID')
+            ->rightJoin('word_tag_map', 'tags.id', 'word_tag_map.tag_id')
             ->toSql();
 
         $this->assertStringContainsString("RIGHT JOIN {$prefix}word_tag_map", $sql);
@@ -264,55 +264,55 @@ class QueryBuilderTest extends TestCase
     {
         $prefix = '';
         $sql = QueryBuilder::table('tags')
-            ->join('word_tag_map', 'tags.TgID', '!=', 'word_tag_map.WtTgID')
+            ->join('word_tag_map', 'tags.id', '!=', 'word_tag_map.tag_id')
             ->toSql();
 
         $this->assertStringContainsString("INNER JOIN {$prefix}word_tag_map", $sql);
-        $this->assertStringContainsString("ON tags.TgID != word_tag_map.WtTgID", $sql);
+        $this->assertStringContainsString("ON tags.id != word_tag_map.tag_id", $sql);
     }
 
     // ===== orderBy() tests =====
 
     public function testOrderByAscending(): void
     {
-        $sql = QueryBuilder::table('tags')->orderBy('TgText')->toSql();
-        $this->assertStringContainsString("ORDER BY TgText ASC", $sql);
+        $sql = QueryBuilder::table('tags')->orderBy('text')->toSql();
+        $this->assertStringContainsString("ORDER BY text ASC", $sql);
     }
 
     public function testOrderByDescending(): void
     {
-        $sql = QueryBuilder::table('tags')->orderBy('TgText', 'DESC')->toSql();
-        $this->assertStringContainsString("ORDER BY TgText DESC", $sql);
+        $sql = QueryBuilder::table('tags')->orderBy('text', 'DESC')->toSql();
+        $this->assertStringContainsString("ORDER BY text DESC", $sql);
     }
 
     public function testOrderByDesc(): void
     {
-        $sql = QueryBuilder::table('tags')->orderByDesc('TgText')->toSql();
-        $this->assertStringContainsString("ORDER BY TgText DESC", $sql);
+        $sql = QueryBuilder::table('tags')->orderByDesc('text')->toSql();
+        $this->assertStringContainsString("ORDER BY text DESC", $sql);
     }
 
     public function testMultipleOrderBys(): void
     {
         $sql = QueryBuilder::table('tags')
-            ->orderBy('TgText')
-            ->orderBy('TgID', 'DESC')
+            ->orderBy('text')
+            ->orderBy('id', 'DESC')
             ->toSql();
 
-        $this->assertStringContainsString("ORDER BY TgText ASC, TgID DESC", $sql);
+        $this->assertStringContainsString("ORDER BY text ASC, id DESC", $sql);
     }
 
     // ===== groupBy() tests =====
 
     public function testGroupBySingleColumn(): void
     {
-        $sql = QueryBuilder::table('tags')->groupBy('TgText')->toSql();
-        $this->assertStringContainsString("GROUP BY TgText", $sql);
+        $sql = QueryBuilder::table('tags')->groupBy('text')->toSql();
+        $this->assertStringContainsString("GROUP BY text", $sql);
     }
 
     public function testGroupByMultipleColumns(): void
     {
-        $sql = QueryBuilder::table('tags')->groupBy(['TgText', 'TgComment'])->toSql();
-        $this->assertStringContainsString("GROUP BY TgText, TgComment", $sql);
+        $sql = QueryBuilder::table('tags')->groupBy(['text', 'comment'])->toSql();
+        $this->assertStringContainsString("GROUP BY text, comment", $sql);
     }
 
     // ===== limit() and offset() tests =====
@@ -349,12 +349,12 @@ class QueryBuilderTest extends TestCase
     {
 
         // Insert test data
-        QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_get']);
+        QueryBuilder::table('tags')->insert(['text' => 'test_qb_get']);
 
-        $results = QueryBuilder::table('tags')->where('TgText', 'test_qb_get')->get();
+        $results = QueryBuilder::table('tags')->where('text', 'test_qb_get')->get();
 
         $this->assertCount(1, $results);
-        $this->assertEquals('test_qb_get', $results[0]['TgText']);
+        $this->assertEquals('test_qb_get', $results[0]['text']);
     }
 
     // ===== first() tests =====
@@ -363,18 +363,18 @@ class QueryBuilderTest extends TestCase
     {
 
         // Insert test data
-        QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_first']);
+        QueryBuilder::table('tags')->insert(['text' => 'test_qb_first']);
 
-        $row = QueryBuilder::table('tags')->where('TgText', 'test_qb_first')->first();
+        $row = QueryBuilder::table('tags')->where('text', 'test_qb_first')->first();
 
         $this->assertIsArray($row);
-        $this->assertEquals('test_qb_first', $row['TgText']);
+        $this->assertEquals('test_qb_first', $row['text']);
     }
 
     public function testFirstReturnsNull(): void
     {
 
-        $row = QueryBuilder::table('tags')->where('TgText', 'nonexistent_xyz')->first();
+        $row = QueryBuilder::table('tags')->where('text', 'nonexistent_xyz')->first();
         $this->assertNull($row);
     }
 
@@ -384,9 +384,9 @@ class QueryBuilderTest extends TestCase
     {
 
         // Insert test data
-        QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_value']);
+        QueryBuilder::table('tags')->insert(['text' => 'test_qb_value']);
 
-        $value = QueryBuilder::table('tags')->where('TgText', 'test_qb_value')->value('TgText');
+        $value = QueryBuilder::table('tags')->where('text', 'test_qb_value')->value('text');
 
         $this->assertEquals('test_qb_value', $value);
     }
@@ -394,7 +394,7 @@ class QueryBuilderTest extends TestCase
     public function testValueReturnsNullWhenNoMatch(): void
     {
 
-        $value = QueryBuilder::table('tags')->where('TgText', 'nonexistent_xyz_123')->value('TgText');
+        $value = QueryBuilder::table('tags')->where('text', 'nonexistent_xyz_123')->value('text');
 
         $this->assertNull($value);
     }
@@ -413,10 +413,10 @@ class QueryBuilderTest extends TestCase
     {
 
         // Insert test data
-        QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_count1']);
-        QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_count2']);
+        QueryBuilder::table('tags')->insert(['text' => 'test_qb_count1']);
+        QueryBuilder::table('tags')->insert(['text' => 'test_qb_count2']);
 
-        $count = QueryBuilder::table('tags')->where('TgText', 'LIKE', 'test_qb_count%')->count();
+        $count = QueryBuilder::table('tags')->where('text', 'LIKE', 'test_qb_count%')->count();
 
         $this->assertEquals(2, $count);
     }
@@ -427,9 +427,9 @@ class QueryBuilderTest extends TestCase
     {
 
         // Insert test data
-        QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_exists']);
+        QueryBuilder::table('tags')->insert(['text' => 'test_qb_exists']);
 
-        $exists = QueryBuilder::table('tags')->where('TgText', 'test_qb_exists')->exists();
+        $exists = QueryBuilder::table('tags')->where('text', 'test_qb_exists')->exists();
 
         $this->assertTrue($exists);
     }
@@ -437,7 +437,7 @@ class QueryBuilderTest extends TestCase
     public function testExistsReturnsFalse(): void
     {
 
-        $exists = QueryBuilder::table('tags')->where('TgText', 'nonexistent_xyz')->exists();
+        $exists = QueryBuilder::table('tags')->where('text', 'nonexistent_xyz')->exists();
         $this->assertFalse($exists);
     }
 
@@ -446,26 +446,26 @@ class QueryBuilderTest extends TestCase
     public function testInsertReturnsId(): void
     {
 
-        $id = QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_insert']);
+        $id = QueryBuilder::table('tags')->insert(['text' => 'test_qb_insert']);
 
         $this->assertGreaterThan(0, $id);
 
         // Verify inserted
-        $row = QueryBuilder::table('tags')->where('TgID', $id)->first();
-        $this->assertEquals('test_qb_insert', $row['TgText']);
+        $row = QueryBuilder::table('tags')->where('id', $id)->first();
+        $this->assertEquals('test_qb_insert', $row['text']);
     }
 
     public function testInsertWithMultipleColumns(): void
     {
 
         $id = QueryBuilder::table('tags')->insert([
-            'TgText' => 'test_qb_multi',
-            'TgComment' => 'test comment'
+            'text' => 'test_qb_multi',
+            'comment' => 'test comment'
         ]);
 
-        $row = QueryBuilder::table('tags')->where('TgID', $id)->first();
-        $this->assertEquals('test_qb_multi', $row['TgText']);
-        $this->assertEquals('test comment', $row['TgComment']);
+        $row = QueryBuilder::table('tags')->where('id', $id)->first();
+        $this->assertEquals('test_qb_multi', $row['text']);
+        $this->assertEquals('test comment', $row['comment']);
     }
 
     // ===== insertMany() tests =====
@@ -474,15 +474,15 @@ class QueryBuilderTest extends TestCase
     {
 
         $affected = QueryBuilder::table('tags')->insertMany([
-            ['TgText' => 'test_qb_many1'],
-            ['TgText' => 'test_qb_many2'],
-            ['TgText' => 'test_qb_many3']
+            ['text' => 'test_qb_many1'],
+            ['text' => 'test_qb_many2'],
+            ['text' => 'test_qb_many3']
         ]);
 
         $this->assertEquals(3, $affected);
 
         // Verify all inserted
-        $count = QueryBuilder::table('tags')->where('TgText', 'LIKE', 'test_qb_many%')->count();
+        $count = QueryBuilder::table('tags')->where('text', 'LIKE', 'test_qb_many%')->count();
         $this->assertEquals(3, $count);
     }
 
@@ -499,18 +499,18 @@ class QueryBuilderTest extends TestCase
     {
 
         // Insert test data
-        $id = QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_update_old']);
+        $id = QueryBuilder::table('tags')->insert(['text' => 'test_qb_update_old']);
 
         // Update
         $affected = QueryBuilder::table('tags')
-            ->where('TgID', $id)
-            ->update(['TgText' => 'test_qb_update_new']);
+            ->where('id', $id)
+            ->update(['text' => 'test_qb_update_new']);
 
         $this->assertEquals(1, $affected);
 
         // Verify updated
-        $row = QueryBuilder::table('tags')->where('TgID', $id)->first();
-        $this->assertEquals('test_qb_update_new', $row['TgText']);
+        $row = QueryBuilder::table('tags')->where('id', $id)->first();
+        $this->assertEquals('test_qb_update_new', $row['text']);
     }
 
     public function testUpdateWithMultipleColumns(): void
@@ -518,18 +518,18 @@ class QueryBuilderTest extends TestCase
 
         // Insert test data with unique suffix
         $suffix = substr(uniqid(), -6);
-        $id = QueryBuilder::table('tags')->insert(['TgText' => "test_qb_upd_m_{$suffix}"]);
+        $id = QueryBuilder::table('tags')->insert(['text' => "test_qb_upd_m_{$suffix}"]);
 
         // Update
-        QueryBuilder::table('tags')->where('TgID', $id)->update([
-            'TgText' => "upd_txt_{$suffix}",
-            'TgComment' => 'updated_comment'
+        QueryBuilder::table('tags')->where('id', $id)->update([
+            'text' => "upd_txt_{$suffix}",
+            'comment' => 'updated_comment'
         ]);
 
         // Verify
-        $row = QueryBuilder::table('tags')->where('TgID', $id)->first();
-        $this->assertEquals("upd_txt_{$suffix}", $row['TgText']);
-        $this->assertEquals('updated_comment', $row['TgComment']);
+        $row = QueryBuilder::table('tags')->where('id', $id)->first();
+        $this->assertEquals("upd_txt_{$suffix}", $row['text']);
+        $this->assertEquals('updated_comment', $row['comment']);
     }
 
     // ===== delete() tests =====
@@ -538,22 +538,22 @@ class QueryBuilderTest extends TestCase
     {
 
         // Insert test data
-        $id = QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_delete']);
+        $id = QueryBuilder::table('tags')->insert(['text' => 'test_qb_delete']);
 
         // Delete
-        $affected = QueryBuilder::table('tags')->where('TgID', $id)->delete();
+        $affected = QueryBuilder::table('tags')->where('id', $id)->delete();
 
         $this->assertEquals(1, $affected);
 
         // Verify deleted
-        $row = QueryBuilder::table('tags')->where('TgID', $id)->first();
+        $row = QueryBuilder::table('tags')->where('id', $id)->first();
         $this->assertNull($row);
     }
 
     public function testDeleteMultipleRows(): void
     {
 
-        // Use random suffix to avoid conflicts (TgText is varchar(20))
+        // Use random suffix to avoid conflicts (text is varchar(20))
         $rand = substr(uniqid(), -6);
         $tag1 = "qb_{$rand}_1";
         $tag2 = "qb_{$rand}_2";
@@ -561,20 +561,20 @@ class QueryBuilderTest extends TestCase
 
         // Clean up any potential leftovers
         try {
-            QueryBuilder::table('tags')->where('TgText', 'LIKE', "qb_{$rand}%")->delete();
+            QueryBuilder::table('tags')->where('text', 'LIKE', "qb_{$rand}%")->delete();
         } catch (\Exception $e) {
             // Ignore if nothing to delete
         }
 
         // Insert test data
         QueryBuilder::table('tags')->insertMany([
-            ['TgText' => $tag1],
-            ['TgText' => $tag2],
-            ['TgText' => $tag3]
+            ['text' => $tag1],
+            ['text' => $tag2],
+            ['text' => $tag3]
         ]);
 
         // Delete
-        $affected = QueryBuilder::table('tags')->where('TgText', 'LIKE', "qb_{$rand}%")->delete();
+        $affected = QueryBuilder::table('tags')->where('text', 'LIKE', "qb_{$rand}%")->delete();
 
         $this->assertEquals(3, $affected);
     }
@@ -614,40 +614,40 @@ class QueryBuilderTest extends TestCase
 
         // Insert test data
         QueryBuilder::table('tags')->insertMany([
-            ['TgText' => 'test_qb_complex_a'],
-            ['TgText' => 'test_qb_complex_b'],
-            ['TgText' => 'test_qb_complex_c'],
-            ['TgText' => 'test_qb_other']
+            ['text' => 'test_qb_complex_a'],
+            ['text' => 'test_qb_complex_b'],
+            ['text' => 'test_qb_complex_c'],
+            ['text' => 'test_qb_other']
         ]);
 
         // Complex query
         $results = QueryBuilder::table('tags')
-            ->select(['TgID', 'TgText'])
-            ->where('TgText', 'LIKE', 'test_qb_complex%')
-            ->orderBy('TgText')
+            ->select(['id', 'text'])
+            ->where('text', 'LIKE', 'test_qb_complex%')
+            ->orderBy('text')
             ->limit(2)
             ->get();
 
         $this->assertCount(2, $results);
-        $this->assertEquals('test_qb_complex_a', $results[0]['TgText']);
-        $this->assertEquals('test_qb_complex_b', $results[1]['TgText']);
+        $this->assertEquals('test_qb_complex_a', $results[0]['text']);
+        $this->assertEquals('test_qb_complex_b', $results[1]['text']);
     }
 
     public function testFluentInterfaceChaining(): void
     {
 
         // Insert test data
-        QueryBuilder::table('tags')->insert(['TgText' => 'test_qb_fluent']);
+        QueryBuilder::table('tags')->insert(['text' => 'test_qb_fluent']);
 
         // Test fluent chaining
         $result = QueryBuilder::table('tags')
-            ->select('TgText')
-            ->where('TgText', 'test_qb_fluent')
-            ->orderBy('TgID')
+            ->select('text')
+            ->where('text', 'test_qb_fluent')
+            ->orderBy('id')
             ->limit(1)
             ->first();
 
         $this->assertIsArray($result);
-        $this->assertEquals('test_qb_fluent', $result['TgText']);
+        $this->assertEquals('test_qb_fluent', $result['text']);
     }
 }

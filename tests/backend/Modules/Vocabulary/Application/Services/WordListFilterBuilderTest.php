@@ -395,7 +395,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $result = $this->builder->buildTagCondition('-1', '', '0');
         $this->assertStringContainsString('having', $result);
-        $this->assertStringContainsString('group_concat(WtTgID) IS NULL', $result);
+        $this->assertStringContainsString('group_concat(tag_id) IS NULL', $result);
     }
 
     #[Test]
@@ -403,7 +403,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $result = $this->builder->buildTagCondition('', '-1', '0');
         $this->assertStringContainsString('having', $result);
-        $this->assertStringContainsString('group_concat(WtTgID) IS NULL', $result);
+        $this->assertStringContainsString('group_concat(tag_id) IS NULL', $result);
     }
 
     #[Test]
@@ -449,7 +449,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildTagCondition('-1', '', '0', $params);
-        $this->assertStringContainsString('group_concat(WtTgID) IS NULL', $result);
+        $this->assertStringContainsString('group_concat(tag_id) IS NULL', $result);
         $this->assertSame([], $params);
     }
 
@@ -481,7 +481,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildTagCondition('-1', '5', '0', $params);
-        $this->assertStringContainsString('group_concat(WtTgID) IS NULL', $result);
+        $this->assertStringContainsString('group_concat(tag_id) IS NULL', $result);
         $this->assertStringContainsString(') OR (', $result);
         $this->assertSame([5], $params);
     }

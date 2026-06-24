@@ -53,7 +53,7 @@ class DBTest extends TestCase
 
         // Clean up test data
         Connection::query("DELETE FROM settings WHERE StKey LIKE 'test_db_%'");
-        Connection::query("DELETE FROM tags WHERE TgText LIKE 'test_db_%'");
+        Connection::query("DELETE FROM tags WHERE text LIKE 'test_db_%'");
     }
 
     // ===== table() tests =====
@@ -99,12 +99,12 @@ class DBTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $result = DB::query("INSERT INTO tags (TgText) VALUES ('test_db_query')");
+        $result = DB::query("INSERT INTO tags (text) VALUES ('test_db_query')");
 
         $this->assertTrue($result);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgText = 'test_db_query'");
+        Connection::query("DELETE FROM tags WHERE text = 'test_db_query'");
     }
 
     // ===== fetchAll() tests =====
@@ -240,14 +240,14 @@ class DBTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        DB::execute("INSERT INTO tags (TgText) VALUES ('test_db_lastid')");
+        DB::execute("INSERT INTO tags (text) VALUES ('test_db_lastid')");
 
         $lastId = DB::lastInsertId();
 
         $this->assertGreaterThan(0, $lastId);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgID = $lastId");
+        Connection::query("DELETE FROM tags WHERE id = $lastId");
     }
 
     // ===== escape() tests =====
@@ -350,17 +350,17 @@ class DBTest extends TestCase
         }
 
         DB::beginTransaction();
-        DB::execute("INSERT INTO tags (TgText) VALUES ('test_db_commit')");
+        DB::execute("INSERT INTO tags (text) VALUES ('test_db_commit')");
         $result = DB::commit();
 
         $this->assertTrue($result);
 
         // Verify committed
-        $row = DB::fetchOne("SELECT * FROM tags WHERE TgText = 'test_db_commit'");
+        $row = DB::fetchOne("SELECT * FROM tags WHERE text = 'test_db_commit'");
         $this->assertIsArray($row);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgText = 'test_db_commit'");
+        Connection::query("DELETE FROM tags WHERE text = 'test_db_commit'");
     }
 
     public function testRollbackTransaction(): void
@@ -370,7 +370,7 @@ class DBTest extends TestCase
         }
 
         DB::beginTransaction();
-        DB::execute("INSERT INTO tags (TgText) VALUES ('test_db_rollback')");
+        DB::execute("INSERT INTO tags (text) VALUES ('test_db_rollback')");
         $result = DB::rollback();
 
         $this->assertTrue($result);
@@ -378,7 +378,7 @@ class DBTest extends TestCase
         // Note: MyISAM doesn't support transactions, so rollback won't actually rollback
         // This test verifies the rollback method executes without error
         // Clean up the inserted row
-        DB::execute("DELETE FROM tags WHERE TgText = 'test_db_rollback'");
+        DB::execute("DELETE FROM tags WHERE text = 'test_db_rollback'");
     }
 
     // ===== Integration tests =====
@@ -417,20 +417,20 @@ class DBTest extends TestCase
         }
 
         // Insert test data
-        DB::table('tags')->insert(['TgText' => 'test_db_builder1']);
-        DB::table('tags')->insert(['TgText' => 'test_db_builder2']);
+        DB::table('tags')->insert(['text' => 'test_db_builder1']);
+        DB::table('tags')->insert(['text' => 'test_db_builder2']);
 
         // Query
         $results = DB::table('tags')
-            ->where('TgText', 'LIKE', 'test_db_builder%')
-            ->orderBy('TgText')
+            ->where('text', 'LIKE', 'test_db_builder%')
+            ->orderBy('text')
             ->get();
 
         $this->assertCount(2, $results);
-        $this->assertEquals('test_db_builder1', $results[0]['TgText']);
-        $this->assertEquals('test_db_builder2', $results[1]['TgText']);
+        $this->assertEquals('test_db_builder1', $results[0]['text']);
+        $this->assertEquals('test_db_builder2', $results[1]['text']);
 
         // Clean up
-        DB::table('tags')->where('TgText', 'LIKE', 'test_db_builder%')->delete();
+        DB::table('tags')->where('text', 'LIKE', 'test_db_builder%')->delete();
     }
 }

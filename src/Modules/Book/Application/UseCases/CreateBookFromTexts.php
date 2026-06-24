@@ -255,7 +255,7 @@ class CreateBookFromTexts
             $bindings = [$textId, $tagId];
             Connection::preparedExecute(
                 "INSERT IGNORE INTO " . Globals::table('text_tag_map') .
-                " (TtTxID, TtT2ID) VALUES (?, ?)",
+                " (text_id, text_tag_id) VALUES (?, ?)",
                 $bindings
             );
         }

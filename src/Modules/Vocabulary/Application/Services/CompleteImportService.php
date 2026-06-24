@@ -587,16 +587,16 @@ class CompleteImportService
      */
     private function handleTagsImport(int $langId): void
     {
-        // Insert new tags. Stamp TgUsID so the new rows belong to the
-        // caller — pre-fix they landed with TgUsID NULL and were
+        // Insert new tags. Stamp user_id so the new rows belong to the
+        // caller — pre-fix they landed with user_id NULL and were
         // invisible to every user (and to the per-user composite
-        // unique on (TgUsID, TgText) introduced in
+        // unique on (user_id, text) introduced in
         // 20260503_120000_per_user_name_uniques.sql, NULL is treated
         // as distinct, so duplicates accumulated silently).
         $tagInsertCol = UserScopedQuery::insertColumn('tags');
         $tagInsertVal = UserScopedQuery::insertValue('tags');
         Connection::execute(
-            "INSERT IGNORE INTO tags (TgText{$tagInsertCol})
+            "INSERT IGNORE INTO tags (text{$tagInsertCol})
             SELECT name{$tagInsertVal} FROM (
                 SELECT temp_words.text_lc,
                 SUBSTRING_INDEX(
@@ -611,7 +611,7 @@ class CompleteImportService
         );
 
         // Link words to tags. Scope BOTH `words` and `tags` to the
-        // caller — without the tags filter the join `name = TgText`
+        // caller — without the tags filter the join `name = text`
         // could match a foreign user's tag with the same text and
         // attach it to the caller's words, polluting the foreign
         // user's tag-to-word membership (the same shape as F13's
@@ -620,7 +620,7 @@ class CompleteImportService
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings)
             . UserScopedQuery::forTablePrepared('tags', $bindings);
         $sql = "INSERT IGNORE INTO word_tag_map
-            SELECT id, TgID
+            SELECT id, id
             FROM (
                 SELECT temp_words.text_lc, SUBSTRING_INDEX(
                     SUBSTRING_INDEX(
@@ -631,7 +631,7 @@ class CompleteImportService
                 ON CHAR_LENGTH(temp_words.tag_list)-CHAR_LENGTH(REPLACE(temp_words.tag_list, ',', ''))>= numbers.n-1
                 ORDER BY text_lc, n
             ) A, tags, words
-            WHERE name=TgText AND A.text_lc=words.text_lc AND language_id=?"
+            WHERE name=text AND A.text_lc=words.text_lc AND language_id=?"
             . $userScope;
 
         Connection::preparedExecute($sql, $bindings);
@@ -745,13 +745,13 @@ class CompleteImportService
         Connection::execute("INSERT IGNORE INTO numbers(n) VALUES ('1'),('2'),('3'),
             ('4'),('5'),('6'),('7'),('8'),('9')");
 
-        // Stamp TgUsID so the imported tags are owned by the caller —
+        // Stamp user_id so the imported tags are owned by the caller —
         // see handleTagsImport() for context. Without this the rows
-        // land with TgUsID NULL and never appear on the user's tag
+        // land with user_id NULL and never appear on the user's tag
         // page.
         $tagInsertCol = UserScopedQuery::insertColumn('tags');
         $tagInsertVal = UserScopedQuery::insertValue('tags');
-        Connection::execute("INSERT IGNORE INTO tags (TgText{$tagInsertCol})
+        Connection::execute("INSERT IGNORE INTO tags (text{$tagInsertCol})
             SELECT NAME{$tagInsertVal} FROM (
                 SELECT SUBSTRING_INDEX(
                     SUBSTRING_INDEX(

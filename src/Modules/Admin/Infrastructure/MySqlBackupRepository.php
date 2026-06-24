@@ -137,10 +137,10 @@ class MySqlBackupRepository implements BackupRepositoryInterface
         // Link/map tables: filter by ownership of the parent row.
         switch ($table) {
             case 'text_tag_map':
-                return 'SELECT * FROM text_tag_map WHERE TtTxID IN ('
+                return 'SELECT * FROM text_tag_map WHERE text_id IN ('
                     . 'SELECT TxID FROM texts WHERE TxUsID = ' . $userId . ')';
             case 'word_tag_map':
-                return 'SELECT * FROM word_tag_map WHERE WtWoID IN ('
+                return 'SELECT * FROM word_tag_map WHERE word_id IN ('
                     . 'SELECT id FROM words WHERE user_id = ' . $userId . ')';
             case 'feed_links':
                 return 'SELECT * FROM feed_links WHERE feed_id IN ('
@@ -244,10 +244,10 @@ class MySqlBackupRepository implements BackupRepositoryInterface
         $scope['languages']    = ' AND LgUsID = ' . $userId;
         $scope['texts']        = ' WHERE TxUsID = ' . $userId;
         $scope['words']        = ' WHERE user_id = ' . $userId;
-        $scope['tags']         = ' WHERE TgUsID = ' . $userId;
-        $scope['text_tags']    = ' WHERE T2UsID = ' . $userId;
-        $scope['text_tag_map'] = ' WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxUsID = ' . $userId . ')';
-        $scope['word_tag_map'] = ' WHERE WtWoID IN (SELECT id FROM words WHERE user_id = ' . $userId . ')';
+        $scope['tags']         = ' WHERE user_id = ' . $userId;
+        $scope['text_tags']    = ' WHERE user_id = ' . $userId;
+        $scope['text_tag_map'] = ' WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = ' . $userId . ')';
+        $scope['word_tag_map'] = ' WHERE word_id IN (SELECT id FROM words WHERE user_id = ' . $userId . ')';
         return $scope;
     }
 
@@ -322,18 +322,18 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 PRIMARY KEY (`StKey`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'tags' => "CREATE TABLE `tags` (
-                `TgID` int(11) unsigned NOT NULL AUTO_INCREMENT,
-                `TgText` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-                `TgComment` varchar(200) NOT NULL DEFAULT '',
-                PRIMARY KEY (`TgID`),
-                UNIQUE KEY `TgText` (`TgText`)
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `text` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+                `comment` varchar(200) NOT NULL DEFAULT '',
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `text` (`text`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'text_tags' => "CREATE TABLE `text_tags` (
-                `T2ID` int(11) unsigned NOT NULL AUTO_INCREMENT,
-                `T2Text` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-                `T2Comment` varchar(200) NOT NULL DEFAULT '',
-                PRIMARY KEY (`T2ID`),
-                UNIQUE KEY `T2Text` (`T2Text`)
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `text` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+                `comment` varchar(200) NOT NULL DEFAULT '',
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `text` (`text`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'word_occurrences' => "CREATE TABLE `word_occurrences` (
                 `Ti2ID` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -366,11 +366,11 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 KEY `TxLgID` (`TxLgID`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'text_tag_map' => "CREATE TABLE `text_tag_map` (
-                `TtTxID` int(11) unsigned NOT NULL,
-                `TtT2ID` int(11) unsigned NOT NULL,
-                PRIMARY KEY (`TtTxID`,`TtT2ID`),
-                KEY `TtTxID` (`TtTxID`),
-                KEY `TtT2ID` (`TtT2ID`)
+                `text_id` int(11) unsigned NOT NULL,
+                `text_tag_id` int(11) unsigned NOT NULL,
+                PRIMARY KEY (`text_id`,`text_tag_id`),
+                KEY `text_id` (`text_id`),
+                KEY `text_tag_id` (`text_tag_id`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'words' => "CREATE TABLE `words` (
                 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -399,11 +399,11 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 KEY `random` (`random`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'word_tag_map' => "CREATE TABLE `word_tag_map` (
-                `WtWoID` int(11) unsigned NOT NULL,
-                `WtTgID` int(11) unsigned NOT NULL,
-                PRIMARY KEY (`WtWoID`,`WtTgID`),
-                KEY `WtTgID` (`WtTgID`),
-                KEY `WtWoID` (`WtWoID`)
+                `word_id` int(11) unsigned NOT NULL,
+                `tag_id` int(11) unsigned NOT NULL,
+                PRIMARY KEY (`word_id`,`tag_id`),
+                KEY `tag_id` (`tag_id`),
+                KEY `word_id` (`word_id`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
         ];
 

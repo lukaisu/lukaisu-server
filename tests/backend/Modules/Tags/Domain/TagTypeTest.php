@@ -38,64 +38,52 @@ class TagTypeTest extends TestCase
         $this->assertEquals('text_tags', TagType::TEXT->tableName());
     }
 
-    // ===== columnPrefix Tests =====
-
-    public function testColumnPrefixReturnsTgForTerm(): void
-    {
-        $this->assertEquals('Tg', TagType::TERM->columnPrefix());
-    }
-
-    public function testColumnPrefixReturnsT2ForText(): void
-    {
-        $this->assertEquals('T2', TagType::TEXT->columnPrefix());
-    }
-
     // ===== idColumn Tests =====
 
     public function testIdColumnReturnsTgIdForTerm(): void
     {
-        $this->assertEquals('TgID', TagType::TERM->idColumn());
+        $this->assertEquals('id', TagType::TERM->idColumn());
     }
 
     public function testIdColumnReturnsT2IdForText(): void
     {
-        $this->assertEquals('T2ID', TagType::TEXT->idColumn());
+        $this->assertEquals('id', TagType::TEXT->idColumn());
     }
 
     // ===== textColumn Tests =====
 
     public function testTextColumnReturnsTgTextForTerm(): void
     {
-        $this->assertEquals('TgText', TagType::TERM->textColumn());
+        $this->assertEquals('text', TagType::TERM->textColumn());
     }
 
     public function testTextColumnReturnsT2TextForText(): void
     {
-        $this->assertEquals('T2Text', TagType::TEXT->textColumn());
+        $this->assertEquals('text', TagType::TEXT->textColumn());
     }
 
     // ===== commentColumn Tests =====
 
     public function testCommentColumnReturnsTgCommentForTerm(): void
     {
-        $this->assertEquals('TgComment', TagType::TERM->commentColumn());
+        $this->assertEquals('comment', TagType::TERM->commentColumn());
     }
 
     public function testCommentColumnReturnsT2CommentForText(): void
     {
-        $this->assertEquals('T2Comment', TagType::TEXT->commentColumn());
+        $this->assertEquals('comment', TagType::TEXT->commentColumn());
     }
 
     // ===== userIdColumn Tests =====
 
     public function testUserIdColumnReturnsTgUsIdForTerm(): void
     {
-        $this->assertEquals('TgUsID', TagType::TERM->userIdColumn());
+        $this->assertEquals('user_id', TagType::TERM->userIdColumn());
     }
 
     public function testUserIdColumnReturnsT2UsIdForText(): void
     {
-        $this->assertEquals('T2UsID', TagType::TEXT->userIdColumn());
+        $this->assertEquals('user_id', TagType::TEXT->userIdColumn());
     }
 
     // ===== associationTable Tests =====
@@ -172,16 +160,14 @@ class TagTypeTest extends TestCase
 
     // ===== Column Methods Consistency Tests =====
 
-    public function testAllColumnMethodsUseColumnPrefix(): void
+    public function testAllColumnMethodsReturnSnakeCaseLiterals(): void
     {
-        // Verify all column methods derive from columnPrefix
+        // After the snake_case rename both tag tables share identical column names.
         foreach (TagType::cases() as $type) {
-            $prefix = $type->columnPrefix();
-
-            $this->assertStringStartsWith($prefix, $type->idColumn());
-            $this->assertStringStartsWith($prefix, $type->textColumn());
-            $this->assertStringStartsWith($prefix, $type->commentColumn());
-            $this->assertStringStartsWith($prefix, $type->userIdColumn());
+            $this->assertSame('id', $type->idColumn());
+            $this->assertSame('text', $type->textColumn());
+            $this->assertSame('comment', $type->commentColumn());
+            $this->assertSame('user_id', $type->userIdColumn());
         }
     }
 

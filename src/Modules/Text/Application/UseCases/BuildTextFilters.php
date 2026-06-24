@@ -122,7 +122,7 @@ class BuildTextFilters
      * @param string|int $tag1     First tag filter (must be numeric or empty)
      * @param string|int $tag2     Second tag filter (must be numeric or empty)
      * @param string     $tag12    AND/OR operator
-     * @param string     $tagIdCol Tag ID column (AgT2ID for archived, TtT2ID for active)
+     * @param string     $tagIdCol Tag ID column (AgT2ID for archived, text_tag_id for active)
      *
      * @return string SQL HAVING clause
      */
@@ -130,7 +130,7 @@ class BuildTextFilters
         string|int $tag1,
         string|int $tag2,
         string $tag12,
-        string $tagIdCol = 'TtT2ID'
+        string $tagIdCol = 'text_tag_id'
     ): string {
         if ($tag1 === '' && $tag2 === '') {
             return '';
@@ -182,7 +182,7 @@ class BuildTextFilters
      * @param string|int $tag1     First tag filter (must be numeric or empty)
      * @param string|int $tag2     Second tag filter (must be numeric or empty)
      * @param string     $tag12    AND/OR operator
-     * @param string     $tagIdCol Tag ID column (TtT2ID for active/archived)
+     * @param string     $tagIdCol Tag ID column (text_tag_id for active/archived)
      *
      * @return array{clause: string, params: array} SQL HAVING clause and parameters
      */
@@ -190,7 +190,7 @@ class BuildTextFilters
         string|int $tag1,
         string|int $tag2,
         string $tag12,
-        string $tagIdCol = 'TtT2ID'
+        string $tagIdCol = 'text_tag_id'
     ): array {
         if ($tag1 === '' && $tag2 === '') {
             return ['clause' => '', 'params' => []];
@@ -239,7 +239,7 @@ class BuildTextFilters
      * Build HAVING clause for archived text tag filtering.
      *
      * Note: Archived texts now use the same text_tag_map table as active texts,
-     * so they use the same TtT2ID column.
+     * so they use the same text_tag_id column.
      *
      * @param string|int $tag1  First tag filter
      * @param string|int $tag2  Second tag filter
@@ -249,7 +249,7 @@ class BuildTextFilters
      */
     public function buildArchivedTagHavingClause($tag1, $tag2, string $tag12): string
     {
-        return $this->buildTagHavingClause($tag1, $tag2, $tag12, 'TtT2ID');
+        return $this->buildTagHavingClause($tag1, $tag2, $tag12, 'text_tag_id');
     }
 
     /**
@@ -263,7 +263,7 @@ class BuildTextFilters
      */
     public function buildTextTagHavingClause($tag1, $tag2, string $tag12): string
     {
-        return $this->buildTagHavingClause($tag1, $tag2, $tag12, 'TtT2ID');
+        return $this->buildTagHavingClause($tag1, $tag2, $tag12, 'text_tag_id');
     }
 
     /**

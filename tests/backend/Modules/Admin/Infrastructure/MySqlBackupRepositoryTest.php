@@ -125,8 +125,8 @@ class MySqlBackupRepositoryTest extends TestCase
             'languages' => 'LgUsID',
             'texts'     => 'TxUsID',
             'words'     => 'user_id',
-            'tags'      => 'TgUsID',
-            'text_tags' => 'T2UsID',
+            'tags'      => 'user_id',
+            'text_tags' => 'user_id',
             'news_feeds' => 'user_id',
             'settings'  => 'StUsID',
         ];
@@ -153,7 +153,7 @@ class MySqlBackupRepositoryTest extends TestCase
 
         $sql = $this->callBuildScopedSelectAll('text_tag_map');
         $this->assertSame(
-            'SELECT * FROM text_tag_map WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxUsID = 11)',
+            'SELECT * FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = 11)',
             $sql
         );
     }
@@ -166,7 +166,7 @@ class MySqlBackupRepositoryTest extends TestCase
 
         $sql = $this->callBuildScopedSelectAll('word_tag_map');
         $this->assertSame(
-            'SELECT * FROM word_tag_map WHERE WtWoID IN (SELECT id FROM words WHERE user_id = 11)',
+            'SELECT * FROM word_tag_map WHERE word_id IN (SELECT id FROM words WHERE user_id = 11)',
             $sql
         );
     }
@@ -202,14 +202,14 @@ class MySqlBackupRepositoryTest extends TestCase
         $this->assertSame(' AND LgUsID = 42', $scope['languages']);
         $this->assertSame(' WHERE TxUsID = 42', $scope['texts']);
         $this->assertSame(' WHERE user_id = 42', $scope['words']);
-        $this->assertSame(' WHERE TgUsID = 42', $scope['tags']);
-        $this->assertSame(' WHERE T2UsID = 42', $scope['text_tags']);
+        $this->assertSame(' WHERE user_id = 42', $scope['tags']);
+        $this->assertSame(' WHERE user_id = 42', $scope['text_tags']);
         $this->assertSame(
-            ' WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxUsID = 42)',
+            ' WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = 42)',
             $scope['text_tag_map']
         );
         $this->assertSame(
-            ' WHERE WtWoID IN (SELECT id FROM words WHERE user_id = 42)',
+            ' WHERE word_id IN (SELECT id FROM words WHERE user_id = 42)',
             $scope['word_tag_map']
         );
     }

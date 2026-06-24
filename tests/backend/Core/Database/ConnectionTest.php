@@ -53,7 +53,7 @@ class ConnectionTest extends TestCase
 
         // Clean up test data after each test
         Connection::query("DELETE FROM settings WHERE StKey LIKE 'test_conn_%'");
-        Connection::query("DELETE FROM tags WHERE TgText LIKE 'test_conn_%'");
+        Connection::query("DELETE FROM tags WHERE text LIKE 'test_conn_%'");
     }
 
     // ===== getInstance() tests =====
@@ -116,12 +116,12 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $result = Connection::query("INSERT INTO tags (TgText) VALUES ('test_conn_tag')");
+        $result = Connection::query("INSERT INTO tags (text) VALUES ('test_conn_tag')");
 
         $this->assertTrue($result);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgText = 'test_conn_tag'");
+        Connection::query("DELETE FROM tags WHERE text = 'test_conn_tag'");
     }
 
     public function testQueryWithInvalidSqlThrowsException(): void
@@ -174,13 +174,13 @@ class ConnectionTest extends TestCase
         }
 
         // INSERT returns true, not a result set
-        $rows = Connection::fetchAll("INSERT INTO tags (TgText) VALUES ('test_conn_fetchall')");
+        $rows = Connection::fetchAll("INSERT INTO tags (text) VALUES ('test_conn_fetchall')");
 
         $this->assertIsArray($rows);
         $this->assertEmpty($rows);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgText = 'test_conn_fetchall'");
+        Connection::query("DELETE FROM tags WHERE text = 'test_conn_fetchall'");
     }
 
     // ===== fetchOne() tests =====
@@ -303,9 +303,9 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        Connection::execute("INSERT INTO tags (TgText) VALUES ('test_conn_exec')");
+        Connection::execute("INSERT INTO tags (text) VALUES ('test_conn_exec')");
 
-        $affected = Connection::execute("DELETE FROM tags WHERE TgText = 'test_conn_exec'");
+        $affected = Connection::execute("DELETE FROM tags WHERE text = 'test_conn_exec'");
 
         $this->assertGreaterThanOrEqual(1, $affected);
     }
@@ -334,14 +334,14 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        Connection::execute("INSERT INTO tags (TgText) VALUES ('test_conn_lastid')");
+        Connection::execute("INSERT INTO tags (text) VALUES ('test_conn_lastid')");
 
         $lastId = Connection::lastInsertId();
 
         $this->assertGreaterThan(0, $lastId);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgID = $lastId");
+        Connection::query("DELETE FROM tags WHERE id = $lastId");
     }
 
     // ===== escape() tests =====
@@ -535,13 +535,13 @@ class ConnectionTest extends TestCase
         }
 
         // Use tags table which has AUTO_INCREMENT
-        Connection::execute("INSERT INTO tags (TgText) VALUES ('test_last_insert_id')");
+        Connection::execute("INSERT INTO tags (text) VALUES ('test_last_insert_id')");
         $lastId = Connection::lastInsertId();
 
         $this->assertGreaterThan(0, $lastId);
 
         // Clean up
-        Connection::execute("DELETE FROM tags WHERE TgText = 'test_last_insert_id'");
+        Connection::execute("DELETE FROM tags WHERE text = 'test_last_insert_id'");
     }
 
     // ===== reset() tests =====

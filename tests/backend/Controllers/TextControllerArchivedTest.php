@@ -110,7 +110,7 @@ class TextControllerArchivedTest extends TestCase
             // Clean up archived texts (stored in texts table with TxArchivedAt set)
             if (self::$testArchivedTextId > 0) {
                 Connection::query(
-                    "DELETE FROM " . Globals::table('text_tag_map') . " WHERE TtTxID = " . self::$testArchivedTextId
+                    "DELETE FROM " . Globals::table('text_tag_map') . " WHERE text_id = " . self::$testArchivedTextId
                 );
                 Connection::query(
                     "DELETE FROM " . Globals::table('texts') . " WHERE TxID = " . self::$testArchivedTextId
@@ -118,7 +118,7 @@ class TextControllerArchivedTest extends TestCase
             }
             if (self::$testArchivedText2Id > 0) {
                 Connection::query(
-                    "DELETE FROM " . Globals::table('text_tag_map') . " WHERE TtTxID = " . self::$testArchivedText2Id
+                    "DELETE FROM " . Globals::table('text_tag_map') . " WHERE text_id = " . self::$testArchivedText2Id
                 );
                 Connection::query(
                     "DELETE FROM " . Globals::table('texts') . " WHERE TxID = " . self::$testArchivedText2Id

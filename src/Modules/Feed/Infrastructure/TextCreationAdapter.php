@@ -49,19 +49,19 @@ class TextCreationAdapter implements TextCreationInterface
         DB::beginTransaction();
         try {
             // Ensure tag exists - use raw SQL for INSERT IGNORE.
-            // forTablePrepared appends " AND T2UsID = ?" which is invalid
-            // after a VALUES clause; inject T2UsID into the column/value
+            // forTablePrepared appends " AND user_id = ?" which is invalid
+            // after a VALUES clause; inject user_id into the column/value
             // list instead so the row is correctly scoped to this user.
             $bindings = [$tagName];
             $userScopeColumn = '';
             $userScopeValue = '';
             $userIdForInsert = UserScopedQuery::getUserIdForInsert('text_tags');
             if ($userIdForInsert !== null) {
-                $userScopeColumn = ', T2UsID';
+                $userScopeColumn = ', user_id';
                 $userScopeValue = ', ?';
                 $bindings[] = $userIdForInsert;
             }
-            $sql = "INSERT IGNORE INTO text_tags (T2Text{$userScopeColumn}) VALUES (?{$userScopeValue})";
+            $sql = "INSERT IGNORE INTO text_tags (text{$userScopeColumn}) VALUES (?{$userScopeValue})";
             Connection::preparedExecute($sql, $bindings);
 
             // Create the text
@@ -83,9 +83,9 @@ class TextCreationAdapter implements TextCreationInterface
 
             // Apply tag to the text
             $bindings = [(int) $textId, $tagName];
-            $sql = "INSERT INTO text_tag_map (TtTxID, TtT2ID)
-                 SELECT ?, T2ID FROM text_tags
-                 WHERE T2Text = ?"
+            $sql = "INSERT INTO text_tag_map (text_id, text_tag_id)
+                 SELECT ?, id FROM text_tags
+                 WHERE text = ?"
                 . UserScopedQuery::forTablePrepared('text_tags', $bindings);
             Connection::preparedExecute($sql, $bindings);
 
@@ -105,15 +105,15 @@ class TextCreationAdapter implements TextCreationInterface
     {
         // Get all text IDs with this tag
         $bindings = [$tagName];
-        $sql = "SELECT TtTxID FROM text_tag_map
-             JOIN text_tags ON TtT2ID = T2ID
-             WHERE T2Text = ?"
+        $sql = "SELECT text_id FROM text_tag_map
+             JOIN text_tags ON text_tag_id = id
+             WHERE text = ?"
             . UserScopedQuery::forTablePrepared('text_tags', $bindings);
         $rows = Connection::preparedFetchAll($sql, $bindings);
 
         $textIds = [];
         foreach ($rows as $row) {
-            $textIds[] = (int) $row['TtTxID'];
+            $textIds[] = (int) $row['text_id'];
         }
 
         $stats = ['archived' => 0, 'sentences' => 0, 'textitems' => 0];
@@ -167,9 +167,9 @@ class TextCreationAdapter implements TextCreationInterface
     public function countTextsWithTag(string $tagName): int
     {
         $bindings = [$tagName];
-        $sql = "SELECT COUNT(DISTINCT TtTxID) as cnt FROM text_tag_map
-             JOIN text_tags ON TtT2ID = T2ID
-             WHERE T2Text = ?"
+        $sql = "SELECT COUNT(DISTINCT text_id) as cnt FROM text_tag_map
+             JOIN text_tags ON text_tag_id = id
+             WHERE text = ?"
             . UserScopedQuery::forTablePrepared('text_tags', $bindings);
 
         $row = Connection::preparedFetchOne($sql, $bindings);

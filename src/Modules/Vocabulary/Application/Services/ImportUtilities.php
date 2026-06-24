@@ -334,12 +334,12 @@ class ImportUtilities
 
         $sql = "SELECT w.id, w.text, w.text_lc, w.translation,
                 w.romanization, w.sentence, w.status,
-                GROUP_CONCAT(t.TgText ORDER BY t.TgText SEPARATOR ', ') as taglist,
+                GROUP_CONCAT(t.text ORDER BY t.text SEPARATOR ', ') as taglist,
                 CASE WHEN w.sentence != '' AND w.sentence LIKE CONCAT('%{', w.text, '}%')
                     THEN 1 ELSE 0 END as SentOK
             FROM words w
-            LEFT JOIN word_tag_map wt ON w.id = wt.WtWoID
-            LEFT JOIN tags t ON wt.WtTgID = t.TgID
+            LEFT JOIN word_tag_map wt ON w.id = wt.word_id
+            LEFT JOIN tags t ON wt.tag_id = t.id
             WHERE w.status_changed_at > ?{$userScope}
             GROUP BY w.id
             ORDER BY w.text

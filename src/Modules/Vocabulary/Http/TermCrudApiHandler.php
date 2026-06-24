@@ -328,12 +328,12 @@ class TermCrudApiHandler
 
         // Get tags for the word - using JOIN with user-scoped tables
         $tagsResult = QueryBuilder::table('word_tag_map')
-            ->select(['tags.TgText'])
-            ->join('tags', 'tags.TgID', '=', 'word_tag_map.WtTgID')
-            ->where('word_tag_map.WtWoID', '=', $termId)
-            ->orderBy('tags.TgText')
+            ->select(['tags.text'])
+            ->join('tags', 'tags.id', '=', 'word_tag_map.tag_id')
+            ->where('word_tag_map.word_id', '=', $termId)
+            ->orderBy('tags.text')
             ->getPrepared();
-        $tags = array_map(fn($row) => (string)$row['TgText'], $tagsResult);
+        $tags = array_map(fn($row) => (string)$row['text'], $tagsResult);
 
         // Process translation - highlight annotation if provided
         $translation = (string)$record['translation'];
@@ -488,12 +488,12 @@ class TermCrudApiHandler
 
             // Get tags for the word
             $tagsResult = QueryBuilder::table('word_tag_map')
-                ->select(['tags.TgText'])
-                ->join('tags', 'tags.TgID', '=', 'word_tag_map.WtTgID')
-                ->where('word_tag_map.WtWoID', '=', $wordId)
-                ->orderBy('tags.TgText')
+                ->select(['tags.text'])
+                ->join('tags', 'tags.id', '=', 'word_tag_map.tag_id')
+                ->where('word_tag_map.word_id', '=', $wordId)
+                ->orderBy('tags.text')
                 ->getPrepared();
-            $tags = array_map(fn($row) => (string)$row['TgText'], $tagsResult);
+            $tags = array_map(fn($row) => (string)$row['text'], $tagsResult);
 
             $term = [
                 'id' => (int) $termData['id'],

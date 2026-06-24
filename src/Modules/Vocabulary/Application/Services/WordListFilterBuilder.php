@@ -197,23 +197,23 @@ class WordListFilterBuilder
 
         if ($tag1Int !== null) {
             if ($tag1Int === -1) {
-                $whTag1 = "group_concat(WtTgID) IS NULL";
+                $whTag1 = "group_concat(tag_id) IS NULL";
             } elseif ($params !== null) {
-                $whTag1 = "concat('/',group_concat(WtTgID separator '/'),'/') like concat('%/', ?, '/%')";
+                $whTag1 = "concat('/',group_concat(tag_id separator '/'),'/') like concat('%/', ?, '/%')";
                 $params[] = $tag1Int;
             } else {
-                $whTag1 = "concat('/',group_concat(WtTgID separator '/'),'/') like '%/" . $tag1Int . "/%'";
+                $whTag1 = "concat('/',group_concat(tag_id separator '/'),'/') like '%/" . $tag1Int . "/%'";
             }
         }
 
         if ($tag2Int !== null) {
             if ($tag2Int === -1) {
-                $whTag2 = "group_concat(WtTgID) IS NULL";
+                $whTag2 = "group_concat(tag_id) IS NULL";
             } elseif ($params !== null) {
-                $whTag2 = "concat('/',group_concat(WtTgID separator '/'),'/') like concat('%/', ?, '/%')";
+                $whTag2 = "concat('/',group_concat(tag_id separator '/'),'/') like concat('%/', ?, '/%')";
                 $params[] = $tag2Int;
             } else {
-                $whTag2 = "concat('/',group_concat(WtTgID separator '/'),'/') like '%/" . $tag2Int . "/%'";
+                $whTag2 = "concat('/',group_concat(tag_id separator '/'),'/') like '%/" . $tag2Int . "/%'";
             }
         }
 

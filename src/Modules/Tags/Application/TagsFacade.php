@@ -844,10 +844,8 @@ class TagsFacade
             return ['clause' => '', 'params' => []];
         }
 
-        $prefix = $this->tagType === TagType::TEXT ? 'T2' : 'Tg';
         $searchValue = str_replace("*", "%", $query);
-        $clause = ' AND (' . $prefix . 'Text LIKE ? OR ' .
-                  $prefix . 'Comment LIKE ?)';
+        $clause = ' AND (text LIKE ? OR comment LIKE ?)';
 
         return ['clause' => $clause, 'params' => [$searchValue, $searchValue]];
     }
@@ -862,7 +860,7 @@ class TagsFacade
      */
     public function parseDuplicateError(string $message): ?array
     {
-        $keyName = $this->tagType === TagType::TEXT ? 'T2Text' : 'TgText';
+        $keyName = $this->tagType === TagType::TEXT ? 'text' : 'text';
 
         if (
             substr($message, 0, 24) == "Error: Duplicate entry '"

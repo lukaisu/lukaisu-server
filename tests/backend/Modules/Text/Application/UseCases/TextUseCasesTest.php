@@ -281,25 +281,25 @@ class TextUseCasesTest extends TestCase
     }
 
     /**
-     * Test buildTextTagHavingClause uses TtT2ID column.
+     * Test buildTextTagHavingClause uses text_tag_id column.
      */
     public function testBuildTextTagHavingClause(): void
     {
         $useCase = new BuildTextFilters();
         $result = $useCase->buildTextTagHavingClause('5', '', 'AND');
 
-        $this->assertStringContainsString('TtT2ID', $result);
+        $this->assertStringContainsString('text_tag_id', $result);
     }
 
     /**
-     * Test buildArchivedTagHavingClause uses TtT2ID column.
+     * Test buildArchivedTagHavingClause uses text_tag_id column.
      */
     public function testBuildArchivedTagHavingClause(): void
     {
         $useCase = new BuildTextFilters();
         $result = $useCase->buildArchivedTagHavingClause('5', '', 'AND');
 
-        $this->assertStringContainsString('TtT2ID', $result);
+        $this->assertStringContainsString('text_tag_id', $result);
     }
 
     /**

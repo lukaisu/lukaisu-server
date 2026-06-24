@@ -88,7 +88,7 @@ class TextTagControllerTest extends TestCase
 
         $result = $method->invoke($this->controller);
 
-        $this->assertSame('T2ID', $result);
+        $this->assertSame('id', $result);
     }
 
     // =========================================================================
@@ -526,8 +526,9 @@ class TextTagControllerTest extends TestCase
     }
 
     #[Test]
-    public function idParameterNameDiffersFromTermTag(): void
+    public function idParameterNameMatchesTermTag(): void
     {
+        // After the snake_case rename both tag tables use the same `id` column.
         $termController = new TermTagController($this->facade);
 
         $termMethod = new \ReflectionMethod(TermTagController::class, 'getIdParameterName');
@@ -537,8 +538,8 @@ class TextTagControllerTest extends TestCase
         $termId = $termMethod->invoke($termController);
         $textId = $textMethod->invoke($this->controller);
 
-        $this->assertSame('TgID', $termId);
-        $this->assertSame('T2ID', $textId);
-        $this->assertNotSame($termId, $textId);
+        $this->assertSame('id', $termId);
+        $this->assertSame('id', $textId);
+        $this->assertSame($termId, $textId);
     }
 }

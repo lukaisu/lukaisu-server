@@ -302,7 +302,7 @@ class TextServiceTest extends TestCase
     {
         $result = $this->service->buildArchivedTagHavingClause('1', '', '');
         $this->assertStringContainsString('HAVING', $result);
-        $this->assertStringContainsString('TtT2ID', $result);
+        $this->assertStringContainsString('text_tag_id', $result);
     }
 
     public function testBuildArchivedTagHavingClauseForUntagged(): void
@@ -382,7 +382,7 @@ class TextServiceTest extends TestCase
     {
         $result = $this->service->buildTextTagHavingClause('1', '', '');
         $this->assertStringContainsString('HAVING', $result);
-        $this->assertStringContainsString('TtT2ID', $result);
+        $this->assertStringContainsString('text_tag_id', $result);
     }
 
     public function testBuildTextTagHavingClauseForUntagged(): void

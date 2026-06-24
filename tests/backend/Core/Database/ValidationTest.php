@@ -56,7 +56,7 @@ class ValidationTest extends TestCase
     {
         // Clean up any existing test data first
         Connection::query(
-            "DELETE FROM text_tag_map WHERE TtTxID IN " .
+            "DELETE FROM text_tag_map WHERE text_id IN " .
             "(SELECT TxID FROM texts WHERE TxTitle = 'Test Validation Text')"
         );
         Connection::query(
@@ -69,8 +69,8 @@ class ValidationTest extends TestCase
         );
         Connection::query("DELETE FROM texts WHERE TxTitle = 'Test Validation Text'");
         Connection::query("DELETE FROM languages WHERE LgName = 'Test Validation Language'");
-        Connection::query("DELETE FROM tags WHERE TgText = 'test_validation_tag'");
-        Connection::query("DELETE FROM text_tags WHERE T2Text = 'test_validation_tag2'");
+        Connection::query("DELETE FROM tags WHERE text = 'test_validation_tag'");
+        Connection::query("DELETE FROM text_tags WHERE text = 'test_validation_tag2'");
 
         // Create test language
         $sql = "INSERT INTO languages (
@@ -100,12 +100,12 @@ class ValidationTest extends TestCase
         self::$testTextId = mysqli_insert_id(Globals::getDbConnection());
 
         // Create test tag (for words)
-        $sql = "INSERT INTO tags (TgText, TgComment) VALUES ('test_validation_tag', 'Test tag')";
+        $sql = "INSERT INTO tags (text, comment) VALUES ('test_validation_tag', 'Test tag')";
         Connection::query($sql);
         self::$testTagId = mysqli_insert_id(Globals::getDbConnection());
 
         // Create test tag2 (for texts)
-        $sql = "INSERT INTO text_tags (T2Text, T2Comment) VALUES ('test_validation_tag2', 'Test tag2')";
+        $sql = "INSERT INTO text_tags (text, comment) VALUES ('test_validation_tag2', 'Test tag2')";
         Connection::query($sql);
         self::$testTag2Id = mysqli_insert_id(Globals::getDbConnection());
     }
@@ -118,10 +118,10 @@ class ValidationTest extends TestCase
 
         // Clean up test data in reverse order
         if (self::$testTag2Id) {
-            Connection::query("DELETE FROM text_tags WHERE T2ID = " . self::$testTag2Id);
+            Connection::query("DELETE FROM text_tags WHERE id = " . self::$testTag2Id);
         }
         if (self::$testTagId) {
-            Connection::query("DELETE FROM tags WHERE TgID = " . self::$testTagId);
+            Connection::query("DELETE FROM tags WHERE id = " . self::$testTagId);
         }
         if (self::$testTextId) {
             Connection::query("DELETE FROM texts WHERE TxID = " . self::$testTextId);

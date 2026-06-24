@@ -45,56 +45,46 @@ enum TagType: string
     }
 
     /**
-     * Get the column prefix for this tag type.
-     *
-     * @return string Column prefix ('Tg' or 'T2')
-     */
-    public function columnPrefix(): string
-    {
-        return match ($this) {
-            self::TERM => 'Tg',
-            self::TEXT => 'T2',
-        };
-    }
-
-    /**
      * Get the ID column name.
      *
-     * @return string Column name ('TgID' or 'T2ID')
+     * Both tag tables share identical column names after the snake_case rename, so
+     * the column accessors return literals (the legacy Tg / T2 prefixes are gone).
+     *
+     * @return string Column name ('id')
      */
     public function idColumn(): string
     {
-        return $this->columnPrefix() . 'ID';
+        return 'id';
     }
 
     /**
      * Get the text column name.
      *
-     * @return string Column name ('TgText' or 'T2Text')
+     * @return string Column name ('text')
      */
     public function textColumn(): string
     {
-        return $this->columnPrefix() . 'Text';
+        return 'text';
     }
 
     /**
      * Get the comment column name.
      *
-     * @return string Column name ('TgComment' or 'T2Comment')
+     * @return string Column name ('comment')
      */
     public function commentColumn(): string
     {
-        return $this->columnPrefix() . 'Comment';
+        return 'comment';
     }
 
     /**
      * Get the user ID column name.
      *
-     * @return string Column name ('TgUsID' or 'T2UsID')
+     * @return string Column name ('user_id')
      */
     public function userIdColumn(): string
     {
-        return $this->columnPrefix() . 'UsID';
+        return 'user_id';
     }
 
     /**

@@ -121,18 +121,18 @@ class TextNavigationService
             if ($currenttag1 != '') {
                 $tag1Int = (int)$currenttag1;
                 if ($tag1Int === -1) {
-                    $wh_tag1 = "group_concat(TtT2ID) IS NULL";
+                    $wh_tag1 = "group_concat(text_tag_id) IS NULL";
                 } else {
-                    $wh_tag1 = "concat('/',group_concat(TtT2ID separator '/'),'/') like concat('%/', ?, '/%')";
+                    $wh_tag1 = "concat('/',group_concat(text_tag_id separator '/'),'/') like concat('%/', ?, '/%')";
                     $params[] = $tag1Int;
                 }
             }
             if ($currenttag2 != '') {
                 $tag2Int = (int)$currenttag2;
                 if ($tag2Int === -1) {
-                    $wh_tag2 = "group_concat(TtT2ID) IS NULL";
+                    $wh_tag2 = "group_concat(text_tag_id) IS NULL";
                 } else {
-                    $wh_tag2 = "concat('/',group_concat(TtT2ID separator '/'),'/') like concat('%/', ?, '/%')";
+                    $wh_tag2 = "concat('/',group_concat(text_tag_id separator '/'),'/') like concat('%/', ?, '/%')";
                     $params[] = $tag2Int;
                 }
             }
@@ -161,9 +161,9 @@ class TextNavigationService
             $sql = 'SELECT TxID
             FROM (
                 (texts
-                    LEFT JOIN text_tag_map ON TxID = TtTxID
+                    LEFT JOIN text_tag_map ON TxID = text_id
                 )
-                LEFT JOIN text_tags ON T2ID = TtT2ID
+                LEFT JOIN text_tags ON id = text_tag_id
             ), languages
             WHERE LgID = TxLgID AND LENGTH(TxAnnotatedText) > 0 '
             . $wh_lang . $wh_query . $textScope . '
@@ -173,9 +173,9 @@ class TextNavigationService
             $sql = 'SELECT TxID
             FROM (
                 (texts
-                    LEFT JOIN text_tag_map ON TxID = TtTxID
+                    LEFT JOIN text_tag_map ON TxID = text_id
                 )
-                LEFT JOIN text_tags ON T2ID = TtT2ID
+                LEFT JOIN text_tags ON id = text_tag_id
             ), languages
             WHERE LgID = TxLgID ' . $wh_lang . $wh_query . $textScope . '
             GROUP BY TxID ' . $wh_tag . '

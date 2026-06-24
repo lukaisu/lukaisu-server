@@ -80,7 +80,7 @@ class BaseControllerTest extends TestCase
 
         // Clean up test data
         if (self::$dbConnected) {
-            Connection::query("DELETE FROM tags WHERE TgText LIKE 'test_ctrl_%'");
+            Connection::query("DELETE FROM tags WHERE text LIKE 'test_ctrl_%'");
         }
 
         parent::tearDown();
@@ -197,14 +197,14 @@ class BaseControllerTest extends TestCase
         }
 
         $result = $this->controller->testExecute(
-            "INSERT INTO tags (TgText) VALUES ('test_ctrl_exec')"
+            "INSERT INTO tags (text) VALUES ('test_ctrl_exec')"
         );
 
         // execute returns number of affected rows
         $this->assertEquals(1, $result);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgText = 'test_ctrl_exec'");
+        Connection::query("DELETE FROM tags WHERE text = 'test_ctrl_exec'");
     }
 
     // ===== getValue() tests =====
@@ -216,16 +216,16 @@ class BaseControllerTest extends TestCase
         }
 
         // Insert test data
-        Connection::query("INSERT INTO tags (TgText) VALUES ('test_ctrl_value')");
+        Connection::query("INSERT INTO tags (text) VALUES ('test_ctrl_value')");
 
         $value = $this->controller->testGetValue(
-            "SELECT TgText as value FROM tags WHERE TgText = 'test_ctrl_value'"
+            "SELECT text as value FROM tags WHERE text = 'test_ctrl_value'"
         );
 
         $this->assertEquals('test_ctrl_value', $value);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgText = 'test_ctrl_value'");
+        Connection::query("DELETE FROM tags WHERE text = 'test_ctrl_value'");
     }
 
     // ===== getMarkedIds() tests =====

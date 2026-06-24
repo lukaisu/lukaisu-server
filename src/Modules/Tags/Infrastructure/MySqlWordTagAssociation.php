@@ -35,8 +35,8 @@ use Lukaisu\Modules\Tags\Domain\TagRepositoryInterface;
 class MySqlWordTagAssociation implements TagAssociationInterface
 {
     private const TABLE_NAME = 'word_tag_map';
-    private const ITEM_COLUMN = 'WtWoID';
-    private const TAG_COLUMN = 'WtTgID';
+    private const ITEM_COLUMN = 'word_id';
+    private const TAG_COLUMN = 'tag_id';
 
     private TagRepositoryInterface $tagRepository;
 
@@ -79,12 +79,12 @@ class MySqlWordTagAssociation implements TagAssociationInterface
     public function getTagTextsForItem(int $itemId): array
     {
         $rows = Connection::preparedFetchAll(
-            'SELECT TgText FROM word_tag_map, tags WHERE TgID = WtTgID AND WtWoID = ? ORDER BY TgText',
+            'SELECT text FROM word_tag_map, tags WHERE id = tag_id AND word_id = ? ORDER BY text',
             [$itemId]
         );
 
         /** @var list<string> */
-        return array_column($rows, 'TgText');
+        return array_column($rows, 'text');
     }
 
     /**
@@ -128,12 +128,12 @@ class MySqlWordTagAssociation implements TagAssociationInterface
 
                 // Get or create the tag for the current user. getOrCreate is
                 // user-scoped, so $tagId already points at the right row; using
-                // it directly avoids a TgText re-lookup that would otherwise
+                // it directly avoids a text re-lookup that would otherwise
                 // match another user's tag with the same name.
                 $tagId = $this->tagRepository->getOrCreate($tagName);
 
                 Connection::preparedExecute(
-                    'INSERT IGNORE INTO word_tag_map (WtWoID, WtTgID) VALUES (?, ?)',
+                    'INSERT IGNORE INTO word_tag_map (word_id, tag_id) VALUES (?, ?)',
                     [$itemId, $tagId]
                 );
             }
@@ -237,7 +237,7 @@ class MySqlWordTagAssociation implements TagAssociationInterface
     {
         // Delete word_tag_map where the tag no longer exists
         return Connection::preparedExecute(
-            'DELETE FROM word_tag_map WHERE WtTgID NOT IN (SELECT TgID FROM tags)',
+            'DELETE FROM word_tag_map WHERE tag_id NOT IN (SELECT id FROM tags)',
             []
         );
     }

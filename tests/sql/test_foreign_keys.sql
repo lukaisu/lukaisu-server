@@ -14,15 +14,15 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Clean up any previous test data
 DELETE FROM word_occurrences WHERE Ti2TxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM sentences WHERE SeTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM text_tag_map WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
+DELETE FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
-DELETE FROM word_tag_map WHERE WtWoID IN (SELECT id FROM words WHERE text LIKE 'fktest_%');
+DELETE FROM word_tag_map WHERE word_id IN (SELECT id FROM words WHERE text LIKE 'fktest_%');
 DELETE FROM words WHERE text LIKE 'fktest_%';
 -- Note: archivedtexts merged into texts table, cleanup already handled by texts DELETE above
 DELETE FROM feed_links WHERE title LIKE 'FK_TEST_%';
 DELETE FROM news_feeds WHERE name LIKE 'FK_TEST_%';
-DELETE FROM tags WHERE TgText LIKE 'fktest_%';
-DELETE FROM text_tags WHERE T2Text LIKE 'fktest_%';
+DELETE FROM tags WHERE text LIKE 'fktest_%';
+DELETE FROM text_tags WHERE text LIKE 'fktest_%';
 DELETE FROM languages WHERE LgName LIKE 'FK_TEST_%';
 
 SELECT '=== Starting Foreign Key Tests ===' AS status;
@@ -197,21 +197,21 @@ VALUES (@test_lang_id, 'fktest_tagged', 'fktest_tagged', 1, 'test', 1);
 
 SET @wt_test_word_id = LAST_INSERT_ID();
 
-INSERT INTO tags (TgText, TgComment) VALUES ('fktest_tag', 'Test tag');
+INSERT INTO tags (text, comment) VALUES ('fktest_tag', 'Test tag');
 SET @wt_test_tag_id = LAST_INSERT_ID();
 
-INSERT INTO word_tag_map (WtWoID, WtTgID) VALUES (@wt_test_word_id, @wt_test_tag_id);
+INSERT INTO word_tag_map (word_id, tag_id) VALUES (@wt_test_word_id, @wt_test_tag_id);
 
 -- Verify wordtag exists
 SELECT IF(COUNT(*) = 1, 'SETUP: Wordtag created', 'SETUP FAIL') AS result
-FROM word_tag_map WHERE WtWoID = @wt_test_word_id;
+FROM word_tag_map WHERE word_id = @wt_test_word_id;
 
 -- Delete word - should cascade to word_tag_map
 DELETE FROM words WHERE id = @wt_test_word_id;
 
 -- Verify wordtag was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Wordtag deleted via CASCADE', 'FAIL: Wordtag not deleted') AS result
-FROM word_tag_map WHERE WtWoID = @wt_test_word_id;
+FROM word_tag_map WHERE word_id = @wt_test_word_id;
 
 -- ============================================================================
 -- Test 7: FK word_tag_map -> tags (ON DELETE CASCADE)
@@ -225,21 +225,21 @@ VALUES (@test_lang_id, 'fktest_tagged2', 'fktest_tagged2', 1, 'test', 1);
 
 SET @wt2_test_word_id = LAST_INSERT_ID();
 
-INSERT INTO tags (TgText, TgComment) VALUES ('fktest_tag2', 'Test tag 2');
+INSERT INTO tags (text, comment) VALUES ('fktest_tag2', 'Test tag 2');
 SET @wt2_test_tag_id = LAST_INSERT_ID();
 
-INSERT INTO word_tag_map (WtWoID, WtTgID) VALUES (@wt2_test_word_id, @wt2_test_tag_id);
+INSERT INTO word_tag_map (word_id, tag_id) VALUES (@wt2_test_word_id, @wt2_test_tag_id);
 
 -- Verify wordtag exists
 SELECT IF(COUNT(*) = 1, 'SETUP: Wordtag created', 'SETUP FAIL') AS result
-FROM word_tag_map WHERE WtTgID = @wt2_test_tag_id;
+FROM word_tag_map WHERE tag_id = @wt2_test_tag_id;
 
 -- Delete tag - should cascade to word_tag_map
-DELETE FROM tags WHERE TgID = @wt2_test_tag_id;
+DELETE FROM tags WHERE id = @wt2_test_tag_id;
 
 -- Verify wordtag was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Wordtag deleted via tag CASCADE', 'FAIL: Wordtag not deleted') AS result
-FROM word_tag_map WHERE WtTgID = @wt2_test_tag_id;
+FROM word_tag_map WHERE tag_id = @wt2_test_tag_id;
 
 -- ============================================================================
 -- Test 8: FK text_tag_map -> texts (ON DELETE CASCADE)
@@ -252,21 +252,21 @@ VALUES (@test_lang_id, 'FK_TEST_TextTag', 'Test', '');
 
 SET @tt_test_text_id = LAST_INSERT_ID();
 
-INSERT INTO text_tags (T2Text, T2Comment) VALUES ('fktest_texttag', 'Test text tag');
+INSERT INTO text_tags (text, comment) VALUES ('fktest_texttag', 'Test text tag');
 SET @tt_test_tag_id = LAST_INSERT_ID();
 
-INSERT INTO text_tag_map (TtTxID, TtT2ID) VALUES (@tt_test_text_id, @tt_test_tag_id);
+INSERT INTO text_tag_map (text_id, text_tag_id) VALUES (@tt_test_text_id, @tt_test_tag_id);
 
 -- Verify texttag exists
 SELECT IF(COUNT(*) = 1, 'SETUP: Texttag created', 'SETUP FAIL') AS result
-FROM text_tag_map WHERE TtTxID = @tt_test_text_id;
+FROM text_tag_map WHERE text_id = @tt_test_text_id;
 
 -- Delete text - should cascade to text_tag_map
 DELETE FROM texts WHERE TxID = @tt_test_text_id;
 
 -- Verify texttag was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Texttag deleted via CASCADE', 'FAIL: Texttag not deleted') AS result
-FROM text_tag_map WHERE TtTxID = @tt_test_text_id;
+FROM text_tag_map WHERE text_id = @tt_test_text_id;
 
 -- ============================================================================
 -- Test 9: FK archived texts (in texts table) -> languages (ON DELETE CASCADE)
@@ -310,21 +310,21 @@ VALUES (@test_lang_id, 'FK_TEST_ArchTag', 'Archived', '', NOW());
 
 SET @att_arch_id = LAST_INSERT_ID();
 
-INSERT INTO text_tags (T2Text, T2Comment) VALUES ('fktest_archtag', 'Arch tag');
+INSERT INTO text_tags (text, comment) VALUES ('fktest_archtag', 'Arch tag');
 SET @att_tag_id = LAST_INSERT_ID();
 
-INSERT INTO text_tag_map (TtTxID, TtT2ID) VALUES (@att_arch_id, @att_tag_id);
+INSERT INTO text_tag_map (text_id, text_tag_id) VALUES (@att_arch_id, @att_tag_id);
 
 -- Verify text_tag_map exists for archived text
 SELECT IF(COUNT(*) = 1, 'SETUP: ArchTextTag created', 'SETUP FAIL') AS result
-FROM text_tag_map WHERE TtTxID = @att_arch_id;
+FROM text_tag_map WHERE text_id = @att_arch_id;
 
 -- Delete archived text - should cascade to text_tag_map
 DELETE FROM texts WHERE TxID = @att_arch_id;
 
 -- Verify text_tag_map entry was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: ArchTextTag deleted via CASCADE', 'FAIL: ArchTextTag not deleted') AS result
-FROM text_tag_map WHERE TtTxID = @att_arch_id;
+FROM text_tag_map WHERE text_id = @att_arch_id;
 
 -- ============================================================================
 -- Test 11: FK news_feeds -> languages (ON DELETE CASCADE)
@@ -461,15 +461,15 @@ SELECT '--- Cleanup ---' AS status;
 -- Clean up remaining test data
 DELETE FROM word_occurrences WHERE Ti2TxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM sentences WHERE SeTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM text_tag_map WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
+DELETE FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
-DELETE FROM word_tag_map WHERE WtWoID IN (SELECT id FROM words WHERE text LIKE 'fktest_%');
+DELETE FROM word_tag_map WHERE word_id IN (SELECT id FROM words WHERE text LIKE 'fktest_%');
 DELETE FROM words WHERE text LIKE 'fktest_%';
 -- Note: archivedtexts merged into texts table, cleanup already handled by texts DELETE above
 DELETE FROM feed_links WHERE title LIKE 'FK_TEST_%';
 DELETE FROM news_feeds WHERE name LIKE 'FK_TEST_%';
-DELETE FROM tags WHERE TgText LIKE 'fktest_%';
-DELETE FROM text_tags WHERE T2Text LIKE 'fktest_%';
+DELETE FROM tags WHERE text LIKE 'fktest_%';
+DELETE FROM text_tags WHERE text LIKE 'fktest_%';
 DELETE FROM languages WHERE LgName LIKE 'FK_TEST_%';
 
 SELECT '=== All Foreign Key Tests Complete ===' AS status;

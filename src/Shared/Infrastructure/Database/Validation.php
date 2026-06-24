@@ -108,11 +108,11 @@ class Validation
 
             $sql = "SELECT (
                 ? IN (
-                    SELECT TgID
+                    SELECT tags.id
                     FROM words, tags, word_tag_map
-                    WHERE TgID = WtTgID AND WtWoID = id" .
+                    WHERE tags.id = tag_id AND word_id = words.id" .
                     $lang_condition .
-                    " group by TgID order by TgText
+                    " group by tags.id order by tags.text
                 )
             ) AS tag_exists"
                 . UserScopedQuery::forTablePrepared('words', $bindings);
@@ -146,12 +146,12 @@ class Validation
             if ($currentlang == '') {
                 $sql = "select (
                     ? in (
-                        select T2ID
+                        select id
                         from texts,
                         text_tags,
                         text_tag_map
-                        where T2ID = TtT2ID and TtTxID = TxID and TxArchivedAt IS NOT NULL
-                        group by T2ID order by T2Text
+                        where id = text_tag_id and text_id = TxID and TxArchivedAt IS NOT NULL
+                        group by id order by text
                     )
                 ) as value"
                     . UserScopedQuery::forTablePrepared('texts', $bindings);
@@ -163,13 +163,13 @@ class Validation
                 $bindings[] = $currentlang_int;
                 $sql = "select (
                     ? in (
-                        select T2ID
+                        select id
                         from texts,
                         text_tags,
                         text_tag_map
-                        where T2ID = TtT2ID and TtTxID = TxID and TxArchivedAt IS NOT NULL
+                        where id = text_tag_id and text_id = TxID and TxArchivedAt IS NOT NULL
                             and TxLgID = ?
-                        group by T2ID order by T2Text
+                        group by id order by text
                     )
                 ) as value"
                     . UserScopedQuery::forTablePrepared('texts', $bindings);
@@ -204,11 +204,11 @@ class Validation
             if ($currentlang == '') {
                 $sql = "select (
                     ? in (
-                        select T2ID
+                        select id
                         from texts, text_tags, text_tag_map
-                        where T2ID = TtT2ID and TtTxID = TxID
-                        group by T2ID
-                        order by T2Text
+                        where id = text_tag_id and text_id = TxID
+                        group by id
+                        order by text
                     )
                 ) as value"
                     . UserScopedQuery::forTablePrepared('texts', $bindings);
@@ -220,10 +220,10 @@ class Validation
                 $bindings[] = $currentlang_int;
                 $sql = "select (
                     ? in (
-                        select T2ID
+                        select id
                         from texts, text_tags, text_tag_map
-                        where T2ID = TtT2ID and TtTxID = TxID and TxLgID = ?
-                        group by T2ID order by T2Text
+                        where id = text_tag_id and text_id = TxID and TxLgID = ?
+                        group by id order by text
                     )
                 ) as value"
                     . UserScopedQuery::forTablePrepared('texts', $bindings);

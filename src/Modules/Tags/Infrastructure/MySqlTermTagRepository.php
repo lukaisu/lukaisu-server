@@ -68,10 +68,10 @@ class MySqlTermTagRepository implements TagRepositoryInterface
     private function mapToEntity(array $row): Tag
     {
         return Tag::reconstitute(
-            (int) $row['TgID'],
+            (int) $row['id'],
             TagType::TERM,
-            (string) $row['TgText'],
-            (string) ($row['TgComment'] ?? '')
+            (string) $row['text'],
+            (string) ($row['comment'] ?? '')
         );
     }
 
@@ -81,7 +81,7 @@ class MySqlTermTagRepository implements TagRepositoryInterface
     public function find(int $id): ?Tag
     {
         $row = $this->query()
-            ->where('TgID', '=', $id)
+            ->where('id', '=', $id)
             ->firstPrepared();
 
         if ($row === null) {
@@ -97,7 +97,7 @@ class MySqlTermTagRepository implements TagRepositoryInterface
     public function findByText(string $text): ?Tag
     {
         $row = $this->query()
-            ->where('TgText', '=', $text)
+            ->where('text', '=', $text)
             ->firstPrepared();
 
         if ($row === null) {
@@ -117,18 +117,18 @@ class MySqlTermTagRepository implements TagRepositoryInterface
         if ($id > 0 && !$tag->id()->isNew()) {
             // Update existing
             $this->query()
-                ->where('TgID', '=', $id)
+                ->where('id', '=', $id)
                 ->updatePrepared([
-                    'TgText' => $tag->text(),
-                    'TgComment' => $tag->comment(),
+                    'text' => $tag->text(),
+                    'comment' => $tag->comment(),
                 ]);
             return;
         }
 
         // Insert new
         $newId = (int) $this->query()->insertPrepared([
-            'TgText' => $tag->text(),
-            'TgComment' => $tag->comment(),
+            'text' => $tag->text(),
+            'comment' => $tag->comment(),
         ]);
         $tag->setId(TagId::fromInt($newId));
     }
@@ -143,11 +143,11 @@ class MySqlTermTagRepository implements TagRepositoryInterface
         }
 
         $affected = $this->query()
-            ->where('TgID', '=', $id)
+            ->where('id', '=', $id)
             ->deletePrepared();
 
         if ($affected > 0) {
-            Maintenance::adjustAutoIncrement(self::TABLE_NAME, 'TgID');
+            Maintenance::adjustAutoIncrement(self::TABLE_NAME, 'id');
         }
 
         return $affected > 0;
@@ -164,11 +164,11 @@ class MySqlTermTagRepository implements TagRepositoryInterface
 
         $ids = array_map('intval', $ids);
         $affected = $this->query()
-            ->whereIn('TgID', $ids)
+            ->whereIn('id', $ids)
             ->deletePrepared();
 
         if ($affected > 0) {
-            Maintenance::adjustAutoIncrement(self::TABLE_NAME, 'TgID');
+            Maintenance::adjustAutoIncrement(self::TABLE_NAME, 'id');
         }
 
         return $affected;
@@ -194,7 +194,7 @@ class MySqlTermTagRepository implements TagRepositoryInterface
         }
 
         if ($affected > 0) {
-            Maintenance::adjustAutoIncrement(self::TABLE_NAME, 'TgID');
+            Maintenance::adjustAutoIncrement(self::TABLE_NAME, 'id');
         }
 
         return $affected;
@@ -206,7 +206,7 @@ class MySqlTermTagRepository implements TagRepositoryInterface
     public function exists(int $id): bool
     {
         return $this->query()
-            ->where('TgID', '=', $id)
+            ->where('id', '=', $id)
             ->existsPrepared();
     }
 
@@ -215,10 +215,10 @@ class MySqlTermTagRepository implements TagRepositoryInterface
      */
     public function textExists(string $text, ?int $excludeId = null): bool
     {
-        $query = $this->query()->where('TgText', '=', $text);
+        $query = $this->query()->where('text', '=', $text);
 
         if ($excludeId !== null) {
-            $query->where('TgID', '!=', $excludeId);
+            $query->where('id', '!=', $excludeId);
         }
 
         return $query->existsPrepared();
@@ -261,7 +261,7 @@ class MySqlTermTagRepository implements TagRepositoryInterface
         /** @var array<int, mixed> $bindings */
         $bindings = $whereData['params'];
         $userScope = UserScopedQuery::forTablePrepared(self::TABLE_NAME, $bindings);
-        $sql = 'SELECT TgID, TgText, TgComment FROM ' . self::TABLE_NAME .
+        $sql = 'SELECT id, text, comment FROM ' . self::TABLE_NAME .
                ' WHERE (1=1) ' . $whereData['clause'] . $userScope .
                ' ORDER BY ' . $column .
                ' LIMIT ' . $offset . ',' . $perPage;
@@ -290,7 +290,7 @@ class MySqlTermTagRepository implements TagRepositoryInterface
     public function count(string $query = ''): int
     {
         if ($query === '') {
-            return $this->query()->count('TgID');
+            return $this->query()->count('id');
         }
 
         $whereData = $this->buildWhereClause($query);
@@ -298,7 +298,7 @@ class MySqlTermTagRepository implements TagRepositoryInterface
         $bindings = $whereData['params'];
         $userScope = UserScopedQuery::forTablePrepared(self::TABLE_NAME, $bindings);
         return (int) Connection::preparedFetchValue(
-            'SELECT COUNT(TgID) AS cnt FROM ' . self::TABLE_NAME .
+            'SELECT COUNT(id) AS cnt FROM ' . self::TABLE_NAME .
             ' WHERE (1=1) ' . $whereData['clause'] . $userScope,
             $bindings,
             'cnt'
@@ -311,12 +311,12 @@ class MySqlTermTagRepository implements TagRepositoryInterface
     public function getAllTexts(): array
     {
         $rows = $this->query()
-            ->select(['TgText'])
-            ->orderBy('TgText', 'ASC')
+            ->select(['text'])
+            ->orderBy('text', 'ASC')
             ->getPrepared();
 
         /** @var list<string> */
-        return array_column($rows, 'TgText');
+        return array_column($rows, 'text');
     }
 
     /**
@@ -325,7 +325,7 @@ class MySqlTermTagRepository implements TagRepositoryInterface
     public function getUsageCount(int $tagId): int
     {
         return QueryBuilder::table('word_tag_map')
-            ->where('WtTgID', '=', $tagId)
+            ->where('tag_id', '=', $tagId)
             ->count();
     }
 
@@ -365,7 +365,7 @@ class MySqlTermTagRepository implements TagRepositoryInterface
         }
 
         $searchValue = str_replace('*', '%', $query);
-        $clause = ' AND (TgText LIKE ? OR TgComment LIKE ?)';
+        $clause = ' AND (text LIKE ? OR comment LIKE ?)';
 
         return ['clause' => $clause, 'params' => [$searchValue, $searchValue]];
     }
@@ -380,11 +380,11 @@ class MySqlTermTagRepository implements TagRepositoryInterface
     private function mapOrderByColumn(string $orderBy): string
     {
         return match (strtolower($orderBy)) {
-            'text' => 'TgText ASC',
-            'comment' => 'TgComment ASC',
-            'newest', 'id desc' => 'TgID DESC',
-            'oldest', 'id asc' => 'TgID ASC',
-            default => 'TgText ASC',
+            'text' => 'text ASC',
+            'comment' => 'comment ASC',
+            'newest', 'id desc' => 'id DESC',
+            'oldest', 'id asc' => 'id ASC',
+            default => 'text ASC',
         };
     }
 }

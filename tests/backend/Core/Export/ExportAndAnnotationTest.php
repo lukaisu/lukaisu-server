@@ -370,15 +370,15 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         // Insert test data
-        Connection::query("INSERT INTO tags (TgText) VALUES ('test_export_firstval')");
+        Connection::query("INSERT INTO tags (text) VALUES ('test_export_firstval')");
         $id = (int)Connection::lastInsertId();
 
-        $value = Connection::fetchValue("SELECT TgText AS value FROM tags WHERE TgID = $id");
+        $value = Connection::fetchValue("SELECT text AS value FROM tags WHERE id = $id");
 
         $this->assertEquals('test_export_firstval', $value);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgID = $id");
+        Connection::query("DELETE FROM tags WHERE id = $id");
     }
 
     public function testGetFirstValueReturnsNullForNoResults(): void
@@ -387,7 +387,7 @@ class ExportAndAnnotationTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $value = Connection::fetchValue("SELECT TgText AS value FROM tags WHERE TgID = 999999");
+        $value = Connection::fetchValue("SELECT text AS value FROM tags WHERE id = 999999");
 
         $this->assertNull($value);
     }
@@ -399,13 +399,13 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         $result = DB::execute(
-            "INSERT INTO tags (TgText) VALUES ('test_export_runsql')"
+            "INSERT INTO tags (text) VALUES ('test_export_runsql')"
         );
 
         // DB::execute returns number of affected rows
         $this->assertEquals(1, $result);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgText = 'test_export_runsql'");
+        Connection::query("DELETE FROM tags WHERE text = 'test_export_runsql'");
     }
 }

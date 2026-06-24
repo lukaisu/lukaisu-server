@@ -497,7 +497,7 @@ class IntegrationTest extends TestCase
     {
         // Insert a test record and get its ID
         Connection::query(
-            "INSERT INTO tags (TgText) VALUES ('test_tag_" . time() . "')"
+            "INSERT INTO tags (text) VALUES ('test_tag_" . time() . "')"
         );
 
         $last_id = (int)Connection::lastInsertId();
@@ -505,7 +505,7 @@ class IntegrationTest extends TestCase
         $this->assertGreaterThan(0, $last_id);
 
         // Clean up
-        Connection::query("DELETE FROM tags WHERE TgID = $last_id");
+        Connection::query("DELETE FROM tags WHERE id = $last_id");
     }
 
     public function testTrimValue(): void
@@ -579,12 +579,12 @@ class IntegrationTest extends TestCase
         $word_id = (int)Connection::lastInsertId();
 
         Connection::query(
-            "INSERT INTO tags (TgText) VALUES ('testtag1')"
+            "INSERT INTO tags (text) VALUES ('testtag1')"
         );
         $tag_id = (int)Connection::lastInsertId();
 
         Connection::query(
-            "INSERT INTO word_tag_map (WtWoID, WtTgID) VALUES ($word_id, $tag_id)"
+            "INSERT INTO word_tag_map (word_id, tag_id) VALUES ($word_id, $tag_id)"
         );
 
         // Test getting tag list
@@ -592,9 +592,9 @@ class IntegrationTest extends TestCase
         $this->assertStringContainsString('testtag1', $tag_list);
 
         // Clean up
-        Connection::query("DELETE FROM word_tag_map WHERE WtWoID = $word_id");
+        Connection::query("DELETE FROM word_tag_map WHERE word_id = $word_id");
         Connection::query("DELETE FROM words WHERE id = $word_id");
-        Connection::query("DELETE FROM tags WHERE TgID = $tag_id");
+        Connection::query("DELETE FROM tags WHERE id = $tag_id");
         Connection::query("DELETE FROM languages WHERE LgID = $lang_id");
     }
 

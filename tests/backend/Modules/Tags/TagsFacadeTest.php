@@ -103,8 +103,8 @@ class TagsFacadeTest extends TestCase
     {
         $result = $this->termTagService->buildWhereClause('test');
         $this->assertIsArray($result);
-        $this->assertStringContainsString('TgText LIKE', $result['clause']);
-        $this->assertStringContainsString('TgComment LIKE', $result['clause']);
+        $this->assertStringContainsString('text LIKE', $result['clause']);
+        $this->assertStringContainsString('comment LIKE', $result['clause']);
         $this->assertCount(2, $result['params']);
         $this->assertEquals('test', $result['params'][0]);
     }
@@ -113,8 +113,8 @@ class TagsFacadeTest extends TestCase
     {
         $result = $this->textTagService->buildWhereClause('test');
         $this->assertIsArray($result);
-        $this->assertStringContainsString('T2Text LIKE', $result['clause']);
-        $this->assertStringContainsString('T2Comment LIKE', $result['clause']);
+        $this->assertStringContainsString('text LIKE', $result['clause']);
+        $this->assertStringContainsString('comment LIKE', $result['clause']);
     }
 
     public function testBuildWhereClauseReplacesWildcard(): void
@@ -398,7 +398,7 @@ class TagsFacadeTest extends TestCase
 
     public function testFormatDuplicateErrorFormatsTermTagDuplicate(): void
     {
-        $message = "Error: Duplicate entry 'mytag' for key 'TgText'";
+        $message = "Error: Duplicate entry 'mytag' for key 'text'";
         $result = $this->termTagService->formatDuplicateError($message);
         $this->assertStringContainsString('Term Tag', $result);
         $this->assertStringContainsString('mytag', $result);
@@ -407,7 +407,7 @@ class TagsFacadeTest extends TestCase
 
     public function testFormatDuplicateErrorFormatsTextTagDuplicate(): void
     {
-        $message = "Error: Duplicate entry 'mytexttag' for key 'T2Text'";
+        $message = "Error: Duplicate entry 'mytexttag' for key 'text'";
         $result = $this->textTagService->formatDuplicateError($message);
         $this->assertStringContainsString('Text Tag', $result);
         $this->assertStringContainsString('mytexttag', $result);

@@ -498,25 +498,25 @@ class Migrations
             // Clean up orphaned word_tag_map (tags deleted)
             Connection::execute(
                 "DELETE word_tag_map
-                FROM (word_tag_map LEFT JOIN tags on WtTgID = TgID)
-                WHERE TgID IS NULL"
+                FROM (word_tag_map LEFT JOIN tags on tag_id = id)
+                WHERE id IS NULL"
             );
             // Clean up orphaned word_tag_map (words deleted)
             Connection::execute(
                 "DELETE word_tag_map
-                FROM (word_tag_map LEFT JOIN words ON WtWoID = id)
+                FROM (word_tag_map LEFT JOIN words ON word_id = id)
                 WHERE id IS NULL"
             );
             // Clean up orphaned text_tag_map (text_tags deleted)
             Connection::execute(
                 "DELETE text_tag_map
-                FROM (text_tag_map LEFT JOIN text_tags ON TtT2ID = T2ID)
-                WHERE T2ID IS NULL"
+                FROM (text_tag_map LEFT JOIN text_tags ON text_tag_id = id)
+                WHERE id IS NULL"
             );
             // Clean up orphaned text_tag_map (texts deleted)
             Connection::execute(
                 "DELETE text_tag_map
-                FROM (text_tag_map LEFT JOIN texts ON TtTxID = TxID)
+                FROM (text_tag_map LEFT JOIN texts ON text_id = TxID)
                 WHERE TxID IS NULL"
             );
             Maintenance::optimizeDatabase();

@@ -305,7 +305,7 @@ if (!in_array($fkMigration, $appliedMigrations)) {
         "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_text " .
             "FOREIGN KEY (Ti2TxID) REFERENCES texts(TxID) ON DELETE CASCADE",
         "ALTER TABLE text_tag_map ADD CONSTRAINT fk_text_tag_map_text " .
-            "FOREIGN KEY (TtTxID) REFERENCES texts(TxID) ON DELETE CASCADE",
+            "FOREIGN KEY (text_id) REFERENCES texts(TxID) ON DELETE CASCADE",
         // Sentence reference
         "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_sentence " .
             "FOREIGN KEY (Ti2SeID) REFERENCES sentences(SeID) ON DELETE CASCADE",
@@ -315,12 +315,12 @@ if (!in_array($fkMigration, $appliedMigrations)) {
             "FOREIGN KEY (Ti2WoID) REFERENCES words(id) ON DELETE SET NULL",
         // Word tags
         "ALTER TABLE word_tag_map ADD CONSTRAINT fk_word_tag_map_word " .
-            "FOREIGN KEY (WtWoID) REFERENCES words(id) ON DELETE CASCADE",
+            "FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE",
         "ALTER TABLE word_tag_map ADD CONSTRAINT fk_word_tag_map_tag " .
-            "FOREIGN KEY (WtTgID) REFERENCES tags(TgID) ON DELETE CASCADE",
+            "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE",
         // Text tags
         "ALTER TABLE text_tag_map ADD CONSTRAINT fk_text_tag_map_text_tag " .
-            "FOREIGN KEY (TtT2ID) REFERENCES text_tags(T2ID) ON DELETE CASCADE",
+            "FOREIGN KEY (text_tag_id) REFERENCES text_tags(id) ON DELETE CASCADE",
         // Feed links
         "ALTER TABLE feed_links ADD CONSTRAINT fk_feed_links_newsfeed " .
             "FOREIGN KEY (feed_id) REFERENCES news_feeds(id) ON DELETE CASCADE",

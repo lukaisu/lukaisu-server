@@ -87,7 +87,7 @@ class TermTagControllerTest extends TestCase
 
         $result = $method->invoke($this->controller);
 
-        $this->assertSame('TgID', $result);
+        $this->assertSame('id', $result);
     }
 
     // =========================================================================

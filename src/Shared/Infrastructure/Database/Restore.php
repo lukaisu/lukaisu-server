@@ -371,11 +371,11 @@ class Restore
     {
         // Level 1: Link/map and derived tables, scoped via parent ownership.
         Connection::preparedExecute(
-            'DELETE FROM text_tag_map WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
+            'DELETE FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
             [$userId]
         );
         Connection::preparedExecute(
-            'DELETE FROM word_tag_map WHERE WtWoID IN (SELECT id FROM words WHERE user_id = ?)',
+            'DELETE FROM word_tag_map WHERE word_id IN (SELECT id FROM words WHERE user_id = ?)',
             [$userId]
         );
         Connection::preparedExecute(
@@ -395,8 +395,8 @@ class Restore
         Connection::preparedExecute('DELETE FROM news_feeds WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM texts WHERE TxUsID = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM words WHERE user_id = ?', [$userId]);
-        Connection::preparedExecute('DELETE FROM tags WHERE TgUsID = ?', [$userId]);
-        Connection::preparedExecute('DELETE FROM text_tags WHERE T2UsID = ?', [$userId]);
+        Connection::preparedExecute('DELETE FROM tags WHERE user_id = ?', [$userId]);
+        Connection::preparedExecute('DELETE FROM text_tags WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM languages WHERE LgUsID = ?', [$userId]);
 
         // Level 3: Per-user settings entry (keep admin/global settings).
@@ -491,14 +491,14 @@ class Restore
 
         // Only the directly-scoped tables carry UsID columns. Link/map
         // and derived tables inherit ownership through their parent
-        // (TtTxID → texts, WtWoID → words, etc.) and don't need rewriting.
+        // (text_id → texts, word_id → words, etc.) and don't need rewriting.
         foreach (
             [
                 'languages'          => 'LgUsID',
                 'texts'              => 'TxUsID',
                 'words'              => 'user_id',
-                'tags'                => 'TgUsID',
-                'text_tags'          => 'T2UsID',
+                'tags'                => 'user_id',
+                'text_tags'          => 'user_id',
                 'news_feeds'         => 'user_id',
                 'settings'           => 'StUsID',
                 'local_dictionaries' => 'LdUsID',

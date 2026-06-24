@@ -115,7 +115,7 @@ class ListTexts
         $sql = "SELECT COUNT(*) AS cnt FROM (
             SELECT TxID FROM (
                 texts
-                LEFT JOIN text_tag_map ON TxID = TtTxID
+                LEFT JOIN text_tag_map ON TxID = text_id
             ) WHERE TxArchivedAt IS NULL {$whLang}{$whQuery}{$textScope}
             GROUP BY TxID {$whTag}
         ) AS dummy";
@@ -163,11 +163,11 @@ class ListTexts
         $sql = "SELECT TxID, TxTitle, LgName, TxAudioURI, TxSourceURI,
             LENGTH(TxAnnotatedText) AS annotlen,
             (SELECT COUNT(*) FROM sentences WHERE SeTxID = TxID) AS sentnum,
-            IFNULL(GROUP_CONCAT(DISTINCT T2Text ORDER BY T2Text SEPARATOR ','), '') AS taglist
+            IFNULL(GROUP_CONCAT(DISTINCT text ORDER BY text SEPARATOR ','), '') AS taglist
             FROM (
                 (texts
-                LEFT JOIN text_tag_map ON TxID = TtTxID)
-                LEFT JOIN text_tags ON T2ID = TtT2ID{$tagJoinScope}
+                LEFT JOIN text_tag_map ON TxID = text_id)
+                LEFT JOIN text_tags ON id = text_tag_id{$tagJoinScope}
             ), languages
             WHERE LgID=TxLgID AND TxArchivedAt IS NULL {$whLang}{$whQuery}{$textScope}{$langScope}
             GROUP BY TxID {$whTag}
@@ -198,7 +198,7 @@ class ListTexts
         $sql = "SELECT COUNT(*) AS cnt FROM (
             SELECT TxID FROM (
                 texts
-                LEFT JOIN text_tag_map ON TxID = TtTxID
+                LEFT JOIN text_tag_map ON TxID = text_id
             ) WHERE TxArchivedAt IS NOT NULL {$whLang}{$whQuery}{$textScope}
             GROUP BY TxID {$whTag}
         ) AS dummy";
@@ -243,11 +243,11 @@ class ListTexts
 
         $sql = "SELECT TxID, TxTitle, LgName, TxAudioURI, TxSourceURI,
             LENGTH(TxAnnotatedText) AS annotlen,
-            IFNULL(GROUP_CONCAT(DISTINCT T2Text ORDER BY T2Text SEPARATOR ','), '') AS taglist
+            IFNULL(GROUP_CONCAT(DISTINCT text ORDER BY text SEPARATOR ','), '') AS taglist
             FROM (
                 (texts
-                LEFT JOIN text_tag_map ON TxID = TtTxID)
-                LEFT JOIN text_tags ON T2ID = TtT2ID{$tagJoinScope}
+                LEFT JOIN text_tag_map ON TxID = text_id)
+                LEFT JOIN text_tags ON id = text_tag_id{$tagJoinScope}
             ), languages
             WHERE LgID=TxLgID AND TxArchivedAt IS NOT NULL {$whLang}{$whQuery}{$textScope}{$langScope}
             GROUP BY TxID {$whTag}

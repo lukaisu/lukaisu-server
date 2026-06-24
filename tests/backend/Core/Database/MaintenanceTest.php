@@ -157,7 +157,7 @@ class MaintenanceTest extends TestCase
         }
 
         // Test with tags table
-        Maintenance::adjustAutoIncrement('tags', 'TgID');
+        Maintenance::adjustAutoIncrement('tags', 'id');
         $this->assertTrue(true, 'adjustAutoIncrement should complete without error for tags');
     }
 
@@ -168,7 +168,7 @@ class MaintenanceTest extends TestCase
         }
 
         // Test with text_tags table
-        Maintenance::adjustAutoIncrement('text_tags', 'T2ID');
+        Maintenance::adjustAutoIncrement('text_tags', 'id');
         $this->assertTrue(true, 'adjustAutoIncrement should complete without error for text_tags');
     }
 

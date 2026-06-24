@@ -35,8 +35,8 @@ use Lukaisu\Modules\Tags\Domain\TagRepositoryInterface;
 class MySqlTextTagAssociation implements TagAssociationInterface
 {
     private const TABLE_NAME = 'text_tag_map';
-    private const ITEM_COLUMN = 'TtTxID';
-    private const TAG_COLUMN = 'TtT2ID';
+    private const ITEM_COLUMN = 'text_id';
+    private const TAG_COLUMN = 'text_tag_id';
 
     private TagRepositoryInterface $tagRepository;
 
@@ -79,12 +79,12 @@ class MySqlTextTagAssociation implements TagAssociationInterface
     public function getTagTextsForItem(int $itemId): array
     {
         $rows = Connection::preparedFetchAll(
-            'SELECT T2Text FROM text_tag_map, text_tags WHERE T2ID = TtT2ID AND TtTxID = ? ORDER BY T2Text',
+            'SELECT text FROM text_tag_map, text_tags WHERE id = text_tag_id AND text_id = ? ORDER BY text',
             [$itemId]
         );
 
         /** @var list<string> */
-        return array_column($rows, 'T2Text');
+        return array_column($rows, 'text');
     }
 
     /**
@@ -128,12 +128,12 @@ class MySqlTextTagAssociation implements TagAssociationInterface
 
                 // Get or create the tag for the current user. getOrCreate is
                 // user-scoped, so $tagId already points at the right row; using
-                // it directly avoids a T2Text re-lookup that would otherwise
+                // it directly avoids a text re-lookup that would otherwise
                 // match another user's tag with the same name.
                 $tagId = $this->tagRepository->getOrCreate($tagName);
 
                 Connection::preparedExecute(
-                    'INSERT IGNORE INTO text_tag_map (TtTxID, TtT2ID) VALUES (?, ?)',
+                    'INSERT IGNORE INTO text_tag_map (text_id, text_tag_id) VALUES (?, ?)',
                     [$itemId, $tagId]
                 );
             }
@@ -237,7 +237,7 @@ class MySqlTextTagAssociation implements TagAssociationInterface
     {
         // Delete text_tag_map where the tag no longer exists
         return Connection::preparedExecute(
-            'DELETE FROM text_tag_map WHERE TtT2ID NOT IN (SELECT T2ID FROM text_tags)',
+            'DELETE FROM text_tag_map WHERE text_tag_id NOT IN (SELECT id FROM text_tags)',
             []
         );
     }

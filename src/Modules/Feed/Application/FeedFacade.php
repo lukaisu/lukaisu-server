@@ -880,7 +880,7 @@ class FeedFacade
                         foreach ($text['TagList'] as $tag) {
                             if (!in_array($tag, $sessionTextTags, true)) {
                                 $bindings = [$tag];
-                                $sql = 'INSERT INTO text_tags (T2Text'
+                                $sql = 'INSERT INTO text_tags (text'
                                     . \Lukaisu\Shared\Infrastructure\Database\UserScopedQuery::insertColumn('text_tags')
                                     . ') VALUES (?'
                                     . \Lukaisu\Shared\Infrastructure\Database\UserScopedQuery
@@ -928,9 +928,9 @@ class FeedFacade
                         /** @var list<mixed> $tagBindings */
                         $tagBindings = array_values(array_merge([$id], $currentTagList));
                         \Lukaisu\Shared\Infrastructure\Database\Connection::preparedExecute(
-                            'INSERT INTO text_tag_map (TtTxID, TtT2ID)
-                            SELECT ?, T2ID FROM text_tags
-                            WHERE T2Text IN (' . $tagPlaceholders . ')'
+                            'INSERT INTO text_tag_map (text_id, text_tag_id)
+                            SELECT ?, id FROM text_tags
+                            WHERE text IN (' . $tagPlaceholders . ')'
                             . \Lukaisu\Shared\Infrastructure\Database\UserScopedQuery
                                 ::forTablePrepared('text_tags', $tagBindings),
                             $tagBindings
@@ -949,15 +949,15 @@ class FeedFacade
                 /** @var list<mixed> $tagQueryBindings */
                 $tagQueryBindings = array_values($currentTagList);
                 $rows = \Lukaisu\Shared\Infrastructure\Database\Connection::preparedFetchAll(
-                    "SELECT TtTxID FROM text_tag_map
-                    JOIN text_tags ON TtT2ID=T2ID
-                    WHERE T2Text IN (" . $tagPlaceholders . ")"
+                    "SELECT text_id FROM text_tag_map
+                    JOIN text_tags ON text_tag_id=id
+                    WHERE text IN (" . $tagPlaceholders . ")"
                     . \Lukaisu\Shared\Infrastructure\Database\UserScopedQuery
                         ::forTablePrepared('text_tags', $tagQueryBindings),
                     $tagQueryBindings
                 );
                 foreach ($rows as $row) {
-                    $textItem[] = (int)$row['TtTxID'];
+                    $textItem[] = (int)$row['text_id'];
                 }
             }
             $textCount = count($textItem);

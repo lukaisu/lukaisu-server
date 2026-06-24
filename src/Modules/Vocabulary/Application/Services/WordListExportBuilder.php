@@ -59,9 +59,9 @@ class WordListExportBuilder
         $ankiSelect = 'select distinct id, LgRightToLeft,
             LgRegexpWordCharacters, LgName, text, translation,
             romanization, sentence,
-            ifnull(group_concat(distinct TgText order by TgText separator \' \'),\'\') as taglist';
-        $ankiFrom = 'from ((words left JOIN word_tag_map ON id = WtWoID)
-            left join tags on TgID = WtTgID), languages';
+            ifnull(group_concat(distinct text order by text separator \' \'),\'\') as taglist';
+        $ankiFrom = 'from ((words left JOIN word_tag_map ON id = word_id)
+            left join tags on id = tag_id), languages';
         $ankiWhere = 'language_id = LgID AND translation != \'*\'
             AND translation != \'\' AND translation IS NOT NULL
             AND sentence IS NOT NULL AND sentence != \'\'
@@ -127,9 +127,9 @@ class WordListExportBuilder
     ): array {
         $tsvSelect = 'select distinct id, LgName, text, translation,
             romanization, sentence, status,
-            ifnull(group_concat(distinct TgText order by TgText separator \' \'),\'\') as taglist';
-        $tsvFrom = 'from ((words left JOIN word_tag_map ON id = WtWoID)
-            left join tags on TgID = WtTgID), languages';
+            ifnull(group_concat(distinct text order by text separator \' \'),\'\') as taglist';
+        $tsvFrom = 'from ((words left JOIN word_tag_map ON id = word_id)
+            left join tags on id = tag_id), languages';
 
         if (!empty($ids)) {
             $params = [];
@@ -189,9 +189,9 @@ class WordListExportBuilder
     ): array {
         $flexSelect = 'select distinct id, LgName, LgExportTemplate, LgRightToLeft,
             text, text_lc, translation, romanization, sentence, status,
-            ifnull(group_concat(distinct TgText order by TgText separator \' \'),\'\') as taglist';
-        $flexFrom = 'from ((words left JOIN word_tag_map ON id = WtWoID)
-            left join tags on TgID = WtTgID), languages';
+            ifnull(group_concat(distinct text order by text separator \' \'),\'\') as taglist';
+        $flexFrom = 'from ((words left JOIN word_tag_map ON id = word_id)
+            left join tags on id = tag_id), languages';
 
         if (!empty($ids)) {
             $params = [];
@@ -250,7 +250,7 @@ class WordListExportBuilder
         if ($textId == '') {
             return [
                 'sql' => 'select distinct id
-                    from (words left JOIN word_tag_map ON id = WtWoID)
+                    from (words left JOIN word_tag_map ON id = word_id)
                     where (1=1) ' . $whLang . $whStat . $whQuery .
                     ' group by id ' . $whTag,
                 'params' => $filterParams,
@@ -264,7 +264,7 @@ class WordListExportBuilder
 
         return [
             'sql' => 'select distinct id
-                from (words left JOIN word_tag_map ON id = WtWoID),
+                from (words left JOIN word_tag_map ON id = word_id),
                 word_occurrences
                 where Ti2LgID = language_id and Ti2WoID = id
                 and Ti2TxID in ' . $inClause .

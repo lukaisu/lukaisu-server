@@ -430,13 +430,13 @@ class WordListApiHandler
         // Get term tags (from tags table - text_tags is for text tags)
         $tags = [];
         $tagResult = QueryBuilder::table('tags')
-            ->select(['TgID', 'TgText'])
-            ->orderBy('TgText')
+            ->select(['id', 'text'])
+            ->orderBy('text')
             ->getPrepared();
         foreach ($tagResult as $row) {
             $tags[] = [
-                'id' => (int) $row['TgID'],
-                'name' => (string) $row['TgText']
+                'id' => (int) $row['id'],
+                'name' => (string) $row['text']
             ];
         }
 
@@ -522,10 +522,10 @@ class WordListApiHandler
                 'words.sentence',
                 "IFNULL(words.sentence, '') LIKE CONCAT('%{', words.text, '}%') AS SentOK",
                 'words.status',
-                "IFNULL(group_concat(DISTINCT tags.TgText ORDER BY tags.TgText separator ','), '') AS taglist"
+                "IFNULL(group_concat(DISTINCT tags.text ORDER BY tags.text separator ','), '') AS taglist"
             ])
-            ->leftJoin('word_tag_map', 'words.id', '=', 'word_tag_map.WtWoID')
-            ->leftJoin('tags', 'tags.TgID', '=', 'word_tag_map.WtTgID')
+            ->leftJoin('word_tag_map', 'words.id', '=', 'word_tag_map.word_id')
+            ->leftJoin('tags', 'tags.id', '=', 'word_tag_map.tag_id')
             ->where('words.status_changed_at', '>', $lastUpdate)
             ->groupBy('words.id')
             ->limit($maxTerms)

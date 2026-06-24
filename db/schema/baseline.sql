@@ -187,39 +187,39 @@ CREATE TABLE IF NOT EXISTS words (
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS tags (
-    TgID smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-    TgUsID int(10) unsigned DEFAULT NULL,
-    TgText varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-    TgComment varchar(200) NOT NULL DEFAULT '',
-    PRIMARY KEY (TgID),
-    KEY TgUsID (TgUsID),
-    UNIQUE KEY TgText (TgText),
-    CONSTRAINT fk_tags_user FOREIGN KEY (TgUsID) REFERENCES users(UsID) ON DELETE CASCADE
+    id smallint(5) unsigned NOT NULL AUTO_INCREMENT,
+    user_id int(10) unsigned DEFAULT NULL,
+    text varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+    comment varchar(200) NOT NULL DEFAULT '',
+    PRIMARY KEY (id),
+    KEY user_id (user_id),
+    UNIQUE KEY text (text),
+    CONSTRAINT fk_tags_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 CREATE TABLE IF NOT EXISTS word_tag_map (
-    WtWoID mediumint(8) unsigned NOT NULL,
-    WtTgID smallint(5) unsigned NOT NULL,
-    PRIMARY KEY (WtWoID,WtTgID),
-    KEY WtTgID (WtTgID)
+    word_id mediumint(8) unsigned NOT NULL,
+    tag_id smallint(5) unsigned NOT NULL,
+    PRIMARY KEY (word_id,tag_id),
+    KEY tag_id (tag_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS text_tags (
-    T2ID smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-    T2UsID int(10) unsigned DEFAULT NULL,
-    T2Text varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-    T2Comment varchar(200) NOT NULL DEFAULT '',
-    PRIMARY KEY (T2ID),
-    KEY T2UsID (T2UsID),
-    UNIQUE KEY T2Text (T2Text),
-    CONSTRAINT fk_text_tags_user FOREIGN KEY (T2UsID) REFERENCES users(UsID) ON DELETE CASCADE
+    id smallint(5) unsigned NOT NULL AUTO_INCREMENT,
+    user_id int(10) unsigned DEFAULT NULL,
+    text varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+    comment varchar(200) NOT NULL DEFAULT '',
+    PRIMARY KEY (id),
+    KEY user_id (user_id),
+    UNIQUE KEY text (text),
+    CONSTRAINT fk_text_tags_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS text_tag_map (
-    TtTxID smallint(5) unsigned NOT NULL,
-    TtT2ID smallint(5) unsigned NOT NULL,
-    PRIMARY KEY (TtTxID,TtT2ID), KEY TtT2ID (TtT2ID)
+    text_id smallint(5) unsigned NOT NULL,
+    text_tag_id smallint(5) unsigned NOT NULL,
+    PRIMARY KEY (text_id,text_tag_id), KEY text_tag_id (text_tag_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS news_feeds (

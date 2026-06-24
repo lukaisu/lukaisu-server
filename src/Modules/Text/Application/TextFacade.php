@@ -240,7 +240,7 @@ class TextFacade
         string|int $tag1,
         string|int $tag2,
         string $tag12,
-        string $tagIdCol = 'TtT2ID'
+        string $tagIdCol = 'text_tag_id'
     ): array {
         return $this->buildTextFilters->buildTagHavingClausePrepared($tag1, $tag2, $tag12, $tagIdCol);
     }
@@ -596,10 +596,10 @@ class TextFacade
         $records = Connection::preparedFetchAll(
             "SELECT TxID, TxTitle, TxAudioURI, TxSourceURI,
             LENGTH(TxAnnotatedText) AS annotlen,
-            IFNULL(GROUP_CONCAT(DISTINCT T2Text ORDER BY T2Text SEPARATOR ','), '') AS taglist
+            IFNULL(GROUP_CONCAT(DISTINCT text ORDER BY text SEPARATOR ','), '') AS taglist
             FROM (
-                (texts LEFT JOIN text_tag_map ON TxID = TtTxID)
-                LEFT JOIN text_tags ON T2ID = TtT2ID{$tagJoinScope}
+                (texts LEFT JOIN text_tag_map ON TxID = text_id)
+                LEFT JOIN text_tags ON id = text_tag_id{$tagJoinScope}
             )
             WHERE TxLgID = ?{$textScope}
             GROUP BY TxID
@@ -673,10 +673,10 @@ class TextFacade
         $records = Connection::preparedFetchAll(
             "SELECT TxID, TxTitle, TxAudioURI, TxSourceURI,
             LENGTH(TxAnnotatedText) AS annotlen,
-            IFNULL(GROUP_CONCAT(DISTINCT T2Text ORDER BY T2Text SEPARATOR ','), '') AS taglist
+            IFNULL(GROUP_CONCAT(DISTINCT text ORDER BY text SEPARATOR ','), '') AS taglist
             FROM (
-                (texts LEFT JOIN text_tag_map ON TxID = TtTxID)
-                LEFT JOIN text_tags ON T2ID = TtT2ID{$tagJoinScope}
+                (texts LEFT JOIN text_tag_map ON TxID = text_id)
+                LEFT JOIN text_tags ON id = text_tag_id{$tagJoinScope}
             )
             WHERE TxLgID = ? AND TxArchivedAt IS NOT NULL{$textScope}
             GROUP BY TxID

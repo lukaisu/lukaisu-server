@@ -216,7 +216,7 @@ class WordListServiceTest extends TestCase
         $result = $service->buildTagCondition('1', '', '');
 
         $this->assertStringContainsString('having', $result);
-        $this->assertStringContainsString('WtTgID', $result);
+        $this->assertStringContainsString('tag_id', $result);
     }
 
     public function testBuildTagConditionWithBothTags(): void

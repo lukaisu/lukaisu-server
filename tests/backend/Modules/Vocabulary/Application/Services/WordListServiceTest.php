@@ -341,7 +341,7 @@ class WordListServiceTest extends TestCase
     {
         $result = $this->service->buildTagCondition('-1', '', '0');
         $this->assertStringContainsString('having', $result);
-        $this->assertStringContainsString('group_concat(WtTgID) IS NULL', $result);
+        $this->assertStringContainsString('group_concat(tag_id) IS NULL', $result);
     }
 
     #[Test]
@@ -349,7 +349,7 @@ class WordListServiceTest extends TestCase
     {
         $result = $this->service->buildTagCondition('', '-1', '0');
         $this->assertStringContainsString('having', $result);
-        $this->assertStringContainsString('group_concat(WtTgID) IS NULL', $result);
+        $this->assertStringContainsString('group_concat(tag_id) IS NULL', $result);
     }
 
     #[Test]
@@ -395,7 +395,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildTagCondition('-1', '', '0', $params);
-        $this->assertStringContainsString('group_concat(WtTgID) IS NULL', $result);
+        $this->assertStringContainsString('group_concat(tag_id) IS NULL', $result);
         $this->assertSame([], $params); // -1 doesn't add a param
     }
 
@@ -428,7 +428,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildTagCondition('-1', '5', '0', $params);
-        $this->assertStringContainsString('group_concat(WtTgID) IS NULL', $result);
+        $this->assertStringContainsString('group_concat(tag_id) IS NULL', $result);
         $this->assertStringContainsString(') OR (', $result);
         $this->assertSame([5], $params);
     }

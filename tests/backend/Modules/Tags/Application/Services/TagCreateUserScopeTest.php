@@ -4,10 +4,10 @@
  * Source-inspection tests for `getOrCreateTermTag` / `getOrCreateTextTag`
  * user-scoping (F13).
  *
- * Tag-text-to-TgID resolution must be scoped to the caller. Otherwise,
+ * Tag-text-to-id resolution must be scoped to the caller. Otherwise,
  * if another user already has a tag with the same name, an unscoped
- * `SELECT TgID FROM tags WHERE TgText = ?` returns the foreign user's
- * TgID — and any subsequent INSERT into `word_tag_map` then writes
+ * `SELECT id FROM tags WHERE text = ?` returns the foreign user's
+ * id — and any subsequent INSERT into `word_tag_map` then writes
  * (foreign-user-tag, my-words) rows that contaminate the foreign user's
  * tag-to-word membership.
  *
@@ -88,7 +88,7 @@ class TagCreateUserScopeTest extends TestCase
             $source,
             "$class::$method must scope its tag-text lookup by user, otherwise"
             . " a tag-text collision across users lets an intruder reuse the"
-            . " foreign user's TgID and pollute their tag-to-row membership."
+            . " foreign user's id and pollute their tag-to-row membership."
         );
     }
 }

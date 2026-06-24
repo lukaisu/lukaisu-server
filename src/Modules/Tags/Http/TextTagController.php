@@ -71,8 +71,8 @@ class TextTagController extends AbstractCrudController
 
         // Handle form submission
         if ($this->param('op') === 'Save') {
-            $text = $this->param('T2Text', '');
-            $comment = $this->param('T2Comment', '');
+            $text = $this->param('text', '');
+            $comment = $this->param('comment', '');
             $result = $this->facade->create($text, $comment);
             $message = $result['success']
                 ? __('tags.flash.saved')
@@ -101,8 +101,8 @@ class TextTagController extends AbstractCrudController
 
         // Handle form submission
         if ($this->param('op') === 'Change') {
-            $text = $this->param('T2Text', '');
-            $comment = $this->param('T2Comment', '');
+            $text = $this->param('text', '');
+            $comment = $this->param('comment', '');
             $result = $this->facade->update($id, $text, $comment);
             if ($result['success']) {
                 // Redirect to list on success
@@ -166,7 +166,7 @@ class TextTagController extends AbstractCrudController
      */
     protected function getIdParameterName(): string
     {
-        return 'T2ID';
+        return 'id';
     }
 
     /**
@@ -176,8 +176,8 @@ class TextTagController extends AbstractCrudController
      */
     protected function handleCreate(): string
     {
-        $text = $this->param('T2Text', '');
-        $comment = $this->param('T2Comment', '');
+        $text = $this->param('text', '');
+        $comment = $this->param('comment', '');
 
         $result = $this->facade->create($text, $comment);
         return $result['success'] ? "Saved" : "Error: " . ($result['error'] ?? 'Unknown error');
@@ -192,8 +192,8 @@ class TextTagController extends AbstractCrudController
      */
     protected function handleUpdate(int $id): string
     {
-        $text = $this->param('T2Text', '');
-        $comment = $this->param('T2Comment', '');
+        $text = $this->param('text', '');
+        $comment = $this->param('comment', '');
 
         $result = $this->facade->update($id, $text, $comment);
         return $result['success'] ? "Updated" : "Error: " . ($result['error'] ?? 'Unknown error');

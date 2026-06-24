@@ -362,7 +362,7 @@ class TagsTest extends TestCase
             $this->markTestSkipped('Database connection not available');
         }
 
-        // Use a unique tag name (max 20 chars for TgText column)
+        // Use a unique tag name (max 20 chars for text column)
         $longTag = 'LT_' . substr((string)time(), -7);
         $result = TagsFacade::addTagToWords($longTag, [1]);
         $this->assertIsArray($result, 'Should handle long tag names');
@@ -795,12 +795,12 @@ class TagsTest extends TestCase
             $this->markTestSkipped('Database connection not available');
         }
 
-        // Use a unique tag name (max 20 chars for TgText column)
+        // Use a unique tag name (max 20 chars for text column)
         $uniqueTagName = 'D_' . substr(uniqid(), -8);
 
         // Clean up any pre-existing tag with this name (shouldn't exist, but be safe)
         Connection::preparedExecute(
-            'DELETE FROM tags WHERE TgText = ?',
+            'DELETE FROM tags WHERE text = ?',
             [$uniqueTagName]
         );
 
@@ -820,7 +820,7 @@ class TagsTest extends TestCase
         try {
             // Insert the tag directly into the database
             Connection::preparedExecute(
-                'INSERT INTO tags (TgText) VALUES (?)',
+                'INSERT INTO tags (text) VALUES (?)',
                 [$uniqueTagName]
             );
 
@@ -842,11 +842,11 @@ class TagsTest extends TestCase
         } finally {
             // Cleanup: remove the test tag, word_tag_map associations, word, and language
             Connection::preparedExecute(
-                'DELETE FROM word_tag_map WHERE WtWoID = ?',
+                'DELETE FROM word_tag_map WHERE word_id = ?',
                 [$wordId]
             );
             Connection::preparedExecute(
-                'DELETE FROM tags WHERE TgText = ?',
+                'DELETE FROM tags WHERE text = ?',
                 [$uniqueTagName]
             );
             Connection::query("DELETE FROM words WHERE id = $wordId");
