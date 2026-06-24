@@ -53,8 +53,10 @@ import {
   getNextWord,
   getTomorrowCount,
   updateStatus as reviewUpdateStatus,
+  applyGrade as reviewApplyGrade,
   getTableWords,
 } from './repositories/review';
+import type { ReviewCard, ReviewGradeRequest } from '@modules/review/api/review_api';
 import {
   getList,
   getFilterOptions,
@@ -376,6 +378,17 @@ async function routePut(path: string, p: Record<string, unknown>): Promise<Local
         p.status != null ? num(p.status) : undefined,
         p.change != null ? num(p.change) : undefined
       )
+    );
+  }
+  if (path === '/review/grade') {
+    return wrap(
+      await reviewApplyGrade({
+        term_id: num(p.term_id),
+        grade: num(p.grade),
+        status: num(p.status),
+        card: p.card as unknown as ReviewCard,
+        log: p.log as unknown as ReviewGradeRequest['log'],
+      })
     );
   }
   m = path.match(/^\/languages\/(\d+)$/);

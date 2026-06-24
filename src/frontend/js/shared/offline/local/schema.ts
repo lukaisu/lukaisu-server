@@ -15,6 +15,7 @@
  */
 
 import Dexie, { type Table } from 'dexie';
+import { seedFromStatus } from './fsrs';
 
 /** Word status values (mirrors the server `status`). */
 export const WordStatus = {
@@ -92,13 +93,50 @@ export interface LocalWord {
   /** 0 = single word; >=1 = multi-word expression spanning N tokens. */
   wordCount: number;
   created: number;
-  /** When `status` last changed (drives review scoring). */
+  /** When `status` last changed (epoch ms). */
   statusChanged: number;
-  todayScore: number;
-  tomorrowScore: number;
-  random: number;
+  /**
+   * FSRS scheduling state (issue #238). Mirrors the `words` FSRS columns and
+   * the persisted shape in `../fsrs.ts` ({@link import('../fsrs').FsrsState}).
+   * The display `status` (1-5) is *derived* from `stability`; 98/99 are manual
+   * flags and are not scheduled.
+   */
+  /** Memory stability in days. */
+  stability: number;
+  /** Item difficulty (~1-10). */
+  difficulty: number;
+  /** Next review due, epoch ms. */
+  due: number;
+  /** Last review, epoch ms, or null if never reviewed. */
+  lastReview: number | null;
+  /** Total reviews. */
+  reps: number;
+  /** Times forgotten (Again while in Review). */
+  lapses: number;
+  /** ts-fsrs state: 0 New, 1 Learning, 2 Review, 3 Relearning. */
+  fsrsState: number;
   updatedAt: number;
   deletedAt: number | null;
+}
+
+/** A logged review (issue #238) — one row per graded answer, for stats/optimisation. */
+export interface LocalReviewLog {
+  id?: number;
+  woId: number;
+  /** 1=Again, 2=Hard, 3=Good, 4=Easy. */
+  grade: number;
+  /** Card state at review time. */
+  fsrsState: number;
+  /** Resulting stability. */
+  stability: number;
+  /** Resulting difficulty. */
+  difficulty: number;
+  /** Days since the previous review. */
+  elapsedDays: number;
+  /** Scheduled interval in days. */
+  scheduledDays: number;
+  /** When the review happened, epoch ms. */
+  reviewedAt: number;
 }
 
 /** A sentence within a text (`Se*`). */
@@ -198,6 +236,7 @@ export class LukaisuLocalDatabase extends Dexie {
   textTagMap!: Table<LocalTextTagMap, number>;
   settings!: Table<LocalSetting, string>;
   pendingOps!: Table<LocalPendingOp, number>;
+  reviewLog!: Table<LocalReviewLog, number>;
 
   constructor(name = 'LukaisuLocalDB') {
     super(name);
@@ -216,6 +255,50 @@ export class LukaisuLocalDatabase extends Dexie {
       settings: 'key',
       pendingOps: '++id, entity, type, createdAt',
     });
+
+    // v2 (issue #238): replace the Leitner score columns with FSRS state and add
+    // the review log. Existing words are seeded from their status so the derived
+    // display status (and reading colours) stay stable; the score fields are
+    // dropped. Mirrors the server's add_fsrs_scheduling migration.
+    this.version(2)
+      .stores({
+        words:
+          '++id, langId, &[textLc+langId], status, due, lemmaLc, deletedAt, updatedAt',
+        reviewLog: '++id, woId, reviewedAt',
+      })
+      .upgrade((tx) =>
+        tx
+          .table<LocalWord>('words')
+          .toCollection()
+          .modify((w) => {
+            const legacy = w as LocalWord & Record<string, unknown>;
+            const status = typeof w.status === 'number' ? w.status : 1;
+            const changed =
+              typeof w.statusChanged === 'number' ? w.statusChanged : w.created ?? 0;
+            const seed =
+              status >= 1 && status <= 5
+                ? seedFromStatus(status, changed)
+                : {
+                    stability: 0,
+                    difficulty: 0,
+                    due: changed,
+                    lastReview: null,
+                    reps: 0,
+                    lapses: 0,
+                    state: 0,
+                  };
+            w.stability = seed.stability;
+            w.difficulty = seed.difficulty;
+            w.due = seed.due;
+            w.lastReview = seed.lastReview;
+            w.reps = seed.reps;
+            w.lapses = seed.lapses;
+            w.fsrsState = seed.state;
+            delete legacy.todayScore;
+            delete legacy.tomorrowScore;
+            delete legacy.random;
+          })
+      );
   }
 }
 

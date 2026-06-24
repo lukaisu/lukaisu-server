@@ -203,3 +203,34 @@ export function seedFromStatus(status: number, statusChangedMs: number): FsrsSta
     state: State.Review,
   };
 }
+
+/** FSRS state for a word taken out of scheduling (ignored 98 / well-known 99). */
+export function unscheduledFsrsState(nowMs: number = Date.now()): FsrsState {
+  return {
+    stability: 0,
+    difficulty: 0,
+    due: nowMs,
+    lastReview: null,
+    reps: 0,
+    lapses: 0,
+    state: State.New,
+  };
+}
+
+/**
+ * FSRS state to persist when a status is set *directly* (reading-view "start
+ * Learning", import, bulk edit) rather than by grading a review:
+ *
+ * - `1` → a fresh New card, due immediately (a brand-new learning word);
+ * - `2`-`5` → {@link seedFromStatus} so the derived status matches;
+ * - `98`/`99` → unscheduled.
+ */
+export function fsrsForStatus(status: number, nowMs: number = Date.now()): FsrsState {
+  if (status === 1) {
+    return newFsrsState(nowMs);
+  }
+  if (status >= 2 && status <= 5) {
+    return seedFromStatus(status, nowMs);
+  }
+  return unscheduledFsrsState(nowMs);
+}

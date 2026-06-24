@@ -6,7 +6,8 @@
  */
 
 import { localDb, type LocalLanguage, type LocalWord } from '../schema';
-import { computeScoreFields } from '../review-scoring';
+import { fsrsForStatus, type FsrsState, type FsrsLogEntry } from '../fsrs';
+import { statusFromStability } from '@shared/stores/statuses';
 import type { ParserConfig } from '../parser';
 
 /** Map a stored language to the tokenizer configuration. */
@@ -50,7 +51,7 @@ export function buildWordRow(
 ): LocalWord {
   const now = nowMs();
   const lemma = fields.lemma ?? '';
-  const scores = computeScoreFields(status, new Date(now));
+  const fsrs = fsrsForStatus(status, now);
   return {
     langId,
     text,
@@ -65,9 +66,13 @@ export function buildWordRow(
     wordCount: fields.wordCount ?? 0,
     created: now,
     statusChanged: now,
-    todayScore: scores.todayScore,
-    tomorrowScore: scores.tomorrowScore,
-    random: scores.random,
+    stability: fsrs.stability,
+    difficulty: fsrs.difficulty,
+    due: fsrs.due,
+    lastReview: fsrs.lastReview,
+    reps: fsrs.reps,
+    lapses: fsrs.lapses,
+    fsrsState: fsrs.state,
     updatedAt: now,
     deletedAt: null,
   };
@@ -107,16 +112,62 @@ export async function applyStatus(
     return null;
   }
   const now = nowMs();
-  const scores = computeScoreFields(newStatus, new Date(now));
+  const fsrs = fsrsForStatus(newStatus, now);
   await localDb.words.update(woId, {
     status: newStatus,
     statusChanged: now,
-    todayScore: scores.todayScore,
-    tomorrowScore: scores.tomorrowScore,
-    random: scores.random,
+    stability: fsrs.stability,
+    difficulty: fsrs.difficulty,
+    due: fsrs.due,
+    lastReview: fsrs.lastReview,
+    reps: fsrs.reps,
+    lapses: fsrs.lapses,
+    fsrsState: fsrs.state,
     updatedAt: now,
   });
   return newStatus;
+}
+
+/**
+ * Persist a graded review. The client (`../fsrs.ts`) computes the updated card;
+ * this only stores it: it writes the FSRS fields, re-derives the display status
+ * from the new stability, and appends a `reviewLog` row. Returns the new status
+ * and due, or null if the word is gone.
+ */
+export async function persistGrade(
+  woId: number,
+  card: FsrsState,
+  log: FsrsLogEntry
+): Promise<{ status: number; due: number } | null> {
+  const word = await localDb.words.get(woId);
+  if (!word) {
+    return null;
+  }
+  const now = nowMs();
+  const status = statusFromStability(card.stability);
+  await localDb.words.update(woId, {
+    status,
+    statusChanged: status !== word.status ? now : word.statusChanged,
+    stability: card.stability,
+    difficulty: card.difficulty,
+    due: card.due,
+    lastReview: card.lastReview,
+    reps: card.reps,
+    lapses: card.lapses,
+    fsrsState: card.state,
+    updatedAt: now,
+  });
+  await localDb.reviewLog.add({
+    woId,
+    grade: log.grade,
+    fsrsState: log.state,
+    stability: log.stability,
+    difficulty: log.difficulty,
+    elapsedDays: log.elapsedDays,
+    scheduledDays: log.scheduledDays,
+    reviewedAt: log.reviewedAt,
+  });
+  return { status, due: card.due };
 }
 
 /** Look up an active word by language + lower-cased term, if any. */

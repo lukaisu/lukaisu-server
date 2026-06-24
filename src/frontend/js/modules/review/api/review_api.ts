@@ -8,13 +8,60 @@
 import { apiGet, apiPut, type ApiResponse } from '@shared/api/client';
 
 /**
- * Word test data returned from the API.
+ * FSRS scheduling state for a word (issue #238). Epoch-ms timestamps. Mirrors
+ * the persisted `FsrsState` in `@shared/offline/local/fsrs`.
+ */
+export interface ReviewCard {
+  stability: number;
+  difficulty: number;
+  due: number;
+  lastReview: number | null;
+  reps: number;
+  lapses: number;
+  /** 0 New, 1 Learning, 2 Review, 3 Relearning. */
+  state: number;
+}
+
+/**
+ * Word test data returned from the API. `fsrs` carries the word's current
+ * scheduling state so the client can compute the next card when graded.
  */
 export interface WordTestData {
   term_id: number | string;
   solution?: string;
   term_text: string;
   group: string;
+  fsrs?: ReviewCard;
+}
+
+/**
+ * A graded review: the grade plus the client-computed next card and a log
+ * entry. The server (or offline store) only persists this — the FSRS algorithm
+ * runs client-side.
+ */
+export interface ReviewGradeRequest {
+  termId: number;
+  grade: number;
+  /** Client-derived display status (1-5). */
+  status: number;
+  card: ReviewCard;
+  log: {
+    state: number;
+    stability: number;
+    difficulty: number;
+    elapsedDays: number;
+    scheduledDays: number;
+    reviewedAt: number;
+  };
+}
+
+/**
+ * Review grade response.
+ */
+export interface ReviewGradeResponse {
+  status?: number;
+  due?: number;
+  error?: string;
 }
 
 /**
@@ -170,6 +217,23 @@ export const ReviewApi = {
       term_id: termId,
       status,
       change
+    });
+  },
+
+  /**
+   * Submit a graded review (Again/Hard/Good/Easy). The client has already
+   * computed the next FSRS card; this persists it (locally or on the server).
+   *
+   * @param req The grade, the new card, the derived status, and the log entry
+   * @returns Promise with the persisted status and next due date
+   */
+  async grade(req: ReviewGradeRequest): Promise<ApiResponse<ReviewGradeResponse>> {
+    return apiPut<ReviewGradeResponse>('/review/grade', {
+      term_id: req.termId,
+      grade: req.grade,
+      status: req.status,
+      card: req.card,
+      log: req.log
     });
   },
 

@@ -6,8 +6,10 @@
  */
 
 import { localDb, type LocalWord } from '../schema';
-import { calculateScore, calculateTomorrowScore, dayDiff } from '../review-scoring';
+import { retrievability } from '../fsrs';
 import { applyStatus, nowMs } from './helpers';
+
+const DAY_MS = 86_400_000;
 import { buildWordTagIndex, buildTagNameIndex } from './tags';
 import type {
   WordListFilters,
@@ -35,7 +37,7 @@ function toItem(
   now: Date,
   tags: string
 ): WordItem {
-  const days = dayDiff(now, new Date(word.statusChanged));
+  const days = Math.max(0, Math.floor((now.getTime() - word.statusChanged) / DAY_MS));
   return {
     id: word.id ?? 0,
     text: word.text,
@@ -47,8 +49,23 @@ function toItem(
     statusAbbr: word.status <= 5 ? String(word.status) : '',
     statusLabel: STATUS_LABELS[word.status] ?? String(word.status),
     days: String(days),
-    score: calculateScore(word.status, days),
-    score2: calculateTomorrowScore(word.status, days),
+    // FSRS view (issue #238): score = memory stability (days), score2 = current
+    // recall probability (%). Replaces the old today/tomorrow Leitner scores.
+    score: Math.round(word.stability),
+    score2: Math.round(
+      retrievability(
+        {
+          stability: word.stability,
+          difficulty: word.difficulty,
+          due: word.due,
+          lastReview: word.lastReview,
+          reps: word.reps,
+          lapses: word.lapses,
+          state: word.fsrsState,
+        },
+        now.getTime()
+      ) * 100
+    ),
     tags,
     langId: word.langId,
     langName,
