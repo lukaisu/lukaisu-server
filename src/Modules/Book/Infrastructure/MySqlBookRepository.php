@@ -39,23 +39,23 @@ class MySqlBookRepository implements BookRepositoryInterface
     /**
      * @var string Primary key column
      */
-    protected string $primaryKey = 'BkID';
+    protected string $primaryKey = 'id';
 
     /**
      * @var array<string, string> Property to column mapping
      */
     protected array $columnMap = [
-        'id' => 'BkID',
-        'userId' => 'BkUsID',
-        'languageId' => 'BkLgID',
-        'title' => 'BkTitle',
-        'author' => 'BkAuthor',
-        'description' => 'BkDescription',
-        'coverPath' => 'BkCoverPath',
-        'sourceType' => 'BkSourceType',
-        'sourceHash' => 'BkSourceHash',
-        'totalChapters' => 'BkTotalChapters',
-        'currentChapter' => 'BkCurrentChapter',
+        'id' => 'id',
+        'userId' => 'user_id',
+        'languageId' => 'language_id',
+        'title' => 'title',
+        'author' => 'author',
+        'description' => 'description',
+        'coverPath' => 'cover_path',
+        'sourceType' => 'source_type',
+        'sourceHash' => 'source_hash',
+        'totalChapters' => 'total_chapters',
+        'currentChapter' => 'current_chapter',
     ];
 
     /**
@@ -111,19 +111,19 @@ class MySqlBookRepository implements BookRepositoryInterface
     protected function mapToEntity(array $row): Book
     {
         return Book::reconstitute(
-            (int) $row['BkID'],
-            isset($row['BkUsID']) ? (int) $row['BkUsID'] : null,
-            (int) $row['BkLgID'],
-            (string) $row['BkTitle'],
-            isset($row['BkAuthor']) ? (string) $row['BkAuthor'] : null,
-            isset($row['BkDescription']) ? (string) $row['BkDescription'] : null,
-            isset($row['BkCoverPath']) ? (string) $row['BkCoverPath'] : null,
-            (string) ($row['BkSourceType'] ?? 'text'),
-            isset($row['BkSourceHash']) ? (string) $row['BkSourceHash'] : null,
-            (int) ($row['BkTotalChapters'] ?? 0),
-            (int) ($row['BkCurrentChapter'] ?? 1),
-            isset($row['BkCreated']) ? (string) $row['BkCreated'] : null,
-            isset($row['BkUpdated']) ? (string) $row['BkUpdated'] : null
+            (int) $row['id'],
+            isset($row['user_id']) ? (int) $row['user_id'] : null,
+            (int) $row['language_id'],
+            (string) $row['title'],
+            isset($row['author']) ? (string) $row['author'] : null,
+            isset($row['description']) ? (string) $row['description'] : null,
+            isset($row['cover_path']) ? (string) $row['cover_path'] : null,
+            (string) ($row['source_type'] ?? 'text'),
+            isset($row['source_hash']) ? (string) $row['source_hash'] : null,
+            (int) ($row['total_chapters'] ?? 0),
+            (int) ($row['current_chapter'] ?? 1),
+            isset($row['created_at']) ? (string) $row['created_at'] : null,
+            isset($row['updated_at']) ? (string) $row['updated_at'] : null
         );
     }
 
@@ -137,16 +137,16 @@ class MySqlBookRepository implements BookRepositoryInterface
     protected function mapToRow(object $entity): array
     {
         return [
-            'BkUsID' => $entity->userId(),
-            'BkLgID' => $entity->languageId(),
-            'BkTitle' => $entity->title(),
-            'BkAuthor' => $entity->author(),
-            'BkDescription' => $entity->description(),
-            'BkCoverPath' => $entity->coverPath(),
-            'BkSourceType' => $entity->sourceType(),
-            'BkSourceHash' => $entity->sourceHash(),
-            'BkTotalChapters' => $entity->totalChapters(),
-            'BkCurrentChapter' => $entity->currentChapter(),
+            'user_id' => $entity->userId(),
+            'language_id' => $entity->languageId(),
+            'title' => $entity->title(),
+            'author' => $entity->author(),
+            'description' => $entity->description(),
+            'cover_path' => $entity->coverPath(),
+            'source_type' => $entity->sourceType(),
+            'source_hash' => $entity->sourceHash(),
+            'total_chapters' => $entity->totalChapters(),
+            'current_chapter' => $entity->currentChapter(),
         ];
     }
 
@@ -192,10 +192,10 @@ class MySqlBookRepository implements BookRepositoryInterface
     public function findBySourceHash(string $hash, ?int $userId = null): ?Book
     {
         $query = $this->query()
-            ->where('BkSourceHash', '=', $hash);
+            ->where('source_hash', '=', $hash);
 
         if ($userId !== null) {
-            $query->where('BkUsID', '=', $userId);
+            $query->where('user_id', '=', $userId);
         }
 
         $row = $query->firstPrepared();
@@ -213,10 +213,10 @@ class MySqlBookRepository implements BookRepositoryInterface
     public function existsBySourceHash(string $hash, ?int $userId = null): bool
     {
         $query = $this->query()
-            ->where('BkSourceHash', '=', $hash);
+            ->where('source_hash', '=', $hash);
 
         if ($userId !== null) {
-            $query->where('BkUsID', '=', $userId);
+            $query->where('user_id', '=', $userId);
         }
 
         return $query->existsPrepared();
@@ -234,16 +234,16 @@ class MySqlBookRepository implements BookRepositoryInterface
         int $offset = 0
     ): array {
         $query = $this->query()
-            ->orderBy('BkUpdated', 'DESC')
+            ->orderBy('updated_at', 'DESC')
             ->limit($limit)
             ->offset($offset);
 
         if ($userId !== null) {
-            $query->where('BkUsID', '=', $userId);
+            $query->where('user_id', '=', $userId);
         }
 
         if ($languageId !== null && $languageId > 0) {
-            $query->where('BkLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -262,11 +262,11 @@ class MySqlBookRepository implements BookRepositoryInterface
         $query = $this->query();
 
         if ($userId !== null) {
-            $query->where('BkUsID', '=', $userId);
+            $query->where('user_id', '=', $userId);
         }
 
         if ($languageId !== null && $languageId > 0) {
-            $query->where('BkLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         return $query->countPrepared();
@@ -312,7 +312,7 @@ class MySqlBookRepository implements BookRepositoryInterface
     {
         $this->query()
             ->where($this->primaryKey, '=', $bookId)
-            ->updatePrepared(['BkTotalChapters' => $count]);
+            ->updatePrepared(['total_chapters' => $count]);
     }
 
     /**
@@ -322,7 +322,7 @@ class MySqlBookRepository implements BookRepositoryInterface
     {
         $this->query()
             ->where($this->primaryKey, '=', $bookId)
-            ->updatePrepared(['BkCurrentChapter' => $chapterNum]);
+            ->updatePrepared(['current_chapter' => $chapterNum]);
     }
 
     /**
@@ -384,7 +384,7 @@ class MySqlBookRepository implements BookRepositoryInterface
 
         // Get book info
         $bookRow = $this->query()
-            ->select(['BkTitle', 'BkTotalChapters'])
+            ->select(['title', 'total_chapters'])
             ->where($this->primaryKey, '=', $bookId)
             ->firstPrepared();
 
@@ -411,10 +411,10 @@ class MySqlBookRepository implements BookRepositoryInterface
 
         return [
             'bookId' => $bookId,
-            'bookTitle' => (string) $bookRow['BkTitle'],
+            'bookTitle' => (string) $bookRow['title'],
             'chapterNum' => $chapterNum,
             'chapterTitle' => isset($textRow['TxChapterTitle']) ? (string) $textRow['TxChapterTitle'] : null,
-            'totalChapters' => (int) $bookRow['BkTotalChapters'],
+            'totalChapters' => (int) $bookRow['total_chapters'],
             'prevTextId' => $prevRow !== null ? (int) $prevRow['TxID'] : null,
             'nextTextId' => $nextRow !== null ? (int) $nextRow['TxID'] : null,
         ];

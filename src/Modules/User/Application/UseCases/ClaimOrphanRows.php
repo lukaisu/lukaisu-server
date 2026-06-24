@@ -55,7 +55,7 @@ class ClaimOrphanRows
         'tags'                => 'TgUsID',
         'text_tags'           => 'T2UsID',
         'news_feeds'          => 'NfUsID',
-        'books'               => 'BkUsID',
+        'books'               => 'user_id',
         'local_dictionaries'  => 'LdUsID',
     ];
 

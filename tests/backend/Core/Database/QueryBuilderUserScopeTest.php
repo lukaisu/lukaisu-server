@@ -232,7 +232,7 @@ class QueryBuilderUserScopeTest extends TestCase
     public function testUserScopeAppliedToBooksTable(): void
     {
         $this->assertTrue(UserScopedQuery::isUserScopedTable('books'));
-        $this->assertEquals('BkUsID', UserScopedQuery::getUserIdColumn('books'));
+        $this->assertEquals('user_id', UserScopedQuery::getUserIdColumn('books'));
     }
 
     public function testUserScopeAppliedToLocalDictionariesTable(): void

@@ -66,7 +66,7 @@ class UserScopedQuery
         'settings' => 'StUsID',
         'local_dictionaries' => 'LdUsID',
         'activity_log' => 'user_id',
-        'books' => 'BkUsID',
+        'books' => 'user_id',
     ];
 
     /**

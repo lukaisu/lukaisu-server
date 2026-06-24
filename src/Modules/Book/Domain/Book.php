@@ -202,19 +202,19 @@ class Book
     public static function fromDbRecord(array $record): self
     {
         return self::reconstitute(
-            (int) $record['BkID'],
-            isset($record['BkUsID']) ? (int) $record['BkUsID'] : null,
-            (int) $record['BkLgID'],
-            (string) $record['BkTitle'],
-            isset($record['BkAuthor']) ? (string) $record['BkAuthor'] : null,
-            isset($record['BkDescription']) ? (string) $record['BkDescription'] : null,
-            isset($record['BkCoverPath']) ? (string) $record['BkCoverPath'] : null,
-            (string) ($record['BkSourceType'] ?? 'text'),
-            isset($record['BkSourceHash']) ? (string) $record['BkSourceHash'] : null,
-            (int) ($record['BkTotalChapters'] ?? 0),
-            (int) ($record['BkCurrentChapter'] ?? 1),
-            isset($record['BkCreated']) ? (string) $record['BkCreated'] : null,
-            isset($record['BkUpdated']) ? (string) $record['BkUpdated'] : null
+            (int) $record['id'],
+            isset($record['user_id']) ? (int) $record['user_id'] : null,
+            (int) $record['language_id'],
+            (string) $record['title'],
+            isset($record['author']) ? (string) $record['author'] : null,
+            isset($record['description']) ? (string) $record['description'] : null,
+            isset($record['cover_path']) ? (string) $record['cover_path'] : null,
+            (string) ($record['source_type'] ?? 'text'),
+            isset($record['source_hash']) ? (string) $record['source_hash'] : null,
+            (int) ($record['total_chapters'] ?? 0),
+            (int) ($record['current_chapter'] ?? 1),
+            isset($record['created_at']) ? (string) $record['created_at'] : null,
+            isset($record['updated_at']) ? (string) $record['updated_at'] : null
         );
     }
 

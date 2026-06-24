@@ -87,7 +87,7 @@ class QueryBuilder
         'news_feeds' => 'NfUsID',
         'settings' => 'StUsID',
         'local_dictionaries' => 'LdUsID',
-        'books' => 'BkUsID',
+        'books' => 'user_id',
     ];
 
     /**
