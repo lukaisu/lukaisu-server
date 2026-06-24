@@ -70,12 +70,12 @@ class FeedArticleApiHandler
         }
 
         // Build WHERE clause with parameters
-        $whereConditions = ["FlNfID = ?"];
+        $whereConditions = ["feed_id = ?"];
         $queryParams = [$feedId];
 
         if (is_string($query) && $query !== '') {
             $pattern = '%' . str_replace('*', '%', $query) . '%';
-            $whereConditions[] = "(FlTitle LIKE ? OR FlDescription LIKE ?)";
+            $whereConditions[] = "(title LIKE ? OR description LIKE ?)";
             $queryParams[] = $pattern;
             $queryParams[] = $pattern;
         }
@@ -97,13 +97,13 @@ class FeedArticleApiHandler
         $offset = ($page - 1) * $perPage;
 
         // Sort order
-        $sorts = ['FlDate DESC', 'FlDate ASC', 'FlTitle ASC'];
-        $orderBy = $sorts[$sort - 1] ?? 'FlDate DESC';
+        $sorts = ['published_at DESC', 'published_at ASC', 'title ASC'];
+        $orderBy = $sorts[$sort - 1] ?? 'published_at DESC';
 
         // Get articles with import status (archived texts are in texts table with TxArchivedAt)
         $sql = "SELECT fl.*, tx.TxID, tx.TxArchivedAt
                 FROM feed_links fl
-                LEFT JOIN texts tx ON tx.TxSourceURI = TRIM(fl.FlLink)
+                LEFT JOIN texts tx ON tx.TxSourceURI = TRIM(fl.link)
                 WHERE $where
                 ORDER BY $orderBy
                 LIMIT ?, ?";
@@ -127,9 +127,9 @@ class FeedArticleApiHandler
                 'total_pages' => $totalPages
             ],
             'feed' => [
-                'id' => (int)$feed['NfID'],
-                'name' => $feed['NfName'],
-                'langId' => $feed['NfLgID']
+                'id' => (int)$feed['id'],
+                'name' => $feed['name'],
+                'langId' => $feed['language_id']
             ]
         ];
     }
@@ -152,7 +152,7 @@ class FeedArticleApiHandler
             $status = 'imported';
         } elseif ($isArchived) {
             $status = 'archived';
-        } elseif (str_starts_with((string)$row['FlLink'], ' ')) {
+        } elseif (str_starts_with((string)$row['link'], ' ')) {
             $status = 'error';
         }
 
@@ -161,13 +161,13 @@ class FeedArticleApiHandler
         $activeTextId = ($textId !== null && !$isArchived) ? $textId : null;
 
         return [
-            'id' => (int)$row['FlID'],
-            'title' => (string)$row['FlTitle'],
-            'link' => trim((string)$row['FlLink']),
-            'description' => (string)$row['FlDescription'],
-            'date' => (string)$row['FlDate'],
-            'audio' => (string)$row['FlAudio'],
-            'hasText' => !empty($row['FlText']),
+            'id' => (int)$row['id'],
+            'title' => (string)$row['title'],
+            'link' => trim((string)$row['link']),
+            'description' => (string)$row['description'],
+            'date' => (string)$row['published_at'],
+            'audio' => (string)$row['audio'],
+            'hasText' => !empty($row['text']),
             'status' => $status,
             'textId' => $activeTextId,
             'archivedTextId' => $archivedTextId
@@ -200,13 +200,13 @@ class FeedArticleApiHandler
             // gate above is removed).
             $deleted = $this->feedFacade->deleteArticles((string)$feedId);
         } else {
-            // Delete specific articles. The whereIn on FlNfID alone
+            // Delete specific articles. The whereIn on feed_id alone
             // doesn't gate ownership because feed_links has no UsID
             // column; the getFeedById check above is what makes it safe.
             $ids = array_map('intval', $articleIds);
             $deleted = QueryBuilder::table('feed_links')
-                ->whereIn('FlID', $ids)
-                ->whereIn('FlNfID', [$feedId])
+                ->whereIn('id', $ids)
+                ->whereIn('feed_id', [$feedId])
                 ->delete();
         }
 
@@ -239,8 +239,8 @@ class FeedArticleApiHandler
 
         foreach ($feedLinks as $row) {
             /** @var array<string, mixed> $row */
-            $nfOptions = (string)($row['NfOptions'] ?? '');
-            $nfName = (string)($row['NfName'] ?? '');
+            $nfOptions = (string)($row['options'] ?? '');
+            $nfName = (string)($row['name'] ?? '');
 
             $tagNameRaw = $this->feedFacade->getNfOption($nfOptions, 'tag');
             $tagName = is_string($tagNameRaw) && $tagNameRaw !== '' ? $tagNameRaw : mb_substr($nfName, 0, 20, 'utf-8');
@@ -251,21 +251,21 @@ class FeedArticleApiHandler
                 $maxTexts = (int)Settings::getWithDefault('set-max-texts-per-feed');
             }
 
-            $flLink = (string)($row['FlLink'] ?? '');
-            $flId = (string)($row['FlID'] ?? '');
+            $flLink = (string)($row['link'] ?? '');
+            $flId = (string)($row['id'] ?? '');
             $doc = [[
                 'link' => empty($flLink) ? ('#' . $flId) : $flLink,
-                'title' => (string)($row['FlTitle'] ?? ''),
-                'audio' => (string)($row['FlAudio'] ?? ''),
-                'text' => (string)($row['FlText'] ?? '')
+                'title' => (string)($row['title'] ?? ''),
+                'audio' => (string)($row['audio'] ?? ''),
+                'text' => (string)($row['text'] ?? '')
             ]];
 
             $charsetRaw = $this->feedFacade->getNfOption($nfOptions, 'charset');
             $charset = is_string($charsetRaw) ? $charsetRaw : null;
             $texts = $this->feedFacade->extractTextFromArticle(
                 $doc,
-                (string)($row['NfArticleSectionTags'] ?? ''),
-                (string)($row['NfFilterTags'] ?? ''),
+                (string)($row['article_section_tags'] ?? ''),
+                (string)($row['filter_tags'] ?? ''),
                 $charset
             );
 
@@ -283,7 +283,7 @@ class FeedArticleApiHandler
                 foreach ($texts as $text) {
                     /** @var array{TxTitle?: mixed, TxText?: mixed, TxAudioURI?: mixed, TxSourceURI?: mixed} $text */
                     $this->feedFacade->createTextFromFeed([
-                        'TxLgID' => (int)($row['NfLgID'] ?? 0),
+                        'TxLgID' => (int)($row['language_id'] ?? 0),
                         'TxTitle' => (string)($text['TxTitle'] ?? ''),
                         'TxText' => (string)($text['TxText'] ?? ''),
                         'TxAudioURI' => (string)($text['TxAudioURI'] ?? ''),

@@ -327,10 +327,10 @@ class FeedWizardController
         }
 
         $this->wizardSession->setEditFeedId($feedId);
-        $this->wizardSession->setRssUrl($row['NfSourceURI']);
+        $this->wizardSession->setRssUrl($row['source_uri']);
 
         // Parse article tags
-        $articleTags = explode('|', str_replace('!?!', '|', $row['NfArticleSectionTags']));
+        $articleTags = explode('|', str_replace('!?!', '|', $row['article_section_tags']));
         $articleTagsHtml = '';
         foreach ($articleTags as $tag) {
             if (substr_compare(trim($tag), "redirect", 0, 8) == 0) {
@@ -345,7 +345,7 @@ class FeedWizardController
         $this->wizardSession->setArticleTags($articleTagsHtml);
 
         // Parse filter tags
-        $filterTags = explode('|', str_replace('!?!', '|', $row['NfFilterTags']));
+        $filterTags = explode('|', str_replace('!?!', '|', $row['filter_tags']));
         $filterTagsHtml = '';
         foreach ($filterTags as $tag) {
             if (trim($tag) != '') {
@@ -357,15 +357,15 @@ class FeedWizardController
         }
         $this->wizardSession->setFilterTags($filterTagsHtml);
 
-        $feedData = $this->feedFacade->detectAndParseFeed($row['NfSourceURI']);
+        $feedData = $this->feedFacade->detectAndParseFeed($row['source_uri']);
         if (!is_array($feedData) || empty($feedData)) {
             $this->wizardSession->remove('feed');
             return new RedirectResponse('/feeds/new?err=1');
         }
         // Update feed data with title
-        $feedData['feed_title'] = $row['NfName'];
+        $feedData['feed_title'] = $row['name'];
         $this->wizardSession->setFeed($feedData);
-        $this->wizardSession->setOptions($row['NfOptions']);
+        $this->wizardSession->setOptions($row['options']);
 
         $feedText = isset($feedData['feed_text']) && is_string($feedData['feed_text'])
             ? $feedData['feed_text']
@@ -378,10 +378,10 @@ class FeedWizardController
             $this->wizardSession->setDetectedFeed('Detected: «' . $feedText . '»');
         }
 
-        $this->wizardSession->setLang((string)$row['NfLgID']);
+        $this->wizardSession->setLang((string)$row['language_id']);
 
         // Handle custom article source
-        $articleSource = $this->feedFacade->getNfOption($row['NfOptions'], 'article_source');
+        $articleSource = $this->feedFacade->getNfOption($row['options'], 'article_source');
         $articleSourceStr = is_string($articleSource) ? $articleSource : '';
         $currentFeedText = $feedText;
         if ($currentFeedText !== $articleSourceStr && $articleSourceStr !== '') {
@@ -506,7 +506,7 @@ class FeedWizardController
         if ($hostStatus !== '' && $hostName !== '') {
             $this->wizardSession->setHostStatus($hostName, $hostStatus);
         }
-        $nfName = InputValidator::getString('NfName');
+        $nfName = InputValidator::getString('name');
         if ($nfName !== '') {
             $this->wizardSession->setFeedTitle($nfName);
         }
@@ -519,7 +519,7 @@ class FeedWizardController
      */
     private function processStep3SessionParams(): void
     {
-        $nfName = InputValidator::getString('NfName');
+        $nfName = InputValidator::getString('name');
         if ($nfName !== '') {
             $this->wizardSession->setFeedTitle($nfName);
         }
@@ -543,11 +543,11 @@ class FeedWizardController
         if ($html !== '') {
             $this->wizardSession->setFilterTags($html);
         }
-        $nfOptions = InputValidator::getString('NfOptions');
+        $nfOptions = InputValidator::getString('options');
         if ($nfOptions !== '') {
             $this->wizardSession->setOptions($nfOptions);
         }
-        $nfLgId = InputValidator::getString('NfLgID');
+        $nfLgId = InputValidator::getString('language_id');
         if ($nfLgId !== '') {
             $this->wizardSession->setLang($nfLgId);
         }

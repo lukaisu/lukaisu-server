@@ -7,7 +7,7 @@
  *
  * Variables expected:
  * - $texts: array of text data (TxTitle, TxText, TxSourceURI, TxAudioURI)
- * - $row: array feed link and feed data (NfLgID, NfID)
+ * - $row: array feed link and feed data (language_id, id)
  * - $count: int starting form counter (passed by reference)
  * - $tagName: string tag name for the text
  * - $nfId: int feed ID
@@ -33,7 +33,7 @@ use Lukaisu\Shared\UI\Helpers\IconHelper;
 
 // View variables - assert types for Psalm
 assert(is_array($texts));
-assert(is_array($row) && isset($row['NfLgID']) && isset($row['NfID']));
+assert(is_array($row) && isset($row['language_id']) && isset($row['id']));
 assert(is_int($count));
 assert(is_string($tagName));
 assert(is_int($nfId));
@@ -43,7 +43,7 @@ assert(is_string($scrdir));
 
 /**
  * @var array<int, array{TxTitle: string, TxText: string, TxSourceURI: string, TxAudioURI: string}> $texts
- * @var array{NfLgID: int, NfID: int} $row
+ * @var array{language_id: int, id: int} $row
  * @var int $count
  * @var string $tagName
  * @var int $nfId
@@ -105,7 +105,7 @@ foreach ($texts as $text) :
                                     /** @var array{LgID: int, LgName: string} $rowLang */
                                     ?>
                                 <option value="<?php echo $rowLang['LgID']; ?>"<?php
-                                if ($row['NfLgID'] === $rowLang['LgID']) {
+                                if ($row['language_id'] === $rowLang['LgID']) {
                                     echo ' selected';
                                 }
                                 ?>><?php echo htmlspecialchars($rowLang['LgName'], ENT_QUOTES, 'UTF-8'); ?></option>

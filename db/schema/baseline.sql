@@ -223,35 +223,35 @@ CREATE TABLE IF NOT EXISTS text_tag_map (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS news_feeds (
-    NfID tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
-    NfUsID int(10) unsigned DEFAULT NULL,
-    NfLgID tinyint(3) unsigned NOT NULL,
-    NfName varchar(40) NOT NULL,
-    NfSourceURI varchar(200) NOT NULL,
-    NfArticleSectionTags text NOT NULL,
-    NfFilterTags text NOT NULL,
-    NfUpdate int(12) unsigned NOT NULL,
-    NfOptions varchar(200) NOT NULL,
-    PRIMARY KEY (NfID),
-    KEY NfUsID (NfUsID),
-    KEY NfLgID (NfLgID),
-    KEY NfUpdate (NfUpdate),
-    CONSTRAINT fk_news_feeds_user FOREIGN KEY (NfUsID) REFERENCES users(UsID) ON DELETE CASCADE
+    id tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
+    user_id int(10) unsigned DEFAULT NULL,
+    language_id tinyint(3) unsigned NOT NULL,
+    name varchar(40) NOT NULL,
+    source_uri varchar(200) NOT NULL,
+    article_section_tags text NOT NULL,
+    filter_tags text NOT NULL,
+    update_interval int(12) unsigned NOT NULL,
+    options varchar(200) NOT NULL,
+    PRIMARY KEY (id),
+    KEY user_id (user_id),
+    KEY language_id (language_id),
+    KEY update_interval (update_interval),
+    CONSTRAINT fk_news_feeds_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS feed_links (
-    FlID mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
-    FlTitle varchar(200) NOT NULL,
-    FlLink varchar(400) NOT NULL,
-    FlDescription text NOT NULL,
-    FlDate datetime NOT NULL,
-    FlAudio varchar(200) NOT NULL DEFAULT '',
-    FlText longtext NOT NULL DEFAULT '',
-    FlNfID tinyint(3) unsigned NOT NULL,
-    PRIMARY KEY (FlID),
-    KEY FlLink (FlLink),
-    KEY FlDate (FlDate),
-    UNIQUE KEY FlTitle (FlNfID,FlTitle)
+    id mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+    title varchar(200) NOT NULL,
+    link varchar(400) NOT NULL,
+    description text NOT NULL,
+    published_at datetime NOT NULL,
+    audio varchar(200) NOT NULL DEFAULT '',
+    text longtext NOT NULL DEFAULT '',
+    feed_id tinyint(3) unsigned NOT NULL,
+    PRIMARY KEY (id),
+    KEY link (link),
+    KEY published_at (published_at),
+    UNIQUE KEY title (feed_id,title)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Whisper transcription job ownership map (binds NLP job_id to the

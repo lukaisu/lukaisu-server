@@ -41,20 +41,20 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
     /**
      * @var string Primary key column
      */
-    protected string $primaryKey = 'NfID';
+    protected string $primaryKey = 'id';
 
     /**
      * @var array<string, string> Property to column mapping
      */
     protected array $columnMap = [
-        'id' => 'NfID',
-        'languageId' => 'NfLgID',
-        'name' => 'NfName',
-        'sourceUri' => 'NfSourceURI',
-        'articleSectionTags' => 'NfArticleSectionTags',
-        'filterTags' => 'NfFilterTags',
-        'updateTimestamp' => 'NfUpdate',
-        'options' => 'NfOptions',
+        'id' => 'id',
+        'languageId' => 'language_id',
+        'name' => 'name',
+        'sourceUri' => 'source_uri',
+        'articleSectionTags' => 'article_section_tags',
+        'filterTags' => 'filter_tags',
+        'updateTimestamp' => 'update_interval',
+        'options' => 'options',
     ];
 
     /**
@@ -63,14 +63,14 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
     protected function mapToEntity(array $row): Feed
     {
         return Feed::reconstitute(
-            (int) $row['NfID'],
-            (int) $row['NfLgID'],
-            (string) $row['NfName'],
-            (string) $row['NfSourceURI'],
-            (string) ($row['NfArticleSectionTags'] ?? ''),
-            (string) ($row['NfFilterTags'] ?? ''),
-            (int) ($row['NfUpdate'] ?? 0),
-            (string) ($row['NfOptions'] ?? '')
+            (int) $row['id'],
+            (int) $row['language_id'],
+            (string) $row['name'],
+            (string) $row['source_uri'],
+            (string) ($row['article_section_tags'] ?? ''),
+            (string) ($row['filter_tags'] ?? ''),
+            (int) ($row['update_interval'] ?? 0),
+            (string) ($row['options'] ?? '')
         );
     }
 
@@ -84,13 +84,13 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
     protected function mapToRow(object $entity): array
     {
         return [
-            'NfLgID' => $entity->languageId(),
-            'NfName' => $entity->name(),
-            'NfSourceURI' => $entity->sourceUri(),
-            'NfArticleSectionTags' => $entity->articleSectionTags(),
-            'NfFilterTags' => $entity->filterTags(),
-            'NfUpdate' => $entity->updateTimestamp(),
-            'NfOptions' => $entity->options()->toString(),
+            'language_id' => $entity->languageId(),
+            'name' => $entity->name(),
+            'source_uri' => $entity->sourceUri(),
+            'article_section_tags' => $entity->articleSectionTags(),
+            'filter_tags' => $entity->filterTags(),
+            'update_interval' => $entity->updateTimestamp(),
+            'options' => $entity->options()->toString(),
         ];
     }
 
@@ -137,7 +137,7 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
      *
      * @psalm-suppress LessSpecificImplementedReturnType
      */
-    public function findAll(string $orderBy = 'NfUpdate', string $direction = 'DESC'): array
+    public function findAll(string $orderBy = 'update_interval', string $direction = 'DESC'): array
     {
         $rows = $this->query()
             ->orderBy($orderBy, $direction)
@@ -154,11 +154,11 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
      */
     public function findByLanguage(
         int $languageId,
-        string $orderBy = 'NfUpdate',
+        string $orderBy = 'update_interval',
         string $direction = 'DESC'
     ): array {
         $rows = $this->query()
-            ->where('NfLgID', '=', $languageId)
+            ->where('language_id', '=', $languageId)
             ->orderBy($orderBy, $direction)
             ->getPrepared();
 
@@ -244,10 +244,10 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
         $query = $this->query();
 
         if ($languageId !== null && $languageId > 0) {
-            $query->where('NfLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
         if ($queryPattern !== null) {
-            $query->where('NfName', 'LIKE', $queryPattern);
+            $query->where('name', 'LIKE', $queryPattern);
         }
 
         return $query->countPrepared();
@@ -260,7 +260,7 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
     {
         $this->query()
             ->where($this->primaryKey, '=', $feedId)
-            ->updatePrepared(['NfUpdate' => $timestamp]);
+            ->updatePrepared(['update_interval' => $timestamp]);
     }
 
     /**
@@ -270,7 +270,7 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
     {
         // Get all feeds with autoupdate option
         $rows = $this->query()
-            ->where('NfOptions', 'LIKE', '%autoupdate=%')
+            ->where('options', 'LIKE', '%autoupdate=%')
             ->getPrepared();
 
         $needUpdate = [];
@@ -290,26 +290,26 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
     public function getForSelect(int $languageId = 0, int $maxNameLength = 40): array
     {
         $query = $this->query()
-            ->select(['NfID', 'NfName', 'NfLgID'])
-            ->orderBy('NfName', 'ASC');
+            ->select(['id', 'name', 'language_id'])
+            ->orderBy('name', 'ASC');
 
         if ($languageId > 0) {
-            $query->where('NfLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
         $result = [];
 
         foreach ($rows as $row) {
-            $name = (string) $row['NfName'];
+            $name = (string) $row['name'];
             if (mb_strlen($name) > $maxNameLength) {
                 $name = mb_substr($name, 0, $maxNameLength - 3) . '...';
             }
 
             $result[] = [
-                'id' => (int) $row['NfID'],
+                'id' => (int) $row['id'],
                 'name' => $name,
-                'language_id' => (int) $row['NfLgID'],
+                'language_id' => (int) $row['language_id'],
             ];
         }
 
@@ -324,7 +324,7 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
         int $limit,
         ?int $languageId = null,
         ?string $queryPattern = null,
-        string $orderBy = 'NfUpdate',
+        string $orderBy = 'update_interval',
         string $direction = 'DESC'
     ): array {
         $query = $this->query()
@@ -333,10 +333,10 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
             ->offset($offset);
 
         if ($languageId !== null && $languageId > 0) {
-            $query->where('NfLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
         if ($queryPattern !== null) {
-            $query->where('NfName', 'LIKE', $queryPattern);
+            $query->where('name', 'LIKE', $queryPattern);
         }
 
         $rows = $query->getPrepared();

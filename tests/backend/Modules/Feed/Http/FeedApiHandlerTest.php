@@ -369,7 +369,7 @@ class FeedApiHandlerTest extends TestCase
 
     public function testGetFeedsCallsFacadeWithoutLanguageId(): void
     {
-        $feeds = [['NfID' => 1, 'NfName' => 'Feed 1']];
+        $feeds = [['id' => 1, 'name' => 'Feed 1']];
         $this->feedFacade->expects($this->once())
             ->method('getFeeds')
             ->with(null)
@@ -382,7 +382,7 @@ class FeedApiHandlerTest extends TestCase
 
     public function testGetFeedsCallsFacadeWithLanguageId(): void
     {
-        $feeds = [['NfID' => 1, 'NfName' => 'Feed 1']];
+        $feeds = [['id' => 1, 'name' => 'Feed 1']];
         $this->feedFacade->expects($this->once())
             ->method('getFeeds')
             ->with(5)
@@ -399,7 +399,7 @@ class FeedApiHandlerTest extends TestCase
 
     public function testGetFeedsNeedingAutoUpdateCallsFacade(): void
     {
-        $feeds = [['NfID' => 1], ['NfID' => 2]];
+        $feeds = [['id' => 1], ['id' => 2]];
         $this->feedFacade->expects($this->once())
             ->method('getFeedsNeedingAutoUpdate')
             ->willReturn($feeds);
@@ -482,7 +482,7 @@ class FeedApiHandlerTest extends TestCase
         // Multi-user defence runs getFeedById first; make it succeed so
         // we still reach the underlying facade call.
         $this->feedFacade->method('getFeedById')
-            ->willReturn(['NfID' => 5, 'NfUsID' => 1, 'NfName' => 'Test']);
+            ->willReturn(['id' => 5, 'user_id' => 1, 'name' => 'Test']);
         $this->feedFacade->expects($this->once())
             ->method('deleteArticles')
             ->with('5')
@@ -544,7 +544,7 @@ class FeedApiHandlerTest extends TestCase
         // (FeedArticleApiHandler::deleteArticles); make the lookup
         // succeed so we can still reach the delegated facade call.
         $this->feedFacade->method('getFeedById')
-            ->willReturn(['NfID' => 1, 'NfUsID' => 1, 'NfName' => 'TestFeed']);
+            ->willReturn(['id' => 1, 'user_id' => 1, 'name' => 'TestFeed']);
         $this->feedFacade->method('deleteArticles')->willReturn(0);
 
         $result = $this->handler->formatDeleteArticles(1, []);
@@ -563,14 +563,14 @@ class FeedApiHandlerTest extends TestCase
             ->willReturn(123);
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => 123,
-                'NfName' => 'Test Feed',
-                'NfSourceURI' => 'http://example.com/feed',
-                'NfLgID' => 1,
-                'NfArticleSectionTags' => '',
-                'NfFilterTags' => '',
-                'NfOptions' => '',
-                'NfUpdate' => 0,
+                'id' => 123,
+                'name' => 'Test Feed',
+                'source_uri' => 'http://example.com/feed',
+                'language_id' => 1,
+                'article_section_tags' => '',
+                'filter_tags' => '',
+                'options' => '',
+                'update_interval' => 0,
             ]);
         $this->feedFacade->method('getNfOption')->willReturn([]);
         $this->feedFacade->method('formatLastUpdate')->willReturn('never');
@@ -592,14 +592,14 @@ class FeedApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => 1,
-                'NfName' => 'Old Name',
-                'NfSourceURI' => 'http://old.com',
-                'NfLgID' => 1,
-                'NfArticleSectionTags' => '',
-                'NfFilterTags' => '',
-                'NfOptions' => '',
-                'NfUpdate' => 0,
+                'id' => 1,
+                'name' => 'Old Name',
+                'source_uri' => 'http://old.com',
+                'language_id' => 1,
+                'article_section_tags' => '',
+                'filter_tags' => '',
+                'options' => '',
+                'update_interval' => 0,
             ]);
         $this->feedFacade->expects($this->once())
             ->method('updateFeed');
@@ -631,17 +631,17 @@ class FeedApiHandlerTest extends TestCase
     public function testImportArticlesHandlesExtractionErrors(): void
     {
         $row = [
-            'NfID' => 1,
-            'NfName' => 'Feed',
-            'NfLgID' => 1,
-            'NfOptions' => '',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'FlID' => 10,
-            'FlTitle' => 'Article',
-            'FlLink' => 'http://example.com/1',
-            'FlAudio' => '',
-            'FlText' => 'Text',
+            'id' => 1,
+            'name' => 'Feed',
+            'language_id' => 1,
+            'options' => '',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'id' => 10,
+            'title' => 'Article',
+            'link' => 'http://example.com/1',
+            'audio' => '',
+            'text' => 'Text',
         ];
 
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$row]);
@@ -670,17 +670,17 @@ class FeedApiHandlerTest extends TestCase
     public function testImportArticlesCreatesTextsSuccessfully(): void
     {
         $row = [
-            'NfID' => 1,
-            'NfName' => 'Feed',
-            'NfLgID' => 2,
-            'NfOptions' => 'tag:custom',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'FlID' => 10,
-            'FlTitle' => 'Article',
-            'FlLink' => 'http://example.com/1',
-            'FlAudio' => 'http://example.com/audio.mp3',
-            'FlText' => 'Article text',
+            'id' => 1,
+            'name' => 'Feed',
+            'language_id' => 2,
+            'options' => 'tag:custom',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'id' => 10,
+            'title' => 'Article',
+            'link' => 'http://example.com/1',
+            'audio' => 'http://example.com/audio.mp3',
+            'text' => 'Article text',
         ];
 
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$row]);
@@ -993,13 +993,13 @@ class FeedApiHandlerTest extends TestCase
     public function formatArticleRecordSetsNewStatusForFreshArticle(): void
     {
         $row = [
-            'FlID' => 1,
-            'FlTitle' => 'Test Article',
-            'FlLink' => 'http://example.com/article',
-            'FlDescription' => 'Description',
-            'FlDate' => '2025-01-01',
-            'FlAudio' => '',
-            'FlText' => '',
+            'id' => 1,
+            'title' => 'Test Article',
+            'link' => 'http://example.com/article',
+            'description' => 'Description',
+            'published_at' => '2025-01-01',
+            'audio' => '',
+            'text' => '',
             'TxID' => null,
             'TxArchivedAt' => null,
         ];
@@ -1019,13 +1019,13 @@ class FeedApiHandlerTest extends TestCase
     public function formatArticleRecordSetsImportedStatusForActiveText(): void
     {
         $row = [
-            'FlID' => 2,
-            'FlTitle' => 'Imported Article',
-            'FlLink' => 'http://example.com/article',
-            'FlDescription' => '',
-            'FlDate' => '2025-01-01',
-            'FlAudio' => '',
-            'FlText' => 'some text',
+            'id' => 2,
+            'title' => 'Imported Article',
+            'link' => 'http://example.com/article',
+            'description' => '',
+            'published_at' => '2025-01-01',
+            'audio' => '',
+            'text' => 'some text',
             'TxID' => 42,
             'TxArchivedAt' => null,
         ];
@@ -1044,13 +1044,13 @@ class FeedApiHandlerTest extends TestCase
     public function formatArticleRecordSetsArchivedStatusForArchivedText(): void
     {
         $row = [
-            'FlID' => 3,
-            'FlTitle' => 'Archived',
-            'FlLink' => 'http://example.com/article',
-            'FlDescription' => '',
-            'FlDate' => '2025-01-01',
-            'FlAudio' => '',
-            'FlText' => '',
+            'id' => 3,
+            'title' => 'Archived',
+            'link' => 'http://example.com/article',
+            'description' => '',
+            'published_at' => '2025-01-01',
+            'audio' => '',
+            'text' => '',
             'TxID' => 50,
             'TxArchivedAt' => '2025-02-01',
         ];
@@ -1068,13 +1068,13 @@ class FeedApiHandlerTest extends TestCase
     public function formatArticleRecordSetsErrorStatusForLeadingSpaceLink(): void
     {
         $row = [
-            'FlID' => 4,
-            'FlTitle' => 'Error Article',
-            'FlLink' => ' http://example.com/error',
-            'FlDescription' => '',
-            'FlDate' => '2025-01-01',
-            'FlAudio' => '',
-            'FlText' => '',
+            'id' => 4,
+            'title' => 'Error Article',
+            'link' => ' http://example.com/error',
+            'description' => '',
+            'published_at' => '2025-01-01',
+            'audio' => '',
+            'text' => '',
             'TxID' => null,
             'TxArchivedAt' => null,
         ];
@@ -1091,13 +1091,13 @@ class FeedApiHandlerTest extends TestCase
     public function formatArticleRecordHandlesEmptyTxId(): void
     {
         $row = [
-            'FlID' => 5,
-            'FlTitle' => 'Test',
-            'FlLink' => 'http://example.com',
-            'FlDescription' => '',
-            'FlDate' => '',
-            'FlAudio' => 'audio.mp3',
-            'FlText' => '',
+            'id' => 5,
+            'title' => 'Test',
+            'link' => 'http://example.com',
+            'description' => '',
+            'published_at' => '',
+            'audio' => 'audio.mp3',
+            'text' => '',
             'TxID' => '',
             'TxArchivedAt' => null,
         ];
@@ -1114,13 +1114,13 @@ class FeedApiHandlerTest extends TestCase
     public function formatArticleRecordDetectsHasText(): void
     {
         $row = [
-            'FlID' => 6,
-            'FlTitle' => 'Test',
-            'FlLink' => 'http://example.com',
-            'FlDescription' => 'Desc',
-            'FlDate' => '2025-01-15',
-            'FlAudio' => '',
-            'FlText' => 'Full article text here',
+            'id' => 6,
+            'title' => 'Test',
+            'link' => 'http://example.com',
+            'description' => 'Desc',
+            'published_at' => '2025-01-15',
+            'audio' => '',
+            'text' => 'Full article text here',
             'TxID' => null,
             'TxArchivedAt' => null,
         ];
@@ -1136,13 +1136,13 @@ class FeedApiHandlerTest extends TestCase
     public function formatArticleRecordDetectsNoText(): void
     {
         $row = [
-            'FlID' => 7,
-            'FlTitle' => 'Test',
-            'FlLink' => 'http://example.com',
-            'FlDescription' => 'Desc',
-            'FlDate' => '2025-01-15',
-            'FlAudio' => '',
-            'FlText' => '',
+            'id' => 7,
+            'title' => 'Test',
+            'link' => 'http://example.com',
+            'description' => 'Desc',
+            'published_at' => '2025-01-15',
+            'audio' => '',
+            'text' => '',
             'TxID' => null,
             'TxArchivedAt' => null,
         ];
@@ -1177,16 +1177,16 @@ class FeedApiHandlerTest extends TestCase
         $this->feedFacade->expects($this->once())
             ->method('createFeed')
             ->with($this->callback(function (array $data) {
-                return $data['NfName'] === 'Trimmed Feed'
-                    && $data['NfSourceURI'] === 'http://trimmed.com';
+                return $data['name'] === 'Trimmed Feed'
+                    && $data['source_uri'] === 'http://trimmed.com';
             }))
             ->willReturn(1);
 
         $this->feedFacade->method('getFeedById')->willReturn([
-            'NfID' => 1, 'NfName' => 'Trimmed Feed',
-            'NfSourceURI' => 'http://trimmed.com', 'NfLgID' => 1,
-            'NfArticleSectionTags' => '', 'NfFilterTags' => '',
-            'NfOptions' => '', 'NfUpdate' => 0,
+            'id' => 1, 'name' => 'Trimmed Feed',
+            'source_uri' => 'http://trimmed.com', 'language_id' => 1,
+            'article_section_tags' => '', 'filter_tags' => '',
+            'options' => '', 'update_interval' => 0,
         ]);
         $this->feedFacade->method('getNfOption')->willReturn([]);
         $this->feedFacade->method('formatLastUpdate')->willReturn('never');
@@ -1206,26 +1206,26 @@ class FeedApiHandlerTest extends TestCase
     public function updateFeedPreservesExistingFieldsWhenNotProvided(): void
     {
         $existing = [
-            'NfID' => 1,
-            'NfName' => 'Original',
-            'NfSourceURI' => 'http://original.com',
-            'NfLgID' => 3,
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => 'script',
-            'NfOptions' => 'tag:old',
-            'NfUpdate' => time(),
+            'id' => 1,
+            'name' => 'Original',
+            'source_uri' => 'http://original.com',
+            'language_id' => 3,
+            'article_section_tags' => 'article',
+            'filter_tags' => 'script',
+            'options' => 'tag:old',
+            'update_interval' => time(),
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($existing);
         $this->feedFacade->expects($this->once())
             ->method('updateFeed')
             ->with(1, $this->callback(function (array $data) {
-                return $data['NfLgID'] === 3
-                    && $data['NfSourceURI'] === 'http://original.com'
-                    && $data['NfArticleSectionTags'] === 'article'
-                    && $data['NfFilterTags'] === 'script'
-                    && $data['NfOptions'] === 'tag:old'
-                    && $data['NfName'] === 'Updated Name';
+                return $data['language_id'] === 3
+                    && $data['source_uri'] === 'http://original.com'
+                    && $data['article_section_tags'] === 'article'
+                    && $data['filter_tags'] === 'script'
+                    && $data['options'] === 'tag:old'
+                    && $data['name'] === 'Updated Name';
             }));
         $this->feedFacade->method('getNfOption')->willReturn([]);
         $this->feedFacade->method('formatLastUpdate')->willReturn('1h ago');
@@ -1274,14 +1274,14 @@ class FeedApiHandlerTest extends TestCase
     public function getFeedReturnsFormattedRecordWhenFound(): void
     {
         $feed = [
-            'NfID' => 1,
-            'NfName' => 'Test Feed',
-            'NfSourceURI' => 'http://test.com',
-            'NfLgID' => 2,
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => 'script',
-            'NfOptions' => '',
-            'NfUpdate' => 0,
+            'id' => 1,
+            'name' => 'Test Feed',
+            'source_uri' => 'http://test.com',
+            'language_id' => 2,
+            'article_section_tags' => 'article',
+            'filter_tags' => 'script',
+            'options' => '',
+            'update_interval' => 0,
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($feed);

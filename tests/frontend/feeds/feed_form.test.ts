@@ -334,10 +334,10 @@ describe('feed_form_component.ts', () => {
   // ===========================================================================
 
   describe('handleSubmit()', () => {
-    it('populates NfOptions hidden field on submit', () => {
+    it('populates options hidden field on submit', () => {
       document.body.innerHTML = `
         <form>
-          <input type="hidden" name="NfOptions" value="" />
+          <input type="hidden" name="options" value="" />
         </form>
       `;
 
@@ -351,12 +351,12 @@ describe('feed_form_component.ts', () => {
       const event = { target: form } as unknown as Event;
       component.handleSubmit(event);
 
-      const nfOptions = document.querySelector<HTMLInputElement>('[name="NfOptions"]')!;
+      const nfOptions = document.querySelector<HTMLInputElement>('[name="options"]')!;
       expect(nfOptions.value).toContain('edit_text=1');
       expect(nfOptions.value).toContain('max_links=75');
     });
 
-    it('handles missing NfOptions field gracefully', () => {
+    it('handles missing options field gracefully', () => {
       document.body.innerHTML = `
         <form></form>
       `;
@@ -368,10 +368,10 @@ describe('feed_form_component.ts', () => {
       expect(() => component.handleSubmit(event)).not.toThrow();
     });
 
-    it('clears previous NfOptions value', () => {
+    it('clears previous options value', () => {
       document.body.innerHTML = `
         <form>
-          <input type="hidden" name="NfOptions" value="old_value" />
+          <input type="hidden" name="options" value="old_value" />
         </form>
       `;
 
@@ -389,7 +389,7 @@ describe('feed_form_component.ts', () => {
       const event = { target: form } as unknown as Event;
       component.handleSubmit(event);
 
-      const nfOptions = document.querySelector<HTMLInputElement>('[name="NfOptions"]')!;
+      const nfOptions = document.querySelector<HTMLInputElement>('[name="options"]')!;
       expect(nfOptions.value).toBe('');
     });
   });
@@ -405,7 +405,7 @@ describe('feed_form_component.ts', () => {
           {"editText": true, "autoUpdate": true, "autoUpdateValue": "24", "autoUpdateUnit": "h"}
         </script>
         <form>
-          <input type="hidden" name="NfOptions" value="" />
+          <input type="hidden" name="options" value="" />
         </form>
       `;
 
@@ -424,7 +424,7 @@ describe('feed_form_component.ts', () => {
       const form = document.querySelector('form')!;
       component.handleSubmit({ target: form } as unknown as Event);
 
-      const nfOptions = document.querySelector<HTMLInputElement>('[name="NfOptions"]')!;
+      const nfOptions = document.querySelector<HTMLInputElement>('[name="options"]')!;
       expect(nfOptions.value).toContain('edit_text=1');
       expect(nfOptions.value).toContain('autoupdate=24h');
       expect(nfOptions.value).toContain('max_links=200');

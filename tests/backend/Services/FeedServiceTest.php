@@ -83,10 +83,10 @@ class FeedServiceTest extends TestCase
         $newsFeedsTable = Globals::table('news_feeds');
         $langTable = Globals::table('languages');
         Connection::query(
-            "DELETE FROM $feedLinksTable WHERE FlNfID IN " .
-            "(SELECT NfID FROM $newsFeedsTable WHERE NfName LIKE 'Test Feed%')"
+            "DELETE FROM $feedLinksTable WHERE feed_id IN " .
+            "(SELECT id FROM $newsFeedsTable WHERE name LIKE 'Test Feed%')"
         );
-        Connection::query("DELETE FROM $newsFeedsTable WHERE NfName LIKE 'Test Feed%'");
+        Connection::query("DELETE FROM $newsFeedsTable WHERE name LIKE 'Test Feed%'");
         Connection::query("DELETE FROM $langTable WHERE LgName = 'FeedServiceTestLang'");
     }
 
@@ -111,10 +111,10 @@ class FeedServiceTest extends TestCase
         $feedLinksTable = Globals::table('feed_links');
         $newsFeedsTable = Globals::table('news_feeds');
         Connection::query(
-            "DELETE FROM $feedLinksTable WHERE FlNfID IN " .
-            "(SELECT NfID FROM $newsFeedsTable WHERE NfName LIKE 'Test Feed%')"
+            "DELETE FROM $feedLinksTable WHERE feed_id IN " .
+            "(SELECT id FROM $newsFeedsTable WHERE name LIKE 'Test Feed%')"
         );
-        Connection::query("DELETE FROM $newsFeedsTable WHERE NfName LIKE 'Test Feed%'");
+        Connection::query("DELETE FROM $newsFeedsTable WHERE name LIKE 'Test Feed%'");
     }
 
     // ===== getFeeds() tests =====
@@ -137,18 +137,18 @@ class FeedServiceTest extends TestCase
 
         // Create a feed
         $feedId = $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed GetFeeds',
-            'NfSourceURI' => 'https://example.com/rss',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed GetFeeds',
+            'source_uri' => 'https://example.com/rss',
+            'article_section_tags' => 'article',
+            'filter_tags' => '',
+            'options' => '',
         ]);
 
         $feeds = $this->service->getFeeds(self::$testLangId);
 
         $this->assertNotEmpty($feeds);
-        $foundFeed = array_filter($feeds, fn($f) => (int)$f['NfID'] === $feedId);
+        $foundFeed = array_filter($feeds, fn($f) => (int)$f['id'] === $feedId);
         $this->assertNotEmpty($foundFeed);
     }
 
@@ -160,18 +160,18 @@ class FeedServiceTest extends TestCase
 
         // Create a feed for our test language
         $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed Language Filter',
-            'NfSourceURI' => 'https://example.com/rss',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed Language Filter',
+            'source_uri' => 'https://example.com/rss',
+            'article_section_tags' => 'article',
+            'filter_tags' => '',
+            'options' => '',
         ]);
 
         // Get feeds for a non-existent language
         $feeds = $this->service->getFeeds(99999);
 
-        $foundTestFeed = array_filter($feeds, fn($f) => $f['NfName'] === 'Test Feed Language Filter');
+        $foundTestFeed = array_filter($feeds, fn($f) => $f['name'] === 'Test Feed Language Filter');
         $this->assertEmpty($foundTestFeed);
     }
 
@@ -184,20 +184,20 @@ class FeedServiceTest extends TestCase
         }
 
         $feedId = $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed GetById',
-            'NfSourceURI' => 'https://example.com/feed',
-            'NfArticleSectionTags' => 'item',
-            'NfFilterTags' => '',
-            'NfOptions' => 'autoupdate=2h',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed GetById',
+            'source_uri' => 'https://example.com/feed',
+            'article_section_tags' => 'item',
+            'filter_tags' => '',
+            'options' => 'autoupdate=2h',
         ]);
 
         $feed = $this->service->getFeedById($feedId);
 
         $this->assertIsArray($feed);
-        $this->assertEquals('Test Feed GetById', $feed['NfName']);
-        $this->assertEquals('https://example.com/feed', $feed['NfSourceURI']);
-        $this->assertEquals('autoupdate=2h', $feed['NfOptions']);
+        $this->assertEquals('Test Feed GetById', $feed['name']);
+        $this->assertEquals('https://example.com/feed', $feed['source_uri']);
+        $this->assertEquals('autoupdate=2h', $feed['options']);
     }
 
     public function testGetFeedByIdReturnsNullForNonExistent(): void
@@ -219,12 +219,12 @@ class FeedServiceTest extends TestCase
         }
 
         $feedId = $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed Create',
-            'NfSourceURI' => 'https://example.com/new-feed',
-            'NfArticleSectionTags' => 'entry',
-            'NfFilterTags' => 'div.content',
-            'NfOptions' => 'max_texts=10',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed Create',
+            'source_uri' => 'https://example.com/new-feed',
+            'article_section_tags' => 'entry',
+            'filter_tags' => 'div.content',
+            'options' => 'max_texts=10',
         ]);
 
         $this->assertIsInt($feedId);
@@ -232,7 +232,7 @@ class FeedServiceTest extends TestCase
 
         // Verify it was created
         $feed = $this->service->getFeedById($feedId);
-        $this->assertEquals('Test Feed Create', $feed['NfName']);
+        $this->assertEquals('Test Feed Create', $feed['name']);
     }
 
     public function testCreateFeedSavesAllFields(): void
@@ -242,22 +242,22 @@ class FeedServiceTest extends TestCase
         }
 
         $feedId = $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed AllFields',
-            'NfSourceURI' => 'https://example.com/all-fields',
-            'NfArticleSectionTags' => 'content',
-            'NfFilterTags' => 'div.filter',
-            'NfOptions' => 'autoupdate=1d,max_texts=5',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed AllFields',
+            'source_uri' => 'https://example.com/all-fields',
+            'article_section_tags' => 'content',
+            'filter_tags' => 'div.filter',
+            'options' => 'autoupdate=1d,max_texts=5',
         ]);
 
         $feed = $this->service->getFeedById($feedId);
 
-        $this->assertEquals((string)self::$testLangId, $feed['NfLgID']);
-        $this->assertEquals('Test Feed AllFields', $feed['NfName']);
-        $this->assertEquals('https://example.com/all-fields', $feed['NfSourceURI']);
-        $this->assertEquals('content', $feed['NfArticleSectionTags']);
-        $this->assertEquals('div.filter', $feed['NfFilterTags']);
-        $this->assertEquals('autoupdate=1d,max_texts=5', $feed['NfOptions']);
+        $this->assertEquals((string)self::$testLangId, $feed['language_id']);
+        $this->assertEquals('Test Feed AllFields', $feed['name']);
+        $this->assertEquals('https://example.com/all-fields', $feed['source_uri']);
+        $this->assertEquals('content', $feed['article_section_tags']);
+        $this->assertEquals('div.filter', $feed['filter_tags']);
+        $this->assertEquals('autoupdate=1d,max_texts=5', $feed['options']);
     }
 
     // ===== updateFeed() tests =====
@@ -269,30 +269,30 @@ class FeedServiceTest extends TestCase
         }
 
         $feedId = $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed Update Original',
-            'NfSourceURI' => 'https://example.com/original',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed Update Original',
+            'source_uri' => 'https://example.com/original',
+            'article_section_tags' => 'article',
+            'filter_tags' => '',
+            'options' => '',
         ]);
 
         $this->service->updateFeed($feedId, [
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed Update Modified',
-            'NfSourceURI' => 'https://example.com/modified',
-            'NfArticleSectionTags' => 'section',
-            'NfFilterTags' => 'div.new-filter',
-            'NfOptions' => 'autoupdate=1w',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed Update Modified',
+            'source_uri' => 'https://example.com/modified',
+            'article_section_tags' => 'section',
+            'filter_tags' => 'div.new-filter',
+            'options' => 'autoupdate=1w',
         ]);
 
         $feed = $this->service->getFeedById($feedId);
 
-        $this->assertEquals('Test Feed Update Modified', $feed['NfName']);
-        $this->assertEquals('https://example.com/modified', $feed['NfSourceURI']);
-        $this->assertEquals('section', $feed['NfArticleSectionTags']);
-        $this->assertEquals('div.new-filter', $feed['NfFilterTags']);
-        $this->assertEquals('autoupdate=1w', $feed['NfOptions']);
+        $this->assertEquals('Test Feed Update Modified', $feed['name']);
+        $this->assertEquals('https://example.com/modified', $feed['source_uri']);
+        $this->assertEquals('section', $feed['article_section_tags']);
+        $this->assertEquals('div.new-filter', $feed['filter_tags']);
+        $this->assertEquals('autoupdate=1w', $feed['options']);
     }
 
     // ===== deleteFeeds() tests =====
@@ -304,26 +304,26 @@ class FeedServiceTest extends TestCase
         }
 
         $feedId = $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed Delete',
-            'NfSourceURI' => 'https://example.com/delete',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed Delete',
+            'source_uri' => 'https://example.com/delete',
+            'article_section_tags' => 'article',
+            'filter_tags' => '',
+            'options' => '',
         ]);
 
         // Add a feedlink (article) to the feed
         $feedLinksTable = Globals::table('feed_links');
         $timestamp = time();
         Connection::execute(
-            "INSERT INTO $feedLinksTable (FlNfID, FlTitle, FlLink, FlDescription, FlDate)
+            "INSERT INTO $feedLinksTable (feed_id, title, link, description, published_at)
              VALUES ($feedId, 'Test Article', 'https://example.com/article', 'Description', " .
             "FROM_UNIXTIME($timestamp))"
         );
 
         // Verify article exists
         $count = (int)Connection::fetchValue(
-            "SELECT COUNT(*) AS value FROM " . Globals::table('feed_links') . " WHERE FlNfID = $feedId"
+            "SELECT COUNT(*) AS value FROM " . Globals::table('feed_links') . " WHERE feed_id = $feedId"
         );
         $this->assertEquals(1, $count);
 
@@ -351,12 +351,12 @@ class FeedServiceTest extends TestCase
 
         // Create a feed
         $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed Count',
-            'NfSourceURI' => 'https://example.com/count',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed Count',
+            'source_uri' => 'https://example.com/count',
+            'article_section_tags' => 'article',
+            'filter_tags' => '',
+            'options' => '',
         ]);
 
         // Check count increased
@@ -482,9 +482,9 @@ class FeedServiceTest extends TestCase
         $result = $this->service->buildQueryFilter('test*', 'title,desc,text', '');
         $this->assertIsArray($result);
         $this->assertStringContainsString('LIKE', $result['clause']);
-        $this->assertStringContainsString('FlTitle', $result['clause']);
-        $this->assertStringContainsString('FlDescription', $result['clause']);
-        $this->assertStringContainsString('FlText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('description', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertEquals('test%', $result['search']);
     }
 
@@ -496,9 +496,9 @@ class FeedServiceTest extends TestCase
 
         $result = $this->service->buildQueryFilter('test', 'title', '');
         $this->assertIsArray($result);
-        $this->assertStringContainsString('FlTitle', $result['clause']);
-        $this->assertStringNotContainsString('FlDescription', $result['clause']);
-        $this->assertStringNotContainsString('FlText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringNotContainsString('description', $result['clause']);
+        $this->assertStringNotContainsString('text', $result['clause']);
         $this->assertEquals('test', $result['search']);
     }
 
@@ -582,9 +582,9 @@ class FeedServiceTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $this->assertEquals('FlTitle', $this->service->getSortColumn(1, 'Fl'));
-        $this->assertEquals('FlDate DESC', $this->service->getSortColumn(2, 'Fl'));
-        $this->assertEquals('FlDate ASC', $this->service->getSortColumn(3, 'Fl'));
+        $this->assertEquals('title', $this->service->getSortColumn(1, 'Fl'));
+        $this->assertEquals('published_at DESC', $this->service->getSortColumn(2, 'Fl'));
+        $this->assertEquals('published_at ASC', $this->service->getSortColumn(3, 'Fl'));
     }
 
     public function testGetSortColumnNewsfeeds(): void
@@ -593,9 +593,9 @@ class FeedServiceTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $this->assertEquals('NfName', $this->service->getSortColumn(1, 'Nf'));
-        $this->assertEquals('NfUpdate DESC', $this->service->getSortColumn(2, 'Nf'));
-        $this->assertEquals('NfUpdate ASC', $this->service->getSortColumn(3, 'Nf'));
+        $this->assertEquals('name', $this->service->getSortColumn(1, 'Nf'));
+        $this->assertEquals('update_interval DESC', $this->service->getSortColumn(2, 'Nf'));
+        $this->assertEquals('update_interval ASC', $this->service->getSortColumn(3, 'Nf'));
     }
 
     public function testGetSortColumnDefaultsToDateDesc(): void
@@ -604,7 +604,7 @@ class FeedServiceTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $this->assertEquals('FlDate DESC', $this->service->getSortColumn(99, 'Fl'));
+        $this->assertEquals('published_at DESC', $this->service->getSortColumn(99, 'Fl'));
     }
 
     // ===== deleteArticles() tests =====
@@ -616,25 +616,25 @@ class FeedServiceTest extends TestCase
         }
 
         $feedId = $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed DeleteArticles',
-            'NfSourceURI' => 'https://example.com/delete-articles',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed DeleteArticles',
+            'source_uri' => 'https://example.com/delete-articles',
+            'article_section_tags' => 'article',
+            'filter_tags' => '',
+            'options' => '',
         ]);
 
         // Add articles
         for ($i = 1; $i <= 3; $i++) {
             Connection::execute(
-                "INSERT INTO " . Globals::table('feed_links') . " (FlNfID, FlTitle, FlLink, FlDescription, FlDate)
+                "INSERT INTO " . Globals::table('feed_links') . " (feed_id, title, link, description, published_at)
                  VALUES ($feedId, 'Article $i', 'https://example.com/art$i', 'Desc', FROM_UNIXTIME(" . time() . "))"
             );
         }
 
         // Verify articles exist
         $count = (int)Connection::fetchValue(
-            "SELECT COUNT(*) AS value FROM " . Globals::table('feed_links') . " WHERE FlNfID = $feedId"
+            "SELECT COUNT(*) AS value FROM " . Globals::table('feed_links') . " WHERE feed_id = $feedId"
         );
         $this->assertEquals(3, $count);
 
@@ -644,7 +644,7 @@ class FeedServiceTest extends TestCase
 
         // Verify articles are gone
         $count = (int)Connection::fetchValue(
-            "SELECT COUNT(*) AS value FROM " . Globals::table('feed_links') . " WHERE FlNfID = $feedId"
+            "SELECT COUNT(*) AS value FROM " . Globals::table('feed_links') . " WHERE feed_id = $feedId"
         );
         $this->assertEquals(0, $count);
 
@@ -661,19 +661,19 @@ class FeedServiceTest extends TestCase
         }
 
         $feedId = $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed ResetUnloadable',
-            'NfSourceURI' => 'https://example.com/reset',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed ResetUnloadable',
+            'source_uri' => 'https://example.com/reset',
+            'article_section_tags' => 'article',
+            'filter_tags' => '',
+            'options' => '',
         ]);
 
         // Add article with space prefix (unloadable)
         $feedLinksTable = Globals::table('feed_links');
         $timestamp = time();
         Connection::execute(
-            "INSERT INTO $feedLinksTable (FlNfID, FlTitle, FlLink, FlDescription, FlDate)
+            "INSERT INTO $feedLinksTable (feed_id, title, link, description, published_at)
              VALUES ($feedId, 'Unloadable Article', ' https://example.com/unloadable', 'Desc', " .
             "FROM_UNIXTIME($timestamp))"
         );
@@ -684,7 +684,7 @@ class FeedServiceTest extends TestCase
 
         // Verify link is trimmed
         $link = Connection::fetchValue(
-            "SELECT FlLink AS value FROM " . Globals::table('feed_links') . " WHERE FlNfID = $feedId"
+            "SELECT link AS value FROM " . Globals::table('feed_links') . " WHERE feed_id = $feedId"
         );
         $this->assertEquals('https://example.com/unloadable', $link);
     }
@@ -699,32 +699,32 @@ class FeedServiceTest extends TestCase
 
         // Create
         $feedId = $this->service->createFeed([
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed RoundTrip',
-            'NfSourceURI' => 'https://example.com/roundtrip',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed RoundTrip',
+            'source_uri' => 'https://example.com/roundtrip',
+            'article_section_tags' => 'article',
+            'filter_tags' => '',
+            'options' => '',
         ]);
 
         $this->assertGreaterThan(0, $feedId);
 
         // Read
         $feed = $this->service->getFeedById($feedId);
-        $this->assertEquals('Test Feed RoundTrip', $feed['NfName']);
+        $this->assertEquals('Test Feed RoundTrip', $feed['name']);
 
         // Update
         $this->service->updateFeed($feedId, [
-            'NfLgID' => self::$testLangId,
-            'NfName' => 'Test Feed RoundTrip Updated',
-            'NfSourceURI' => 'https://example.com/roundtrip-updated',
-            'NfArticleSectionTags' => 'section',
-            'NfFilterTags' => 'div.filter',
-            'NfOptions' => 'autoupdate=1d',
+            'language_id' => self::$testLangId,
+            'name' => 'Test Feed RoundTrip Updated',
+            'source_uri' => 'https://example.com/roundtrip-updated',
+            'article_section_tags' => 'section',
+            'filter_tags' => 'div.filter',
+            'options' => 'autoupdate=1d',
         ]);
 
         $updatedFeed = $this->service->getFeedById($feedId);
-        $this->assertEquals('Test Feed RoundTrip Updated', $updatedFeed['NfName']);
+        $this->assertEquals('Test Feed RoundTrip Updated', $updatedFeed['name']);
 
         // Delete
         $result = $this->service->deleteFeeds((string)$feedId);

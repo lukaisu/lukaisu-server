@@ -365,13 +365,13 @@ class FeedEditControllerTest extends TestCase
     {
         $_REQUEST = [
             'update_feed' => '1',
-            'NfID' => '42',
-            'NfLgID' => '1',
-            'NfName' => 'Updated Feed',
-            'NfSourceURI' => 'http://example.com/rss',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => 'script',
-            'NfOptions' => 'tag:news,',
+            'id' => '42',
+            'language_id' => '1',
+            'name' => 'Updated Feed',
+            'source_uri' => 'http://example.com/rss',
+            'article_section_tags' => 'article',
+            'filter_tags' => 'script',
+            'options' => 'tag:news,',
         ];
 
         $this->feedFacade->expects($this->once())
@@ -379,8 +379,8 @@ class FeedEditControllerTest extends TestCase
             ->with(
                 42,
                 $this->callback(function (array $data) {
-                    return $data['NfName'] === 'Updated Feed'
-                        && $data['NfOptions'] === 'tag:news';
+                    return $data['name'] === 'Updated Feed'
+                        && $data['options'] === 'tag:news';
                 })
             );
 
@@ -393,13 +393,13 @@ class FeedEditControllerTest extends TestCase
     {
         $_REQUEST = [
             'update_feed' => '1',
-            'NfID' => '1',
-            'NfLgID' => '1',
-            'NfName' => 'Test',
-            'NfSourceURI' => 'http://test.com',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfOptions' => 'opt1:val1,opt2:val2,',
+            'id' => '1',
+            'language_id' => '1',
+            'name' => 'Test',
+            'source_uri' => 'http://test.com',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'options' => 'opt1:val1,opt2:val2,',
         ];
 
         $this->feedFacade->expects($this->once())
@@ -407,7 +407,7 @@ class FeedEditControllerTest extends TestCase
             ->with(
                 $this->anything(),
                 $this->callback(function (array $data) {
-                    return $data['NfOptions'] === 'opt1:val1,opt2:val2';
+                    return $data['options'] === 'opt1:val1,opt2:val2';
                 })
             );
 
@@ -436,19 +436,19 @@ class FeedEditControllerTest extends TestCase
     {
         $_REQUEST = [
             'save_feed' => '1',
-            'NfLgID' => '2',
-            'NfName' => 'New Feed',
-            'NfSourceURI' => 'http://example.com/rss',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => '2',
+            'name' => 'New Feed',
+            'source_uri' => 'http://example.com/rss',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'options' => '',
         ];
 
         $this->feedFacade->expects($this->once())
             ->method('createFeed')
             ->with($this->callback(function (array $data) {
-                return $data['NfName'] === 'New Feed'
-                    && $data['NfLgID'] === '2';
+                return $data['name'] === 'New Feed'
+                    && $data['language_id'] === '2';
             }));
 
         $method = new \ReflectionMethod(FeedEditController::class, 'handleSaveFeed');
@@ -480,14 +480,14 @@ class FeedEditControllerTest extends TestCase
     public function showEditFormCallsFacadeForExistingFeed(): void
     {
         $feed = [
-            'NfID' => 1,
-            'NfName' => 'Test Feed',
-            'NfSourceURI' => 'http://test.com',
-            'NfLgID' => 1,
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
-            'NfUpdate' => 0,
+            'id' => 1,
+            'name' => 'Test Feed',
+            'source_uri' => 'http://test.com',
+            'language_id' => 1,
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'options' => '',
+            'update_interval' => 0,
         ];
 
         $this->feedFacade->expects($this->once())
@@ -517,14 +517,14 @@ class FeedEditControllerTest extends TestCase
     public function showEditFormParsesAutoUpdateOption(): void
     {
         $feed = [
-            'NfID' => 1,
-            'NfName' => 'Test',
-            'NfSourceURI' => 'http://test.com',
-            'NfLgID' => 1,
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfOptions' => 'autoupdate:24h',
-            'NfUpdate' => 0,
+            'id' => 1,
+            'name' => 'Test',
+            'source_uri' => 'http://test.com',
+            'language_id' => 1,
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'options' => 'autoupdate:24h',
+            'update_interval' => 0,
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($feed);
@@ -560,14 +560,14 @@ class FeedEditControllerTest extends TestCase
     public function showEditFormHandlesNullAutoUpdate(): void
     {
         $feed = [
-            'NfID' => 1,
-            'NfName' => 'Test',
-            'NfSourceURI' => 'http://test.com',
-            'NfLgID' => 1,
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
-            'NfUpdate' => 0,
+            'id' => 1,
+            'name' => 'Test',
+            'source_uri' => 'http://test.com',
+            'language_id' => 1,
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'options' => '',
+            'update_interval' => 0,
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($feed);
@@ -718,14 +718,14 @@ class FeedEditControllerTest extends TestCase
     public function editFeedCallsLanguageFacadeForExistingFeed(): void
     {
         $feed = [
-            'NfID' => 1,
-            'NfLgID' => 5,
-            'NfName' => 'Test',
-            'NfSourceURI' => 'http://test.com',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
-            'NfUpdate' => 0,
+            'id' => 1,
+            'language_id' => 5,
+            'name' => 'Test',
+            'source_uri' => 'http://test.com',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'options' => '',
+            'update_interval' => 0,
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($feed);

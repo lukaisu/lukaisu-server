@@ -356,7 +356,7 @@ class FeedLoadControllerTest extends TestCase
         $this->feedFacade->expects($this->once())
             ->method('getFeeds')
             ->with(3)
-            ->willReturn([['NfID' => 1, 'NfName' => 'Feed']]);
+            ->willReturn([['id' => 1, 'name' => 'Feed']]);
 
         $this->languageFacade->method('getLanguagesForSelect')
             ->willReturn([['LgID' => 3, 'LgName' => 'Spanish']]);

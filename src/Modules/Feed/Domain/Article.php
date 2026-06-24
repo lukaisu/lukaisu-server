@@ -154,14 +154,14 @@ class Article
     public static function fromDbRecord(array $record): self
     {
         return self::reconstitute(
-            (int) $record['FlID'],
-            (int) $record['FlNfID'],
-            (string) $record['FlTitle'],
-            (string) $record['FlLink'],
-            (string) ($record['FlDescription'] ?? ''),
-            (string) ($record['FlDate'] ?? ''),
-            (string) ($record['FlAudio'] ?? ''),
-            (string) ($record['FlText'] ?? '')
+            (int) $record['id'],
+            (int) $record['feed_id'],
+            (string) $record['title'],
+            (string) $record['link'],
+            (string) ($record['description'] ?? ''),
+            (string) ($record['published_at'] ?? ''),
+            (string) ($record['audio'] ?? ''),
+            (string) ($record['text'] ?? '')
         );
     }
 

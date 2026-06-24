@@ -341,12 +341,12 @@ class FeedWizardControllerTest extends TestCase
     public function loadExistingFeedForEditSetsSessionFromFeedData(): void
     {
         $feedRow = [
-            'NfSourceURI' => 'http://example.com/feed',
-            'NfArticleSectionTags' => 'div.content!?!p',
-            'NfFilterTags' => 'ad!?!sidebar',
-            'NfName' => 'Test Feed',
-            'NfOptions' => 'edit_text=1',
-            'NfLgID' => 2,
+            'source_uri' => 'http://example.com/feed',
+            'article_section_tags' => 'div.content!?!p',
+            'filter_tags' => 'ad!?!sidebar',
+            'name' => 'Test Feed',
+            'options' => 'edit_text=1',
+            'language_id' => 2,
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($feedRow);
@@ -375,12 +375,12 @@ class FeedWizardControllerTest extends TestCase
     public function loadExistingFeedForEditHandlesRedirectTags(): void
     {
         $feedRow = [
-            'NfSourceURI' => 'http://example.com/feed',
-            'NfArticleSectionTags' => 'redirect http://new.url | !?!div.content',
-            'NfFilterTags' => '',
-            'NfName' => 'Test Feed',
-            'NfOptions' => '',
-            'NfLgID' => 1,
+            'source_uri' => 'http://example.com/feed',
+            'article_section_tags' => 'redirect http://new.url | !?!div.content',
+            'filter_tags' => '',
+            'name' => 'Test Feed',
+            'options' => '',
+            'language_id' => 1,
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($feedRow);
@@ -400,12 +400,12 @@ class FeedWizardControllerTest extends TestCase
     public function loadExistingFeedForEditReturnsRedirectOnEmptyFeedData(): void
     {
         $feedRow = [
-            'NfSourceURI' => 'http://example.com/feed',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfName' => 'Test Feed',
-            'NfOptions' => '',
-            'NfLgID' => 1,
+            'source_uri' => 'http://example.com/feed',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'name' => 'Test Feed',
+            'options' => '',
+            'language_id' => 1,
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($feedRow);
@@ -423,12 +423,12 @@ class FeedWizardControllerTest extends TestCase
     public function loadExistingFeedForEditHandlesEmptyFeedText(): void
     {
         $feedRow = [
-            'NfSourceURI' => 'http://example.com/feed',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfName' => 'Test Feed',
-            'NfOptions' => '',
-            'NfLgID' => 1,
+            'source_uri' => 'http://example.com/feed',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'name' => 'Test Feed',
+            'options' => '',
+            'language_id' => 1,
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($feedRow);
@@ -448,12 +448,12 @@ class FeedWizardControllerTest extends TestCase
     public function loadExistingFeedForEditHandlesCustomArticleSource(): void
     {
         $feedRow = [
-            'NfSourceURI' => 'http://example.com/feed',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfName' => 'Test Feed',
-            'NfOptions' => 'article_source:description',
-            'NfLgID' => 1,
+            'source_uri' => 'http://example.com/feed',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'name' => 'Test Feed',
+            'options' => 'article_source:description',
+            'language_id' => 1,
         ];
 
         $feedData = [
@@ -489,12 +489,12 @@ class FeedWizardControllerTest extends TestCase
     public function loadExistingFeedForEditReturnsRedirectOnFalseReturn(): void
     {
         $feedRow = [
-            'NfSourceURI' => 'http://example.com/feed',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfName' => 'Test Feed',
-            'NfOptions' => '',
-            'NfLgID' => 1,
+            'source_uri' => 'http://example.com/feed',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'name' => 'Test Feed',
+            'options' => '',
+            'language_id' => 1,
         ];
 
         $this->feedFacade->method('getFeedById')->willReturn($feedRow);
@@ -697,7 +697,7 @@ class FeedWizardControllerTest extends TestCase
         $_REQUEST['hide_images'] = 'no';
         $_REQUEST['host_name'] = 'example.com';
         $_REQUEST['host_status'] = 'allow';
-        $_REQUEST['NfName'] = 'My Feed';
+        $_REQUEST['name'] = 'My Feed';
 
         $this->wizardSession->method('has')->willReturn(true);
 
@@ -783,14 +783,14 @@ class FeedWizardControllerTest extends TestCase
     #[Test]
     public function processStep3SessionParamsReadsAllInputParams(): void
     {
-        $_REQUEST['NfName'] = 'Step3 Feed';
+        $_REQUEST['name'] = 'Step3 Feed';
         $_REQUEST['NfArticleSection'] = 'div.article';
         $_REQUEST['article_selector'] = '.main-content';
         $_REQUEST['selected_feed'] = '3';
         $_REQUEST['article_tags'] = '<li>tag</li>';
         $_REQUEST['html'] = '<li>filter</li>';
-        $_REQUEST['NfOptions'] = 'edit_text=1';
-        $_REQUEST['NfLgID'] = '5';
+        $_REQUEST['options'] = 'edit_text=1';
+        $_REQUEST['language_id'] = '5';
         $_REQUEST['maxim'] = '10';
         $_REQUEST['select_mode'] = 'xpath';
         $_REQUEST['hide_images'] = 'yes';

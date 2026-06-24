@@ -62,7 +62,7 @@ class UserScopedQuery
         'words' => 'WoUsID',
         'tags' => 'TgUsID',
         'text_tags' => 'T2UsID',
-        'news_feeds' => 'NfUsID',
+        'news_feeds' => 'user_id',
         'settings' => 'StUsID',
         'local_dictionaries' => 'LdUsID',
         'activity_log' => 'user_id',

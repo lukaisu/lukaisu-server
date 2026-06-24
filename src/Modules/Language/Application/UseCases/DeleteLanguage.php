@@ -108,7 +108,7 @@ class DeleteLanguage
                 ->where('WoLgID', '=', $id)
                 ->count(),
             'feeds' => QueryBuilder::table('news_feeds')
-                ->where('NfLgID', '=', $id)
+                ->where('language_id', '=', $id)
                 ->count(),
         ];
     }

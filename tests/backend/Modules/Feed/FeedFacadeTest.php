@@ -141,9 +141,9 @@ class FeedFacadeTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertCount(1, $result);
-        $this->assertEquals(1, $result[0]['NfID']);
-        $this->assertEquals('Test Feed', $result[0]['NfName']);
-        $this->assertEquals('https://example.com/feed.xml', $result[0]['NfSourceURI']);
+        $this->assertEquals(1, $result[0]['id']);
+        $this->assertEquals('Test Feed', $result[0]['name']);
+        $this->assertEquals('https://example.com/feed.xml', $result[0]['source_uri']);
     }
 
     public function testGetFeedsWithLanguageFilter(): void
@@ -168,7 +168,7 @@ class FeedFacadeTest extends TestCase
         $result = $this->facade->getFeeds(2);
 
         $this->assertCount(1, $result);
-        $this->assertEquals(2, $result[0]['NfLgID']);
+        $this->assertEquals(2, $result[0]['language_id']);
     }
 
     public function testGetFeedByIdReturnsNullWhenNotFound(): void
@@ -205,9 +205,9 @@ class FeedFacadeTest extends TestCase
         $result = $this->facade->getFeedById(5);
 
         $this->assertIsArray($result);
-        $this->assertEquals(5, $result['NfID']);
-        $this->assertEquals('My Feed', $result['NfName']);
-        $this->assertEquals('autoupdate=1h', $result['NfOptions']);
+        $this->assertEquals(5, $result['id']);
+        $this->assertEquals('My Feed', $result['name']);
+        $this->assertEquals('autoupdate=1h', $result['options']);
     }
 
     public function testCountFeedsReturnsInteger(): void
@@ -245,12 +245,12 @@ class FeedFacadeTest extends TestCase
             });
 
         $data = [
-            'NfLgID' => 1,
-            'NfName' => 'New Feed',
-            'NfSourceURI' => 'https://example.com/new.xml',
-            'NfArticleSectionTags' => '//article',
-            'NfFilterTags' => '//ad',
-            'NfOptions' => 'tag=news,',
+            'language_id' => 1,
+            'name' => 'New Feed',
+            'source_uri' => 'https://example.com/new.xml',
+            'article_section_tags' => '//article',
+            'filter_tags' => '//ad',
+            'options' => 'tag=news,',
         ];
 
         $result = $this->facade->createFeed($data);
@@ -270,10 +270,10 @@ class FeedFacadeTest extends TestCase
             });
 
         $this->facade->createFeed([
-            'NfLgID' => 1,
-            'NfName' => 'Test',
-            'NfSourceURI' => 'https://example.com/feed.xml',
-            'NfOptions' => 'tag=test,autoupdate=1h,',
+            'language_id' => 1,
+            'name' => 'Test',
+            'source_uri' => 'https://example.com/feed.xml',
+            'options' => 'tag=test,autoupdate=1h,',
         ]);
 
         $this->assertNotNull($savedFeed);
@@ -312,12 +312,12 @@ class FeedFacadeTest extends TestCase
             }));
 
         $this->facade->updateFeed(5, [
-            'NfLgID' => 1,
-            'NfName' => 'New Name',
-            'NfSourceURI' => 'https://new.com/feed.xml',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'NfOptions' => '',
+            'language_id' => 1,
+            'name' => 'New Name',
+            'source_uri' => 'https://new.com/feed.xml',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'options' => '',
         ]);
     }
 
@@ -384,8 +384,8 @@ class FeedFacadeTest extends TestCase
         $result = $this->facade->getFeedLinks('1');
 
         $this->assertCount(1, $result);
-        $this->assertEquals('Article Title', $result[0]['FlTitle']);
-        $this->assertEquals('https://example.com/article', $result[0]['FlLink']);
+        $this->assertEquals('Article Title', $result[0]['title']);
+        $this->assertEquals('https://example.com/article', $result[0]['link']);
     }
 
     public function testGetFeedLinksPassesSearchDirectly(): void
@@ -397,7 +397,7 @@ class FeedFacadeTest extends TestCase
                 [1],
                 0,
                 50,
-                'FlDate',
+                'published_at',
                 'DESC',
                 'test'  // Search passed directly
             )
@@ -496,8 +496,8 @@ class FeedFacadeTest extends TestCase
         $result = $this->facade->getMarkedFeedLinks([1, 2]);
 
         $this->assertCount(1, $result);
-        $this->assertEquals('Test Article', $result[0]['FlTitle']);
-        $this->assertEquals('Test Feed', $result[0]['NfName']);
+        $this->assertEquals('Test Article', $result[0]['title']);
+        $this->assertEquals('Test Feed', $result[0]['name']);
     }
 
     public function testGetMarkedFeedLinksWithStringInput(): void
@@ -659,7 +659,7 @@ class FeedFacadeTest extends TestCase
         $result = $this->facade->getFeedsNeedingAutoUpdate();
 
         $this->assertCount(1, $result);
-        $this->assertEquals('Auto Feed', $result[0]['NfName']);
+        $this->assertEquals('Auto Feed', $result[0]['name']);
     }
 
     // ===== Text creation tests =====
@@ -965,37 +965,37 @@ class FeedFacadeTest extends TestCase
     public function testGetSortColumnForArticlesReturnsTitle(): void
     {
         $result = $this->facade->getSortColumn(1, 'Fl');
-        $this->assertEquals('FlTitle', $result);
+        $this->assertEquals('title', $result);
     }
 
     public function testGetSortColumnForArticlesReturnsDateDesc(): void
     {
         $result = $this->facade->getSortColumn(2, 'Fl');
-        $this->assertEquals('FlDate DESC', $result);
+        $this->assertEquals('published_at DESC', $result);
     }
 
     public function testGetSortColumnForArticlesReturnsDateAsc(): void
     {
         $result = $this->facade->getSortColumn(3, 'Fl');
-        $this->assertEquals('FlDate ASC', $result);
+        $this->assertEquals('published_at ASC', $result);
     }
 
     public function testGetSortColumnForFeedsReturnsName(): void
     {
         $result = $this->facade->getSortColumn(1, 'Nf');
-        $this->assertEquals('NfName', $result);
+        $this->assertEquals('name', $result);
     }
 
     public function testGetSortColumnForFeedsReturnsUpdateDesc(): void
     {
         $result = $this->facade->getSortColumn(2, 'Nf');
-        $this->assertEquals('NfUpdate DESC', $result);
+        $this->assertEquals('update_interval DESC', $result);
     }
 
     public function testGetSortColumnDefaultsToDateDesc(): void
     {
         $result = $this->facade->getSortColumn(99, 'Fl');
-        $this->assertEquals('FlDate DESC', $result);
+        $this->assertEquals('published_at DESC', $result);
     }
 
     // ===== Query filter tests =====
@@ -1012,7 +1012,7 @@ class FeedFacadeTest extends TestCase
     {
         $result = $this->facade->buildQueryFilter('test', 'title', '');
         $this->assertIsArray($result);
-        $this->assertStringContainsString('FlTitle', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
         $this->assertStringContainsString('LIKE', $result['clause']);
         $this->assertEquals('test', $result['search']);
     }
@@ -1028,9 +1028,9 @@ class FeedFacadeTest extends TestCase
     {
         $result = $this->facade->buildQueryFilter('search', 'title,desc,text', '');
         $this->assertIsArray($result);
-        $this->assertStringContainsString('FlTitle', $result['clause']);
-        $this->assertStringContainsString('FlDescription', $result['clause']);
-        $this->assertStringContainsString('FlText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('description', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertEquals('search', $result['search']);
     }
 
@@ -1173,21 +1173,21 @@ class FeedFacadeTest extends TestCase
 
         $result = $this->facade->getFeeds();
 
-        $this->assertArrayHasKey('NfID', $result[0]);
-        $this->assertArrayHasKey('NfLgID', $result[0]);
-        $this->assertArrayHasKey('NfName', $result[0]);
-        $this->assertArrayHasKey('NfSourceURI', $result[0]);
-        $this->assertArrayHasKey('NfArticleSectionTags', $result[0]);
-        $this->assertArrayHasKey('NfFilterTags', $result[0]);
-        $this->assertArrayHasKey('NfUpdate', $result[0]);
-        $this->assertArrayHasKey('NfOptions', $result[0]);
+        $this->assertArrayHasKey('id', $result[0]);
+        $this->assertArrayHasKey('language_id', $result[0]);
+        $this->assertArrayHasKey('name', $result[0]);
+        $this->assertArrayHasKey('source_uri', $result[0]);
+        $this->assertArrayHasKey('article_section_tags', $result[0]);
+        $this->assertArrayHasKey('filter_tags', $result[0]);
+        $this->assertArrayHasKey('update_interval', $result[0]);
+        $this->assertArrayHasKey('options', $result[0]);
 
-        $this->assertEquals(1, $result[0]['NfID']);
-        $this->assertEquals(2, $result[0]['NfLgID']);
-        $this->assertEquals('Test Feed', $result[0]['NfName']);
-        $this->assertEquals('//article', $result[0]['NfArticleSectionTags']);
-        $this->assertEquals('//ad', $result[0]['NfFilterTags']);
-        $this->assertEquals(1234567890, $result[0]['NfUpdate']);
+        $this->assertEquals(1, $result[0]['id']);
+        $this->assertEquals(2, $result[0]['language_id']);
+        $this->assertEquals('Test Feed', $result[0]['name']);
+        $this->assertEquals('//article', $result[0]['article_section_tags']);
+        $this->assertEquals('//ad', $result[0]['filter_tags']);
+        $this->assertEquals(1234567890, $result[0]['update_interval']);
     }
 
     // ===== Method existence tests =====

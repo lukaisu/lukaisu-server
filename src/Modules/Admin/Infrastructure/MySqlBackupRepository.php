@@ -143,8 +143,8 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 return 'SELECT * FROM word_tag_map WHERE WtWoID IN ('
                     . 'SELECT WoID FROM words WHERE WoUsID = ' . $userId . ')';
             case 'feed_links':
-                return 'SELECT * FROM feed_links WHERE FlNfID IN ('
-                    . 'SELECT NfID FROM news_feeds WHERE NfUsID = ' . $userId . ')';
+                return 'SELECT * FROM feed_links WHERE feed_id IN ('
+                    . 'SELECT id FROM news_feeds WHERE user_id = ' . $userId . ')';
         }
 
         // Unknown table: leave unfiltered. Should never be hit with the

@@ -84,7 +84,7 @@ class QueryBuilder
         'words' => 'WoUsID',
         'tags' => 'TgUsID',
         'text_tags' => 'T2UsID',
-        'news_feeds' => 'NfUsID',
+        'news_feeds' => 'user_id',
         'settings' => 'StUsID',
         'local_dictionaries' => 'LdUsID',
         'books' => 'user_id',

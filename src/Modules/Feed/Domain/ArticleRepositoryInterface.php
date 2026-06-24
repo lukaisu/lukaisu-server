@@ -54,7 +54,7 @@ interface ArticleRepositoryInterface
         int $feedId,
         int $offset = 0,
         int $limit = 50,
-        string $orderBy = 'FlDate',
+        string $orderBy = 'published_at',
         string $direction = 'DESC'
     ): array;
 
@@ -90,7 +90,7 @@ interface ArticleRepositoryInterface
         array $feedIds,
         int $offset = 0,
         int $limit = 50,
-        string $orderBy = 'FlDate',
+        string $orderBy = 'published_at',
         string $direction = 'DESC',
         string $search = ''
     ): array;
@@ -129,7 +129,7 @@ interface ArticleRepositoryInterface
     /**
      * Insert multiple articles in batch.
      *
-     * Ignores duplicates based on (FlNfID, FlTitle) unique key.
+     * Ignores duplicates based on (feed_id, title) unique key.
      *
      * @param Article[] $articles Articles to insert
      * @param int       $feedId   Feed ID for all articles

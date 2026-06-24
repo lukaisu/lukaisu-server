@@ -61,7 +61,7 @@ class GetFeedList
         int $limit = 50,
         ?int $languageId = null,
         ?string $queryPattern = null,
-        string $orderBy = 'NfUpdate',
+        string $orderBy = 'update_interval',
         string $direction = 'DESC'
     ): array {
         $feeds = $this->feedRepository->findPaginated(
@@ -103,7 +103,7 @@ class GetFeedList
      */
     public function executeAll(
         ?int $languageId = null,
-        string $orderBy = 'NfUpdate',
+        string $orderBy = 'update_interval',
         string $direction = 'DESC'
     ): array {
         if ($languageId !== null && $languageId > 0) {

@@ -111,8 +111,8 @@ class FeedFacade
      * @param int|null $langId Language ID filter (null for all)
      *
      * @return array<int, array{
-     *     NfID: int|null, NfLgID: int, NfName: string, NfSourceURI: string,
-     *     NfArticleSectionTags: string, NfFilterTags: string, NfUpdate: int, NfOptions: string
+     *     id: int|null, language_id: int, name: string, source_uri: string,
+     *     article_section_tags: string, filter_tags: string, update_interval: int, options: string
      * }> Array of feed records
      */
     public function getFeeds(?int $langId = null): array
@@ -131,8 +131,8 @@ class FeedFacade
      * @param int $feedId Feed ID
      *
      * @return array{
-     *     NfID: int|null, NfLgID: int, NfName: string, NfSourceURI: string,
-     *     NfArticleSectionTags: string, NfFilterTags: string, NfUpdate: int, NfOptions: string
+     *     id: int|null, language_id: int, name: string, source_uri: string,
+     *     article_section_tags: string, filter_tags: string, update_interval: int, options: string
      * }|null Feed record or null if not found
      */
     public function getFeedById(int $feedId): ?array
@@ -164,12 +164,12 @@ class FeedFacade
     public function createFeed(array $data): int
     {
         $feed = $this->createFeed->execute(
-            (int) $data['NfLgID'],
-            (string) $data['NfName'],
-            (string) $data['NfSourceURI'],
-            (string) ($data['NfArticleSectionTags'] ?? ''),
-            (string) ($data['NfFilterTags'] ?? ''),
-            rtrim((string) ($data['NfOptions'] ?? ''), ',')
+            (int) $data['language_id'],
+            (string) $data['name'],
+            (string) $data['source_uri'],
+            (string) ($data['article_section_tags'] ?? ''),
+            (string) ($data['filter_tags'] ?? ''),
+            rtrim((string) ($data['options'] ?? ''), ',')
         );
 
         return (int) $feed->id();
@@ -187,12 +187,12 @@ class FeedFacade
     {
         $this->updateFeed->execute(
             $feedId,
-            (int) $data['NfLgID'],
-            (string) $data['NfName'],
-            (string) $data['NfSourceURI'],
-            (string) ($data['NfArticleSectionTags'] ?? ''),
-            (string) ($data['NfFilterTags'] ?? ''),
-            rtrim((string) ($data['NfOptions'] ?? ''), ',')
+            (int) $data['language_id'],
+            (string) $data['name'],
+            (string) $data['source_uri'],
+            (string) ($data['article_section_tags'] ?? ''),
+            (string) ($data['filter_tags'] ?? ''),
+            rtrim((string) ($data['options'] ?? ''), ',')
         );
     }
 
@@ -227,7 +227,7 @@ class FeedFacade
     public function getFeedLinks(
         string $feedIds,
         string $search = '',
-        string $orderBy = 'FlDate DESC',
+        string $orderBy = 'published_at DESC',
         int $offset = 0,
         int $limit = 50
     ): array {
@@ -312,10 +312,10 @@ class FeedFacade
      * @param array|string $markedItems Array or comma-separated string of IDs
      *
      * @return array<int, array{
-     *     FlID: int|null, FlNfID: int, FlTitle: string, FlLink: string, FlDescription: string,
-     *     FlDate: string, FlAudio: string, FlText: string, NfID: int|null, NfLgID: int,
-     *     NfName: string, NfSourceURI: string, NfArticleSectionTags: string, NfFilterTags: string,
-     *     NfUpdate: int, NfOptions: string
+     *     id: int|null, feed_id: int, title: string, link: string, description: string,
+     *     published_at: string, audio: string, text: string, language_id: int,
+     *     name: string, source_uri: string, article_section_tags: string, filter_tags: string,
+     *     update_interval: int, options: string
      * }> Array of feed link data with feed options
      */
     public function getMarkedFeedLinks($markedItems): array
@@ -328,7 +328,7 @@ class FeedFacade
 
         $articles = $this->getArticles->getByIds(array_map('intval', $ids));
 
-        /** @var array<int, array{FlID: int|null, FlNfID: int, FlTitle: string, FlLink: string, FlDescription: string, FlDate: string, FlAudio: string, FlText: string, NfID: int|null, NfLgID: int, NfName: string, NfSourceURI: string, NfArticleSectionTags: string, NfFilterTags: string, NfUpdate: int, NfOptions: string}> $result */
+        /** @var array<int, array{id: int|null, feed_id: int, title: string, link: string, description: string, published_at: string, audio: string, text: string, language_id: int, name: string, source_uri: string, article_section_tags: string, filter_tags: string, update_interval: int, options: string}> $result */
         $result = [];
         foreach ($articles as $article) {
             $feed = $this->feedRepository->find($article->feedId());
@@ -336,9 +336,13 @@ class FeedFacade
                 continue;
             }
 
+            // The article already carries feed_id (== the feed's own id), so drop
+            // the feed's id key here to avoid clobbering the article id on merge.
+            $feedData = $this->feedToArray($feed);
+            unset($feedData['id']);
             $result[] = [
                 ...$this->articleEntityToArray($article),
-                ...$this->feedToArray($feed)
+                ...$feedData
             ];
         }
 
@@ -610,15 +614,15 @@ class FeedFacade
     {
         if ($prefix === 'Nf') {
             $cols = [
-                1 => 'NfName',
-                2 => 'NfUpdate DESC',
-                3 => 'NfUpdate ASC',
+                1 => 'name',
+                2 => 'update_interval DESC',
+                3 => 'update_interval ASC',
             ];
         } else {
             $cols = [
-                1 => "{$prefix}Title",
-                2 => "{$prefix}Date DESC",
-                3 => "{$prefix}Date ASC",
+                1 => 'title',
+                2 => 'published_at DESC',
+                3 => 'published_at ASC',
             ];
         }
 
@@ -654,13 +658,13 @@ class FeedFacade
 
         switch ($queryMode) {
             case 'title,desc,text':
-                $clause = " AND (FlTitle $operator ? OR FlDescription $operator ? OR FlText $operator ?)";
+                $clause = " AND (title $operator ? OR description $operator ? OR text $operator ?)";
                 break;
             case 'title':
-                $clause = " AND (FlTitle $operator ?)";
+                $clause = " AND (title $operator ?)";
                 break;
             default:
-                $clause = " AND (FlTitle $operator ? OR FlDescription $operator ? OR FlText $operator ?)";
+                $clause = " AND (title $operator ? OR description $operator ? OR text $operator ?)";
                 break;
         }
 
@@ -749,21 +753,21 @@ class FeedFacade
      * @param Feed $feed Feed entity
      *
      * @return array{
-     *     NfID: int|null, NfLgID: int, NfName: string, NfSourceURI: string,
-     *     NfArticleSectionTags: string, NfFilterTags: string, NfUpdate: int, NfOptions: string
+     *     id: int|null, language_id: int, name: string, source_uri: string,
+     *     article_section_tags: string, filter_tags: string, update_interval: int, options: string
      * } Legacy array format
      */
     private function feedToArray(Feed $feed): array
     {
         return [
-            'NfID' => $feed->id(),
-            'NfLgID' => $feed->languageId(),
-            'NfName' => $feed->name(),
-            'NfSourceURI' => $feed->sourceUri(),
-            'NfArticleSectionTags' => $feed->articleSectionTags(),
-            'NfFilterTags' => $feed->filterTags(),
-            'NfUpdate' => $feed->updateTimestamp(),
-            'NfOptions' => $feed->options()->toString(),
+            'id' => $feed->id(),
+            'language_id' => $feed->languageId(),
+            'name' => $feed->name(),
+            'source_uri' => $feed->sourceUri(),
+            'article_section_tags' => $feed->articleSectionTags(),
+            'filter_tags' => $feed->filterTags(),
+            'update_interval' => $feed->updateTimestamp(),
+            'options' => $feed->options()->toString(),
         ];
     }
 
@@ -773,21 +777,21 @@ class FeedFacade
      * @param \Lukaisu\Modules\Feed\Domain\Article $article Article entity
      *
      * @return array{
-     *     FlID: int|null, FlNfID: int, FlTitle: string, FlLink: string, FlDescription: string,
-     *     FlDate: string, FlAudio: string, FlText: string
+     *     id: int|null, feed_id: int, title: string, link: string, description: string,
+     *     published_at: string, audio: string, text: string
      * } Legacy array format
      */
     private function articleEntityToArray($article): array
     {
         return [
-            'FlID' => $article->id(),
-            'FlNfID' => $article->feedId(),
-            'FlTitle' => $article->title(),
-            'FlLink' => $article->link(),
-            'FlDescription' => $article->description(),
-            'FlDate' => $article->date(),
-            'FlAudio' => $article->audio(),
-            'FlText' => $article->text(),
+            'id' => $article->id(),
+            'feed_id' => $article->feedId(),
+            'title' => $article->title(),
+            'link' => $article->link(),
+            'description' => $article->description(),
+            'published_at' => $article->date(),
+            'audio' => $article->audio(),
+            'text' => $article->text(),
         ];
     }
 
@@ -799,8 +803,8 @@ class FeedFacade
      * } $item Article result with status
      *
      * @return array{
-     *     FlID: int, FlTitle: string, FlLink: string, FlDescription: string, FlDate: string,
-     *     FlAudio: string, TxID: int|null, ArchivedTxID: int|null
+     *     id: int, title: string, link: string, description: string, published_at: string,
+     *     audio: string, TxID: int|null, ArchivedTxID: int|null
      * } Legacy array format
      */
     private function articleToLegacyArray(array $item): array
@@ -811,12 +815,12 @@ class FeedFacade
             throw new \LogicException('Cannot convert unpersisted article to legacy format');
         }
         return [
-            'FlID' => $id,
-            'FlTitle' => $article->title(),
-            'FlLink' => $article->link(),
-            'FlDescription' => $article->description(),
-            'FlDate' => $article->date(),
-            'FlAudio' => $article->audio(),
+            'id' => $id,
+            'title' => $article->title(),
+            'link' => $article->link(),
+            'description' => $article->description(),
+            'published_at' => $article->date(),
+            'audio' => $article->audio(),
             'TxID' => $item['text_id'],
             'ArchivedTxID' => $item['archived_id'],
         ];
@@ -849,13 +853,13 @@ class FeedFacade
     {
         $texts = array_reverse($texts);
         $textsArchived = $sentencesDeleted = $textItemsDeleted = $archiveCount = 0;
-        /** @var list<int|string> $NfID */
-        $NfID = [];
+        /** @var list<int|string> $id */
+        $id = [];
 
         foreach ($texts as $text) {
-            $NfID[] = $text['Nf_ID'];
+            $id[] = $text['Nf_ID'];
         }
-        $NfID = array_unique($NfID);
+        $id = array_unique($id);
 
         /** @var list<string> $currentTagList */
         $currentTagList = [];
@@ -864,7 +868,7 @@ class FeedFacade
         /** @var int|null $nfMaxTexts */
         $nfMaxTexts = null;
 
-        foreach ($NfID as $feedID) {
+        foreach ($id as $feedID) {
             foreach ($texts as $text) {
                 if ($feedID == $text['Nf_ID']) {
                     if ($currentTagList !== $text['TagList']) {

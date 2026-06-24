@@ -174,12 +174,12 @@ $configJson = json_encode([
         <form id="curated-feed-form" action="/feeds/new" method="post" style="display: none;">
             <?php echo FormHelper::csrfField(); ?>
             <input type="hidden" name="save_feed" value="1" />
-            <input type="hidden" name="NfLgID" x-bind:value="curatedFormData.NfLgID" />
-            <input type="hidden" name="NfName" x-model="curatedFormData.NfName" />
-            <input type="hidden" name="NfSourceURI" x-model="curatedFormData.NfSourceURI" />
-            <input type="hidden" name="NfArticleSectionTags" x-model="curatedFormData.NfArticleSectionTags" />
-            <input type="hidden" name="NfFilterTags" x-model="curatedFormData.NfFilterTags" />
-            <input type="hidden" name="NfOptions" x-model="curatedFormData.NfOptions" />
+            <input type="hidden" name="language_id" x-bind:value="curatedFormData.language_id" />
+            <input type="hidden" name="name" x-model="curatedFormData.name" />
+            <input type="hidden" name="source_uri" x-model="curatedFormData.source_uri" />
+            <input type="hidden" name="article_section_tags" x-model="curatedFormData.article_section_tags" />
+            <input type="hidden" name="filter_tags" x-model="curatedFormData.filter_tags" />
+            <input type="hidden" name="options" x-model="curatedFormData.options" />
         </form>
     </div>
 
@@ -262,11 +262,11 @@ $configJson = json_encode([
               x-data="feedForm"
               @submit="handleSubmit($event)">
             <?php echo FormHelper::csrfField(); ?>
-            <input type="hidden" name="NfOptions" value="" />
+            <input type="hidden" name="options" value="" />
             <input type="hidden" name="save_feed" value="1" />
 
             <div class="box">
-                <input type="hidden" name="NfLgID" x-bind:value="currentLanguageId" />
+                <input type="hidden" name="language_id" x-bind:value="currentLanguageId" />
 
                 <!-- Name -->
                 <div class="field">
@@ -277,7 +277,7 @@ $configJson = json_encode([
                     <div class="control">
                         <input class="input notempty"
                                type="text"
-                               name="NfName"
+                               name="name"
                                id="manual_NfName"
                                placeholder="<?php echo __e('feed.wizard.step1.name_placeholder'); ?>"
                                required />
@@ -293,7 +293,7 @@ $configJson = json_encode([
                     <div class="control">
                         <input class="input notempty"
                                type="url"
-                               name="NfSourceURI"
+                               name="source_uri"
                                id="manual_NfSourceURI"
                                placeholder="<?php echo __e('feed.wizard.step1.url_placeholder'); ?>"
                                required />
@@ -309,7 +309,7 @@ $configJson = json_encode([
                     <div class="control">
                         <input class="input notempty"
                                type="text"
-                               name="NfArticleSectionTags"
+                               name="article_section_tags"
                                id="manual_NfArticleSectionTags"
                                placeholder="<?php echo __e('feed.wizard.step1.article_section_placeholder'); ?>"
                                required />
@@ -324,7 +324,7 @@ $configJson = json_encode([
                     <div class="control">
                         <input class="input"
                                type="text"
-                               name="NfFilterTags"
+                               name="filter_tags"
                                id="manual_NfFilterTags"
                                placeholder="<?php echo __e('feed.wizard.step1.filter_tags_placeholder'); ?>" />
                     </div>

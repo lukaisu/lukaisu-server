@@ -84,7 +84,7 @@ class GetFeedListTest extends TestCase
         $this->feedRepository
             ->expects($this->once())
             ->method('findPaginated')
-            ->with(0, 50, null, null, 'NfUpdate', 'DESC')
+            ->with(0, 50, null, null, 'update_interval', 'DESC')
             ->willReturn([$feed1, $feed2]);
 
         $this->feedRepository
@@ -114,7 +114,7 @@ class GetFeedListTest extends TestCase
         $this->feedRepository
             ->expects($this->once())
             ->method('findPaginated')
-            ->with(10, 25, 2, '%french%', 'NfName', 'ASC')
+            ->with(10, 25, 2, '%french%', 'name', 'ASC')
             ->willReturn([$feed]);
 
         $this->feedRepository
@@ -134,7 +134,7 @@ class GetFeedListTest extends TestCase
             limit: 25,
             languageId: 2,
             queryPattern: '%french%',
-            orderBy: 'NfName',
+            orderBy: 'name',
             direction: 'ASC'
         );
 
@@ -196,7 +196,7 @@ class GetFeedListTest extends TestCase
         $this->feedRepository
             ->expects($this->once())
             ->method('findByLanguage')
-            ->with(2, 'NfUpdate', 'DESC')
+            ->with(2, 'update_interval', 'DESC')
             ->willReturn([$feed]);
 
         $this->feedRepository
@@ -215,7 +215,7 @@ class GetFeedListTest extends TestCase
         $this->feedRepository
             ->expects($this->once())
             ->method('findAll')
-            ->with('NfName', 'ASC')
+            ->with('name', 'ASC')
             ->willReturn([]);
 
         $this->feedRepository
@@ -224,7 +224,7 @@ class GetFeedListTest extends TestCase
 
         $result = $this->useCase->executeAll(
             languageId: null,
-            orderBy: 'NfName',
+            orderBy: 'name',
             direction: 'ASC'
         );
 
@@ -237,7 +237,7 @@ class GetFeedListTest extends TestCase
         $this->feedRepository
             ->expects($this->once())
             ->method('findAll')
-            ->with('NfUpdate', 'DESC')
+            ->with('update_interval', 'DESC')
             ->willReturn([]);
 
         $this->feedRepository
@@ -255,12 +255,12 @@ class GetFeedListTest extends TestCase
         $this->feedRepository
             ->expects($this->once())
             ->method('findByLanguage')
-            ->with(1, 'NfName', 'ASC')
+            ->with(1, 'name', 'ASC')
             ->willReturn([]);
 
         $result = $this->useCase->executeAll(
             languageId: 1,
-            orderBy: 'NfName',
+            orderBy: 'name',
             direction: 'ASC'
         );
 

@@ -171,7 +171,7 @@ export function feedFormData(config: FeedFormConfig = {}): FeedFormData {
      */
     handleSubmit(event: Event): void {
       const form = event.target as HTMLFormElement;
-      const hiddenField = form.querySelector<HTMLInputElement>('input[name="NfOptions"]');
+      const hiddenField = form.querySelector<HTMLInputElement>('input[name="options"]');
       if (hiddenField) {
         hiddenField.value = this.serializeOptions();
       }

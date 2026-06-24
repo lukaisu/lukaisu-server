@@ -298,7 +298,7 @@ if (!in_array($fkMigration, $appliedMigrations)) {
         "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_language " .
             "FOREIGN KEY (SeLgID) REFERENCES languages(LgID) ON DELETE CASCADE",
         "ALTER TABLE news_feeds ADD CONSTRAINT fk_news_feeds_language " .
-            "FOREIGN KEY (NfLgID) REFERENCES languages(LgID) ON DELETE CASCADE",
+            "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
         // Text references
         "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_text " .
             "FOREIGN KEY (SeTxID) REFERENCES texts(TxID) ON DELETE CASCADE",
@@ -323,7 +323,7 @@ if (!in_array($fkMigration, $appliedMigrations)) {
             "FOREIGN KEY (TtT2ID) REFERENCES text_tags(T2ID) ON DELETE CASCADE",
         // Feed links
         "ALTER TABLE feed_links ADD CONSTRAINT fk_feed_links_newsfeed " .
-            "FOREIGN KEY (FlNfID) REFERENCES news_feeds(NfID) ON DELETE CASCADE",
+            "FOREIGN KEY (feed_id) REFERENCES news_feeds(id) ON DELETE CASCADE",
     ];
 
     $fkCount = 0;
@@ -364,8 +364,8 @@ if (!in_array($columnDefaultsMigration, $appliedMigrations)) {
         "ALTER TABLE languages MODIFY COLUMN LgExceptionsSplitSentences varchar(500) NOT NULL DEFAULT ''",
         "ALTER TABLE languages MODIFY COLUMN LgRegexpWordCharacters varchar(500) NOT NULL DEFAULT 'a-zA-ZÀ-ÖØ-öø-ȳ'",
         "ALTER TABLE texts MODIFY COLUMN TxAnnotatedText longtext NOT NULL DEFAULT ''",
-        "ALTER TABLE feed_links MODIFY COLUMN FlAudio varchar(200) NOT NULL DEFAULT ''",
-        "ALTER TABLE feed_links MODIFY COLUMN FlText longtext NOT NULL DEFAULT ''",
+        "ALTER TABLE feed_links MODIFY COLUMN audio varchar(200) NOT NULL DEFAULT ''",
+        "ALTER TABLE feed_links MODIFY COLUMN text longtext NOT NULL DEFAULT ''",
     ];
 
     foreach ($columnDefaults as $sql) {

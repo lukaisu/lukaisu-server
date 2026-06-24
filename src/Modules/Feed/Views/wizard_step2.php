@@ -256,7 +256,7 @@ $configJson = json_encode([
                         <div class="control is-expanded">
                             <input class="input notempty"
                                    type="text"
-                                   name="NfName"
+                                   name="name"
                                    x-model="feedName"
                                    required />
                         </div>

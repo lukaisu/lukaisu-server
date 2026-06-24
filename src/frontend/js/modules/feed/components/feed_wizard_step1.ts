@@ -53,12 +53,12 @@ export interface Step1Config {
  * Hidden form data for curated feed submission.
  */
 interface CuratedFormData {
-  NfLgID: string;
-  NfName: string;
-  NfSourceURI: string;
-  NfArticleSectionTags: string;
-  NfFilterTags: string;
-  NfOptions: string;
+  language_id: string;
+  name: string;
+  source_uri: string;
+  article_section_tags: string;
+  filter_tags: string;
+  options: string;
 }
 
 /**
@@ -196,12 +196,12 @@ export function feedWizardStep1Data(): FeedWizardStep1Data {
     },
 
     curatedFormData: {
-      NfLgID: '',
-      NfName: '',
-      NfSourceURI: '',
-      NfArticleSectionTags: '',
-      NfFilterTags: '',
-      NfOptions: ''
+      language_id: '',
+      name: '',
+      source_uri: '',
+      article_section_tags: '',
+      filter_tags: '',
+      options: ''
     },
 
     init(): void {
@@ -238,12 +238,12 @@ export function feedWizardStep1Data(): FeedWizardStep1Data {
     addCuratedFeed(source: CuratedSource): void {
       // Populate hidden form and submit using current language from navbar
       this.curatedFormData = {
-        NfLgID: String(this.currentLanguageId),
-        NfName: source.name,
-        NfSourceURI: source.url,
-        NfArticleSectionTags: source.articleSectionTags,
-        NfFilterTags: source.filterTags,
-        NfOptions: source.options
+        language_id: String(this.currentLanguageId),
+        name: source.name,
+        source_uri: source.url,
+        article_section_tags: source.articleSectionTags,
+        filter_tags: source.filterTags,
+        options: source.options
       };
 
       // Need to wait one tick for Alpine to update the hidden inputs

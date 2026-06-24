@@ -44,20 +44,20 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
     /**
      * @var string Primary key column
      */
-    protected string $primaryKey = 'FlID';
+    protected string $primaryKey = 'id';
 
     /**
      * @var array<string, string> Property to column mapping
      */
     protected array $columnMap = [
-        'id' => 'FlID',
-        'feedId' => 'FlNfID',
-        'title' => 'FlTitle',
-        'link' => 'FlLink',
-        'description' => 'FlDescription',
-        'date' => 'FlDate',
-        'audio' => 'FlAudio',
-        'text' => 'FlText',
+        'id' => 'id',
+        'feedId' => 'feed_id',
+        'title' => 'title',
+        'link' => 'link',
+        'description' => 'description',
+        'date' => 'published_at',
+        'audio' => 'audio',
+        'text' => 'text',
     ];
 
     /**
@@ -66,14 +66,14 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
     protected function mapToEntity(array $row): Article
     {
         return Article::reconstitute(
-            (int) $row['FlID'],
-            (int) $row['FlNfID'],
-            (string) $row['FlTitle'],
-            (string) $row['FlLink'],
-            (string) ($row['FlDescription'] ?? ''),
-            (string) ($row['FlDate'] ?? ''),
-            (string) ($row['FlAudio'] ?? ''),
-            (string) ($row['FlText'] ?? '')
+            (int) $row['id'],
+            (int) $row['feed_id'],
+            (string) $row['title'],
+            (string) $row['link'],
+            (string) ($row['description'] ?? ''),
+            (string) ($row['published_at'] ?? ''),
+            (string) ($row['audio'] ?? ''),
+            (string) ($row['text'] ?? '')
         );
     }
 
@@ -87,13 +87,13 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
     protected function mapToRow(object $entity): array
     {
         return [
-            'FlNfID' => $entity->feedId(),
-            'FlTitle' => $entity->title(),
-            'FlLink' => $entity->link(),
-            'FlDescription' => $entity->description(),
-            'FlDate' => $entity->date(),
-            'FlAudio' => $entity->audio(),
-            'FlText' => $entity->text(),
+            'feed_id' => $entity->feedId(),
+            'title' => $entity->title(),
+            'link' => $entity->link(),
+            'description' => $entity->description(),
+            'published_at' => $entity->date(),
+            'audio' => $entity->audio(),
+            'text' => $entity->text(),
         ];
     }
 
@@ -118,13 +118,13 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
     }
 
     /**
-     * Append a `FlNfID IN (SELECT NfID FROM news_feeds WHERE NfUsID = ?)`
+     * Append a `feed_id IN (SELECT id FROM news_feeds WHERE user_id = ?)`
      * fragment to $bindings when multi-user mode is on with an
      * authenticated user.
      *
      * `feed_links` doesn't carry its own `UsID` column, so QueryBuilder's
      * auto-scoping doesn't fire. Every code path that takes a
-     * caller-supplied FlID/FlNfID must run through this scope or
+     * caller-supplied id/feed_id must run through this scope or
      * accept the full multi-tenant blast radius (read-foreign-articles,
      * delete-foreign-articles, etc.). The fragment is empty in
      * single-user installs so legacy tests stay green.
@@ -143,7 +143,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
             return '';
         }
         $bindings[] = $userId;
-        return ' AND FlNfID IN (SELECT NfID FROM news_feeds WHERE NfUsID = ?)';
+        return ' AND feed_id IN (SELECT id FROM news_feeds WHERE user_id = ?)';
     }
 
     /**
@@ -155,7 +155,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $bindings = [$id];
         $scope = $this->feedOwnerScope($bindings);
         $row = Connection::preparedFetchOne(
-            'SELECT * FROM feed_links WHERE FlID = ?' . $scope . ' LIMIT 1',
+            'SELECT * FROM feed_links WHERE id = ?' . $scope . ' LIMIT 1',
             $bindings
         );
         if ($row === null) {
@@ -171,11 +171,11 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         int $feedId,
         int $offset = 0,
         int $limit = 50,
-        string $orderBy = 'FlDate',
+        string $orderBy = 'published_at',
         string $direction = 'DESC'
     ): array {
         $rows = $this->query()
-            ->where('FlNfID', '=', $feedId)
+            ->where('feed_id', '=', $feedId)
             ->orderBy($orderBy, $direction)
             ->limit($limit)
             ->offset($offset)
@@ -201,7 +201,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $inClause = Connection::buildPreparedInClause(array_map('intval', $ids), $bindings);
         $scope = $this->feedOwnerScope($bindings);
         $rows = Connection::preparedFetchAll(
-            'SELECT * FROM feed_links WHERE FlID IN ' . $inClause . $scope,
+            'SELECT * FROM feed_links WHERE id IN ' . $inClause . $scope,
             $bindings
         );
         return array_map(
@@ -214,7 +214,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
      * {@inheritdoc}
      */
     private const ALLOWED_ORDER_COLUMNS = [
-        'FlDate', 'FlTitle', 'FlID', 'FlLink',
+        'published_at', 'title', 'id', 'link',
     ];
 
     private const ALLOWED_DIRECTIONS = ['ASC', 'DESC'];
@@ -223,7 +223,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         array $feedIds,
         int $offset = 0,
         int $limit = 50,
-        string $orderBy = 'FlDate',
+        string $orderBy = 'published_at',
         string $direction = 'DESC',
         string $search = ''
     ): array {
@@ -232,7 +232,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         }
 
         if (!in_array($orderBy, self::ALLOWED_ORDER_COLUMNS, true)) {
-            $orderBy = 'FlDate';
+            $orderBy = 'published_at';
         }
         $direction = strtoupper($direction);
         if (!in_array($direction, self::ALLOWED_DIRECTIONS, true)) {
@@ -251,7 +251,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $searchClause = '';
         $searchBindings = [];
         if ($search !== '') {
-            $searchClause = " AND (FlTitle LIKE ? OR FlDescription LIKE ?)";
+            $searchClause = " AND (title LIKE ? OR description LIKE ?)";
             $searchBindings[] = '%' . $search . '%';
             $searchBindings[] = '%' . $search . '%';
         }
@@ -260,12 +260,12 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $allBindings = array_merge($textScopeBindings, $bindings, $searchBindings);
 
         // Complex query with LEFT JOIN to texts (archived texts are in same table with TxArchivedAt)
-        $sql = "SELECT FlID, FlNfID, FlTitle, FlLink, FlDescription, FlDate, FlAudio, FlText,
+        $sql = "SELECT id, feed_id, title, link, description, published_at, audio, text,
                        TxID, TxArchivedAt
                 FROM feed_links
-                LEFT JOIN texts ON TxSourceURI = TRIM(FlLink)"
+                LEFT JOIN texts ON TxSourceURI = TRIM(link)"
                 . $textScope
-                . " WHERE FlNfID IN {$feedInClause} {$searchClause}"
+                . " WHERE feed_id IN {$feedInClause} {$searchClause}"
                 . " ORDER BY {$orderBy} {$direction}"
                 . " LIMIT {$offset}, {$limit}";
 
@@ -301,14 +301,14 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
             $searchPattern = '%' . $search . '%';
             $bindings = [$feedId, $searchPattern, $searchPattern];
             $sql = "SELECT COUNT(*) as cnt FROM feed_links
-                    WHERE FlNfID = ?
-                    AND (FlTitle LIKE ? OR FlDescription LIKE ?)";
+                    WHERE feed_id = ?
+                    AND (title LIKE ? OR description LIKE ?)";
             $row = Connection::preparedFetchOne($sql, $bindings);
             return (int) ($row['cnt'] ?? 0);
         }
 
         return $this->query()
-            ->where('FlNfID', '=', $feedId)
+            ->where('feed_id', '=', $feedId)
             ->countPrepared();
     }
 
@@ -329,14 +329,14 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
             $bindings[] = $searchPattern;
             $bindings[] = $searchPattern;
             $sql = "SELECT COUNT(*) as cnt FROM feed_links
-                    WHERE FlNfID IN {$feedInClause}
-                    AND (FlTitle LIKE ? OR FlDescription LIKE ?)";
+                    WHERE feed_id IN {$feedInClause}
+                    AND (title LIKE ? OR description LIKE ?)";
             $row = Connection::preparedFetchOne($sql, $bindings);
             return (int) ($row['cnt'] ?? 0);
         }
 
         return $this->query()
-            ->whereIn('FlNfID', $feedIds)
+            ->whereIn('feed_id', $feedIds)
             ->countPrepared();
     }
 
@@ -374,7 +374,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $duplicates = 0;
 
         foreach ($articles as $article) {
-            // Check for duplicate by title (unique key: FlNfID, FlTitle)
+            // Check for duplicate by title (unique key: feed_id, title)
             if ($this->titleExistsForFeed($feedId, $article->title())) {
                 $duplicates++;
                 continue;
@@ -420,7 +420,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $bindings = [$id];
         $scope = $this->feedOwnerScope($bindings);
         $deleted = Connection::preparedExecute(
-            'DELETE FROM feed_links WHERE FlID = ?' . $scope,
+            'DELETE FROM feed_links WHERE id = ?' . $scope,
             $bindings
         );
         return $deleted > 0;
@@ -435,7 +435,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $bindings = [$feedId];
         $scope = $this->feedOwnerScope($bindings);
         return Connection::preparedExecute(
-            'DELETE FROM feed_links WHERE FlNfID = ?' . $scope,
+            'DELETE FROM feed_links WHERE feed_id = ?' . $scope,
             $bindings
         );
     }
@@ -453,7 +453,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $inClause = Connection::buildPreparedInClause(array_map('intval', $feedIds), $bindings);
         $scope = $this->feedOwnerScope($bindings);
         return Connection::preparedExecute(
-            'DELETE FROM feed_links WHERE FlNfID IN ' . $inClause . $scope,
+            'DELETE FROM feed_links WHERE feed_id IN ' . $inClause . $scope,
             $bindings
         );
     }
@@ -471,7 +471,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $inClause = Connection::buildPreparedInClause(array_map('intval', $ids), $bindings);
         $scope = $this->feedOwnerScope($bindings);
         return Connection::preparedExecute(
-            'DELETE FROM feed_links WHERE FlID IN ' . $inClause . $scope,
+            'DELETE FROM feed_links WHERE id IN ' . $inClause . $scope,
             $bindings
         );
     }
@@ -490,8 +490,8 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
 
         // Use raw SQL for TRIM() expression
         return Connection::preparedExecute(
-            "UPDATE feed_links SET FlLink = TRIM(FlLink)
-             WHERE FlNfID IN {$feedInClause}",
+            "UPDATE feed_links SET link = TRIM(link)
+             WHERE feed_id IN {$feedInClause}",
             $bindings
         );
     }
@@ -503,8 +503,8 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
     {
         // Add space prefix to mark as error
         $this->query()
-            ->where('FlLink', '=', $link)
-            ->updatePrepared(['FlLink' => ' ' . $link]);
+            ->where('link', '=', $link)
+            ->updatePrepared(['link' => ' ' . $link]);
     }
 
     /**
@@ -513,8 +513,8 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
     public function titleExistsForFeed(int $feedId, string $title): bool
     {
         return $this->query()
-            ->where('FlNfID', '=', $feedId)
-            ->where('FlTitle', '=', $title)
+            ->where('feed_id', '=', $feedId)
+            ->where('title', '=', $title)
             ->existsPrepared();
     }
 
@@ -525,30 +525,30 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
     {
         /** @var array<int, mixed> $bindings */
         $bindings = [];
-        $sql = "SELECT FlNfID, COUNT(*) as cnt FROM feed_links";
+        $sql = "SELECT feed_id, COUNT(*) as cnt FROM feed_links";
 
         if (!empty($feedIds)) {
             $feedInClause = Connection::buildPreparedInClause($feedIds, $bindings);
             $scope = $this->feedOwnerScope($bindings);
-            $sql .= " WHERE FlNfID IN {$feedInClause}" . $scope;
+            $sql .= " WHERE feed_id IN {$feedInClause}" . $scope;
         } else {
             // Empty feedIds means "give me counts for every feed". In
             // multi-user mode, restrict that to the caller's feeds.
             $scope = $this->feedOwnerScope($bindings);
             if ($scope !== '') {
-                // feedOwnerScope yields ` AND FlNfID IN (...)`; drop the
+                // feedOwnerScope yields ` AND feed_id IN (...)`; drop the
                 // leading ` AND ` (5 chars) so it can start a fresh WHERE.
                 $sql .= ' WHERE ' . substr($scope, 5);
             }
         }
 
-        $sql .= " GROUP BY FlNfID";
+        $sql .= " GROUP BY feed_id";
 
         $rows = Connection::preparedFetchAll($sql, $bindings);
         $counts = [];
 
         foreach ($rows as $row) {
-            $counts[(int) $row['FlNfID']] = (int) $row['cnt'];
+            $counts[(int) $row['feed_id']] = (int) $row['cnt'];
         }
 
         return $counts;

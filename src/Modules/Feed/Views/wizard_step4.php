@@ -137,7 +137,7 @@ $configJson = json_encode([
                     <div class="field has-addons">
                         <div class="control is-expanded">
                             <div class="select is-fullwidth">
-                                <select name="NfLgID" x-model="languageId" required class="notempty">
+                                <select name="language_id" x-model="languageId" required class="notempty">
                                     <option value=""><?php echo __e('feed.wizard.step4.select_placeholder'); ?></option>
                                     <template x-for="lang in languages" :key="lang.id">
                                         <option :value="lang.id" x-text="lang.name"></option>
@@ -165,7 +165,7 @@ $configJson = json_encode([
                 <div class="field-body">
                     <div class="field has-addons">
                         <div class="control is-expanded">
-                            <input class="input notempty" type="text" name="NfName"
+                            <input class="input notempty" type="text" name="name"
                                    x-model="feedName" required />
                         </div>
                         <div class="control">
@@ -188,7 +188,7 @@ $configJson = json_encode([
                 <div class="field-body">
                     <div class="field has-addons">
                         <div class="control is-expanded">
-                            <input class="input notempty" type="text" name="NfSourceURI"
+                            <input class="input notempty" type="text" name="source_uri"
                                    x-model="sourceUri" required />
                         </div>
                         <div class="control">
@@ -211,7 +211,7 @@ $configJson = json_encode([
                 <div class="field-body">
                     <div class="field has-addons">
                         <div class="control is-expanded">
-                            <input class="input notempty" type="text" name="NfArticleSectionTags"
+                            <input class="input notempty" type="text" name="article_section_tags"
                                    x-model="articleSection" required />
                         </div>
                         <div class="control">
@@ -234,7 +234,7 @@ $configJson = json_encode([
                 <div class="field-body">
                     <div class="field">
                         <div class="control">
-                            <input class="input" type="text" name="NfFilterTags"
+                            <input class="input" type="text" name="filter_tags"
                                    x-model="filterTags" />
                         </div>
                     </div>
@@ -357,9 +357,9 @@ $configJson = json_encode([
 
         <!-- Hidden inputs -->
         <template x-if="isEditMode">
-            <input type="hidden" name="NfID" :value="config.editFeedId" />
+            <input type="hidden" name="id" :value="config.editFeedId" />
         </template>
-        <input type="hidden" name="NfOptions" value="" />
+        <input type="hidden" name="options" value="" />
         <input type="hidden" name="article_source" :value="config.feedText" />
         <input type="hidden" :name="isEditMode ? 'update_feed' : 'save_feed'" value="1" />
 

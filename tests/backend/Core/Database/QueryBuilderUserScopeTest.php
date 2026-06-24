@@ -220,7 +220,7 @@ class QueryBuilderUserScopeTest extends TestCase
     public function testUserScopeAppliedToNewsfeedsTable(): void
     {
         $this->assertTrue(UserScopedQuery::isUserScopedTable('news_feeds'));
-        $this->assertEquals('NfUsID', UserScopedQuery::getUserIdColumn('news_feeds'));
+        $this->assertEquals('user_id', UserScopedQuery::getUserIdColumn('news_feeds'));
     }
 
     public function testUserScopeAppliedToSettingsTable(): void
@@ -390,7 +390,7 @@ class QueryBuilderUserScopeTest extends TestCase
         $this->assertEquals('WoUsID', $tables['words']);
         $this->assertEquals('TgUsID', $tables['tags']);
         $this->assertEquals('T2UsID', $tables['text_tags']);
-        $this->assertEquals('NfUsID', $tables['news_feeds']);
+        $this->assertEquals('user_id', $tables['news_feeds']);
         $this->assertEquals('StUsID', $tables['settings']);
     }
 

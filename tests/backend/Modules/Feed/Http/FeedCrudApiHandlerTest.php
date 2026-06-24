@@ -75,7 +75,7 @@ class FeedCrudApiHandlerTest extends TestCase
 
     public function testFormatFeedRecordZeroUpdateTimestamp(): void
     {
-        $row = $this->makeFeedRow(['NfUpdate' => 0]);
+        $row = $this->makeFeedRow(['update_interval' => 0]);
 
         $this->feedFacade->method('getNfOption')->willReturn([]);
         // formatLastUpdate should NOT be called when timestamp is 0
@@ -144,7 +144,7 @@ class FeedCrudApiHandlerTest extends TestCase
 
     public function testFormatFeedRecordEmptyOptions(): void
     {
-        $row = $this->makeFeedRow(['NfOptions' => '']);
+        $row = $this->makeFeedRow(['options' => '']);
 
         $this->feedFacade->method('getNfOption')->willReturn([]);
         $this->feedFacade->method('formatLastUpdate')->willReturn('up to date');
@@ -157,7 +157,7 @@ class FeedCrudApiHandlerTest extends TestCase
 
     public function testFormatFeedRecordCallsGetNfOptionWithAllParam(): void
     {
-        $row = $this->makeFeedRow(['NfOptions' => 'charset=utf8,max=10']);
+        $row = $this->makeFeedRow(['options' => 'charset=utf8,max=10']);
 
         $this->feedFacade->expects($this->once())
             ->method('getNfOption')
@@ -172,7 +172,7 @@ class FeedCrudApiHandlerTest extends TestCase
 
     public function testFormatFeedRecordCastsIdToInt(): void
     {
-        $row = $this->makeFeedRow(['NfID' => '99']);
+        $row = $this->makeFeedRow(['id' => '99']);
 
         $this->feedFacade->method('getNfOption')->willReturn([]);
         $this->feedFacade->method('formatLastUpdate')->willReturn('up to date');
@@ -185,7 +185,7 @@ class FeedCrudApiHandlerTest extends TestCase
 
     public function testFormatFeedRecordCastsLangIdToInt(): void
     {
-        $row = $this->makeFeedRow(['NfLgID' => '7']);
+        $row = $this->makeFeedRow(['language_id' => '7']);
 
         $this->feedFacade->method('getNfOption')->willReturn([]);
         $this->feedFacade->method('formatLastUpdate')->willReturn('up to date');
@@ -351,12 +351,12 @@ class FeedCrudApiHandlerTest extends TestCase
         $this->feedFacade->expects($this->once())
             ->method('createFeed')
             ->with([
-                'NfLgID' => 3,
-                'NfName' => 'My Feed',
-                'NfSourceURI' => 'https://example.com/rss',
-                'NfArticleSectionTags' => 'article',
-                'NfFilterTags' => '.content',
-                'NfOptions' => 'charset=utf8'
+                'language_id' => 3,
+                'name' => 'My Feed',
+                'source_uri' => 'https://example.com/rss',
+                'article_section_tags' => 'article',
+                'filter_tags' => '.content',
+                'options' => 'charset=utf8'
             ])
             ->willReturn(10);
 
@@ -382,12 +382,12 @@ class FeedCrudApiHandlerTest extends TestCase
         $this->feedFacade->expects($this->once())
             ->method('createFeed')
             ->with([
-                'NfLgID' => 1,
-                'NfName' => 'Feed',
-                'NfSourceURI' => 'https://example.com',
-                'NfArticleSectionTags' => '',
-                'NfFilterTags' => '',
-                'NfOptions' => ''
+                'language_id' => 1,
+                'name' => 'Feed',
+                'source_uri' => 'https://example.com',
+                'article_section_tags' => '',
+                'filter_tags' => '',
+                'options' => ''
             ])
             ->willReturn(1);
 
@@ -405,7 +405,7 @@ class FeedCrudApiHandlerTest extends TestCase
         $this->feedFacade->expects($this->once())
             ->method('createFeed')
             ->with($this->callback(function (array $data) {
-                return $data['NfName'] === 'Trimmed Name';
+                return $data['name'] === 'Trimmed Name';
             }))
             ->willReturn(1);
 
@@ -423,7 +423,7 @@ class FeedCrudApiHandlerTest extends TestCase
         $this->feedFacade->expects($this->once())
             ->method('createFeed')
             ->with($this->callback(function (array $data) {
-                return $data['NfSourceURI'] === 'https://example.com/rss';
+                return $data['source_uri'] === 'https://example.com/rss';
             }))
             ->willReturn(1);
 
@@ -480,12 +480,12 @@ class FeedCrudApiHandlerTest extends TestCase
         $this->feedFacade->expects($this->once())
             ->method('updateFeed')
             ->with(42, [
-                'NfLgID' => 1,
-                'NfName' => 'Updated Name',
-                'NfSourceURI' => 'https://example.com/feed',
-                'NfArticleSectionTags' => 'article',
-                'NfFilterTags' => 'div.content',
-                'NfOptions' => 'charset=utf8'
+                'language_id' => 1,
+                'name' => 'Updated Name',
+                'source_uri' => 'https://example.com/feed',
+                'article_section_tags' => 'article',
+                'filter_tags' => 'div.content',
+                'options' => 'charset=utf8'
             ]);
 
         $this->feedFacade->method('getNfOption')->willReturn([]);
@@ -507,12 +507,12 @@ class FeedCrudApiHandlerTest extends TestCase
         $this->feedFacade->expects($this->once())
             ->method('updateFeed')
             ->with(42, [
-                'NfLgID' => 1,
-                'NfName' => 'Test Feed',
-                'NfSourceURI' => 'https://example.com/feed',
-                'NfArticleSectionTags' => 'article',
-                'NfFilterTags' => 'div.content',
-                'NfOptions' => 'charset=utf8'
+                'language_id' => 1,
+                'name' => 'Test Feed',
+                'source_uri' => 'https://example.com/feed',
+                'article_section_tags' => 'article',
+                'filter_tags' => 'div.content',
+                'options' => 'charset=utf8'
             ]);
 
         $this->feedFacade->method('getNfOption')->willReturn([]);
@@ -534,12 +534,12 @@ class FeedCrudApiHandlerTest extends TestCase
         $this->feedFacade->expects($this->once())
             ->method('updateFeed')
             ->with(42, [
-                'NfLgID' => 5,
-                'NfName' => 'New Name',
-                'NfSourceURI' => 'https://new.example.com',
-                'NfArticleSectionTags' => 'section',
-                'NfFilterTags' => 'span.text',
-                'NfOptions' => 'max=20'
+                'language_id' => 5,
+                'name' => 'New Name',
+                'source_uri' => 'https://new.example.com',
+                'article_section_tags' => 'section',
+                'filter_tags' => 'span.text',
+                'options' => 'max=20'
             ]);
 
         $this->feedFacade->method('getNfOption')->willReturn([]);
@@ -820,15 +820,15 @@ class FeedCrudApiHandlerTest extends TestCase
     private function makeFeedRow(array $overrides = []): array
     {
         return array_merge([
-            'NfID' => 42,
-            'NfName' => 'Test Feed',
-            'NfSourceURI' => 'https://example.com/feed',
-            'NfLgID' => 1,
+            'id' => 42,
+            'name' => 'Test Feed',
+            'source_uri' => 'https://example.com/feed',
+            'language_id' => 1,
             'LgName' => 'English',
-            'NfArticleSectionTags' => 'article',
-            'NfFilterTags' => 'div.content',
-            'NfOptions' => 'charset=utf8',
-            'NfUpdate' => 1700000000,
+            'article_section_tags' => 'article',
+            'filter_tags' => 'div.content',
+            'options' => 'charset=utf8',
+            'update_interval' => 1700000000,
             'articleCount' => 15,
         ], $overrides);
     }

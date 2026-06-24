@@ -173,7 +173,7 @@ class ListLanguages
                 ->where('WoLgID', '=', $lid)
                 ->count(),
             'feeds' => QueryBuilder::table('news_feeds')
-                ->where('NfLgID', '=', $lid)
+                ->where('language_id', '=', $lid)
                 ->count(),
         ];
     }
@@ -186,12 +186,12 @@ class ListLanguages
     private function getFeedCounts(): array
     {
         $records = QueryBuilder::table('news_feeds')
-            ->select(['NfLgID', 'COUNT(*) as value'])
-            ->groupBy('NfLgID')
+            ->select(['language_id', 'COUNT(*) as value'])
+            ->groupBy('language_id')
             ->getPrepared();
         $counts = [];
         foreach ($records as $record) {
-            $counts[(int)$record['NfLgID']] = (int)$record['value'];
+            $counts[(int)$record['language_id']] = (int)$record['value'];
         }
         return $counts;
     }
@@ -204,13 +204,13 @@ class ListLanguages
     private function getArticleCounts(): array
     {
         $records = QueryBuilder::table('news_feeds')
-            ->selectRaw('news_feeds.NfLgID, COUNT(*) AS article_count')
-            ->join('feed_links', 'news_feeds.NfID', '=', 'feed_links.FlNfID')
-            ->groupBy('news_feeds.NfLgID')
+            ->selectRaw('news_feeds.language_id, COUNT(*) AS article_count')
+            ->join('feed_links', 'news_feeds.id', '=', 'feed_links.feed_id')
+            ->groupBy('news_feeds.language_id')
             ->getPrepared();
         $counts = [];
         foreach ($records as $record) {
-            $counts[(int)$record['NfLgID']] = (int)$record['article_count'];
+            $counts[(int)$record['language_id']] = (int)$record['article_count'];
         }
         return $counts;
     }

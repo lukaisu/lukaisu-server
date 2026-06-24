@@ -38,7 +38,7 @@ class MySqlArticleRepositoryTest extends TestCase
     {
         $reflection = new \ReflectionProperty(MySqlArticleRepository::class, 'primaryKey');
 
-        $this->assertSame('FlID', $reflection->getValue($this->repository));
+        $this->assertSame('id', $reflection->getValue($this->repository));
     }
 
     public function testColumnMapProperty(): void
@@ -48,14 +48,14 @@ class MySqlArticleRepositoryTest extends TestCase
         $columnMap = $reflection->getValue($this->repository);
 
         $this->assertIsArray($columnMap);
-        $this->assertSame('FlID', $columnMap['id']);
-        $this->assertSame('FlNfID', $columnMap['feedId']);
-        $this->assertSame('FlTitle', $columnMap['title']);
-        $this->assertSame('FlLink', $columnMap['link']);
-        $this->assertSame('FlDescription', $columnMap['description']);
-        $this->assertSame('FlDate', $columnMap['date']);
-        $this->assertSame('FlAudio', $columnMap['audio']);
-        $this->assertSame('FlText', $columnMap['text']);
+        $this->assertSame('id', $columnMap['id']);
+        $this->assertSame('feed_id', $columnMap['feedId']);
+        $this->assertSame('title', $columnMap['title']);
+        $this->assertSame('link', $columnMap['link']);
+        $this->assertSame('description', $columnMap['description']);
+        $this->assertSame('published_at', $columnMap['date']);
+        $this->assertSame('audio', $columnMap['audio']);
+        $this->assertSame('text', $columnMap['text']);
     }
 
     // =========================================================================
@@ -67,14 +67,14 @@ class MySqlArticleRepositoryTest extends TestCase
         $method = new \ReflectionMethod(MySqlArticleRepository::class, 'mapToEntity');
 
         $row = [
-            'FlID' => '123',
-            'FlNfID' => '456',
-            'FlTitle' => 'Test Article',
-            'FlLink' => 'https://example.com/article',
-            'FlDescription' => 'Test description',
-            'FlDate' => '2024-01-15 10:30:00',
-            'FlAudio' => 'https://example.com/audio.mp3',
-            'FlText' => 'Full article text',
+            'id' => '123',
+            'feed_id' => '456',
+            'title' => 'Test Article',
+            'link' => 'https://example.com/article',
+            'description' => 'Test description',
+            'published_at' => '2024-01-15 10:30:00',
+            'audio' => 'https://example.com/audio.mp3',
+            'text' => 'Full article text',
         ];
 
         $article = $method->invoke($this->repository, $row);
@@ -95,14 +95,14 @@ class MySqlArticleRepositoryTest extends TestCase
         $method = new \ReflectionMethod(MySqlArticleRepository::class, 'mapToEntity');
 
         $row = [
-            'FlID' => '1',
-            'FlNfID' => '2',
-            'FlTitle' => 'Title',
-            'FlLink' => 'https://example.com',
-            'FlDescription' => null,
-            'FlDate' => null,
-            'FlAudio' => null,
-            'FlText' => null,
+            'id' => '1',
+            'feed_id' => '2',
+            'title' => 'Title',
+            'link' => 'https://example.com',
+            'description' => null,
+            'published_at' => null,
+            'audio' => null,
+            'text' => null,
         ];
 
         $article = $method->invoke($this->repository, $row);
@@ -118,11 +118,11 @@ class MySqlArticleRepositoryTest extends TestCase
         $method = new \ReflectionMethod(MySqlArticleRepository::class, 'mapToEntity');
 
         $row = [
-            'FlID' => '1',
-            'FlNfID' => '2',
-            'FlTitle' => 'Title',
-            'FlLink' => 'https://example.com',
-            // Missing: FlDescription, FlDate, FlAudio, FlText
+            'id' => '1',
+            'feed_id' => '2',
+            'title' => 'Title',
+            'link' => 'https://example.com',
+            // Missing: description, published_at, audio, text
         ];
 
         $article = $method->invoke($this->repository, $row);
@@ -138,10 +138,10 @@ class MySqlArticleRepositoryTest extends TestCase
         $method = new \ReflectionMethod(MySqlArticleRepository::class, 'mapToEntity');
 
         $row = [
-            'FlID' => '999',
-            'FlNfID' => '888',
-            'FlTitle' => 'Title',
-            'FlLink' => 'https://example.com',
+            'id' => '999',
+            'feed_id' => '888',
+            'title' => 'Title',
+            'link' => 'https://example.com',
         ];
 
         $article = $method->invoke($this->repository, $row);
@@ -155,14 +155,14 @@ class MySqlArticleRepositoryTest extends TestCase
         $method = new \ReflectionMethod(MySqlArticleRepository::class, 'mapToEntity');
 
         $row = [
-            'FlID' => '1',
-            'FlNfID' => '2',
-            'FlTitle' => '日本語タイトル',
-            'FlLink' => 'https://example.com/日本語',
-            'FlDescription' => 'Descripción en español',
-            'FlDate' => '2024-01-15',
-            'FlAudio' => '',
-            'FlText' => 'Текст на русском',
+            'id' => '1',
+            'feed_id' => '2',
+            'title' => '日本語タイトル',
+            'link' => 'https://example.com/日本語',
+            'description' => 'Descripción en español',
+            'published_at' => '2024-01-15',
+            'audio' => '',
+            'text' => 'Текст на русском',
         ];
 
         $article = $method->invoke($this->repository, $row);
@@ -194,13 +194,13 @@ class MySqlArticleRepositoryTest extends TestCase
         $row = $method->invoke($this->repository, $article);
 
         $this->assertIsArray($row);
-        $this->assertSame(456, $row['FlNfID']);
-        $this->assertSame('Test Title', $row['FlTitle']);
-        $this->assertSame('https://example.com', $row['FlLink']);
-        $this->assertSame('Description', $row['FlDescription']);
-        $this->assertSame('2024-01-15', $row['FlDate']);
-        $this->assertSame('https://example.com/audio.mp3', $row['FlAudio']);
-        $this->assertSame('Full text', $row['FlText']);
+        $this->assertSame(456, $row['feed_id']);
+        $this->assertSame('Test Title', $row['title']);
+        $this->assertSame('https://example.com', $row['link']);
+        $this->assertSame('Description', $row['description']);
+        $this->assertSame('2024-01-15', $row['published_at']);
+        $this->assertSame('https://example.com/audio.mp3', $row['audio']);
+        $this->assertSame('Full text', $row['text']);
     }
 
     public function testMapToRowDoesNotIncludeId(): void
@@ -211,7 +211,7 @@ class MySqlArticleRepositoryTest extends TestCase
 
         $row = $method->invoke($this->repository, $article);
 
-        $this->assertArrayNotHasKey('FlID', $row);
+        $this->assertArrayNotHasKey('id', $row);
         $this->assertArrayNotHasKey('id', $row);
     }
 
@@ -223,10 +223,10 @@ class MySqlArticleRepositoryTest extends TestCase
 
         $row = $method->invoke($this->repository, $article);
 
-        $this->assertSame('', $row['FlDescription']);
-        $this->assertSame('', $row['FlDate']);
-        $this->assertSame('', $row['FlAudio']);
-        $this->assertSame('', $row['FlText']);
+        $this->assertSame('', $row['description']);
+        $this->assertSame('', $row['published_at']);
+        $this->assertSame('', $row['audio']);
+        $this->assertSame('', $row['text']);
     }
 
     // =========================================================================
@@ -349,27 +349,27 @@ class MySqlArticleRepositoryTest extends TestCase
         $mapToRow = new \ReflectionMethod(MySqlArticleRepository::class, 'mapToRow');
 
         $originalRow = [
-            'FlID' => '123',
-            'FlNfID' => '456',
-            'FlTitle' => 'Test Article',
-            'FlLink' => 'https://example.com/article',
-            'FlDescription' => 'Test description',
-            'FlDate' => '2024-01-15 10:30:00',
-            'FlAudio' => 'https://example.com/audio.mp3',
-            'FlText' => 'Full article text',
+            'id' => '123',
+            'feed_id' => '456',
+            'title' => 'Test Article',
+            'link' => 'https://example.com/article',
+            'description' => 'Test description',
+            'published_at' => '2024-01-15 10:30:00',
+            'audio' => 'https://example.com/audio.mp3',
+            'text' => 'Full article text',
         ];
 
         $article = $mapToEntity->invoke($this->repository, $originalRow);
         $resultRow = $mapToRow->invoke($this->repository, $article);
 
         // Verify all fields except ID are preserved
-        $this->assertSame(456, $resultRow['FlNfID']);
-        $this->assertSame('Test Article', $resultRow['FlTitle']);
-        $this->assertSame('https://example.com/article', $resultRow['FlLink']);
-        $this->assertSame('Test description', $resultRow['FlDescription']);
-        $this->assertSame('2024-01-15 10:30:00', $resultRow['FlDate']);
-        $this->assertSame('https://example.com/audio.mp3', $resultRow['FlAudio']);
-        $this->assertSame('Full article text', $resultRow['FlText']);
+        $this->assertSame(456, $resultRow['feed_id']);
+        $this->assertSame('Test Article', $resultRow['title']);
+        $this->assertSame('https://example.com/article', $resultRow['link']);
+        $this->assertSame('Test description', $resultRow['description']);
+        $this->assertSame('2024-01-15 10:30:00', $resultRow['published_at']);
+        $this->assertSame('https://example.com/audio.mp3', $resultRow['audio']);
+        $this->assertSame('Full article text', $resultRow['text']);
     }
 
     // =========================================================================
@@ -381,14 +381,14 @@ class MySqlArticleRepositoryTest extends TestCase
         $method = new \ReflectionMethod(MySqlArticleRepository::class, 'mapToEntity');
 
         $row = [
-            'FlID' => '1',
-            'FlNfID' => '2',
-            'FlTitle' => 'Error Article',
-            'FlLink' => ' https://example.com', // Space prefix indicates error
-            'FlDescription' => '',
-            'FlDate' => '',
-            'FlAudio' => '',
-            'FlText' => '',
+            'id' => '1',
+            'feed_id' => '2',
+            'title' => 'Error Article',
+            'link' => ' https://example.com', // Space prefix indicates error
+            'description' => '',
+            'published_at' => '',
+            'audio' => '',
+            'text' => '',
         ];
 
         $article = $method->invoke($this->repository, $row);
@@ -403,14 +403,14 @@ class MySqlArticleRepositoryTest extends TestCase
 
         $longText = str_repeat('a', 10000);
         $row = [
-            'FlID' => '1',
-            'FlNfID' => '2',
-            'FlTitle' => 'Title',
-            'FlLink' => 'https://example.com',
-            'FlDescription' => $longText,
-            'FlDate' => '',
-            'FlAudio' => '',
-            'FlText' => $longText,
+            'id' => '1',
+            'feed_id' => '2',
+            'title' => 'Title',
+            'link' => 'https://example.com',
+            'description' => $longText,
+            'published_at' => '',
+            'audio' => '',
+            'text' => $longText,
         ];
 
         $article = $method->invoke($this->repository, $row);
@@ -424,14 +424,14 @@ class MySqlArticleRepositoryTest extends TestCase
         $method = new \ReflectionMethod(MySqlArticleRepository::class, 'mapToEntity');
 
         $row = [
-            'FlID' => '1',
-            'FlNfID' => '2',
-            'FlTitle' => "Title with 'quotes' and \"double quotes\"",
-            'FlLink' => 'https://example.com?a=1&b=2',
-            'FlDescription' => '<script>alert("xss")</script>',
-            'FlDate' => '',
-            'FlAudio' => '',
-            'FlText' => "Line1\nLine2\tTabbed",
+            'id' => '1',
+            'feed_id' => '2',
+            'title' => "Title with 'quotes' and \"double quotes\"",
+            'link' => 'https://example.com?a=1&b=2',
+            'description' => '<script>alert("xss")</script>',
+            'published_at' => '',
+            'audio' => '',
+            'text' => "Line1\nLine2\tTabbed",
         ];
 
         $article = $method->invoke($this->repository, $row);

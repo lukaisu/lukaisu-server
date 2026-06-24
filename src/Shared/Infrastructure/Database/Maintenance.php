@@ -67,8 +67,8 @@ class Maintenance
         self::adjustAutoIncrement('words', 'WoID');
         self::adjustAutoIncrement('tags', 'TgID');
         self::adjustAutoIncrement('text_tags', 'T2ID');
-        self::adjustAutoIncrement('news_feeds', 'NfID');
-        self::adjustAutoIncrement('feed_links', 'FlID');
+        self::adjustAutoIncrement('news_feeds', 'id');
+        self::adjustAutoIncrement('feed_links', 'id');
         // SHOW TABLE STATUS queries physical table names, not logical table names
         // In the new system, tables don't have prefixes - they're just "words", "texts", etc.
         $sql =

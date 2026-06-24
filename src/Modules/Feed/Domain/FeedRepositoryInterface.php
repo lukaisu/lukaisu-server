@@ -42,12 +42,12 @@ interface FeedRepositoryInterface
     /**
      * Find all feeds.
      *
-     * @param string $orderBy    Column to order by (default: NfUpdate)
+     * @param string $orderBy    Column to order by (default: update_interval)
      * @param string $direction  Sort direction (ASC/DESC)
      *
      * @return Feed[]
      */
-    public function findAll(string $orderBy = 'NfUpdate', string $direction = 'DESC'): array;
+    public function findAll(string $orderBy = 'update_interval', string $direction = 'DESC'): array;
 
     /**
      * Find feeds by language ID.
@@ -60,7 +60,7 @@ interface FeedRepositoryInterface
      */
     public function findByLanguage(
         int $languageId,
-        string $orderBy = 'NfUpdate',
+        string $orderBy = 'update_interval',
         string $direction = 'DESC'
     ): array;
 
@@ -162,7 +162,7 @@ interface FeedRepositoryInterface
         int $limit,
         ?int $languageId = null,
         ?string $queryPattern = null,
-        string $orderBy = 'NfUpdate',
+        string $orderBy = 'update_interval',
         string $direction = 'DESC'
     ): array;
 }

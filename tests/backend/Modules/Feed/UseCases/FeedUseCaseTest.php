@@ -425,7 +425,7 @@ class FeedUseCaseTest extends TestCase
                 50,
                 null,
                 null,
-                'NfUpdate',
+                'update_interval',
                 'DESC'
             )
             ->willReturn([$feed1, $feed2]);
@@ -466,7 +466,7 @@ class FeedUseCaseTest extends TestCase
                 25,
                 2,
                 '%french%',
-                'NfName',
+                'name',
                 'ASC'
             )
             ->willReturn([$feed]);
@@ -488,7 +488,7 @@ class FeedUseCaseTest extends TestCase
             limit: 25,
             languageId: 2,
             queryPattern: '%french%',
-            orderBy: 'NfName',
+            orderBy: 'name',
             direction: 'ASC'
         );
 
@@ -537,7 +537,7 @@ class FeedUseCaseTest extends TestCase
         $this->feedRepository
             ->expects($this->once())
             ->method('findByLanguage')
-            ->with(2, 'NfUpdate', 'DESC')
+            ->with(2, 'update_interval', 'DESC')
             ->willReturn([$feed]);
 
         $this->feedRepository
@@ -560,7 +560,7 @@ class FeedUseCaseTest extends TestCase
         $this->feedRepository
             ->expects($this->once())
             ->method('findAll')
-            ->with('NfName', 'ASC')
+            ->with('name', 'ASC')
             ->willReturn([]);
 
         $this->feedRepository
@@ -569,7 +569,7 @@ class FeedUseCaseTest extends TestCase
 
         $result = $useCase->executeAll(
             languageId: null,
-            orderBy: 'NfName',
+            orderBy: 'name',
             direction: 'ASC'
         );
 
@@ -586,7 +586,7 @@ class FeedUseCaseTest extends TestCase
         $this->feedRepository
             ->expects($this->once())
             ->method('findAll')
-            ->with('NfUpdate', 'DESC')
+            ->with('update_interval', 'DESC')
             ->willReturn([]);
 
         $this->feedRepository

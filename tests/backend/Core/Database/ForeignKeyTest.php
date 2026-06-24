@@ -114,7 +114,7 @@ class ForeignKeyTest extends TestCase
         Connection::query("DELETE FROM word_tag_map WHERE WtWoID NOT IN (SELECT WoID FROM words)");
         Connection::query("DELETE FROM tags WHERE TgText LIKE 'fktest_%'");
         Connection::query("DELETE FROM text_tags WHERE T2Text LIKE 'fktest_%'");
-        Connection::query("DELETE FROM news_feeds WHERE NfName LIKE 'FK_Test_%'");
+        Connection::query("DELETE FROM news_feeds WHERE name LIKE 'FK_Test_%'");
     }
 
     // ===== Ti2WoID Nullable Tests =====
@@ -452,38 +452,38 @@ class ForeignKeyTest extends TestCase
     {
         $this->requireForeignKeys();
         Connection::query(
-            "INSERT INTO news_feeds (NfLgID, NfName, NfSourceURI, NfArticleSectionTags,
-             NfFilterTags, NfUpdate, NfOptions)
+            "INSERT INTO news_feeds (language_id, name, source_uri, article_section_tags,
+             filter_tags, update_interval, options)
              VALUES (" . self::$testLangId . ", 'FK_Test_Feed', 'https://test.com/feed',
              '', '', 0, '')"
         );
         $feedId = (int) Connection::fetchValue(
-            "SELECT NfID FROM news_feeds WHERE NfName = 'FK_Test_Feed'",
-            'NfID'
+            "SELECT id FROM news_feeds WHERE name = 'FK_Test_Feed'",
+            'id'
         );
 
         Connection::query(
-            "INSERT INTO feed_links (FlNfID, FlTitle, FlLink, FlDescription, FlDate, FlAudio, FlText)
+            "INSERT INTO feed_links (feed_id, title, link, description, published_at, audio, text)
              VALUES ($feedId, 'FK_Test_Link', 'https://test.com/article', 'Test', NOW(), '', '')"
         );
         $linkId = (int) Connection::fetchValue(
-            "SELECT FlID FROM feed_links WHERE FlTitle = 'FK_Test_Link'",
-            'FlID'
+            "SELECT id FROM feed_links WHERE title = 'FK_Test_Link'",
+            'id'
         );
 
         // Verify feedlink exists
         $beforeCount = (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM feed_links WHERE FlID = $linkId",
+            "SELECT COUNT(*) AS cnt FROM feed_links WHERE id = $linkId",
             'cnt'
         );
         $this->assertEquals(1, $beforeCount, 'Feedlink should exist before delete');
 
         // Delete newsfeed
-        Connection::query("DELETE FROM news_feeds WHERE NfID = $feedId");
+        Connection::query("DELETE FROM news_feeds WHERE id = $feedId");
 
         // Verify feedlink was cascaded
         $afterCount = (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM feed_links WHERE FlID = $linkId",
+            "SELECT COUNT(*) AS cnt FROM feed_links WHERE id = $linkId",
             'cnt'
         );
         $this->assertEquals(0, $afterCount, 'Feedlink should be deleted via CASCADE');

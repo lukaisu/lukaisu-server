@@ -242,15 +242,15 @@ export function feedWizardStep4Data(): FeedWizardStep4Data {
 
     goBack(): void {
       const optionsStr = this.buildOptionsString();
-      const url = `/feeds/wizard?step=3&NfOptions=${encodeURIComponent(optionsStr)}` +
-        `&NfLgID=${encodeURIComponent(this.languageId)}` +
-        `&NfName=${encodeURIComponent(this.feedName)}`;
+      const url = `/feeds/wizard?step=3&options=${encodeURIComponent(optionsStr)}` +
+        `&language_id=${encodeURIComponent(this.languageId)}` +
+        `&name=${encodeURIComponent(this.feedName)}`;
       window.location.href = url;
     },
 
     handleSubmit(): void {
-      // Update the hidden NfOptions field before form submission
-      const optionsInput = document.querySelector<HTMLInputElement>('input[name="NfOptions"]');
+      // Update the hidden options field before form submission
+      const optionsInput = document.querySelector<HTMLInputElement>('input[name="options"]');
       if (optionsInput) {
         optionsInput.value = this.buildOptionsString();
       }

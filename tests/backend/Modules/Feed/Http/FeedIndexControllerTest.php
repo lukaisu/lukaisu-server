@@ -217,17 +217,17 @@ class FeedIndexControllerTest extends TestCase
         $_REQUEST = ['marked_items' => ['1']];
 
         $feedLink = [
-            'NfID' => 1,
-            'NfName' => 'Test Feed',
-            'NfLgID' => 1,
-            'NfOptions' => '',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'FlID' => 10,
-            'FlTitle' => 'Article 1',
-            'FlLink' => 'http://example.com/1',
-            'FlAudio' => '',
-            'FlText' => 'Article text content',
+            'id' => 1,
+            'name' => 'Test Feed',
+            'language_id' => 1,
+            'options' => '',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'id' => 10,
+            'title' => 'Article 1',
+            'link' => 'http://example.com/1',
+            'audio' => '',
+            'text' => 'Article text content',
         ];
 
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$feedLink]);
@@ -279,17 +279,17 @@ class FeedIndexControllerTest extends TestCase
         $_REQUEST = ['marked_items' => ['1']];
 
         $feedLink = [
-            'NfID' => 1,
-            'NfName' => 'Test Feed',
-            'NfLgID' => 1,
-            'NfOptions' => '',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'FlID' => 10,
-            'FlTitle' => 'Article 1',
-            'FlLink' => 'http://example.com/1',
-            'FlAudio' => '',
-            'FlText' => 'Article text',
+            'id' => 1,
+            'name' => 'Test Feed',
+            'language_id' => 1,
+            'options' => '',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'id' => 10,
+            'title' => 'Article 1',
+            'link' => 'http://example.com/1',
+            'audio' => '',
+            'text' => 'Article text',
         ];
 
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$feedLink]);
@@ -325,17 +325,17 @@ class FeedIndexControllerTest extends TestCase
         $_REQUEST = ['marked_items' => ['1']];
 
         $feedLink = [
-            'NfID' => 1,
-            'NfName' => 'Test Feed',
-            'NfLgID' => 1,
-            'NfOptions' => '',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'FlID' => 10,
-            'FlTitle' => 'Article 1',
-            'FlLink' => 'http://example.com/1',
-            'FlAudio' => '',
-            'FlText' => 'Text content',
+            'id' => 1,
+            'name' => 'Test Feed',
+            'language_id' => 1,
+            'options' => '',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'id' => 10,
+            'title' => 'Article 1',
+            'link' => 'http://example.com/1',
+            'audio' => '',
+            'text' => 'Text content',
         ];
 
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$feedLink]);
@@ -366,17 +366,17 @@ class FeedIndexControllerTest extends TestCase
         $_REQUEST = ['marked_items' => ['1']];
 
         $feedLink = [
-            'NfID' => 1,
-            'NfName' => 'Very Long Feed Name That Exceeds Twenty',
-            'NfLgID' => 1,
-            'NfOptions' => 'tag:custom_tag',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'FlID' => 10,
-            'FlTitle' => 'Test',
-            'FlLink' => 'http://example.com/1',
-            'FlAudio' => '',
-            'FlText' => 'Text',
+            'id' => 1,
+            'name' => 'Very Long Feed Name That Exceeds Twenty',
+            'language_id' => 1,
+            'options' => 'tag:custom_tag',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'id' => 10,
+            'title' => 'Test',
+            'link' => 'http://example.com/1',
+            'audio' => '',
+            'text' => 'Text',
         ];
 
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$feedLink]);
@@ -434,7 +434,7 @@ class FeedIndexControllerTest extends TestCase
         ];
 
         $row = [
-            'NfLgID' => 1,
+            'language_id' => 1,
         ];
 
         $this->feedFacade->expects($this->exactly(2))
@@ -467,7 +467,7 @@ class FeedIndexControllerTest extends TestCase
         $texts = [
             ['TxTitle' => '<script>alert("xss")</script>', 'TxText' => 'Content'],
         ];
-        $row = ['NfLgID' => 1];
+        $row = ['language_id' => 1];
 
         $this->feedFacade->method('createTextFromFeed')->willReturn(1);
         $this->feedFacade->method('archiveOldTexts')
@@ -498,7 +498,7 @@ class FeedIndexControllerTest extends TestCase
                 'TxSourceURI' => 'http://example.com/article'
             ],
         ];
-        $row = ['NfLgID' => 5];
+        $row = ['language_id' => 5];
 
         $this->feedFacade->expects($this->once())
             ->method('createTextFromFeed')
@@ -619,15 +619,15 @@ class FeedIndexControllerTest extends TestCase
         $_REQUEST = ['query' => '', 'query_mode' => 'title', 'sort' => '1'];
 
         $feeds = [
-            ['NfID' => 10, 'NfName' => 'Feed 1', 'NfUpdate' => '0'],
-            ['NfID' => 20, 'NfName' => 'Feed 2', 'NfUpdate' => '0'],
+            ['id' => 10, 'name' => 'Feed 1', 'update_interval' => '0'],
+            ['id' => 20, 'name' => 'Feed 2', 'update_interval' => '0'],
         ];
 
         $this->feedFacade->method('getFeeds')->willReturn($feeds);
         $this->feedFacade->method('buildQueryFilter')
             ->willReturn(['search' => '']);
         $this->feedFacade->method('countFeedLinks')->willReturn(0);
-        $this->feedFacade->method('getSortColumn')->willReturn('FlDate DESC');
+        $this->feedFacade->method('getSortColumn')->willReturn('published_at DESC');
         $this->languageFacade->method('getLanguagesForSelect')->willReturn([]);
 
         $method = new \ReflectionMethod(FeedIndexController::class, 'renderFeedsIndex');
@@ -654,11 +654,11 @@ class FeedIndexControllerTest extends TestCase
         $_REQUEST = ['query' => '', 'sort' => '1'];
 
         $this->feedFacade->method('getFeeds')
-            ->willReturn([['NfID' => 1, 'NfName' => 'Feed', 'NfUpdate' => '0']]);
+            ->willReturn([['id' => 1, 'name' => 'Feed', 'update_interval' => '0']]);
         $this->feedFacade->method('buildQueryFilter')
             ->willReturn(['search' => '']);
         $this->feedFacade->method('countFeedLinks')->willReturn(0);
-        $this->feedFacade->method('getSortColumn')->willReturn('FlDate DESC');
+        $this->feedFacade->method('getSortColumn')->willReturn('published_at DESC');
         $this->languageFacade->method('getLanguagesForSelect')->willReturn([]);
 
         // getFeedLinks should NOT be called when recno is 0
@@ -689,21 +689,21 @@ class FeedIndexControllerTest extends TestCase
         $_REQUEST = ['marked_items' => ['1']];
 
         $feedLink = [
-            'NfID' => 1,
-            'NfName' => 'A Very Long Feed Name That Is More Than Twenty Characters',
-            'NfLgID' => 1,
-            'NfOptions' => '',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'FlID' => 10,
-            'FlTitle' => 'Test',
-            'FlLink' => 'http://example.com/1',
-            'FlAudio' => '',
-            'FlText' => 'Text',
+            'id' => 1,
+            'name' => 'A Very Long Feed Name That Is More Than Twenty Characters',
+            'language_id' => 1,
+            'options' => '',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'id' => 10,
+            'title' => 'Test',
+            'link' => 'http://example.com/1',
+            'audio' => '',
+            'text' => 'Text',
         ];
 
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$feedLink]);
-        // getNfOption returns empty for 'tag', so fallback to first 20 chars of NfName
+        // getNfOption returns empty for 'tag', so fallback to first 20 chars of name
         $this->feedFacade->method('getNfOption')->willReturn(null);
 
         $this->feedFacade->method('extractTextFromArticle')
@@ -733,17 +733,17 @@ class FeedIndexControllerTest extends TestCase
         $_REQUEST = ['marked_items' => ['1']];
 
         $feedLink = [
-            'NfID' => 1,
-            'NfName' => 'Feed',
-            'NfLgID' => 1,
-            'NfOptions' => '',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'FlID' => 42,
-            'FlTitle' => 'Test',
-            'FlLink' => '',
-            'FlAudio' => '',
-            'FlText' => 'Text',
+            'id' => 1,
+            'name' => 'Feed',
+            'language_id' => 1,
+            'options' => '',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'id' => 42,
+            'title' => 'Test',
+            'link' => '',
+            'audio' => '',
+            'text' => 'Text',
         ];
 
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$feedLink]);
@@ -760,7 +760,7 @@ class FeedIndexControllerTest extends TestCase
         $result = $method->invoke($this->controller);
         ob_end_clean();
 
-        // When FlLink is empty, it should fallback to '#42'
+        // When link is empty, it should fallback to '#42'
         $this->assertSame(0, $result['editText']);
     }
 

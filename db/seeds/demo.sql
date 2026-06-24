@@ -104,17 +104,17 @@ DROP
   TABLE IF EXISTS newsfeeds;
 
 CREATE TABLE `newsfeeds` (
-  `NfID` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
-  `NfLgID` tinyint(3) unsigned NOT NULL,
-  `NfName` varchar(40) NOT NULL,
-  `NfSourceURI` varchar(200) NOT NULL,
-  `NfArticleSectionTags` text NOT NULL,
-  `NfFilterTags` text NOT NULL,
-  `NfUpdate` int(12) unsigned NOT NULL,
-  `NfOptions` varchar(200) NOT NULL,
-  PRIMARY KEY (`NfID`),
-  KEY `NfLgID` (`NfLgID`),
-  KEY `NfUpdate` (`NfUpdate`)
+  `id` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
+  `language_id` tinyint(3) unsigned NOT NULL,
+  `name` varchar(40) NOT NULL,
+  `source_uri` varchar(200) NOT NULL,
+  `article_section_tags` text NOT NULL,
+  `filter_tags` text NOT NULL,
+  `update_interval` int(12) unsigned NOT NULL,
+  `options` varchar(200) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `language_id` (`language_id`),
+  KEY `update_interval` (`update_interval`)
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8;
 INSERT INTO newsfeeds
 VALUES
@@ -2696,18 +2696,18 @@ VALUES
 DROP
   TABLE IF EXISTS feedlinks;
 CREATE TABLE `feedlinks` (
-  `FlID` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `FlTitle` varchar(200) NOT NULL,
-  `FlLink` varchar(400) NOT NULL,
-  `FlDescription` text NOT NULL,
-  `FlDate` datetime NOT NULL,
-  `FlAudio` varchar(200) NOT NULL DEFAULT '',
-  `FlText` longtext NOT NULL DEFAULT '',
-  `FlNfID` tinyint(3) unsigned NOT NULL,
-  PRIMARY KEY (`FlID`),
-  KEY `FlLink` (`FlLink`),
-  KEY `FlDate` (`FlDate`),
-  UNIQUE KEY `FlTitle` (`FlNfID`, `FlTitle`)
+  `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(200) NOT NULL,
+  `link` varchar(400) NOT NULL,
+  `description` text NOT NULL,
+  `published_at` datetime NOT NULL,
+  `audio` varchar(200) NOT NULL DEFAULT '',
+  `text` longtext NOT NULL DEFAULT '',
+  `feed_id` tinyint(3) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `link` (`link`),
+  KEY `published_at` (`published_at`),
+  UNIQUE KEY `title` (`feed_id`, `title`)
 ) ENGINE=InnoDB DEFAULT CHARSET = utf8;
 DROP TABLE IF EXISTS local_dictionary_entries;
 DROP TABLE IF EXISTS local_dictionaries;

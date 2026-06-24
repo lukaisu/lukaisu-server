@@ -64,18 +64,18 @@ class FeedCrudApiHandler
         $queryParams = [];
 
         if ($langId !== null && $langId > 0) {
-            $whereConditions[] = "NfLgID = ?";
+            $whereConditions[] = "language_id = ?";
             $queryParams[] = $langId;
         }
         if (is_string($query) && $query !== '') {
-            $whereConditions[] = "NfName LIKE ?";
+            $whereConditions[] = "name LIKE ?";
             $queryParams[] = '%' . str_replace('*', '%', $query) . '%';
         }
 
         // Scope to current user when multi-user mode is on. UserScopedQuery
         // returns "" in single-user mode, so legacy behaviour is preserved.
-        // forTablePrepared yields " AND NfUsID = ?"; we need just
-        // "NfUsID = ?" to fit the implode(' AND ', …) below, so strip the
+        // forTablePrepared yields " AND user_id = ?"; we need just
+        // "user_id = ?" to fit the implode(' AND ', …) below, so strip the
         // five-char " AND " prefix.
         $userScope = UserScopedQuery::forTablePrepared('news_feeds', $queryParams);
         if ($userScope !== '') {
@@ -99,15 +99,15 @@ class FeedCrudApiHandler
         $offset = ($page - 1) * $perPage;
 
         // Sort order
-        $sorts = ['NfName ASC', 'NfUpdate DESC', 'NfUpdate ASC'];
-        $orderBy = $sorts[$sort - 1] ?? 'NfUpdate DESC';
+        $sorts = ['name ASC', 'update_interval DESC', 'update_interval ASC'];
+        $orderBy = $sorts[$sort - 1] ?? 'update_interval DESC';
 
         // Get feeds with language names and article counts. The same
         // $where covers the user-scope filter we appended above.
         $sql = "SELECT nf.*, lg.LgName,
-                       (SELECT COUNT(*) FROM feed_links WHERE FlNfID = NfID) AS articleCount
+                       (SELECT COUNT(*) FROM feed_links WHERE feed_id = id) AS articleCount
                 FROM news_feeds nf
-                LEFT JOIN languages lg ON lg.LgID = nf.NfLgID
+                LEFT JOIN languages lg ON lg.LgID = nf.language_id
                 WHERE $where
                 ORDER BY $orderBy
                 LIMIT ?, ?";
@@ -146,22 +146,22 @@ class FeedCrudApiHandler
      */
     public function formatFeedRecord(array $row): array
     {
-        $options = $this->feedFacade->getNfOption((string)$row['NfOptions'], 'all');
-        $updateTimestamp = (int)$row['NfUpdate'];
+        $options = $this->feedFacade->getNfOption((string)$row['options'], 'all');
+        $updateTimestamp = (int)$row['update_interval'];
         $lastUpdate = $updateTimestamp > 0
             ? $this->feedFacade->formatLastUpdate(time() - $updateTimestamp)
             : 'never';
 
         return [
-            'id' => (int)$row['NfID'],
-            'name' => (string)$row['NfName'],
-            'sourceUri' => (string)$row['NfSourceURI'],
-            'langId' => (int)$row['NfLgID'],
+            'id' => (int)$row['id'],
+            'name' => (string)$row['name'],
+            'sourceUri' => (string)$row['source_uri'],
+            'langId' => (int)$row['language_id'],
             'langName' => (string)($row['LgName'] ?? ''),
-            'articleSectionTags' => (string)$row['NfArticleSectionTags'],
-            'filterTags' => (string)$row['NfFilterTags'],
+            'articleSectionTags' => (string)$row['article_section_tags'],
+            'filterTags' => (string)$row['filter_tags'],
             'options' => is_array($options) ? $options : [],
-            'optionsString' => (string)$row['NfOptions'],
+            'optionsString' => (string)$row['options'],
             'updateTimestamp' => $updateTimestamp,
             'lastUpdate' => $lastUpdate,
             'articleCount' => (int)($row['articleCount'] ?? 0)
@@ -212,7 +212,7 @@ class FeedCrudApiHandler
         // Get language name
         $langResult = QueryBuilder::table('languages')
             ->select(['LgName'])
-            ->where('LgID', '=', $feed['NfLgID'])
+            ->where('LgID', '=', $feed['language_id'])
             ->firstPrepared();
         if ($langResult !== null) {
             $feed['LgName'] = (string)$langResult['LgName'];
@@ -221,7 +221,7 @@ class FeedCrudApiHandler
         // Get article count
         $countResult = QueryBuilder::table('feed_links')
             ->select(['COUNT(*) AS cnt'])
-            ->where('FlNfID', '=', $feedId)
+            ->where('feed_id', '=', $feedId)
             ->firstPrepared();
         if ($countResult !== null) {
             $feed['articleCount'] = (int)$countResult['cnt'];
@@ -246,7 +246,7 @@ class FeedCrudApiHandler
         if ($langId <= 0) {
             return ['success' => false, 'error' => 'Language is required'];
         }
-        // Multi-user mass-assignment fence: NfLgID is a client-supplied
+        // Multi-user mass-assignment fence: language_id is a client-supplied
         // reference into `languages`, so without an ownership check an
         // attacker can pin their feed to another user's LgID.
         if (!\Lukaisu\Shared\Infrastructure\Globals::languageBelongsToCurrentUser($langId)) {
@@ -260,12 +260,12 @@ class FeedCrudApiHandler
         }
 
         $feedId = $this->feedFacade->createFeed([
-            'NfLgID' => $langId,
-            'NfName' => $name,
-            'NfSourceURI' => $sourceUri,
-            'NfArticleSectionTags' => $data['articleSectionTags'] ?? '',
-            'NfFilterTags' => $data['filterTags'] ?? '',
-            'NfOptions' => $data['options'] ?? ''
+            'language_id' => $langId,
+            'name' => $name,
+            'source_uri' => $sourceUri,
+            'article_section_tags' => $data['articleSectionTags'] ?? '',
+            'filter_tags' => $data['filterTags'] ?? '',
+            'options' => $data['options'] ?? ''
         ]);
 
         return [
@@ -289,13 +289,13 @@ class FeedCrudApiHandler
             return ['success' => false, 'error' => 'Feed not found'];
         }
 
-        // If the request reassigns NfLgID, the new LgID must also
+        // If the request reassigns language_id, the new LgID must also
         // belong to the caller — otherwise an attacker who owns one
         // feed could rotate it into another user's language.
         if (isset($data['langId'])) {
             $newLangId = (int) $data['langId'];
             if (
-                $newLangId !== $existing['NfLgID']
+                $newLangId !== $existing['language_id']
                 && !\Lukaisu\Shared\Infrastructure\Globals::languageBelongsToCurrentUser($newLangId)
             ) {
                 return ['success' => false, 'error' => 'Language not found or access denied'];
@@ -303,12 +303,12 @@ class FeedCrudApiHandler
         }
 
         $this->feedFacade->updateFeed($feedId, [
-            'NfLgID' => $data['langId'] ?? $existing['NfLgID'],
-            'NfName' => $data['name'] ?? $existing['NfName'],
-            'NfSourceURI' => $data['sourceUri'] ?? $existing['NfSourceURI'],
-            'NfArticleSectionTags' => $data['articleSectionTags'] ?? $existing['NfArticleSectionTags'],
-            'NfFilterTags' => $data['filterTags'] ?? $existing['NfFilterTags'],
-            'NfOptions' => $data['options'] ?? $existing['NfOptions']
+            'language_id' => $data['langId'] ?? $existing['language_id'],
+            'name' => $data['name'] ?? $existing['name'],
+            'source_uri' => $data['sourceUri'] ?? $existing['source_uri'],
+            'article_section_tags' => $data['articleSectionTags'] ?? $existing['article_section_tags'],
+            'filter_tags' => $data['filterTags'] ?? $existing['filter_tags'],
+            'options' => $data['options'] ?? $existing['options']
         ]);
 
         return [

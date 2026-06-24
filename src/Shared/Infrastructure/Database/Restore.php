@@ -383,7 +383,7 @@ class Restore
             [$userId]
         );
         Connection::preparedExecute(
-            'DELETE FROM feed_links WHERE FlNfID IN (SELECT NfID FROM news_feeds WHERE NfUsID = ?)',
+            'DELETE FROM feed_links WHERE feed_id IN (SELECT id FROM news_feeds WHERE user_id = ?)',
             [$userId]
         );
         Connection::preparedExecute(
@@ -392,7 +392,7 @@ class Restore
         );
 
         // Level 2: Direct user-scoped tables.
-        Connection::preparedExecute('DELETE FROM news_feeds WHERE NfUsID = ?', [$userId]);
+        Connection::preparedExecute('DELETE FROM news_feeds WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM texts WHERE TxUsID = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM words WHERE WoUsID = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM tags WHERE TgUsID = ?', [$userId]);
@@ -499,7 +499,7 @@ class Restore
                 'words'              => 'WoUsID',
                 'tags'                => 'TgUsID',
                 'text_tags'          => 'T2UsID',
-                'news_feeds'         => 'NfUsID',
+                'news_feeds'         => 'user_id',
                 'settings'           => 'StUsID',
                 'local_dictionaries' => 'LdUsID',
             ] as $table => $column

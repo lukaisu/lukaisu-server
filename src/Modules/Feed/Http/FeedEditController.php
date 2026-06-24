@@ -157,12 +157,12 @@ class FeedEditController
         // Handle form submission before any output
         if (InputValidator::has('save_feed')) {
             $data = [
-                'NfLgID' => InputValidator::getString('NfLgID'),
-                'NfName' => InputValidator::getString('NfName'),
-                'NfSourceURI' => InputValidator::getString('NfSourceURI'),
-                'NfArticleSectionTags' => InputValidator::getString('NfArticleSectionTags'),
-                'NfFilterTags' => InputValidator::getString('NfFilterTags'),
-                'NfOptions' => rtrim(InputValidator::getString('NfOptions'), ','),
+                'language_id' => InputValidator::getString('language_id'),
+                'name' => InputValidator::getString('name'),
+                'source_uri' => InputValidator::getString('source_uri'),
+                'article_section_tags' => InputValidator::getString('article_section_tags'),
+                'filter_tags' => InputValidator::getString('filter_tags'),
+                'options' => rtrim(InputValidator::getString('options'), ','),
             ];
 
             $feedId = $this->feedFacade->createFeed($data);
@@ -204,12 +204,12 @@ class FeedEditController
         // Handle form submission before any output
         if (InputValidator::has('update_feed')) {
             $data = [
-                'NfLgID' => InputValidator::getString('NfLgID'),
-                'NfName' => InputValidator::getString('NfName'),
-                'NfSourceURI' => InputValidator::getString('NfSourceURI'),
-                'NfArticleSectionTags' => InputValidator::getString('NfArticleSectionTags'),
-                'NfFilterTags' => InputValidator::getString('NfFilterTags'),
-                'NfOptions' => rtrim(InputValidator::getString('NfOptions'), ','),
+                'language_id' => InputValidator::getString('language_id'),
+                'name' => InputValidator::getString('name'),
+                'source_uri' => InputValidator::getString('source_uri'),
+                'article_section_tags' => InputValidator::getString('article_section_tags'),
+                'filter_tags' => InputValidator::getString('filter_tags'),
+                'options' => rtrim(InputValidator::getString('options'), ','),
             ];
 
             $this->feedFacade->updateFeed($id, $data);
@@ -218,7 +218,7 @@ class FeedEditController
             return;
         }
 
-        $langName = $this->languageFacade->getLanguageName($feed['NfLgID']);
+        $langName = $this->languageFacade->getLanguageName($feed['language_id']);
         PageLayoutHelper::renderPageStart('Edit Feed - ' . $langName, true);
 
         $this->showEditForm($id);
@@ -328,15 +328,15 @@ class FeedEditController
             return;
         }
 
-        $feedId = InputValidator::getInt('NfID', 0) ?? 0;
+        $feedId = InputValidator::getInt('id', 0) ?? 0;
 
         $data = [
-            'NfLgID' => InputValidator::getString('NfLgID'),
-            'NfName' => InputValidator::getString('NfName'),
-            'NfSourceURI' => InputValidator::getString('NfSourceURI'),
-            'NfArticleSectionTags' => InputValidator::getString('NfArticleSectionTags'),
-            'NfFilterTags' => InputValidator::getString('NfFilterTags'),
-            'NfOptions' => rtrim(InputValidator::getString('NfOptions'), ','),
+            'language_id' => InputValidator::getString('language_id'),
+            'name' => InputValidator::getString('name'),
+            'source_uri' => InputValidator::getString('source_uri'),
+            'article_section_tags' => InputValidator::getString('article_section_tags'),
+            'filter_tags' => InputValidator::getString('filter_tags'),
+            'options' => rtrim(InputValidator::getString('options'), ','),
         ];
 
         $this->feedFacade->updateFeed($feedId, $data);
@@ -354,12 +354,12 @@ class FeedEditController
         }
 
         $data = [
-            'NfLgID' => InputValidator::getString('NfLgID'),
-            'NfName' => InputValidator::getString('NfName'),
-            'NfSourceURI' => InputValidator::getString('NfSourceURI'),
-            'NfArticleSectionTags' => InputValidator::getString('NfArticleSectionTags'),
-            'NfFilterTags' => InputValidator::getString('NfFilterTags'),
-            'NfOptions' => rtrim(InputValidator::getString('NfOptions'), ','),
+            'language_id' => InputValidator::getString('language_id'),
+            'name' => InputValidator::getString('name'),
+            'source_uri' => InputValidator::getString('source_uri'),
+            'article_section_tags' => InputValidator::getString('article_section_tags'),
+            'filter_tags' => InputValidator::getString('filter_tags'),
+            'options' => rtrim(InputValidator::getString('options'), ','),
         ];
 
         $this->feedFacade->createFeed($data);
@@ -383,7 +383,7 @@ class FeedEditController
         // A user who just created their first language hasn't toggled the
         // navbar dropdown, so 'currentlanguage' is unset. Fall back to the
         // first language in their list — without this, the curated-feed
-        // wizard posts NfLgID=0 and the server rejects with 500.
+        // wizard posts language_id=0 and the server rejects with 500.
         if ($currentLanguageId === 0 && !empty($languages)) {
             /** @var array{LgID: int|string} $first */
             $first = $languages[0];
@@ -440,13 +440,13 @@ class FeedEditController
         $languages = $this->feedFacade->getLanguages();
 
         // Parse options
-        $options = $this->feedFacade->getNfOption($feed['NfOptions'], '');
+        $options = $this->feedFacade->getNfOption($feed['options'], '');
         if (!is_array($options)) {
             $options = [];
         }
 
         // Parse auto-update interval
-        $autoUpdateRaw = $this->feedFacade->getNfOption($feed['NfOptions'], 'autoupdate');
+        $autoUpdateRaw = $this->feedFacade->getNfOption($feed['options'], 'autoupdate');
         if ($autoUpdateRaw === null || !is_string($autoUpdateRaw)) {
             $autoUpdateInterval = null;
             $autoUpdateUnit = null;
@@ -510,9 +510,9 @@ class FeedEditController
             }
 
             $sorts = [
-                ['column' => 'NfName', 'direction' => 'ASC'],
-                ['column' => 'NfUpdate', 'direction' => 'DESC'],
-                ['column' => 'NfUpdate', 'direction' => 'ASC'],
+                ['column' => 'name', 'direction' => 'ASC'],
+                ['column' => 'update_interval', 'direction' => 'DESC'],
+                ['column' => 'update_interval', 'direction' => 'ASC'],
             ];
             $lsorts = count($sorts);
             if ($currentSort < 1) {
@@ -526,10 +526,10 @@ class FeedEditController
             $query = QueryBuilder::table('news_feeds')->select(['*']);
 
             if (!empty($currentLang)) {
-                $query->where('NfLgID', '=', $currentLang);
+                $query->where('language_id', '=', $currentLang);
             }
             if ($queryPattern !== null) {
-                $query->where('NfName', 'LIKE', $queryPattern);
+                $query->where('name', 'LIKE', $queryPattern);
             }
 
             $sortConfig = $sorts[$currentSort - 1];

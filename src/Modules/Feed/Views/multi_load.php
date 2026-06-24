@@ -23,9 +23,9 @@ declare(strict_types=1);
 namespace Lukaisu\Views\Feed;
 
 /**
- * @var array<int, array{NfID: int, NfLgID: int, NfName: string, NfSourceURI: string,
- *     NfArticleSectionTags: string, NfFilterTags: string, NfUpdate: int,
- *     NfOptions: string}> $feeds Feed data
+ * @var array<int, array{id: int, language_id: int, name: string, source_uri: string,
+ *     article_section_tags: string, filter_tags: string, update_interval: int,
+ *     options: string}> $feeds Feed data
  * @var int $currentLang Current language filter
  * @var array<int, array{id: int, name: string}> $languages Language records (transformed for SelectOptionsBuilder)
  * @var \Lukaisu\Modules\Feed\Application\FeedFacade $feedService Feed service
@@ -54,16 +54,16 @@ namespace Lukaisu\Views\Feed;
     <?php
     $time = time();
     foreach ($feeds as $row) :
-        $nfUpdate = $row['NfUpdate'] ?? 0;
+        $nfUpdate = $row['update_interval'] ?? 0;
         $diff = $time - $nfUpdate;
         ?>
     <tr>
         <td class="has-text-centered">
             <input class="markcheck" type="checkbox" name="selected_feed[]"
-                   value="<?php echo $row['NfID']; ?>" checked="checked" />
+                   value="<?php echo $row['id']; ?>" checked="checked" />
         </td>
         <td class="has-text-centered" colspan="2"><?php
-            echo htmlspecialchars($row['NfName'] ?? '', ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars($row['name'] ?? '', ENT_QUOTES, 'UTF-8');
         ?></td>
         <td class="has-text-centered" sorttable_customkey="<?php echo $diff; ?>">
             <?php if ($nfUpdate) {

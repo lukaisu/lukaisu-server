@@ -168,14 +168,14 @@ class Feed
     public static function fromDbRecord(array $record): self
     {
         return self::reconstitute(
-            (int) $record['NfID'],
-            (int) $record['NfLgID'],
-            (string) $record['NfName'],
-            (string) $record['NfSourceURI'],
-            (string) ($record['NfArticleSectionTags'] ?? ''),
-            (string) ($record['NfFilterTags'] ?? ''),
-            (int) ($record['NfUpdate'] ?? 0),
-            (string) ($record['NfOptions'] ?? '')
+            (int) $record['id'],
+            (int) $record['language_id'],
+            (string) $record['name'],
+            (string) $record['source_uri'],
+            (string) ($record['article_section_tags'] ?? ''),
+            (string) ($record['filter_tags'] ?? ''),
+            (int) ($record['update_interval'] ?? 0),
+            (string) ($record['options'] ?? '')
         );
     }
 

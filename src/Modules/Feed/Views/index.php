@@ -32,8 +32,8 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
 
 /**
  * @var array<int, array{
- *     NfID: int, NfLgID: int, NfName: string, NfSourceURI: string, NfArticleSectionTags: string,
- *     NfFilterTags: string, NfUpdate: int, NfOptions: string
+ *     id: int, language_id: int, name: string, source_uri: string, article_section_tags: string,
+ *     filter_tags: string, update_interval: int, options: string
  * }> $feeds Feed data
  * @var int $currentLang Current language filter
  * @var string $currentQuery Search query
@@ -179,32 +179,32 @@ echo PageLayoutHelper::buildActionCard([
     <?php
     $time = time();
     foreach ($feeds as $row) :
-        $diff = $time - $row['NfUpdate'];
+        $diff = $time - $row['update_interval'];
         ?>
 <tr>
     <td class="has-text-centered">
-        <input type="checkbox" name="marked[]" class="markcheck" value="<?php echo $row['NfID']; ?>" />
+        <input type="checkbox" name="marked[]" class="markcheck" value="<?php echo $row['id']; ?>" />
     </td>
     <td class="has-text-centered nowrap">
-        <a href="/feeds/<?php echo $row['NfID']; ?>/edit">
+        <a href="/feeds/<?php echo $row['id']; ?>/edit">
             <?php echo IconHelper::render('rss', ['title' => 'Edit', 'alt' => 'Edit']); ?>
         </a>
-        &nbsp; <a href="/feeds/<?php echo $row['NfID']; ?>/load">
+        &nbsp; <a href="/feeds/<?php echo $row['id']; ?>/load">
             <span title="Update Feed"><?php echo IconHelper::render('refresh-cw', ['alt' => '-']); ?></span>
         </a>&nbsp;
-        <a href="<?php echo htmlspecialchars($row['NfSourceURI'], ENT_QUOTES, 'UTF-8'); ?>" data-action="open-window">
+        <a href="<?php echo htmlspecialchars($row['source_uri'], ENT_QUOTES, 'UTF-8'); ?>" data-action="open-window">
             <?php echo IconHelper::render('external-link', ['title' => 'Show Feed', 'alt' => 'Link']); ?>
         </a>&nbsp;
-        <span class="click" @click="confirmDelete('<?php echo $row['NfID']; ?>')">
+        <span class="click" @click="confirmDelete('<?php echo $row['id']; ?>')">
             <?php echo IconHelper::render('circle-minus', ['title' => 'Delete', 'alt' => 'Delete']); ?>
         </span>
     </td>
-    <td class="has-text-centered"><?php echo htmlspecialchars($row['NfName'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+    <td class="has-text-centered"><?php echo htmlspecialchars($row['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
     <td class="has-text-centered"><?php
-        echo htmlspecialchars(str_replace(',', ', ', $row['NfOptions']), ENT_QUOTES, 'UTF-8');
+        echo htmlspecialchars(str_replace(',', ', ', $row['options']), ENT_QUOTES, 'UTF-8');
     ?></td>
     <td class="has-text-centered" sorttable_customkey="<?php echo $diff; ?>">
-        <?php if ($row['NfUpdate']) {
+        <?php if ($row['update_interval']) {
             echo $feedService->formatLastUpdate($diff);
         } ?>
     </td>

@@ -19,8 +19,8 @@ DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
 DELETE FROM word_tag_map WHERE WtWoID IN (SELECT WoID FROM words WHERE WoText LIKE 'fktest_%');
 DELETE FROM words WHERE WoText LIKE 'fktest_%';
 -- Note: archivedtexts merged into texts table, cleanup already handled by texts DELETE above
-DELETE FROM feed_links WHERE FlTitle LIKE 'FK_TEST_%';
-DELETE FROM news_feeds WHERE NfName LIKE 'FK_TEST_%';
+DELETE FROM feed_links WHERE title LIKE 'FK_TEST_%';
+DELETE FROM news_feeds WHERE name LIKE 'FK_TEST_%';
 DELETE FROM tags WHERE TgText LIKE 'fktest_%';
 DELETE FROM text_tags WHERE T2Text LIKE 'fktest_%';
 DELETE FROM languages WHERE LgName LIKE 'FK_TEST_%';
@@ -337,21 +337,21 @@ VALUES ('FK_TEST_Feed_Lang', 'https://test.com/###', '', '.!?', '', 'a-zA-Z');
 
 SET @feed_lang_id = LAST_INSERT_ID();
 
-INSERT INTO news_feeds (NfLgID, NfName, NfSourceURI, NfArticleSectionTags, NfFilterTags, NfUpdate, NfOptions)
+INSERT INTO news_feeds (language_id, name, source_uri, article_section_tags, filter_tags, update_interval, options)
 VALUES (@feed_lang_id, 'FK_TEST_Feed', 'https://test.com/feed', '', '', 0, '');
 
 SET @feed_id = LAST_INSERT_ID();
 
 -- Verify newsfeed exists
 SELECT IF(COUNT(*) = 1, 'SETUP: Newsfeed created', 'SETUP FAIL') AS result
-FROM news_feeds WHERE NfID = @feed_id;
+FROM news_feeds WHERE id = @feed_id;
 
 -- Delete language - should cascade to news_feeds
 DELETE FROM languages WHERE LgID = @feed_lang_id;
 
 -- Verify newsfeed was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Newsfeed deleted via CASCADE', 'FAIL: Newsfeed not deleted') AS result
-FROM news_feeds WHERE NfID = @feed_id;
+FROM news_feeds WHERE id = @feed_id;
 
 -- ============================================================================
 -- Test 12: FK feed_links -> news_feeds (ON DELETE CASCADE)
@@ -359,26 +359,26 @@ FROM news_feeds WHERE NfID = @feed_id;
 
 SELECT '--- Test 12: feed_links -> news_feeds CASCADE ---' AS test;
 
-INSERT INTO news_feeds (NfLgID, NfName, NfSourceURI, NfArticleSectionTags, NfFilterTags, NfUpdate, NfOptions)
+INSERT INTO news_feeds (language_id, name, source_uri, article_section_tags, filter_tags, update_interval, options)
 VALUES (@test_lang_id, 'FK_TEST_FeedLink', 'https://test.com/feed2', '', '', 0, '');
 
 SET @fl_feed_id = LAST_INSERT_ID();
 
-INSERT INTO feed_links (FlNfID, FlTitle, FlLink, FlDescription, FlDate, FlAudio, FlText)
+INSERT INTO feed_links (feed_id, title, link, description, published_at, audio, text)
 VALUES (@fl_feed_id, 'FK_TEST_Link', 'https://test.com/article', 'Test', NOW(), '', '');
 
 SET @feedlink_id = LAST_INSERT_ID();
 
 -- Verify feedlink exists
 SELECT IF(COUNT(*) = 1, 'SETUP: Feedlink created', 'SETUP FAIL') AS result
-FROM feed_links WHERE FlID = @feedlink_id;
+FROM feed_links WHERE id = @feedlink_id;
 
 -- Delete newsfeed - should cascade to feed_links
-DELETE FROM news_feeds WHERE NfID = @fl_feed_id;
+DELETE FROM news_feeds WHERE id = @fl_feed_id;
 
 -- Verify feedlink was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Feedlink deleted via CASCADE', 'FAIL: Feedlink not deleted') AS result
-FROM feed_links WHERE FlID = @feedlink_id;
+FROM feed_links WHERE id = @feedlink_id;
 
 -- ============================================================================
 -- Test 13: Verify FK constraint prevents invalid references
@@ -466,8 +466,8 @@ DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
 DELETE FROM word_tag_map WHERE WtWoID IN (SELECT WoID FROM words WHERE WoText LIKE 'fktest_%');
 DELETE FROM words WHERE WoText LIKE 'fktest_%';
 -- Note: archivedtexts merged into texts table, cleanup already handled by texts DELETE above
-DELETE FROM feed_links WHERE FlTitle LIKE 'FK_TEST_%';
-DELETE FROM news_feeds WHERE NfName LIKE 'FK_TEST_%';
+DELETE FROM feed_links WHERE title LIKE 'FK_TEST_%';
+DELETE FROM news_feeds WHERE name LIKE 'FK_TEST_%';
 DELETE FROM tags WHERE TgText LIKE 'fktest_%';
 DELETE FROM text_tags WHERE T2Text LIKE 'fktest_%';
 DELETE FROM languages WHERE LgName LIKE 'FK_TEST_%';

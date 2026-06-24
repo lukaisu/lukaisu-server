@@ -76,16 +76,16 @@ $actions = [
       x-data="feedForm()"
       @submit="handleSubmit($event)">
     <?php echo \Lukaisu\Shared\UI\Helpers\FormHelper::csrfField(); ?>
-    <input type="hidden" name="NfOptions" value="" />
+    <input type="hidden" name="options" value="" />
     <input type="hidden" name="save_feed" value="1" />
 
     <div class="box">
         <!-- Language -->
         <div class="field">
-            <label class="label" for="NfLgID"><?= __('feed.new_label_language') ?></label>
+            <label class="label" for="language_id"><?= __('feed.new_label_language') ?></label>
             <div class="control">
                 <div class="select is-fullwidth">
-                    <select name="NfLgID" id="NfLgID">
+                    <select name="language_id" id="language_id">
                         <?php foreach ($languages as $lang) : ?>
                         <option value="<?php echo $lang['LgID']; ?>"<?php if ($currentLang === $lang['LgID']) {
                             echo ' selected';
@@ -100,15 +100,15 @@ $actions = [
 
         <!-- Name -->
         <div class="field">
-            <label class="label" for="NfName">
+            <label class="label" for="name">
                 <?= __('feed.new_label_name') ?>
                 <span class="has-text-danger" title="<?= $titleRequired ?>">*</span>
             </label>
             <div class="control">
                 <input class="input notempty"
                        type="text"
-                       name="NfName"
-                       id="NfName"
+                       name="name"
+                       id="name"
                        placeholder="<?= $phName ?>"
                        required />
             </div>
@@ -116,15 +116,15 @@ $actions = [
 
         <!-- Newsfeed URL -->
         <div class="field">
-            <label class="label" for="NfSourceURI">
+            <label class="label" for="source_uri">
                 <?= __('feed.new_label_url') ?>
                 <span class="has-text-danger" title="<?= $titleRequired ?>">*</span>
             </label>
             <div class="control">
                 <input class="input notempty"
                        type="url"
-                       name="NfSourceURI"
-                       id="NfSourceURI"
+                       name="source_uri"
+                       id="source_uri"
                        placeholder="<?= $phUrl ?>"
                        required />
             </div>
@@ -132,15 +132,15 @@ $actions = [
 
         <!-- Article Section -->
         <div class="field">
-            <label class="label" for="NfArticleSectionTags">
+            <label class="label" for="article_section_tags">
                 <?= __('feed.new_label_article_section') ?>
                 <span class="has-text-danger" title="<?= $titleRequired ?>">*</span>
             </label>
             <div class="control">
                 <input class="input notempty"
                        type="text"
-                       name="NfArticleSectionTags"
-                       id="NfArticleSectionTags"
+                       name="article_section_tags"
+                       id="article_section_tags"
                        placeholder="<?= $phArticleSection ?>"
                        required />
             </div>
@@ -148,12 +148,12 @@ $actions = [
 
         <!-- Filter Tags -->
         <div class="field">
-            <label class="label" for="NfFilterTags"><?= __('feed.new_label_filter_tags') ?></label>
+            <label class="label" for="filter_tags"><?= __('feed.new_label_filter_tags') ?></label>
             <div class="control">
                 <input class="input"
                        type="text"
-                       name="NfFilterTags"
-                       id="NfFilterTags"
+                       name="filter_tags"
+                       id="filter_tags"
                        placeholder="<?= $phFilterTags ?>" />
             </div>
         </div>

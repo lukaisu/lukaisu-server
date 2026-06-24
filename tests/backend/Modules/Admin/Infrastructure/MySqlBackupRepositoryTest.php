@@ -127,7 +127,7 @@ class MySqlBackupRepositoryTest extends TestCase
             'words'     => 'WoUsID',
             'tags'      => 'TgUsID',
             'text_tags' => 'T2UsID',
-            'news_feeds' => 'NfUsID',
+            'news_feeds' => 'user_id',
             'settings'  => 'StUsID',
         ];
 
@@ -179,7 +179,7 @@ class MySqlBackupRepositoryTest extends TestCase
 
         $sql = $this->callBuildScopedSelectAll('feed_links');
         $this->assertSame(
-            'SELECT * FROM feed_links WHERE FlNfID IN (SELECT NfID FROM news_feeds WHERE NfUsID = 11)',
+            'SELECT * FROM feed_links WHERE feed_id IN (SELECT id FROM news_feeds WHERE user_id = 11)',
             $sql
         );
     }

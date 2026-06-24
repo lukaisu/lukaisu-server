@@ -47,13 +47,13 @@ class FeedArticleApiHandlerTest extends TestCase
     public function testFormatArticleRecordNewStatus(): void
     {
         $row = [
-            'FlID' => '42',
-            'FlTitle' => 'Test Article',
-            'FlLink' => 'https://example.com/article',
-            'FlDescription' => 'A description',
-            'FlDate' => '2026-01-15',
-            'FlAudio' => '',
-            'FlText' => '',
+            'id' => '42',
+            'title' => 'Test Article',
+            'link' => 'https://example.com/article',
+            'description' => 'A description',
+            'published_at' => '2026-01-15',
+            'audio' => '',
+            'text' => '',
             'TxID' => null,
             'TxArchivedAt' => null,
         ];
@@ -68,13 +68,13 @@ class FeedArticleApiHandlerTest extends TestCase
     public function testFormatArticleRecordImportedStatus(): void
     {
         $row = [
-            'FlID' => '42',
-            'FlTitle' => 'Imported Article',
-            'FlLink' => 'https://example.com/article',
-            'FlDescription' => 'Desc',
-            'FlDate' => '2026-01-15',
-            'FlAudio' => '',
-            'FlText' => 'Some text',
+            'id' => '42',
+            'title' => 'Imported Article',
+            'link' => 'https://example.com/article',
+            'description' => 'Desc',
+            'published_at' => '2026-01-15',
+            'audio' => '',
+            'text' => 'Some text',
             'TxID' => '10',
             'TxArchivedAt' => null,
         ];
@@ -89,13 +89,13 @@ class FeedArticleApiHandlerTest extends TestCase
     public function testFormatArticleRecordArchivedStatus(): void
     {
         $row = [
-            'FlID' => '42',
-            'FlTitle' => 'Archived Article',
-            'FlLink' => 'https://example.com/article',
-            'FlDescription' => 'Desc',
-            'FlDate' => '2026-01-15',
-            'FlAudio' => '',
-            'FlText' => 'Text content',
+            'id' => '42',
+            'title' => 'Archived Article',
+            'link' => 'https://example.com/article',
+            'description' => 'Desc',
+            'published_at' => '2026-01-15',
+            'audio' => '',
+            'text' => 'Text content',
             'TxID' => '10',
             'TxArchivedAt' => '2026-01-20 10:00:00',
         ];
@@ -110,13 +110,13 @@ class FeedArticleApiHandlerTest extends TestCase
     public function testFormatArticleRecordErrorStatus(): void
     {
         $row = [
-            'FlID' => '42',
-            'FlTitle' => 'Error Article',
-            'FlLink' => ' https://example.com/broken',
-            'FlDescription' => 'Desc',
-            'FlDate' => '2026-01-15',
-            'FlAudio' => '',
-            'FlText' => '',
+            'id' => '42',
+            'title' => 'Error Article',
+            'link' => ' https://example.com/broken',
+            'description' => 'Desc',
+            'published_at' => '2026-01-15',
+            'audio' => '',
+            'text' => '',
             'TxID' => null,
             'TxArchivedAt' => null,
         ];
@@ -134,63 +134,63 @@ class FeedArticleApiHandlerTest extends TestCase
 
     public function testFormatArticleRecordIdCastToInt(): void
     {
-        $row = $this->makeArticleRow(['FlID' => '99']);
+        $row = $this->makeArticleRow(['id' => '99']);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame(99, $result['id']);
     }
 
     public function testFormatArticleRecordTitleIsString(): void
     {
-        $row = $this->makeArticleRow(['FlTitle' => 'My Title']);
+        $row = $this->makeArticleRow(['title' => 'My Title']);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('My Title', $result['title']);
     }
 
     public function testFormatArticleRecordLinkIsTrimmed(): void
     {
-        $row = $this->makeArticleRow(['FlLink' => '  https://example.com  ']);
+        $row = $this->makeArticleRow(['link' => '  https://example.com  ']);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('https://example.com', $result['link']);
     }
 
     public function testFormatArticleRecordDescriptionIsString(): void
     {
-        $row = $this->makeArticleRow(['FlDescription' => 'A description']);
+        $row = $this->makeArticleRow(['description' => 'A description']);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('A description', $result['description']);
     }
 
     public function testFormatArticleRecordDateIsString(): void
     {
-        $row = $this->makeArticleRow(['FlDate' => '2026-03-10']);
+        $row = $this->makeArticleRow(['published_at' => '2026-03-10']);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('2026-03-10', $result['date']);
     }
 
     public function testFormatArticleRecordAudioIsString(): void
     {
-        $row = $this->makeArticleRow(['FlAudio' => 'https://example.com/audio.mp3']);
+        $row = $this->makeArticleRow(['audio' => 'https://example.com/audio.mp3']);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('https://example.com/audio.mp3', $result['audio']);
     }
 
     public function testFormatArticleRecordHasTextTrueWhenNotEmpty(): void
     {
-        $row = $this->makeArticleRow(['FlText' => 'Some content']);
+        $row = $this->makeArticleRow(['text' => 'Some content']);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertTrue($result['hasText']);
     }
 
     public function testFormatArticleRecordHasTextFalseWhenEmpty(): void
     {
-        $row = $this->makeArticleRow(['FlText' => '']);
+        $row = $this->makeArticleRow(['text' => '']);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertFalse($result['hasText']);
     }
 
     public function testFormatArticleRecordHasTextFalseWhenNull(): void
     {
-        $row = $this->makeArticleRow(['FlText' => null]);
+        $row = $this->makeArticleRow(['text' => null]);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertFalse($result['hasText']);
     }
@@ -236,7 +236,7 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         // When TxID is set, imported status takes priority even if link starts with space
         $row = $this->makeArticleRow([
-            'FlLink' => ' https://example.com/broken',
+            'link' => ' https://example.com/broken',
             'TxID' => '5',
             'TxArchivedAt' => null,
         ]);
@@ -247,7 +247,7 @@ class FeedArticleApiHandlerTest extends TestCase
     public function testFormatArticleRecordArchivedTakesPriorityOverErrorLink(): void
     {
         $row = $this->makeArticleRow([
-            'FlLink' => ' https://example.com/broken',
+            'link' => ' https://example.com/broken',
             'TxID' => '5',
             'TxArchivedAt' => '2026-01-20',
         ]);
@@ -258,7 +258,7 @@ class FeedArticleApiHandlerTest extends TestCase
     public function testFormatArticleRecordErrorRequiresLeadingSpace(): void
     {
         $row = $this->makeArticleRow([
-            'FlLink' => 'https://example.com/ok',
+            'link' => 'https://example.com/ok',
             'TxID' => null,
         ]);
         $result = $this->handler->formatArticleRecord($row);
@@ -323,9 +323,9 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => '1',
-                'NfName' => 'Test Feed',
-                'NfLgID' => '2',
+                'id' => '1',
+                'name' => 'Test Feed',
+                'language_id' => '2',
             ]);
 
         $result = $this->handler->getArticles(['feed_id' => 1]);
@@ -339,9 +339,9 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => '5',
-                'NfName' => 'My Feed',
-                'NfLgID' => '3',
+                'id' => '5',
+                'name' => 'My Feed',
+                'language_id' => '3',
             ]);
 
         $result = $this->handler->getArticles(['feed_id' => 5]);
@@ -355,9 +355,9 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => '1',
-                'NfName' => 'Feed',
-                'NfLgID' => '1',
+                'id' => '1',
+                'name' => 'Feed',
+                'language_id' => '1',
             ]);
 
         $result = $this->handler->getArticles(['feed_id' => 1]);
@@ -370,9 +370,9 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => '1',
-                'NfName' => 'Feed',
-                'NfLgID' => '1',
+                'id' => '1',
+                'name' => 'Feed',
+                'language_id' => '1',
             ]);
 
         $result = $this->handler->getArticles([
@@ -388,9 +388,9 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => '1',
-                'NfName' => 'Feed',
-                'NfLgID' => '1',
+                'id' => '1',
+                'name' => 'Feed',
+                'language_id' => '1',
             ]);
 
         $result = $this->handler->getArticles([
@@ -405,9 +405,9 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => '1',
-                'NfName' => 'Feed',
-                'NfLgID' => '1',
+                'id' => '1',
+                'name' => 'Feed',
+                'language_id' => '1',
             ]);
 
         $result = $this->handler->getArticles([
@@ -425,13 +425,13 @@ class FeedArticleApiHandlerTest extends TestCase
     /**
      * Stub the feed-ownership gate that runs before any delete path.
      * In multi-user mode `deleteArticles` calls `getFeedById` first so it
-     * can bail out on a foreign FlNfID; tests that exercise the
+     * can bail out on a foreign feed_id; tests that exercise the
      * happy-path delete need to make that lookup succeed.
      */
     private function mockFeedOwnedByCaller(): void
     {
         $this->feedFacade->method('getFeedById')
-            ->willReturn(['NfID' => 1, 'NfUsID' => 1, 'NfName' => 'TestFeed']);
+            ->willReturn(['id' => 1, 'user_id' => 1, 'name' => 'TestFeed']);
     }
 
     public function testDeleteArticlesEmptyArrayDeletesAll(): void
@@ -508,7 +508,7 @@ class FeedArticleApiHandlerTest extends TestCase
         // so a foreign feedId returns null. The handler must bail out
         // before touching feed_links — feed_links has no UsID column,
         // so without this gate any logged-in user could wipe any other
-        // user's articles by guessing their NfID.
+        // user's articles by guessing their id.
         $this->feedFacade->method('getFeedById')->willReturn(null);
         $this->feedFacade->expects($this->never())->method('deleteArticles');
 
@@ -554,16 +554,16 @@ class FeedArticleApiHandlerTest extends TestCase
         $this->feedFacade->method('getMarkedFeedLinks')
             ->willReturn([
                 [
-                    'NfOptions' => '',
-                    'NfName' => 'TestFeed',
-                    'NfLgID' => '1',
-                    'NfArticleSectionTags' => '',
-                    'NfFilterTags' => '',
-                    'FlLink' => 'https://example.com/article1',
-                    'FlID' => '10',
-                    'FlTitle' => 'Article 1',
-                    'FlAudio' => '',
-                    'FlText' => 'Article text content',
+                    'options' => '',
+                    'name' => 'TestFeed',
+                    'language_id' => '1',
+                    'article_section_tags' => '',
+                    'filter_tags' => '',
+                    'link' => 'https://example.com/article1',
+                    'id' => '10',
+                    'title' => 'Article 1',
+                    'audio' => '',
+                    'text' => 'Article text content',
                 ]
             ]);
 
@@ -717,7 +717,7 @@ class FeedArticleApiHandlerTest extends TestCase
     public function testImportArticlesWithEmptyFlLinkUsesHashId(): void
     {
         $row = $this->makeFeedLinkRow('10', 'No Link Article');
-        $row['FlLink'] = '';
+        $row['link'] = '';
 
         $this->feedFacade->method('getMarkedFeedLinks')
             ->willReturn([$row]);
@@ -726,7 +726,7 @@ class FeedArticleApiHandlerTest extends TestCase
 
         $this->feedFacade->method('extractTextFromArticle')
             ->willReturnCallback(function (array $doc) {
-                // Verify that the doc link is '#10' when FlLink is empty
+                // Verify that the doc link is '#10' when link is empty
                 $this->assertSame('#10', $doc[0]['link']);
                 return [
                     ['TxTitle' => 'T', 'TxText' => 'X', 'TxAudioURI' => '', 'TxSourceURI' => '']
@@ -877,9 +877,9 @@ class FeedArticleApiHandlerTest extends TestCase
         $this->feedFacade->method('getFeedById')
             ->with(5)
             ->willReturn([
-                'NfID' => '5',
-                'NfName' => 'Feed',
-                'NfLgID' => '1',
+                'id' => '5',
+                'name' => 'Feed',
+                'language_id' => '1',
             ]);
 
         $result = $this->handler->getArticles(['feed_id' => '5']);
@@ -891,9 +891,9 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => '1',
-                'NfName' => 'Feed',
-                'NfLgID' => '1',
+                'id' => '1',
+                'name' => 'Feed',
+                'language_id' => '1',
             ]);
 
         $result = $this->handler->getArticles([
@@ -908,9 +908,9 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => '1',
-                'NfName' => 'Feed',
-                'NfLgID' => '1',
+                'id' => '1',
+                'name' => 'Feed',
+                'language_id' => '1',
             ]);
 
         // sort=0 would be clamped to 1
@@ -926,9 +926,9 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $this->feedFacade->method('getFeedById')
             ->willReturn([
-                'NfID' => '1',
-                'NfName' => 'Feed',
-                'NfLgID' => '1',
+                'id' => '1',
+                'name' => 'Feed',
+                'language_id' => '1',
             ]);
 
         // sort=99 would be clamped to 3
@@ -943,7 +943,7 @@ class FeedArticleApiHandlerTest extends TestCase
     public function testImportArticlesWithCharsetOption(): void
     {
         $row = $this->makeFeedLinkRow('10', 'Article');
-        $row['NfOptions'] = 'charset=windows-1252';
+        $row['options'] = 'charset=windows-1252';
 
         $this->feedFacade->method('getMarkedFeedLinks')
             ->willReturn([$row]);
@@ -1024,13 +1024,13 @@ class FeedArticleApiHandlerTest extends TestCase
     private function makeArticleRow(array $overrides = []): array
     {
         return array_merge([
-            'FlID' => '1',
-            'FlTitle' => 'Default Title',
-            'FlLink' => 'https://example.com/default',
-            'FlDescription' => 'Default description',
-            'FlDate' => '2026-01-01',
-            'FlAudio' => '',
-            'FlText' => '',
+            'id' => '1',
+            'title' => 'Default Title',
+            'link' => 'https://example.com/default',
+            'description' => 'Default description',
+            'published_at' => '2026-01-01',
+            'audio' => '',
+            'text' => '',
             'TxID' => null,
             'TxArchivedAt' => null,
         ], $overrides);
@@ -1051,16 +1051,16 @@ class FeedArticleApiHandlerTest extends TestCase
         string $feedName = 'TestFeed'
     ): array {
         return [
-            'NfOptions' => '',
-            'NfName' => $feedName,
-            'NfLgID' => '1',
-            'NfArticleSectionTags' => '',
-            'NfFilterTags' => '',
-            'FlLink' => 'https://example.com/' . $flId,
-            'FlID' => $flId,
-            'FlTitle' => $title,
-            'FlAudio' => '',
-            'FlText' => 'Article text content',
+            'options' => '',
+            'name' => $feedName,
+            'language_id' => '1',
+            'article_section_tags' => '',
+            'filter_tags' => '',
+            'link' => 'https://example.com/' . $flId,
+            'id' => $flId,
+            'title' => $title,
+            'audio' => '',
+            'text' => 'Article text content',
         ];
     }
 }

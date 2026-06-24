@@ -459,14 +459,14 @@ class FeedsTest extends TestCase
     {
         // Test default prefix (Fl)
         $result = $this->feedService->getSortColumn(1);
-        $this->assertStringContainsString('Title', $result);
+        $this->assertStringContainsString('title', $result);
 
         $result = $this->feedService->getSortColumn(2);
-        $this->assertStringContainsString('Date', $result);
+        $this->assertStringContainsString('published_at', $result);
 
         // Test Nf prefix
         $result = $this->feedService->getSortColumn(1, 'Nf');
-        $this->assertStringContainsString('Name', $result);
+        $this->assertStringContainsString('name', $result);
     }
 
     /**

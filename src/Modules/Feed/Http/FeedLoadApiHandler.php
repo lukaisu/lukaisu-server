@@ -57,7 +57,7 @@ class FeedLoadApiHandler
         $placeholders = array_fill(0, count($feed), $placeholderRow);
 
         $sql = 'INSERT IGNORE INTO feed_links
-                (FlTitle, FlLink, FlText, FlDescription, FlDate, FlAudio, FlNfID)
+                (title, link, text, description, published_at, audio, feed_id)
                 VALUES ' . implode(', ', $placeholders);
 
         // Collect all parameters
@@ -97,8 +97,8 @@ class FeedLoadApiHandler
     {
         // Update feed timestamp using QueryBuilder
         QueryBuilder::table('news_feeds')
-            ->where('NfID', '=', $nfid)
-            ->updatePrepared(['NfUpdate' => time()]);
+            ->where('id', '=', $nfid)
+            ->updatePrepared(['update_interval' => time()]);
 
         $nfMaxLinksRaw = $this->feedFacade->getNfOption($nfoptions, 'max_links');
         if ($nfMaxLinksRaw === null || $nfMaxLinksRaw === '' || is_array($nfMaxLinksRaw)) {
@@ -131,14 +131,14 @@ class FeedLoadApiHandler
         // Count total feed_links using QueryBuilder
         $row = QueryBuilder::table('feed_links')
             ->select(['COUNT(*) AS total'])
-            ->where('FlNfID', '=', $nfid)
+            ->where('feed_id', '=', $nfid)
             ->firstPrepared();
 
         $to = ($row !== null ? (int)$row['total'] : 0) - $nfMaxLinks;
         if ($to > 0) {
             QueryBuilder::table('feed_links')
-                ->whereIn('FlNfID', [$nfid])
-                ->orderBy('FlDate', 'ASC')
+                ->whereIn('feed_id', [$nfid])
+                ->orderBy('published_at', 'ASC')
                 ->limit($to)
                 ->deletePrepared();
             $msg .= ", $to old article(s) deleted";

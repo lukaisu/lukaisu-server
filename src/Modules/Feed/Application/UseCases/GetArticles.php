@@ -56,7 +56,7 @@ class GetArticles
         array $feedIds,
         int $offset = 0,
         int $limit = 50,
-        string $orderBy = 'FlDate',
+        string $orderBy = 'published_at',
         string $direction = 'DESC',
         string $search = ''
     ): array {
@@ -100,7 +100,7 @@ class GetArticles
         int $feedId,
         int $offset = 0,
         int $limit = 50,
-        string $orderBy = 'FlDate',
+        string $orderBy = 'published_at',
         string $direction = 'DESC',
         string $search = ''
     ): array {

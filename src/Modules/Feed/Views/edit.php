@@ -28,9 +28,9 @@ use Lukaisu\Shared\UI\Helpers\IconHelper;
 use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
 
 /**
- * @var array{NfID: int|null, NfLgID: int, NfName: string, NfSourceURI: string,
- *            NfArticleSectionTags: string, NfFilterTags: string, NfUpdate: int,
- *            NfOptions: string} $feed Feed data
+ * @var array{id: int|null, language_id: int, name: string, source_uri: string,
+ *            article_section_tags: string, filter_tags: string, update_interval: int,
+ *            options: string} $feed Feed data
  * @var array<int, array{LgID: int, LgName: string}> $languages Language records
  * @var array<string, string> $options Parsed feed options
  * @var string|null $autoUpdateInterval Auto-update interval value
@@ -40,7 +40,7 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
 $actions = [
     ['url' => '/feeds?page=1', 'label' => __('feed.edit_action_feeds'), 'icon' => 'list'],
     [
-        'url' => '/feeds/wizard?step=2&edit_feed=' . (int)$feed['NfID'],
+        'url' => '/feeds/wizard?step=2&edit_feed=' . (int)$feed['id'],
         'label' => __('feed.edit_action_wizard'),
         'icon' => 'wand-2',
         'class' => 'is-info'
@@ -76,23 +76,23 @@ $helpLabel = __('feed.edit_help');
     'articleSourceValue' => $options['article_source'] ?? '',
 ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
 </script>
-<form class="validate" action="/feeds/<?php echo (int)$feed['NfID']; ?>/edit" method="post"
+<form class="validate" action="/feeds/<?php echo (int)$feed['id']; ?>/edit" method="post"
       x-data="feedForm()"
       @submit="handleSubmit($event)">
     <?php echo \Lukaisu\Shared\UI\Helpers\FormHelper::csrfField(); ?>
-    <input type="hidden" name="NfID" value="<?php echo $feed['NfID'] ?? ''; ?>" />
-    <input type="hidden" name="NfOptions" value="" />
+    <input type="hidden" name="id" value="<?php echo $feed['id'] ?? ''; ?>" />
+    <input type="hidden" name="options" value="" />
     <input type="hidden" name="update_feed" value="1" />
 
     <div class="box">
         <!-- Language -->
         <div class="field">
-            <label class="label" for="NfLgID"><?php echo __e('feed.edit_label_language'); ?></label>
+            <label class="label" for="language_id"><?php echo __e('feed.edit_label_language'); ?></label>
             <div class="control">
                 <div class="select is-fullwidth">
-                    <select name="NfLgID" id="NfLgID">
+                    <select name="language_id" id="language_id">
                         <?php foreach ($languages as $lang) : ?>
-                            <?php $selected = ($feed['NfLgID'] === $lang['LgID']) ? ' selected' : ''; ?>
+                            <?php $selected = ($feed['language_id'] === $lang['LgID']) ? ' selected' : ''; ?>
                             <option value="<?php echo $lang['LgID']; ?>"<?php echo $selected; ?>>
                             <?php echo htmlspecialchars($lang['LgName'], ENT_QUOTES, 'UTF-8'); ?>
                         </option>
@@ -104,51 +104,51 @@ $helpLabel = __('feed.edit_help');
 
         <!-- Name -->
         <div class="field">
-            <label class="label" for="NfName">
+            <label class="label" for="name">
                 <?php echo __e('feed.edit_label_name'); ?>
                 <span class="has-text-danger" title="<?php echo __e('feed.edit_required'); ?>">*</span>
             </label>
             <div class="control">
                 <input class="input notempty"
                        type="text"
-                       name="NfName"
-                       id="NfName"
-                       value="<?php echo htmlspecialchars($feed['NfName'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                       name="name"
+                       id="name"
+                       value="<?php echo htmlspecialchars($feed['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                        required />
             </div>
         </div>
 
         <!-- Newsfeed URL -->
         <div class="field">
-            <label class="label" for="NfSourceURI">
+            <label class="label" for="source_uri">
                 <?php echo __e('feed.edit_label_url'); ?>
                 <span class="has-text-danger" title="<?php echo __e('feed.edit_required'); ?>">*</span>
             </label>
             <div class="control">
                 <input class="input notempty"
                        type="url"
-                       name="NfSourceURI"
-                       id="NfSourceURI"
-                       value="<?php echo htmlspecialchars($feed['NfSourceURI'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                       name="source_uri"
+                       id="source_uri"
+                       value="<?php echo htmlspecialchars($feed['source_uri'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                        required />
             </div>
         </div>
 
         <!-- Article Section -->
         <div class="field">
-            <label class="label" for="NfArticleSectionTags">
+            <label class="label" for="article_section_tags">
                 <?php echo __e('feed.edit_label_article_section'); ?>
                 <span class="has-text-danger" title="<?php echo __e('feed.edit_required'); ?>">*</span>
             </label>
             <div class="control">
                 <?php
-                $articleSection = $feed['NfArticleSectionTags'] ?? '';
+                $articleSection = $feed['article_section_tags'] ?? '';
                 $articleSectionVal = htmlspecialchars($articleSection, ENT_QUOTES, 'UTF-8');
                 ?>
                 <input class="input notempty"
                        type="text"
-                       name="NfArticleSectionTags"
-                       id="NfArticleSectionTags"
+                       name="article_section_tags"
+                       id="article_section_tags"
                        value="<?php echo $articleSectionVal; ?>"
                        required />
             </div>
@@ -156,16 +156,16 @@ $helpLabel = __('feed.edit_help');
 
         <!-- Filter Tags -->
         <div class="field">
-            <label class="label" for="NfFilterTags"><?php echo __e('feed.edit_label_filter_tags'); ?></label>
+            <label class="label" for="filter_tags"><?php echo __e('feed.edit_label_filter_tags'); ?></label>
             <div class="control">
                 <?php
-                $filterTags = $feed['NfFilterTags'] ?? '';
+                $filterTags = $feed['filter_tags'] ?? '';
                 $filterTagsVal = htmlspecialchars($filterTags, ENT_QUOTES, 'UTF-8');
                 ?>
                 <input class="input"
                        type="text"
-                       name="NfFilterTags"
-                       id="NfFilterTags"
+                       name="filter_tags"
+                       id="filter_tags"
                        value="<?php echo $filterTagsVal; ?>" />
             </div>
         </div>

@@ -85,7 +85,7 @@ class GetArticlesTest extends TestCase
         $this->articleRepository
             ->expects($this->once())
             ->method('findByFeedsWithStatus')
-            ->with([10], 0, 50, 'FlDate', 'DESC', '')
+            ->with([10], 0, 50, 'published_at', 'DESC', '')
             ->willReturn($articleData);
 
         $this->articleRepository
@@ -124,7 +124,7 @@ class GetArticlesTest extends TestCase
         $this->articleRepository
             ->expects($this->once())
             ->method('findByFeedsWithStatus')
-            ->with([1, 2], 20, 10, 'FlTitle', 'ASC', 'search term')
+            ->with([1, 2], 20, 10, 'title', 'ASC', 'search term')
             ->willReturn([]);
 
         $this->articleRepository
@@ -137,7 +137,7 @@ class GetArticlesTest extends TestCase
             feedIds: [1, 2],
             offset: 20,
             limit: 10,
-            orderBy: 'FlTitle',
+            orderBy: 'title',
             direction: 'ASC',
             search: 'search term'
         );
@@ -160,7 +160,7 @@ class GetArticlesTest extends TestCase
         $this->articleRepository
             ->expects($this->once())
             ->method('findByFeedsWithStatus')
-            ->with([10, 20], 0, 50, 'FlDate', 'DESC', '')
+            ->with([10, 20], 0, 50, 'published_at', 'DESC', '')
             ->willReturn($articleData);
 
         $this->articleRepository
@@ -187,7 +187,7 @@ class GetArticlesTest extends TestCase
         $this->articleRepository
             ->expects($this->once())
             ->method('findByFeedsWithStatus')
-            ->with([5], 0, 50, 'FlDate', 'DESC', '')
+            ->with([5], 0, 50, 'published_at', 'DESC', '')
             ->willReturn([]);
 
         $this->articleRepository
@@ -208,7 +208,7 @@ class GetArticlesTest extends TestCase
         $this->articleRepository
             ->expects($this->once())
             ->method('findByFeedsWithStatus')
-            ->with([7], 10, 25, 'FlTitle', 'ASC', 'query')
+            ->with([7], 10, 25, 'title', 'ASC', 'query')
             ->willReturn([]);
 
         $this->articleRepository
@@ -221,7 +221,7 @@ class GetArticlesTest extends TestCase
             feedId: 7,
             offset: 10,
             limit: 25,
-            orderBy: 'FlTitle',
+            orderBy: 'title',
             direction: 'ASC',
             search: 'query'
         );

@@ -112,7 +112,7 @@ class FeedIndexController
         $languages = null;
 
         foreach ($feedLinks as $row) {
-            $requiresEdit = $this->feedFacade->getNfOption($row['NfOptions'], 'edit_text') == 1;
+            $requiresEdit = $this->feedFacade->getNfOption($row['options'], 'edit_text') == 1;
 
             if ($requiresEdit) {
                 if ($editText == 1) {
@@ -126,15 +126,15 @@ class FeedIndexController
             }
 
             $doc = [[
-                'link' => $row['FlLink'] === '' ? ('#' . ($row['FlID'] ?? 0)) : $row['FlLink'],
-                'title' => $row['FlTitle'],
-                'audio' => $row['FlAudio'],
-                'text' => $row['FlText']
+                'link' => $row['link'] === '' ? ('#' . ($row['id'] ?? 0)) : $row['link'],
+                'title' => $row['title'],
+                'audio' => $row['audio'],
+                'text' => $row['text']
             ]];
 
-            $nfName = $row['NfName'];
-            $nfId = $row['NfID'];
-            $nfOptions = $row['NfOptions'];
+            $nfName = $row['name'];
+            $nfId = $row['feed_id'];
+            $nfOptions = $row['options'];
 
             $tagNameRaw = $this->feedFacade->getNfOption($nfOptions, 'tag');
             $tagName = is_string($tagNameRaw) && $tagNameRaw !== '' ? $tagNameRaw : mb_substr($nfName, 0, 20, "utf-8");
@@ -149,8 +149,8 @@ class FeedIndexController
             $charset = is_string($charsetRaw) ? $charsetRaw : null;
             $texts = $this->feedFacade->extractTextFromArticle(
                 $doc,
-                $row['NfArticleSectionTags'],
-                $row['NfFilterTags'],
+                $row['article_section_tags'],
+                $row['filter_tags'],
                 $charset
             );
 
@@ -166,7 +166,7 @@ class FeedIndexController
 
             if ($requiresEdit) {
                 // Include edit form view
-                $scrdir = $this->languageFacade->getScriptDirectionTag($row['NfLgID']);
+                $scrdir = $this->languageFacade->getScriptDirectionTag($row['language_id']);
                 /** @psalm-suppress UnresolvableInclude View path is constructed at runtime */
                 include $this->viewPath . 'edit_text_form.php';
             } elseif (is_array($texts)) {
@@ -209,7 +209,7 @@ class FeedIndexController
                 '</div>';
 
             $this->feedFacade->createTextFromFeed([
-                'TxLgID' => $row['NfLgID'],
+                'TxLgID' => $row['language_id'],
                 'TxTitle' => $text['TxTitle'],
                 'TxText' => $text['TxText'],
                 'TxAudioURI' => $text['TxAudioURI'] ?? '',
@@ -286,13 +286,13 @@ class FeedIndexController
         $feedTime = null;
         if ($currentFeed == 0 || empty($feeds)) {
             if (!empty($feeds)) {
-                $currentFeed = (int)$feeds[0]['NfID'];
+                $currentFeed = (int)$feeds[0]['id'];
             }
         } else {
             // Get feed time for the selected feed
             foreach ($feeds as $f) {
-                if ((int)$f['NfID'] === $currentFeed) {
-                    $feedTime = $f['NfUpdate'];
+                if ((int)$f['id'] === $currentFeed) {
+                    $feedTime = $f['update_interval'];
                     break;
                 }
             }

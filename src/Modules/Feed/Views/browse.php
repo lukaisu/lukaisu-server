@@ -47,8 +47,8 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
  * @var int $currentSort Current sort index
  * @var int $maxPerPage Articles per page
  * @var int $pages Total pages
- * @var array<int, array{FlID: int|null, FlNfID: int, FlTitle: string, FlLink: string,
- *     FlDescription: string, FlDate: string, FlAudio: string, FlText: string,
+ * @var array<int, array{id: int|null, feed_id: int, title: string, link: string,
+ *     description: string, published_at: string, audio: string, text: string,
  *     TxID: int|null, TxArchivedAt: string|null}> $articles Array of feed article records
  * @var int|null $feedTime Last update timestamp
  */
@@ -197,10 +197,10 @@ endif; ?>
                 <span title="<?php echo __e('feed.browse_archived_title'); ?>">
                     <?php echo IconHelper::render('circle-x', ['alt' => '-']); ?>
                 </span>
-        <?php elseif ($row['FlLink'] !== '' && str_starts_with($row['FlLink'], ' ')) : ?>
+        <?php elseif ($row['link'] !== '' && str_starts_with($row['link'], ' ')) : ?>
             <td class="has-text-centered">
             <span class="not_found"
-                  name="<?php echo $row['FlID']; ?>"
+                  name="<?php echo $row['id']; ?>"
                   title="<?php echo __e('feed.browse_download_error_title'); ?>"
                   @click="handleNotFoundClick($event)">
                 <?php echo IconHelper::render('alert-circle', ['alt' => '-']); ?>
@@ -210,16 +210,16 @@ endif; ?>
                 <input type="checkbox"
                        class="markcheck"
                        name="marked_items[]"
-                       value="<?php echo $row['FlID']; ?>" />
+                       value="<?php echo $row['id']; ?>" />
         <?php endif; ?>
         </td>
             <td class="has-text-centered">
-            <?php $descEscaped = htmlentities($row['FlDescription'], ENT_QUOTES, 'UTF-8', false); ?>
+            <?php $descEscaped = htmlentities($row['description'], ENT_QUOTES, 'UTF-8', false); ?>
             <span title="<?php echo $descEscaped; ?>">
-                <b><?php echo htmlspecialchars($row['FlTitle'], ENT_QUOTES, 'UTF-8'); ?></b>
+                <b><?php echo htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8'); ?></b>
             </span>
-        <?php if ($row['FlAudio']) : ?>
-            <?php $audioEscaped = htmlspecialchars($row['FlAudio'], ENT_QUOTES, 'UTF-8'); ?>
+        <?php if ($row['audio']) : ?>
+            <?php $audioEscaped = htmlspecialchars($row['audio'], ENT_QUOTES, 'UTF-8'); ?>
             <a href="<?php echo $audioEscaped; ?>"
                @click.prevent="openPopup($el, 'audio')"
                target="_blank"
@@ -229,8 +229,8 @@ endif; ?>
         <?php endif; ?>
         </td>
             <td class="has-text-centered valign-middle">
-        <?php if ($row['FlLink'] !== '' && !str_starts_with(trim($row['FlLink']), '#')) : ?>
-            <?php $linkEscaped = htmlspecialchars(trim($row['FlLink']), ENT_QUOTES, 'UTF-8'); ?>
+        <?php if ($row['link'] !== '' && !str_starts_with(trim($row['link']), '#')) : ?>
+            <?php $linkEscaped = htmlspecialchars(trim($row['link']), ENT_QUOTES, 'UTF-8'); ?>
             <a href="<?php echo $linkEscaped; ?>"
                title="<?php echo $linkEscaped; ?>"
                @click.prevent="openPopup($el, 'external')"
@@ -239,7 +239,7 @@ endif; ?>
             <?php echo IconHelper::render('external-link', ['alt' => '-']); ?></a>
         <?php endif; ?>
         </td><td class="has-text-centered">
-            <?php echo htmlspecialchars($row['FlDate'], ENT_QUOTES, 'UTF-8'); ?>
+            <?php echo htmlspecialchars($row['published_at'], ENT_QUOTES, 'UTF-8'); ?>
         </td></tr>
     <?php endforeach; ?>
 

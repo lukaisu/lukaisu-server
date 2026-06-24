@@ -272,8 +272,8 @@ describe('feed_wizard_step4.ts', () => {
       component.goBack();
 
       expect(window.location.href).toContain('/feeds/wizard?step=3');
-      expect(window.location.href).toContain('NfLgID=2');
-      expect(window.location.href).toContain('NfName=Test');
+      expect(window.location.href).toContain('language_id=2');
+      expect(window.location.href).toContain('name=Test');
 
       window.location = originalLocation;
     });
@@ -284,16 +284,16 @@ describe('feed_wizard_step4.ts', () => {
   // ===========================================================================
 
   describe('handleSubmit()', () => {
-    it('updates NfOptions hidden input', () => {
+    it('updates options hidden input', () => {
       document.body.innerHTML = `
-        <input type="hidden" name="NfOptions" value="" />
+        <input type="hidden" name="options" value="" />
       `;
 
       const component = feedWizardStep4Data();
       component.editText = true;
       component.handleSubmit();
 
-      const input = document.querySelector<HTMLInputElement>('input[name="NfOptions"]');
+      const input = document.querySelector<HTMLInputElement>('input[name="options"]');
       expect(input?.value).toContain('edit_text=1');
     });
 
