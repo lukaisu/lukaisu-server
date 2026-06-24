@@ -39,7 +39,7 @@ contract both agents build to.
 
 | Bucket | Owner after migration | Examples |
 |---|---|---|
-| **Rendering** | **Client** (already TS) | reader, review surface, word popups, navbar, i18n — already in `src/frontend/`, bundled into the app via "Model B" |
+| **Rendering** | **Client** (already TS) | reader, review surface, word popups, navbar, i18n — already in `src/frontend/`, bundled into the app (see *Rendering hollow-out*) |
 | **Data / DB** | **Client** (on-device DB) | languages, texts, words/terms, sentences, word-occurrences, tags, settings, review scheduling |
 | **NLP** | **Optional server (Python)** | CJK parse (MeCab/jieba), lemmatization (spaCy), TTS (Piper), Whisper transcription |
 | **Outbound / network** | **Optional server (Python)** | Gutenberg/Gutendex, Global Digital Library, Internet Archive, RSS feeds, YouTube transcripts, arbitrary web/EPUB URL extraction |
@@ -97,6 +97,58 @@ The end state is a small Python service. Get there in this order:
    buckets, the PHP surface only shrinks. Keep it runnable as the legacy
    full-stack server for existing self-hosters during the transition.
 
+## Rendering hollow-out (relocating the frontend)
+
+The seam puts **rendering on the client**, but today `src/frontend/` (the TS
+reader/library/review/connect UI, the on-device DB, and the parsers) physically
+lives in this repo and is built **two ways**:
+
+- `vite.config.ts` → `dist/` — **this server's own browser UI** (the PHP-served
+  PWA).
+- `vite.app.config.ts` → `dist-app/` — the **bundled app** the `lukaisu` repo
+  packages into the APK.
+
+One frontend source, **two consumers** — that shared ownership is the only thing
+keeping the frontend in this repo. Untangle it in two pieces:
+
+**Piece 1 — sever the PHP→HTML build coupling. DONE (2026-06).** The app pages
+(`src/frontend/app/{index,library,read,review}.html`) used to be prerendered from
+this server's PHP views at build time: a `<!--LUKAISU_VIEW:…-->` marker expanded
+by `build/php-view-prerender.mjs` (a mini PHP→HTML transpiler), pulling view
+partials and `locale/en/*.json`. That output is now **committed as static HTML**;
+the prerender Vite plugin and `build/php-view-prerender.mjs` are deleted.
+`build:app` no longer reads any PHP view, partial, or locale file — verified
+byte-identical `dist-app/` before/after, typecheck green. The app frontend builds
+from `src/frontend/` alone now. **Accepted trade-off:** those pages no longer
+auto-track the PHP templates — the app owns them and may diverge (correct, since
+the app is independent and PHP is frozen).
+
+**Piece 2 — relocate the frontend to `lukaisu` (NOT done; this is your call).**
+The shared JS/CSS (`src/frontend/js`, `src/frontend/css`, ~2 MB, **self-contained
+— no import escapes `src/frontend/`**) should become owned by the `lukaisu` app.
+That removes `lukaisu`'s build-time dependency on this repo entirely and kills the
+F-Droid submodule question (see `lukaisu/FDROID.md` Step 5). The blocker is the
+**second consumer** — this server still builds its own browser UI from the same
+source. Resolve it one of three ways:
+
+  1. **Retire this server's browser UI** (recommended, mission-aligned: server →
+     headless Python NLP/outbound). Once nothing here serves a PWA, move
+     `src/frontend/` to `lukaisu` wholesale and delete `vite.config.ts`'s web-UI
+     build. Cleanest end state, but **gated on PHP/PWA actually being
+     decommissioned** — which is out of scope for the F-Droid milestone (PHP
+     stays as the legacy full-stack server during the transition).
+  2. **Extract to a shared package** (`@lukaisu/frontend`) both repos consume.
+     Keeps a server UI; costs a publish/versioning pipeline in this repo.
+  3. **Reverse the dependency** (server pulls the frontend from `lukaisu`).
+     Avoid — it just moves the cross-repo coupling here, and risks a cycle (this
+     repo's PHP views were the app's template source until Piece 1).
+
+**Recommendation:** don't do Piece 2 in isolation — sequence it with retiring the
+server browser UI (option 1). Until then, `lukaisu` bundling the frontend from
+here (a git submodule for the F-Droid catalog build) is the correct interim.
+Coordinate the move with the `lukaisu` agent; never fork the frontend into two
+diverging copies.
+
 ## What to reuse / where things are
 
 - **API surface to mirror:** `src/backend/Api/V1/Endpoints.php` (the registry)
@@ -123,11 +175,12 @@ The end state is a small Python service. Get there in this order:
   server-authoritative-when-online *before* building it. Per-row timestamps +
   tombstones + a pending-op queue on the client is the minimum. Spike this in
   isolation.
-- **Where does the frontend TS ultimately live?** Today `src/frontend/` is here
-  and bundled into the app (Model B). The stated direction is rendering "moves
-  to the client." Coordinate with the client agent: for the milestone it's fine
-  to keep the TS here and bundle it; the long-term home is the `lukaisu` app.
-  Don't fork the frontend in two places.
+- **Where does the frontend TS ultimately live?** See **Rendering hollow-out**
+  above. Piece 1 (severing the PHP→HTML build coupling) is **done**; Piece 2
+  (relocating `src/frontend/` to the `lukaisu` app, gated on retiring this
+  server's browser UI) is the remaining call. For the milestone it's fine to keep
+  the TS here and bundle it; the long-term home is the `lukaisu` app. Never fork
+  the frontend into two diverging copies.
 - **Python framework:** the NLP service appears to be FastAPI already — extend
   it rather than introducing a second framework.
 
