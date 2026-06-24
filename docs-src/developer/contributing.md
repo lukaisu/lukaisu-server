@@ -339,6 +339,6 @@ Either go to the forum of the [official Lukaisu Server version](https://sourcefo
 
 ### Support on OpenCollective
 
-Lukaisu Server is hosted on OpenCollective, you can support the development of the app at <https://opencollective.com/lukaisu-community>.
+Lukaisu Server is hosted on OpenCollective, you can support the development of the app at <https://opencollective.com/lukaisu>.
 
 Thanks for your interest in contributing!
