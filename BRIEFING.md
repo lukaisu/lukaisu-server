@@ -59,6 +59,29 @@ server.
 
 The end state is a small Python service. Get there in this order:
 
+> **Status (2026-06).**
+> - **Step 1 — DONE.** The edge service stands alone (`services/nlp/`, FastAPI):
+>   `parse` / `lemmatize` / `tts` / `whisper` routers, callable without the PHP
+>   container, Docker-verified (full **and** `EDGE_ONLY` images). HTTP contract
+>   written up in `docs-src/server/http-contract.md`.
+> - **Step 2 — DONE.** Outbound integrations ported to the same service
+>   (`content` / `feeds` / `extract` routers: Gutendex, Global Digital Library,
+>   Internet Archive, RSS, YouTube, web/EPUB), all behind the SSRF guard
+>   (`services/nlp/app/services/http/safe_fetch.py`).
+> - **Step 3 — DESIGNED, not built** (`docs-src/server/sync-contract.md`). Out of
+>   the milestone by design.
+> - **Step 4 — DESIGNED, not built** (`docs-src/server/auth.md`). Gated on sync.
+> - **Step 5 — standing policy.** PHP is frozen; no new features added.
+>
+> **The F-Droid milestone is met and proven.** The bundled app does the whole
+> create-language → paste-text → read → save → review flow fully offline, making
+> **zero `/api/v1` calls** — asserted (`apiAttempts === 0`) by the browser E2E in
+> `cypress/app-e2e/`. The create surfaces are bundled as
+> `src/frontend/app/{language,text}.html` (purpose-built, API-client-driven — the
+> server-rendered forms do native POSTs and can't run offline). CJK still falls
+> back to the on-device character parser when no server is connected, per the
+> degradation rule.
+
 1. **Make the NLP service stand alone.** The Python NLP service (the `nlp`
    Docker service — verify its exact location; the Dockerfile copies an `app/`,
    likely under `services/nlp/`) already exposes parse / tts / whisper /
@@ -161,6 +184,10 @@ diverging copies.
   `CharacterParser`, `MecabParser`, `ParserRegistry`) and
   `src/Modules/Language/Application/` text-parsing orchestration.
 - **DB schema for the sync model:** `db/schema/`, `db/migrations/`.
+- **Server-side design docs:** `docs-src/server/` — `http-contract.md` (the
+  optional NLP/outbound HTTP surface), `local-first.md` (the offline
+  architecture and four-bucket seam), `sync-contract.md` (the design-only sync
+  model and conflict strategy), `auth.md` (the design-only auth model).
 
 ## Out of scope (for the F-Droid milestone)
 
