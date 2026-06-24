@@ -59,7 +59,7 @@ class SqlValidatorTest extends TestCase
 
     public function testValidCreateTableIfNotExists(): void
     {
-        $sql = "CREATE TABLE IF NOT EXISTS `words` ( WoID int(11) )";
+        $sql = "CREATE TABLE IF NOT EXISTS `words` ( id int(11) )";
         $this->assertTrue($this->validator->validate($sql));
     }
 

@@ -64,11 +64,11 @@ $valChange = htmlspecialchars(__('vocabulary.common.change'), ENT_QUOTES, 'UTF-8
 <form name="editword" class="validate" action="/word/edit-multi" method="post"
 data-lukaisu-form-check="true" data-lukaisu-clear-frame="true">
 <?php echo \Lukaisu\Shared\UI\Helpers\FormHelper::csrfField(); ?>
-<input type="hidden" name="WoLgID" id="langfield" value="<?php echo $termLgid; ?>" />
-<input type="hidden" name="WoID" value="<?php echo $termId; ?>" />
+<input type="hidden" name="language_id" id="langfield" value="<?php echo $termLgid; ?>" />
+<input type="hidden" name="id" value="<?php echo $termId; ?>" />
 <input type="hidden" name="WoOldStatus" value="<?php echo $originalStatus; ?>" />
-<input type="hidden" name="WoStatus" value="<?php echo $status; ?>" />
-<input type="hidden" name="WoTextLC" value="<?php echo htmlspecialchars($termTextlc, ENT_QUOTES, 'UTF-8'); ?>" />
+<input type="hidden" name="status" value="<?php echo $status; ?>" />
+<input type="hidden" name="text_lc" value="<?php echo htmlspecialchars($termTextlc, ENT_QUOTES, 'UTF-8'); ?>" />
 <input type="hidden" name="tid" value="<?php echo $tid; ?>" />
 <input type="hidden" name="ord" value="<?php echo $ord; ?>" />
 <table class="table is-bordered is-fullwidth">
@@ -76,7 +76,7 @@ data-lukaisu-form-check="true" data-lukaisu-clear-frame="true">
         <td class="has-text-right"><b><?= __('vocabulary.form.edit_term') ?>:</b></td>
         <td class="">
             <input <?php echo $scrdir; ?> class="notempty checkoutsidebmp"
-            data_info="Term" type="text" name="WoText" id="wordfield"
+            data_info="Term" type="text" name="text" id="wordfield"
             value="<?php echo htmlspecialchars($termText, ENT_QUOTES, 'UTF-8'); ?>" maxlength="250" size="35" />
             <?php echo IconHelper::render('circle-x', [
                 'title' => __('vocabulary.common.field_required'),
@@ -88,7 +88,7 @@ data-lukaisu-form-check="true" data-lukaisu-clear-frame="true">
     <tr>
         <td class="has-text-right"><?= __('vocabulary.form.translation_label') ?></td>
         <td class="">
-            <textarea name="WoTranslation"
+            <textarea name="translation"
                       class="setfocus textarea-noreturn checklength checkoutsidebmp"
                       data_maxlength="500"
                       data_info="Translation"
@@ -106,7 +106,7 @@ data-lukaisu-form-check="true" data-lukaisu-clear-frame="true">
         <td class="has-text-right"><?= __('vocabulary.form.romaniz_label') ?></td>
         <td class="">
             <input type="text" class="checkoutsidebmp" data_info="Romanization"
-            name="WoRomanization" maxlength="100" size="35"
+            name="romanization" maxlength="100" size="35"
             value="<?php echo htmlspecialchars($romanization, ENT_QUOTES, 'UTF-8'); ?>" />
         </td>
     </tr>
@@ -114,7 +114,7 @@ data-lukaisu-form-check="true" data-lukaisu-clear-frame="true">
         <td class="has-text-right"><?= __('vocabulary.show.sentence_term_in_braces') ?></td>
         <td class="">
             <textarea <?php echo $scrdir; ?>
-                      name="WoSentence"
+                      name="sentence"
                       class="textarea-noreturn checklength checkoutsidebmp"
                       data_maxlength="1000"
                       data_info="Sentence"
@@ -125,7 +125,7 @@ data-lukaisu-form-check="true" data-lukaisu-clear-frame="true">
     <tr>
         <td class="has-text-right"><?= __('vocabulary.form.notes_label') ?></td>
         <td class="">
-            <textarea name="WoNotes"
+            <textarea name="notes"
             class="textarea-noreturn checklength checkoutsidebmp" data_maxlength="1000"
             data_info="Notes" cols="35" rows="3"><?php echo htmlspecialchars($notes, ENT_QUOTES, 'UTF-8'); ?></textarea>
         </td>

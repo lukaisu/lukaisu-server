@@ -80,7 +80,7 @@ interface TermRepositoryInterface
      */
     public function findByLanguage(
         int $languageId,
-        ?string $orderBy = 'WoText',
+        ?string $orderBy = 'text',
         string $direction = 'ASC'
     ): array;
 
@@ -262,7 +262,7 @@ interface TermRepositoryInterface
         int $languageId = 0,
         int $page = 1,
         int $perPage = 20,
-        string $orderBy = 'WoText',
+        string $orderBy = 'text',
         string $direction = 'ASC'
     ): array;
 

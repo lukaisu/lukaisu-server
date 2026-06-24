@@ -812,7 +812,7 @@ class TagsTest extends TestCase
         $langId = (int)Connection::lastInsertId();
 
         Connection::query(
-            "INSERT INTO words (WoText, WoTextLC, WoStatus, WoLgID)
+            "INSERT INTO words (text, text_lc, status, language_id)
              VALUES ('duptestword', 'duptestword', 1, $langId)"
         );
         $wordId = (int)Connection::lastInsertId();
@@ -849,7 +849,7 @@ class TagsTest extends TestCase
                 'DELETE FROM tags WHERE TgText = ?',
                 [$uniqueTagName]
             );
-            Connection::query("DELETE FROM words WHERE WoID = $wordId");
+            Connection::query("DELETE FROM words WHERE id = $wordId");
             Connection::query("DELETE FROM languages WHERE LgID = $langId");
         }
     }

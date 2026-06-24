@@ -110,8 +110,8 @@ class ForeignKeyTest extends TestCase
         Connection::query("DELETE FROM word_occurrences WHERE Ti2Text LIKE 'fktest_%'");
         Connection::query("DELETE FROM sentences WHERE SeText LIKE 'FK Test%'");
         Connection::query("DELETE FROM texts WHERE TxTitle LIKE 'FK_Test_%'");
-        Connection::query("DELETE FROM words WHERE WoText LIKE 'fktest_%'");
-        Connection::query("DELETE FROM word_tag_map WHERE WtWoID NOT IN (SELECT WoID FROM words)");
+        Connection::query("DELETE FROM words WHERE text LIKE 'fktest_%'");
+        Connection::query("DELETE FROM word_tag_map WHERE WtWoID NOT IN (SELECT id FROM words)");
         Connection::query("DELETE FROM tags WHERE TgText LIKE 'fktest_%'");
         Connection::query("DELETE FROM text_tags WHERE T2Text LIKE 'fktest_%'");
         Connection::query("DELETE FROM news_feeds WHERE name LIKE 'FK_Test_%'");
@@ -249,7 +249,7 @@ class ForeignKeyTest extends TestCase
         $this->assertEquals($wordId, (int) $beforeWoId, 'Ti2WoID should be set before word delete');
 
         // Delete word
-        Connection::query("DELETE FROM words WHERE WoID = $wordId");
+        Connection::query("DELETE FROM words WHERE id = $wordId");
 
         // Verify Ti2WoID is now NULL but text item still exists
         $count = (int) Connection::fetchValue(
@@ -291,7 +291,7 @@ class ForeignKeyTest extends TestCase
         $this->assertEquals(1, $beforeCount, 'Wordtag should exist before delete');
 
         // Delete word
-        Connection::query("DELETE FROM words WHERE WoID = $wordId");
+        Connection::query("DELETE FROM words WHERE id = $wordId");
 
         // Verify wordtag was cascaded
         $afterCount = (int) Connection::fetchValue(
@@ -621,12 +621,12 @@ class ForeignKeyTest extends TestCase
     private function createTestWord(string $text): int
     {
         Connection::query(
-            "INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoTranslation, WoWordCount)
+            "INSERT INTO words (language_id, text, text_lc, status, translation, word_count)
              VALUES (" . self::$testLangId . ", '$text', '$text', 1, 'test translation', 1)"
         );
         return (int) Connection::fetchValue(
-            "SELECT WoID FROM words WHERE WoText = '$text'",
-            'WoID'
+            "SELECT id FROM words WHERE text = '$text'",
+            'id'
         );
     }
 }

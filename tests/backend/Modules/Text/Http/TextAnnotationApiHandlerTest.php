@@ -497,7 +497,7 @@ class TextAnnotationApiHandlerTest extends TestCase
     #[Test]
     public function makeTransContainsUpdateTermTranslationForExistingWid(): void
     {
-        // WoID won't exist in test DB, so wid check will fail, but test the path
+        // id won't exist in test DB, so wid check will fail, but test the path
         $result = $this->handler->makeTrans(0, 999999, '', 'hello', 1);
 
         // Since the wid does not exist in DB, widset check will fall through

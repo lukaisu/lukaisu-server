@@ -148,7 +148,7 @@ describe('word_upload.ts', () => {
       it('fetches terms from API', async () => {
         const mockResponse = {
           navigation: { current_page: 1, total_pages: 3 },
-          terms: [{ WoID: 1, WoText: 'test', WoTranslation: 'test', WoRomanization: '', WoSentence: '', WoStatus: 1, SentOK: 1, taglist: '' }]
+          terms: [{ id: 1, text: 'test', translation: 'test', romanization: '', sentence: '', status: 1, SentOK: 1, taglist: '' }]
         };
 
         global.fetch = vi.fn(() =>
@@ -246,12 +246,12 @@ describe('word_upload.ts', () => {
       it('formats term with all fields', () => {
         const component = wordUploadResultApp({ lastUpdate: '', rtl: false, recno: 1 });
         const term = {
-          WoID: 1,
-          WoText: 'hello',
-          WoTranslation: 'hola',
-          WoRomanization: 'helo',
-          WoSentence: 'Hello world',
-          WoStatus: 1,
+          id: 1,
+          text: 'hello',
+          translation: 'hola',
+          romanization: 'helo',
+          sentence: 'Hello world',
+          status: 1,
           SentOK: 1,
           taglist: 'tag1, tag2'
         };
@@ -268,12 +268,12 @@ describe('word_upload.ts', () => {
       it('applies RTL direction when enabled', () => {
         const component = wordUploadResultApp({ lastUpdate: '', rtl: true, recno: 1 });
         const term = {
-          WoID: 1,
-          WoText: 'مرحبا',
-          WoTranslation: 'Hello',
-          WoRomanization: '',
-          WoSentence: '',
-          WoStatus: 1,
+          id: 1,
+          text: 'مرحبا',
+          translation: 'Hello',
+          romanization: '',
+          sentence: '',
+          status: 1,
           SentOK: 0,
           taglist: ''
         };
@@ -286,12 +286,12 @@ describe('word_upload.ts', () => {
       it('shows asterisk for empty romanization', () => {
         const component = wordUploadResultApp({ lastUpdate: '', rtl: false, recno: 1 });
         const term = {
-          WoID: 1,
-          WoText: 'test',
-          WoTranslation: 'test',
-          WoRomanization: '',
-          WoSentence: '',
-          WoStatus: 1,
+          id: 1,
+          text: 'test',
+          translation: 'test',
+          romanization: '',
+          sentence: '',
+          status: 1,
           SentOK: 0,
           taglist: ''
         };
@@ -304,12 +304,12 @@ describe('word_upload.ts', () => {
       it('shows check icon for valid sentence', () => {
         const component = wordUploadResultApp({ lastUpdate: '', rtl: false, recno: 1 });
         const term = {
-          WoID: 1,
-          WoText: 'test',
-          WoTranslation: 'test',
-          WoRomanization: '',
-          WoSentence: 'Test sentence',
-          WoStatus: 1,
+          id: 1,
+          text: 'test',
+          translation: 'test',
+          romanization: '',
+          sentence: 'Test sentence',
+          status: 1,
           SentOK: 1,
           taglist: ''
         };
@@ -322,12 +322,12 @@ describe('word_upload.ts', () => {
       it('shows x icon for invalid sentence', () => {
         const component = wordUploadResultApp({ lastUpdate: '', rtl: false, recno: 1 });
         const term = {
-          WoID: 1,
-          WoText: 'test',
-          WoTranslation: 'test',
-          WoRomanization: '',
-          WoSentence: '',
-          WoStatus: 1,
+          id: 1,
+          text: 'test',
+          translation: 'test',
+          romanization: '',
+          sentence: '',
+          status: 1,
           SentOK: 0,
           taglist: ''
         };

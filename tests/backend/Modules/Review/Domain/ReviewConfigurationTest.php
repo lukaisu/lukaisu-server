@@ -69,7 +69,7 @@ class ReviewConfigurationTest extends TestCase
 
     public function testConstructorWithStringSelection(): void
     {
-        $sql = 'SELECT * FROM words WHERE WoStatus = 1';
+        $sql = 'SELECT * FROM words WHERE status = 1';
         $config = new ReviewConfiguration('raw_sql', $sql);
 
         $this->assertEquals($sql, $config->selection);
@@ -256,7 +256,7 @@ class ReviewConfigurationTest extends TestCase
         $sql = $config->toSqlProjectionPrepared($params);
 
         $this->assertStringContainsString('words', $sql);
-        $this->assertStringContainsString('WoLgID = ?', $sql);
+        $this->assertStringContainsString('language_id = ?', $sql);
         $this->assertEquals([42], $params);
     }
 
@@ -279,7 +279,7 @@ class ReviewConfigurationTest extends TestCase
         $sql = $config->toSqlProjectionPrepared($params);
 
         $this->assertStringContainsString('words', $sql);
-        $this->assertStringContainsString('WoID IN (?,?,?)', $sql);
+        $this->assertStringContainsString('id IN (?,?,?)', $sql);
         $this->assertEquals([10, 20, 30], $params);
     }
 

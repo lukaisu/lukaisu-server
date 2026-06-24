@@ -91,9 +91,9 @@ class ReviewApiHandler implements ApiRoutableInterface
         }
 
         // Extract typed values from word record
-        $woText = is_string($wordRecord['WoText']) ? $wordRecord['WoText'] : '';
-        $woTextLC = is_string($wordRecord['WoTextLC']) ? $wordRecord['WoTextLC'] : '';
-        $woID = is_numeric($wordRecord['WoID']) ? (int)$wordRecord['WoID'] : 0;
+        $woText = is_string($wordRecord['text']) ? $wordRecord['text'] : '';
+        $woTextLC = is_string($wordRecord['text_lc']) ? $wordRecord['text_lc'] : '';
+        $woID = is_numeric($wordRecord['id']) ? (int)$wordRecord['id'] : 0;
 
         // Check context annotation settings
         $settings = $this->reviewFacade->getTableReviewSettings();
@@ -140,7 +140,7 @@ class ReviewApiHandler implements ApiRoutableInterface
         );
 
         return [
-            "term_id" => is_numeric($wordRecord['WoID']) ? (int) $wordRecord['WoID'] : 0,
+            "term_id" => is_numeric($wordRecord['id']) ? (int) $wordRecord['id'] : 0,
             "solution" => $solution,
             "term_text" => $save,
             "group" => $htmlSentence
@@ -175,7 +175,7 @@ class ReviewApiHandler implements ApiRoutableInterface
     ): array {
         $baseType = $this->reviewFacade->getBaseReviewType($testType);
         $wordMode = $this->reviewFacade->isWordMode($testType);
-        $wordText = is_string($wordRecord['WoText']) ? $wordRecord['WoText'] : '';
+        $wordText = is_string($wordRecord['text']) ? $wordRecord['text'] : '';
 
         // Extract the word from sentence (marked with {})
         if (preg_match('/\{([^}]+)\}/', $sentence, $matches)) {
@@ -206,7 +206,7 @@ class ReviewApiHandler implements ApiRoutableInterface
                 if ($wordMode) {
                     // Type 5: Translation → Term (word mode) - show translation
                     /** @var mixed $translationRaw */
-                    $translationRaw = $wordRecord['WoTranslation'] ?? '';
+                    $translationRaw = $wordRecord['translation'] ?? '';
                     $translation = is_string($translationRaw) ? $translationRaw : '';
                     $displayHtml = '<span class="word-test">'
                         . htmlspecialchars($translation, ENT_QUOTES, 'UTF-8')
@@ -675,7 +675,7 @@ class ReviewApiHandler implements ApiRoutableInterface
         foreach ($wordsResult as $word) {
             // Format sentence with highlighted word
             $sent = htmlspecialchars(
-                ExportService::replaceTabNewline((string)($word['WoSentence'] ?? '')),
+                ExportService::replaceTabNewline((string)($word['sentence'] ?? '')),
                 ENT_QUOTES,
                 'UTF-8'
             );
@@ -690,13 +690,13 @@ class ReviewApiHandler implements ApiRoutableInterface
             );
 
             $words[] = [
-                'id' => (int)$word['WoID'],
-                'text' => $word['WoText'] ?? '',
-                'translation' => $word['WoTranslation'] ?? '',
-                'romanization' => $word['WoRomanization'] ?? '',
+                'id' => (int)$word['id'],
+                'text' => $word['text'] ?? '',
+                'translation' => $word['translation'] ?? '',
+                'romanization' => $word['romanization'] ?? '',
                 'sentence' => $sent,
                 'sentenceHtml' => $sentenceHtml,
-                'status' => (int)($word['WoStatus'] ?? 1),
+                'status' => (int)($word['status'] ?? 1),
                 'score' => (int)($word['Score'] ?? 0)
             ];
         }

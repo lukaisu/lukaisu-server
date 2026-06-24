@@ -1380,8 +1380,8 @@ class DatabaseConnectTest extends TestCase
         // Test insert variable mode (column names)
         $result = TermStatusService::makeScoreRandomInsertUpdate('iv');
         $this->assertIsString($result);
-        $this->assertStringContainsString('WoTodayScore', $result);
-        $this->assertStringContainsString('WoRandom', $result);
+        $this->assertStringContainsString('today_score', $result);
+        $this->assertStringContainsString('random', $result);
 
         // Test insert data mode (values)
         $result = TermStatusService::makeScoreRandomInsertUpdate('id');
@@ -1391,7 +1391,7 @@ class DatabaseConnectTest extends TestCase
         // Test update mode
         $result = TermStatusService::makeScoreRandomInsertUpdate('u');
         $this->assertIsString($result);
-        $this->assertStringContainsString('WoTodayScore', $result);
+        $this->assertStringContainsString('today_score', $result);
 
         // Test with invalid mode (should return empty string)
         $result = TermStatusService::makeScoreRandomInsertUpdate('x');

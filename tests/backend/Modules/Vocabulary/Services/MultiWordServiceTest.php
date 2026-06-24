@@ -78,7 +78,7 @@ class MultiWordServiceTest extends TestCase
         }
 
         // Clean up test words
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE language_id = " . self::$testLangId);
         // Clean up test language
         Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . self::$testLangId);
     }
@@ -96,7 +96,7 @@ class MultiWordServiceTest extends TestCase
         }
 
         // Clean up test words after each test
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoText LIKE 'test%'");
+        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE text LIKE 'test%'");
     }
 
     // ===== createMultiWord() tests =====
@@ -130,9 +130,9 @@ class MultiWordServiceTest extends TestCase
         // Verify word was created
         $word = $this->crudService->findById($result['id']);
         $this->assertNotNull($word);
-        $this->assertEquals('test multi word', $word['WoTextLC']);
-        $this->assertEquals('1', $word['WoStatus']);
-        $this->assertEquals('3', $word['WoWordCount']);
+        $this->assertEquals('test multi word', $word['text_lc']);
+        $this->assertEquals('1', $word['status']);
+        $this->assertEquals('3', $word['word_count']);
     }
 
     // ===== updateMultiWord() tests =====
@@ -175,8 +175,8 @@ class MultiWordServiceTest extends TestCase
 
         // Verify update
         $word = $this->crudService->findById($wid);
-        $this->assertEquals('updated translation', $word['WoTranslation']);
-        $this->assertEquals('2', $word['WoStatus']);
+        $this->assertEquals('updated translation', $word['translation']);
+        $this->assertEquals('2', $word['status']);
     }
 
     // ===== getMultiWordData() tests =====

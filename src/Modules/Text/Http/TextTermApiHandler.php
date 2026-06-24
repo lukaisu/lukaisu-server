@@ -77,22 +77,22 @@ class TextTermApiHandler
             ->select(
                 [
                 'CASE WHEN `Ti2WordCount`>0 THEN Ti2WordCount ELSE 1 END AS Code',
-                'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE `WoText` END AS TiText',
-                'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN LOWER(Ti2Text) ELSE `WoTextLC` END AS TiTextLC',
+                'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE `text` END AS TiText',
+                'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN LOWER(Ti2Text) ELSE `text_lc` END AS TiTextLC',
                 'Ti2Order',
                 'Ti2SeID',
                 'CASE WHEN `Ti2WordCount`>0 THEN 0 ELSE 1 END AS TiIsNotWord',
                 'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN CHAR_LENGTH(Ti2Text) ' .
-                    'ELSE CHAR_LENGTH(`WoTextLC`) END AS TiTextLength',
-                'WoID',
-                'WoText',
-                'WoStatus',
-                'WoTranslation',
-                'WoRomanization',
-                'WoNotes'
+                    'ELSE CHAR_LENGTH(`text_lc`) END AS TiTextLength',
+                'id',
+                'text',
+                'status',
+                'translation',
+                'romanization',
+                'notes'
                 ]
             )
-            ->leftJoin('words', 'word_occurrences.Ti2WoID', '=', 'words.WoID')
+            ->leftJoin('words', 'word_occurrences.Ti2WoID', '=', 'words.id')
             ->where('word_occurrences.Ti2TxID', '=', $textId)
             ->orderBy('Ti2Order', 'ASC')
             ->orderBy('Ti2WordCount', 'DESC')
@@ -114,9 +114,9 @@ class TextTermApiHandler
                         'text' => $record['TiText'],
                         'remaining' => $code,
                         'startPos' => $order,
-                        'wordId' => isset($record['WoID']) ? (int)$record['WoID'] : null,
-                        'status' => (int)($record['WoStatus'] ?? 0),
-                        'translation' => ExportService::replaceTabNewline((string)($record['WoTranslation'] ?? '')),
+                        'wordId' => isset($record['id']) ? (int)$record['id'] : null,
+                        'status' => (int)($record['status'] ?? 0),
+                        'translation' => ExportService::replaceTabNewline((string)($record['translation'] ?? '')),
                     ];
                 }
             }
@@ -136,16 +136,16 @@ class TextTermApiHandler
             ];
 
             if ($isNotWord === 0) {
-                if (isset($record['WoID'])) {
-                    $wordData['wordId'] = (int)$record['WoID'];
-                    $wordData['status'] = (int)$record['WoStatus'];
+                if (isset($record['id'])) {
+                    $wordData['wordId'] = (int)$record['id'];
+                    $wordData['status'] = (int)$record['status'];
                     $wordData['translation'] = ExportService::replaceTabNewline(
-                        (string)($record['WoTranslation'] ?? '')
+                        (string)($record['translation'] ?? '')
                     );
-                    $wordData['romanization'] = (string)($record['WoRomanization'] ?? '');
-                    $wordData['notes'] = (string)($record['WoNotes'] ?? '');
+                    $wordData['romanization'] = (string)($record['romanization'] ?? '');
+                    $wordData['notes'] = (string)($record['notes'] ?? '');
 
-                    $tags = TagsFacade::getWordTagList((int)$record['WoID'], false);
+                    $tags = TagsFacade::getWordTagList((int)$record['id'], false);
                     if ($tags) {
                         $wordData['tags'] = $tags;
                     }
@@ -288,8 +288,8 @@ class TextTermApiHandler
     {
         $translations = array();
         $alltrans = (string) QueryBuilder::table('words')
-            ->where('WoID', '=', $wordId)
-            ->valuePrepared('WoTranslation');
+            ->where('id', '=', $wordId)
+            ->valuePrepared('translation');
         $transarr = preg_split('/[' . StringUtils::getSeparators() . ']/u', $alltrans);
         if ($transarr === false) {
             return $translations;
@@ -372,7 +372,7 @@ class TextTermApiHandler
         if (count($vals) > 2 && ctype_digit($vals[2])) {
             $wid = (int)$vals[2];
             $tempWid = QueryBuilder::table('words')
-                ->where('WoID', '=', $wid)
+                ->where('id', '=', $wid)
                 ->countPrepared();
             if ($tempWid < 1) {
                 $wid = null;

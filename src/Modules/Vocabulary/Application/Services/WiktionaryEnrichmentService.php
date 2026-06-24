@@ -31,21 +31,21 @@ class WiktionaryEnrichmentService
     /**
      * Get the next batch of unenriched words for a language.
      *
-     * @return list<array{WoID: int, WoText: string}>
+     * @return list<array{id: int, text: string}>
      */
     public function getUnenrichedWords(int $langId, int $batchSize = self::BATCH_SIZE): array
     {
         $bindings = [$langId];
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $bindings[] = $batchSize;
-        $sql = "SELECT WoID, WoText FROM words
-                WHERE WoLgID = ?
-                AND (WoTranslation IS NULL OR WoTranslation = '' OR WoTranslation = '*')
+        $sql = "SELECT id, text FROM words
+                WHERE language_id = ?
+                AND (translation IS NULL OR translation = '' OR translation = '*')
                 $userScope
-                ORDER BY WoID ASC
+                ORDER BY id ASC
                 LIMIT ?";
 
-        /** @var list<array{WoID: int, WoText: string}> */
+        /** @var list<array{id: int, text: string}> */
         return Connection::preparedFetchAll($sql, $bindings);
     }
 
@@ -57,8 +57,8 @@ class WiktionaryEnrichmentService
         $bindings = [$langId];
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $sql = "SELECT COUNT(*) as value FROM words
-                WHERE WoLgID = ?
-                AND (WoTranslation IS NULL OR WoTranslation = '' OR WoTranslation = '*')
+                WHERE language_id = ?
+                AND (translation IS NULL OR translation = '' OR translation = '*')
                 $userScope";
 
         /** @var int|string|null $result */
@@ -74,7 +74,7 @@ class WiktionaryEnrichmentService
         $bindings = [$langId];
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $sql = "SELECT COUNT(*) as value FROM words
-                WHERE WoLgID = ? $userScope";
+                WHERE language_id = ? $userScope";
 
         /** @var int|string|null $result */
         $result = Connection::preparedFetchValue($sql, $bindings);
@@ -116,10 +116,10 @@ class WiktionaryEnrichmentService
         $warning = '';
 
         foreach ($words as $word) {
-            $translation = $this->fetchKaikkiTranslation($word['WoText'], $kaikkiName);
+            $translation = $this->fetchKaikkiTranslation($word['text'], $kaikkiName);
 
             if ($translation !== null) {
-                $this->updateTranslation($word['WoID'], $translation);
+                $this->updateTranslation($word['id'], $translation);
                 $enriched++;
                 $consecutiveFailures = 0;
             } else {
@@ -180,13 +180,13 @@ class WiktionaryEnrichmentService
 
         foreach ($words as $word) {
             $definition = $this->fetchWiktionaryDefinition(
-                $word['WoText'],
+                $word['text'],
                 $wiktCode,
                 $kaikkiName
             );
 
             if ($definition !== null) {
-                $this->updateTranslation($word['WoID'], $definition);
+                $this->updateTranslation($word['id'], $definition);
                 $enriched++;
                 $consecutiveFailures = 0;
             } else {
@@ -469,7 +469,7 @@ class WiktionaryEnrichmentService
     private function updateTranslation(int $wordId, string $translation): void
     {
         Connection::preparedExecute(
-            "UPDATE words SET WoTranslation = ? WHERE WoID = ?",
+            "UPDATE words SET translation = ? WHERE id = ?",
             [$translation, $wordId]
         );
     }

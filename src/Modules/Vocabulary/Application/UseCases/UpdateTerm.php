@@ -98,22 +98,22 @@ class UpdateTerm
     /**
      * Execute and return result array (backward compatible with WordService).
      *
-     * @param array $data Update data array with keys like WoID, WoStatus, etc.
+     * @param array $data Update data array with keys like id, status, etc.
      *
      * @return array{id: int, message: string, success: bool}
      */
     public function executeFromArray(array $data): array
     {
         try {
-            $termId = (int) ($data['WoID'] ?? 0);
+            $termId = (int) ($data['id'] ?? 0);
 
             $term = $this->execute(
                 $termId,
-                isset($data['WoStatus']) ? (int) $data['WoStatus'] : null,
-                isset($data['WoTranslation']) ? (string)$data['WoTranslation'] : null,
-                isset($data['WoSentence']) ? (string)$data['WoSentence'] : null,
-                isset($data['WoNotes']) ? (string)$data['WoNotes'] : null,
-                isset($data['WoRomanization']) ? (string)$data['WoRomanization'] : null
+                isset($data['status']) ? (int) $data['status'] : null,
+                isset($data['translation']) ? (string)$data['translation'] : null,
+                isset($data['sentence']) ? (string)$data['sentence'] : null,
+                isset($data['notes']) ? (string)$data['notes'] : null,
+                isset($data['romanization']) ? (string)$data['romanization'] : null
             );
 
             return [

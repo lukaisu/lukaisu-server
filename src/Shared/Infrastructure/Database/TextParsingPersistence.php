@@ -197,9 +197,9 @@ class TextParsingPersistence
         $bindings = [$lid];
         $rows = Connection::preparedFetchAll(
             "SELECT count(`TiOrder`) cnt, if(0=TiWordCount,0,1) as len,
-            LOWER(TiText) as word, WoTranslation
+            LOWER(TiText) as word, translation
             FROM temp_word_occurrences
-            LEFT JOIN words ON lower(TiText)=WoTextLC AND WoLgID=?"
+            LEFT JOIN words ON lower(TiText)=text_lc AND language_id=?"
             . UserScopedQuery::forTablePrepared('words', $bindings, '')
             . " GROUP BY lower(TiText)",
             $bindings
@@ -209,7 +209,7 @@ class TextParsingPersistence
                 $wo[] = array(
                     \htmlspecialchars((string) ($record['word'] ?? ''), ENT_QUOTES, 'UTF-8'),
                     $record['cnt'],
-                    \htmlspecialchars((string) ($record['WoTranslation'] ?? ''), ENT_QUOTES, 'UTF-8')
+                    \htmlspecialchars((string) ($record['translation'] ?? ''), ENT_QUOTES, 'UTF-8')
                 );
             } else {
                 $nw[] = array(
@@ -296,27 +296,27 @@ class TextParsingPersistence
         // STEP 2: Insert text items. TiSeID and tempexprs.sent now equal actual SeID.
         if ($hasmultiword) {
             // Build SQL and bindings in lockstep. Each forTablePrepared() call
-            // both appends " AND WoUsID = ?" to the SQL and pushes $userId
+            // both appends " AND user_id = ?" to the SQL and pushes $userId
             // onto $bindings, so the bindings stay in left-to-right placeholder
             // order even with two user-scope injections inside the UNION.
             $bindings = [$lid, $tid];
             $sql = "INSERT INTO word_occurrences (
                 Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text
-            ) SELECT WoID, ?, ?, sent, TiOrder - (2*(n-1)) TiOrder,
+            ) SELECT id, ?, ?, sent, TiOrder - (2*(n-1)) TiOrder,
             n TiWordCount, word
             FROM tempexprs
             JOIN words
-            ON WoTextLC = lword AND WoWordCount = n"
+            ON text_lc = lword AND word_count = n"
                 . UserScopedQuery::forTablePrepared('words', $bindings, '')
-                . " WHERE lword IS NOT NULL AND WoLgID = ?";
+                . " WHERE lword IS NOT NULL AND language_id = ?";
             $bindings[] = $lid;
             $bindings[] = $lid;
             $bindings[] = $tid;
             $sql .= " UNION ALL
-            SELECT WoID, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
+            SELECT id, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
             FROM temp_word_occurrences
             LEFT JOIN words
-            ON LOWER(TiText) = WoTextLC AND TiWordCount=1 AND WoLgID = ?";
+            ON LOWER(TiText) = text_lc AND TiWordCount=1 AND language_id = ?";
             $bindings[] = $lid;
             $sql .= UserScopedQuery::forTablePrepared('words', $bindings, '')
                 . " ORDER BY TiOrder, TiWordCount";
@@ -330,10 +330,10 @@ class TextParsingPersistence
                 "INSERT INTO word_occurrences (
                     Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text
                 )
-                SELECT WoID, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
+                SELECT id, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
                 FROM temp_word_occurrences
                 LEFT JOIN words
-                ON LOWER(TiText) = WoTextLC AND TiWordCount=1 AND WoLgID = ?"
+                ON LOWER(TiText) = text_lc AND TiWordCount=1 AND language_id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings, '')
                 . " ORDER BY TiOrder, TiWordCount",
                 $bindings
@@ -356,21 +356,21 @@ class TextParsingPersistence
         if ($multiwords) {
             $bindings = [$lid];
             $rows = Connection::preparedFetchAll(
-                "SELECT COUNT(WoID) cnt, n as len,
-                LOWER(WoText) AS word, WoTranslation
+                "SELECT COUNT(id) cnt, n as len,
+                LOWER(text) AS word, translation
                 FROM tempexprs
                 JOIN words
-                ON WoTextLC = lword AND WoWordCount = n"
+                ON text_lc = lword AND word_count = n"
                 . UserScopedQuery::forTablePrepared('words', $bindings, '')
-                . " WHERE lword IS NOT NULL AND WoLgID = ?
-                GROUP BY WoID ORDER BY WoTextLC",
+                . " WHERE lword IS NOT NULL AND language_id = ?
+                GROUP BY id ORDER BY text_lc",
                 $bindings
             );
             foreach ($rows as $record) {
                 $mw[] = array(
                     htmlspecialchars((string)($record['word'] ?? ''), ENT_QUOTES, 'UTF-8'),
                     $record['cnt'],
-                    htmlspecialchars((string)($record['WoTranslation'] ?? ''), ENT_QUOTES, 'UTF-8')
+                    htmlspecialchars((string)($record['translation'] ?? ''), ENT_QUOTES, 'UTF-8')
                 );
             }
         }
@@ -396,13 +396,13 @@ class TextParsingPersistence
     {
         $wl = [];
         $rows = QueryBuilder::table('words')
-            ->select(['DISTINCT(WoWordCount) as WoWordCount'])
-            ->where('WoLgID', '=', $lid)
-            ->where('WoWordCount', '>', 1)
+            ->select(['DISTINCT(word_count) as word_count'])
+            ->where('language_id', '=', $lid)
+            ->where('word_count', '>', 1)
             ->getPrepared();
 
         foreach ($rows as $record) {
-            $wl[] = (int)$record['WoWordCount'];
+            $wl[] = (int)$record['word_count'];
         }
 
         return $wl;

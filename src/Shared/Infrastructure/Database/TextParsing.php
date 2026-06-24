@@ -192,9 +192,9 @@ class TextParsing
         $bindings = [$lid];
         $rows = Connection::preparedFetchAll(
             "SELECT COUNT(`TiOrder`) AS cnt, IF(0=TiWordCount,0,1) AS len,
-            LOWER(TiText) AS word, WoTranslation
+            LOWER(TiText) AS word, translation
             FROM temp_word_occurrences
-            LEFT JOIN words ON LOWER(TiText)=WoTextLC AND WoLgID=?"
+            LEFT JOIN words ON LOWER(TiText)=text_lc AND language_id=?"
             . UserScopedQuery::forTablePrepared('words', $bindings, '')
             . " GROUP BY LOWER(TiText)",
             $bindings
@@ -207,7 +207,7 @@ class TextParsing
             if ($record['len'] == 1) {
                 $totalWords += (int) $record['cnt'];
                 // Word is unknown if it has no translation
-                if (empty($record['WoTranslation'])) {
+                if (empty($record['translation'])) {
                     $unknownWords += (int) $record['cnt'];
                 }
             }

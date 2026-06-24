@@ -30,18 +30,18 @@ use Lukaisu\Shared\Infrastructure\Globals;
  * Usage:
  * ```php
  * // Get user scope condition for WHERE clause (for raw SQL)
- * $sql = "SELECT * FROM words WHERE WoLgID = 1"
+ * $sql = "SELECT * FROM words WHERE language_id = 1"
  *      . UserScopedQuery::forTable('words');
  *
  * // For prepared statements
- * $bindings = [1]; // WoLgID = 1
- * $sql = "SELECT * FROM words WHERE WoLgID = ?"
+ * $bindings = [1]; // language_id = 1
+ * $sql = "SELECT * FROM words WHERE language_id = ?"
  *      . UserScopedQuery::forTablePrepared('words', $bindings);
  *
  * // Get user_id for INSERT (when using raw SQL)
  * $userId = UserScopedQuery::getUserIdForInsert('words');
  * if ($userId !== null) {
- *     $data['WoUsID'] = $userId;
+ *     $data['user_id'] = $userId;
  * }
  * ```
  *
@@ -59,7 +59,7 @@ class UserScopedQuery
     private const USER_SCOPED_TABLES = [
         'languages' => 'LgUsID',
         'texts' => 'TxUsID',
-        'words' => 'WoUsID',
+        'words' => 'user_id',
         'tags' => 'TgUsID',
         'text_tags' => 'T2UsID',
         'news_feeds' => 'user_id',
@@ -119,12 +119,12 @@ class UserScopedQuery
     /**
      * Get INSERT column fragment for user scope.
      *
-     * Returns a SQL fragment like ", WoUsID" to append to INSERT column list
+     * Returns a SQL fragment like ", user_id" to append to INSERT column list
      * when user scope should be applied, or empty string otherwise.
      *
      * Usage:
      * ```php
-     * $sql = "INSERT INTO words (WoLgID, WoText" . UserScopedQuery::insertColumn('words') .
+     * $sql = "INSERT INTO words (language_id, text" . UserScopedQuery::insertColumn('words') .
      *         ") VALUES (?, ?" . UserScopedQuery::insertValuePrepared('words', $bindings) . ")";
      * ```
      *
@@ -214,7 +214,7 @@ class UserScopedQuery
     /**
      * Get WHERE condition for user scope filtering.
      *
-     * Returns a SQL fragment like " AND WoUsID = 1" when user scope
+     * Returns a SQL fragment like " AND user_id = 1" when user scope
      * should be applied, or empty string otherwise.
      *
      * @param string $tableName    The table name (without prefix)
@@ -246,7 +246,7 @@ class UserScopedQuery
     /**
      * Get WHERE condition for user scope filtering (prepared statement version).
      *
-     * Returns a SQL fragment like " AND WoUsID = ?" and adds the user ID
+     * Returns a SQL fragment like " AND user_id = ?" and adds the user ID
      * to the provided bindings array.
      *
      * @param string             $tableName    The table name (without prefix)
@@ -284,7 +284,7 @@ class UserScopedQuery
     /**
      * Get a standalone WHERE clause for user scope.
      *
-     * Returns "WHERE WoUsID = 1" when applicable, empty string otherwise.
+     * Returns "WHERE user_id = 1" when applicable, empty string otherwise.
      * Use this when you need a WHERE clause that only contains user scope.
      *
      * @param string $tableName The table name (without prefix)

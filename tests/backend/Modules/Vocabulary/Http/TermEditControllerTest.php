@@ -489,8 +489,8 @@ class TermEditControllerTest extends TestCase
         $result = $method->invoke($this->controller);
 
         $expectedKeys = [
-            'WoID', 'WoLgID', 'WoText', 'WoTextLC', 'WoStatus',
-            'WoOldStatus', 'WoTranslation', 'WoRomanization', 'WoSentence',
+            'id', 'language_id', 'text', 'text_lc', 'status',
+            'WoOldStatus', 'translation', 'romanization', 'sentence',
             'tid', 'ord', 'len',
         ];
 
@@ -516,7 +516,7 @@ class TermEditControllerTest extends TestCase
 
         $result = $method->invoke($this->controller);
 
-        $this->assertSame(0, $result['WoLgID']);
+        $this->assertSame(0, $result['language_id']);
     }
 
     // =========================================================================

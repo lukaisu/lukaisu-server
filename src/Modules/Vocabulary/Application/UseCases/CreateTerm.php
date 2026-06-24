@@ -136,7 +136,7 @@ class CreateTerm
     /**
      * Execute and return result array (backward compatible with WordService).
      *
-     * @param array $data Word data array with keys like WoLgID, WoText, etc.
+     * @param array $data Word data array with keys like language_id, text, etc.
      *
      * @return array{id: int, message: string, success: bool, textlc: string, text: string}
      */
@@ -144,14 +144,14 @@ class CreateTerm
     {
         try {
             $term = $this->execute(
-                (int) ($data['WoLgID'] ?? 0),
-                (string) ($data['WoText'] ?? ''),
-                (int) ($data['WoStatus'] ?? 1),
-                (string) ($data['WoTranslation'] ?? ''),
-                (string) ($data['WoSentence'] ?? ''),
-                (string) ($data['WoNotes'] ?? ''),
-                (string) ($data['WoRomanization'] ?? ''),
-                (int) ($data['WoWordCount'] ?? 1)
+                (int) ($data['language_id'] ?? 0),
+                (string) ($data['text'] ?? ''),
+                (int) ($data['status'] ?? 1),
+                (string) ($data['translation'] ?? ''),
+                (string) ($data['sentence'] ?? ''),
+                (string) ($data['notes'] ?? ''),
+                (string) ($data['romanization'] ?? ''),
+                (int) ($data['word_count'] ?? 1)
             );
 
             return [

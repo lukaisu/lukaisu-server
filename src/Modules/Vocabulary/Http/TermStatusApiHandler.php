@@ -215,8 +215,8 @@ class TermStatusApiHandler
         $bindings = [$status, $wid];
         return Connection::preparedExecute(
             "UPDATE words
-            SET WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate}
-            WHERE WoID = ?"
+            SET status = ?, status_changed_at = NOW(), {$scoreUpdate}
+            WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             [$status, $wid]
         );
@@ -266,9 +266,9 @@ class TermStatusApiHandler
             if ($m1 == 1) {
                 /** @var int|null $fetchedStatus */
                 $fetchedStatus = QueryBuilder::table('words')
-                    ->select(['WoStatus'])
-                    ->where('WoID', '=', $wid)
-                    ->valuePrepared('WoStatus');
+                    ->select(['status'])
+                    ->where('id', '=', $wid)
+                    ->valuePrepared('status');
                 if (!isset($fetchedStatus)) {
                     return null;
                 }
@@ -292,9 +292,9 @@ class TermStatusApiHandler
     {
         /** @var int|null $fetchedStatus */
         $fetchedStatus = QueryBuilder::table('words')
-            ->select(['WoStatus'])
-            ->where('WoID', '=', $wid)
-            ->valuePrepared('WoStatus');
+            ->select(['status'])
+            ->where('id', '=', $wid)
+            ->valuePrepared('status');
 
         if (!isset($fetchedStatus)) {
             return '';

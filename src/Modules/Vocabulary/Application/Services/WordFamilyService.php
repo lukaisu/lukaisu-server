@@ -72,24 +72,24 @@ class WordFamilyService
         $bindings[] = $limit;
 
         $groups = Connection::preparedFetchAll(
-            "SELECT WoLemma, WoLemmaLC, COUNT(*) as family_size,
-                    GROUP_CONCAT(WoText ORDER BY WoText SEPARATOR ', ') as terms
+            "SELECT lemma, lemma_lc, COUNT(*) as family_size,
+                    GROUP_CONCAT(text ORDER BY text SEPARATOR ', ') as terms
              FROM words
-             WHERE WoLgID = ?
-               AND WoLemmaLC IS NOT NULL
-               AND WoLemmaLC != ''{$userScope}
-             GROUP BY WoLemmaLC
+             WHERE language_id = ?
+               AND lemma_lc IS NOT NULL
+               AND lemma_lc != ''{$userScope}
+             GROUP BY lemma_lc
              HAVING family_size > 1
-             ORDER BY family_size DESC, WoLemma
+             ORDER BY family_size DESC, lemma
              LIMIT ?",
             $bindings
         );
 
         $result = [];
         foreach ($groups as $group) {
-            $lemmaLc = (string) $group['WoLemmaLC'];
+            $lemmaLc = (string) $group['lemma_lc'];
             $result[$lemmaLc] = [
-                'lemma' => (string) $group['WoLemma'],
+                'lemma' => (string) $group['lemma'],
                 'count' => (int) $group['family_size'],
                 'terms' => explode(', ', (string) $group['terms']),
             ];
@@ -116,23 +116,23 @@ class WordFamilyService
         $bindings[] = $limit;
 
         $results = Connection::preparedFetchAll(
-            "SELECT w1.WoText as base_word, w1.WoTextLC as base_lc,
-                    GROUP_CONCAT(DISTINCT w2.WoText ORDER BY w2.WoText SEPARATOR ', ') as variants
+            "SELECT w1.text as base_word, w1.text_lc as base_lc,
+                    GROUP_CONCAT(DISTINCT w2.text ORDER BY w2.text SEPARATOR ', ') as variants
              FROM words w1
-             JOIN words w2 ON w2.WoLgID = w1.WoLgID
-                          AND w2.WoID != w1.WoID
-                          AND LEFT(w2.WoTextLC, CHAR_LENGTH(w1.WoTextLC)) = w1.WoTextLC
-                          AND CHAR_LENGTH(w2.WoTextLC) > CHAR_LENGTH(w1.WoTextLC)
-                          AND CHAR_LENGTH(w2.WoTextLC) <= CHAR_LENGTH(w1.WoTextLC) + 5
-             WHERE w1.WoLgID = ?
-               AND w1.WoWordCount = 1
-               AND w1.WoLemma IS NULL
-               AND w2.WoLemma IS NULL
-               AND w2.WoLgID = ?
-               AND w2.WoWordCount = 1{$userScope}
-             GROUP BY w1.WoID
-             HAVING COUNT(DISTINCT w2.WoID) >= 1
-             ORDER BY COUNT(DISTINCT w2.WoID) DESC
+             JOIN words w2 ON w2.language_id = w1.language_id
+                          AND w2.id != w1.id
+                          AND LEFT(w2.text_lc, CHAR_LENGTH(w1.text_lc)) = w1.text_lc
+                          AND CHAR_LENGTH(w2.text_lc) > CHAR_LENGTH(w1.text_lc)
+                          AND CHAR_LENGTH(w2.text_lc) <= CHAR_LENGTH(w1.text_lc) + 5
+             WHERE w1.language_id = ?
+               AND w1.word_count = 1
+               AND w1.lemma IS NULL
+               AND w2.lemma IS NULL
+               AND w2.language_id = ?
+               AND w2.word_count = 1{$userScope}
+             GROUP BY w1.id
+             HAVING COUNT(DISTINCT w2.id) >= 1
+             ORDER BY COUNT(DISTINCT w2.id) DESC
              LIMIT ?",
             $bindings
         );
@@ -162,7 +162,7 @@ class WordFamilyService
         // Get the term's lemma
         $bindings = [$termId];
         $term = Connection::preparedFetchOne(
-            "SELECT WoID, WoLemma, WoLemmaLC, WoLgID FROM words WHERE WoID = ?"
+            "SELECT id, lemma, lemma_lc, language_id FROM words WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
@@ -171,23 +171,23 @@ class WordFamilyService
             return null;
         }
 
-        $lemmaLc = (string) ($term['WoLemmaLC'] ?? '');
+        $lemmaLc = (string) ($term['lemma_lc'] ?? '');
         if ($lemmaLc === '') {
             // Term has no lemma, return just itself
             return $this->buildSingleTermFamily($termId);
         }
 
-        $languageId = (int) $term['WoLgID'];
+        $languageId = (int) $term['language_id'];
 
         // Get all family members
         $bindings = [$languageId, $lemmaLc];
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $members = Connection::preparedFetchAll(
-            "SELECT WoID, WoText, WoTextLC, WoLemma, WoTranslation, WoRomanization,
-                    WoStatus, WoStatusChanged, WoWordCount
+            "SELECT id, text, text_lc, lemma, translation, romanization,
+                    status, status_changed_at, word_count
              FROM words
-             WHERE WoLgID = ? AND WoLemmaLC = ?{$userScope}
-             ORDER BY WoWordCount ASC, WoStatus DESC, WoText ASC",
+             WHERE language_id = ? AND lemma_lc = ?{$userScope}
+             ORDER BY word_count ASC, status DESC, text ASC",
             $bindings
         );
 
@@ -196,24 +196,24 @@ class WordFamilyService
         $totalOccurrences = 0;
 
         foreach ($members as $member) {
-            $status = (int) $member['WoStatus'];
+            $status = (int) $member['status'];
             $statusCounts[$status]++;
 
             // Get occurrence count for this word
-            $occurrences = $this->getWordOccurrenceCount((int) $member['WoID']);
+            $occurrences = $this->getWordOccurrenceCount((int) $member['id']);
             $totalOccurrences += $occurrences;
 
             $terms[] = [
-                'id' => (int) $member['WoID'],
-                'text' => (string) $member['WoText'],
-                'textLc' => (string) $member['WoTextLC'],
-                'translation' => (string) ($member['WoTranslation'] ?? ''),
-                'romanization' => (string) ($member['WoRomanization'] ?? ''),
+                'id' => (int) $member['id'],
+                'text' => (string) $member['text'],
+                'textLc' => (string) $member['text_lc'],
+                'translation' => (string) ($member['translation'] ?? ''),
+                'romanization' => (string) ($member['romanization'] ?? ''),
                 'status' => $status,
-                'statusChanged' => (string) ($member['WoStatusChanged'] ?? ''),
-                'wordCount' => (int) $member['WoWordCount'],
+                'statusChanged' => (string) ($member['status_changed_at'] ?? ''),
+                'wordCount' => (int) $member['word_count'],
                 'occurrences' => $occurrences,
-                'isBaseForm' => mb_strtolower((string) $member['WoText'], 'UTF-8') === $lemmaLc,
+                'isBaseForm' => mb_strtolower((string) $member['text'], 'UTF-8') === $lemmaLc,
             ];
         }
 
@@ -224,7 +224,7 @@ class WordFamilyService
             : 0;
 
         return [
-            'lemma' => (string) ($term['WoLemma'] ?? ''),
+            'lemma' => (string) ($term['lemma'] ?? ''),
             'lemmaLc' => $lemmaLc,
             'langId' => $languageId,
             'terms' => $terms,
@@ -251,9 +251,9 @@ class WordFamilyService
     {
         $bindings = [$termId];
         $term = Connection::preparedFetchOne(
-            "SELECT WoID, WoText, WoTextLC, WoLemma, WoTranslation, WoRomanization,
-                    WoStatus, WoStatusChanged, WoWordCount, WoLgID
-             FROM words WHERE WoID = ?"
+            "SELECT id, text, text_lc, lemma, translation, romanization,
+                    status, status_changed_at, word_count, language_id
+             FROM words WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
@@ -263,21 +263,21 @@ class WordFamilyService
         }
 
         $occurrences = $this->getWordOccurrenceCount($termId);
-        $status = (int) $term['WoStatus'];
+        $status = (int) $term['status'];
 
         return [
-            'lemma' => (string) ($term['WoText'] ?? ''),
-            'lemmaLc' => (string) ($term['WoTextLC'] ?? ''),
-            'langId' => (int) $term['WoLgID'],
+            'lemma' => (string) ($term['text'] ?? ''),
+            'lemmaLc' => (string) ($term['text_lc'] ?? ''),
+            'langId' => (int) $term['language_id'],
             'terms' => [[
                 'id' => $termId,
-                'text' => (string) $term['WoText'],
-                'textLc' => (string) $term['WoTextLC'],
-                'translation' => (string) ($term['WoTranslation'] ?? ''),
-                'romanization' => (string) ($term['WoRomanization'] ?? ''),
+                'text' => (string) $term['text'],
+                'textLc' => (string) $term['text_lc'],
+                'translation' => (string) ($term['translation'] ?? ''),
+                'romanization' => (string) ($term['romanization'] ?? ''),
                 'status' => $status,
-                'statusChanged' => (string) ($term['WoStatusChanged'] ?? ''),
-                'wordCount' => (int) $term['WoWordCount'],
+                'statusChanged' => (string) ($term['status_changed_at'] ?? ''),
+                'wordCount' => (int) $term['word_count'],
                 'occurrences' => $occurrences,
                 'isBaseForm' => true,
             ]],
@@ -330,8 +330,8 @@ class WordFamilyService
         $bindings = [$status, $languageId, $lemmaLc];
 
         return Connection::preparedExecute(
-            "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW()
-             WHERE WoLgID = ? AND WoLemmaLC = ?"
+            "UPDATE words SET status = ?, status_changed_at = NOW()
+             WHERE language_id = ? AND lemma_lc = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
@@ -362,8 +362,8 @@ class WordFamilyService
         // Get total count of families
         $bindings = [$languageId];
         $total = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT WoLemmaLC) as cnt FROM words
-             WHERE WoLgID = ? AND WoLemmaLC IS NOT NULL AND WoLemmaLC != ''"
+            "SELECT COUNT(DISTINCT lemma_lc) as cnt FROM words
+             WHERE language_id = ? AND lemma_lc IS NOT NULL AND lemma_lc != ''"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
             'cnt'
@@ -373,7 +373,7 @@ class WordFamilyService
         $sortClause = match ($sortBy) {
             'count' => 'family_size ' . ($sortDir === 'desc' ? 'DESC' : 'ASC'),
             'status' => 'avg_status ' . ($sortDir === 'desc' ? 'DESC' : 'ASC'),
-            default => 'WoLemma ' . ($sortDir === 'desc' ? 'DESC' : 'ASC'),
+            default => 'lemma ' . ($sortDir === 'desc' ? 'DESC' : 'ASC'),
         };
 
         // Get families with aggregated data
@@ -382,16 +382,16 @@ class WordFamilyService
         $bindings[] = $perPage;
         $bindings[] = $offset;
         $rows = Connection::preparedFetchAll(
-            "SELECT WoLemma, WoLemmaLC,
+            "SELECT lemma, lemma_lc,
                     COUNT(*) as family_size,
-                    AVG(CASE WHEN WoStatus <= 5 THEN WoStatus ELSE NULL END) as avg_status,
-                    SUM(CASE WHEN WoStatus IN (5, 99) THEN 1 ELSE 0 END) as known_count,
-                    SUM(CASE WHEN WoStatus BETWEEN 1 AND 4 THEN 1 ELSE 0 END) as learning_count,
-                    GROUP_CONCAT(WoText ORDER BY WoWordCount, WoText SEPARATOR ', ') as forms
+                    AVG(CASE WHEN status <= 5 THEN status ELSE NULL END) as avg_status,
+                    SUM(CASE WHEN status IN (5, 99) THEN 1 ELSE 0 END) as known_count,
+                    SUM(CASE WHEN status BETWEEN 1 AND 4 THEN 1 ELSE 0 END) as learning_count,
+                    GROUP_CONCAT(text ORDER BY word_count, text SEPARATOR ', ') as forms
              FROM words
-             WHERE WoLgID = ? AND WoLemmaLC IS NOT NULL AND WoLemmaLC != ''{$userScope}
-             GROUP BY WoLemmaLC
-             ORDER BY {$sortClause}, WoLemma
+             WHERE language_id = ? AND lemma_lc IS NOT NULL AND lemma_lc != ''{$userScope}
+             GROUP BY lemma_lc
+             ORDER BY {$sortClause}, lemma
              LIMIT ? OFFSET ?",
             $bindings
         );
@@ -399,8 +399,8 @@ class WordFamilyService
         $families = [];
         foreach ($rows as $row) {
             $families[] = [
-                'lemma' => (string) $row['WoLemma'],
-                'lemmaLc' => (string) $row['WoLemmaLC'],
+                'lemma' => (string) $row['lemma'],
+                'lemmaLc' => (string) $row['lemma_lc'],
                 'formCount' => (int) $row['family_size'],
                 'averageStatus' => round((float) ($row['avg_status'] ?? 0), 1),
                 'knownCount' => (int) $row['known_count'],
@@ -440,8 +440,8 @@ class WordFamilyService
         $bindings = [$languageId, $lemmaLc];
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $term = Connection::preparedFetchOne(
-            "SELECT WoID FROM words
-             WHERE WoLgID = ? AND WoLemmaLC = ?{$userScope}
+            "SELECT id FROM words
+             WHERE language_id = ? AND lemma_lc = ?{$userScope}
              LIMIT 1",
             $bindings
         );
@@ -450,7 +450,7 @@ class WordFamilyService
             return null;
         }
 
-        return $this->getWordFamilyDetails((int) $term['WoID']);
+        return $this->getWordFamilyDetails((int) $term['id']);
     }
 
     /**
@@ -467,12 +467,12 @@ class WordFamilyService
     {
         $bindings = [$termId];
         $term = Connection::preparedFetchOne(
-            "SELECT WoLemmaLC, WoLgID FROM words WHERE WoID = ?"
+            "SELECT lemma_lc, language_id FROM words WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
 
-        if ($term === null || empty($term['WoLemmaLC'])) {
+        if ($term === null || empty($term['lemma_lc'])) {
             return [
                 'suggestion' => 'none',
                 'affected_count' => 0,
@@ -480,8 +480,8 @@ class WordFamilyService
             ];
         }
 
-        $lemmaLc = (string) $term['WoLemmaLC'];
-        $languageId = (int) $term['WoLgID'];
+        $lemmaLc = (string) $term['lemma_lc'];
+        $languageId = (int) $term['language_id'];
 
         // Find family members with lower status (for "known" updates)
         // or higher status (for "learning" updates)
@@ -489,9 +489,9 @@ class WordFamilyService
             // Marked as known - suggest updating forms with lower status
             $bindings = [$languageId, $lemmaLc, $termId];
             $affected = Connection::preparedFetchAll(
-                "SELECT WoID, WoText, WoStatus FROM words
-                 WHERE WoLgID = ? AND WoLemmaLC = ? AND WoID != ?
-                   AND WoStatus < 5 AND WoStatus != 98"
+                "SELECT id, text, status FROM words
+                 WHERE language_id = ? AND lemma_lc = ? AND id != ?
+                   AND status < 5 AND status != 98"
                 . UserScopedQuery::forTablePrepared('words', $bindings),
                 $bindings
             );
@@ -500,16 +500,16 @@ class WordFamilyService
                 return [
                     'suggestion' => 'mark_family_known',
                     'affected_count' => count($affected),
-                    'term_ids' => array_map(fn($r) => (int) $r['WoID'], $affected),
+                    'term_ids' => array_map(fn($r) => (int) $r['id'], $affected),
                 ];
             }
         } elseif ($newStatus >= 1 && $newStatus <= 4) {
             // Learning status - check if any forms are marked higher
             $bindings = [$languageId, $lemmaLc, $termId, $newStatus];
             $affected = Connection::preparedFetchAll(
-                "SELECT WoID, WoText, WoStatus FROM words
-                 WHERE WoLgID = ? AND WoLemmaLC = ? AND WoID != ?
-                   AND WoStatus > ? AND WoStatus NOT IN (98, 99)"
+                "SELECT id, text, status FROM words
+                 WHERE language_id = ? AND lemma_lc = ? AND id != ?
+                   AND status > ? AND status NOT IN (98, 99)"
                 . UserScopedQuery::forTablePrepared('words', $bindings),
                 $bindings
             );
@@ -518,7 +518,7 @@ class WordFamilyService
                 return [
                     'suggestion' => 'sync_family_status',
                     'affected_count' => count($affected),
-                    'term_ids' => array_map(fn($r) => (int) $r['WoID'], $affected),
+                    'term_ids' => array_map(fn($r) => (int) $r['id'], $affected),
                 ];
             }
         }
@@ -550,8 +550,8 @@ class WordFamilyService
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
 
         return Connection::preparedExecute(
-            "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW()
-             WHERE WoID IN ({$placeholders}){$userScope}",
+            "UPDATE words SET status = ?, status_changed_at = NOW()
+             WHERE id IN ({$placeholders}){$userScope}",
             $bindings
         );
     }

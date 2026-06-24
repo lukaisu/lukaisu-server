@@ -32,14 +32,14 @@ class WordListServiceTest extends TestCase
     public function buildLangConditionReturnsConditionWithoutParams(): void
     {
         $result = $this->service->buildLangCondition('5');
-        $this->assertSame(' and WoLgID=5', $result);
+        $this->assertSame(' and language_id=5', $result);
     }
 
     #[Test]
     public function buildLangConditionCastsToInt(): void
     {
         $result = $this->service->buildLangCondition('abc');
-        $this->assertSame(' and WoLgID=0', $result);
+        $this->assertSame(' and language_id=0', $result);
     }
 
     #[Test]
@@ -47,7 +47,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildLangCondition('7', $params);
-        $this->assertSame(' and WoLgID = ?', $result);
+        $this->assertSame(' and language_id = ?', $result);
         $this->assertSame([7], $params);
     }
 
@@ -65,7 +65,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildLangCondition('abc', $params);
-        $this->assertSame(' and WoLgID = ?', $result);
+        $this->assertSame(' and language_id = ?', $result);
         $this->assertSame([0], $params);
     }
 
@@ -83,56 +83,56 @@ class WordListServiceTest extends TestCase
     public function buildStatusConditionSingleStatus(): void
     {
         $result = $this->service->buildStatusCondition('1');
-        $this->assertSame(' and WoStatus = 1', $result);
+        $this->assertSame(' and status = 1', $result);
     }
 
     #[Test]
     public function buildStatusConditionRange12(): void
     {
         $result = $this->service->buildStatusCondition('12');
-        $this->assertSame(' and (WoStatus between 1 and 2)', $result);
+        $this->assertSame(' and (status between 1 and 2)', $result);
     }
 
     #[Test]
     public function buildStatusConditionRange15(): void
     {
         $result = $this->service->buildStatusCondition('15');
-        $this->assertSame(' and (WoStatus between 1 and 5)', $result);
+        $this->assertSame(' and (status between 1 and 5)', $result);
     }
 
     #[Test]
     public function buildStatusConditionRange25(): void
     {
         $result = $this->service->buildStatusCondition('25');
-        $this->assertSame(' and (WoStatus between 2 and 5)', $result);
+        $this->assertSame(' and (status between 2 and 5)', $result);
     }
 
     #[Test]
     public function buildStatusConditionRange45(): void
     {
         $result = $this->service->buildStatusCondition('45');
-        $this->assertSame(' and (WoStatus between 4 and 5)', $result);
+        $this->assertSame(' and (status between 4 and 5)', $result);
     }
 
     #[Test]
     public function buildStatusCondition599(): void
     {
         $result = $this->service->buildStatusCondition('599');
-        $this->assertSame(' and WoStatus in (5,99)', $result);
+        $this->assertSame(' and status in (5,99)', $result);
     }
 
     #[Test]
     public function buildStatusConditionIgnored(): void
     {
         $result = $this->service->buildStatusCondition('98');
-        $this->assertSame(' and WoStatus = 98', $result);
+        $this->assertSame(' and status = 98', $result);
     }
 
     #[Test]
     public function buildStatusConditionWellKnown(): void
     {
         $result = $this->service->buildStatusCondition('99');
-        $this->assertSame(' and WoStatus = 99', $result);
+        $this->assertSame(' and status = 99', $result);
     }
 
     // =========================================================================
@@ -153,7 +153,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildQueryCondition('hello', 'term', '', $params);
-        $this->assertSame(' and (WoText like ?)', $result);
+        $this->assertSame(' and (text like ?)', $result);
         $this->assertSame(['hello'], $params);
     }
 
@@ -162,7 +162,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildQueryCondition('test', 'rom', '', $params);
-        $this->assertSame(" and (IFNULL(WoRomanization,'*') like ?)", $result);
+        $this->assertSame(" and (IFNULL(romanization,'*') like ?)", $result);
         $this->assertSame(['test'], $params);
     }
 
@@ -171,7 +171,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildQueryCondition('meaning', 'transl', '', $params);
-        $this->assertSame(' and (WoTranslation like ?)', $result);
+        $this->assertSame(' and (translation like ?)', $result);
         $this->assertSame(['meaning'], $params);
     }
 
@@ -180,7 +180,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildQueryCondition('test', 'term,rom', '', $params);
-        $this->assertSame(" and (WoText like ? or IFNULL(WoRomanization,'*') like ?)", $result);
+        $this->assertSame(" and (text like ? or IFNULL(romanization,'*') like ?)", $result);
         $this->assertSame(['test', 'test'], $params);
     }
 
@@ -189,7 +189,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildQueryCondition('test', 'rom,transl', '', $params);
-        $this->assertSame(" and (IFNULL(WoRomanization,'*') like ? or WoTranslation like ?)", $result);
+        $this->assertSame(" and (IFNULL(romanization,'*') like ? or translation like ?)", $result);
         $this->assertSame(['test', 'test'], $params);
     }
 
@@ -198,7 +198,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildQueryCondition('test', 'term,transl', '', $params);
-        $this->assertSame(' and (WoText like ? or WoTranslation like ?)', $result);
+        $this->assertSame(' and (text like ? or translation like ?)', $result);
         $this->assertSame(['test', 'test'], $params);
     }
 
@@ -208,7 +208,7 @@ class WordListServiceTest extends TestCase
         $params = [];
         $result = $this->service->buildQueryCondition('test', 'term,rom,transl', '', $params);
         $this->assertSame(
-            " and (WoText like ? or IFNULL(WoRomanization,'*') like ? or WoTranslation like ?)",
+            " and (text like ? or IFNULL(romanization,'*') like ? or translation like ?)",
             $result
         );
         $this->assertSame(['test', 'test', 'test'], $params);
@@ -220,7 +220,7 @@ class WordListServiceTest extends TestCase
         $params = [];
         $result = $this->service->buildQueryCondition('test', 'unknown', '', $params);
         $this->assertSame(
-            " and (WoText like ? or IFNULL(WoRomanization,'*') like ? or WoTranslation like ?)",
+            " and (text like ? or IFNULL(romanization,'*') like ? or translation like ?)",
             $result
         );
         $this->assertSame(['test', 'test', 'test'], $params);
@@ -255,7 +255,7 @@ class WordListServiceTest extends TestCase
     {
         $params = [];
         $result = $this->service->buildQueryCondition('^test$', 'term', 'r', $params);
-        $this->assertSame(' and (WoText rlike ?)', $result);
+        $this->assertSame(' and (text rlike ?)', $result);
         $this->assertSame(['^test$'], $params);
     }
 
@@ -440,12 +440,12 @@ class WordListServiceTest extends TestCase
     #[Test]
     public function getTestWordIdsSqlNoTextIdReturnsArray(): void
     {
-        $result = $this->service->getTestWordIdsSql('', ' and WoLgID = ?', '', '', '', [1]);
+        $result = $this->service->getTestWordIdsSql('', ' and language_id = ?', '', '', '', [1]);
         $this->assertIsArray($result);
         $this->assertArrayHasKey('sql', $result);
         $this->assertArrayHasKey('params', $result);
-        $this->assertStringContainsString('select distinct WoID', $result['sql']);
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
+        $this->assertStringContainsString('select distinct id', $result['sql']);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertStringNotContainsString('word_occurrences', $result['sql']);
         $this->assertSame([1], $result['params']);
     }
@@ -473,9 +473,9 @@ class WordListServiceTest extends TestCase
     {
         $result = $this->service->getTestWordIdsSql(
             '5',
-            ' and WoLgID = ?',
-            ' and WoStatus = 2',
-            ' and (WoText like ?)',
+            ' and language_id = ?',
+            ' and status = 2',
+            ' and (text like ?)',
             '',
             [7, 'test%']
         );
@@ -501,8 +501,8 @@ class WordListServiceTest extends TestCase
         $result = $this->service->getAnkiExportSql(
             [],
             '',
-            ' and WoLgID = ?',
-            ' and WoStatus = 2',
+            ' and language_id = ?',
+            ' and status = 2',
             '',
             '',
             [1]
@@ -510,8 +510,8 @@ class WordListServiceTest extends TestCase
         $this->assertIsArray($result);
         $this->assertArrayHasKey('sql', $result);
         $this->assertArrayHasKey('params', $result);
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
-        $this->assertStringContainsString('WoStatus = 2', $result['sql']);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
+        $this->assertStringContainsString('status = 2', $result['sql']);
         $this->assertSame([1], $result['params']);
     }
 
@@ -519,10 +519,10 @@ class WordListServiceTest extends TestCase
     public function getAnkiExportSqlWithIds(): void
     {
         $result = $this->service->getAnkiExportSql([10, 20, 30], '', '', '', '', '');
-        $this->assertStringContainsString('WoID in', $result['sql']);
+        $this->assertStringContainsString('id in', $result['sql']);
         $this->assertStringContainsString('?', $result['sql']);
         $this->assertSame([10, 20, 30], $result['params']);
-        $this->assertStringContainsString('WoTranslation', $result['sql']);
+        $this->assertStringContainsString('translation', $result['sql']);
     }
 
     #[Test]
@@ -540,7 +540,7 @@ class WordListServiceTest extends TestCase
         $result = $this->service->getAnkiExportSql(
             [],
             '5',
-            ' and WoLgID = ?',
+            ' and language_id = ?',
             '',
             '',
             '',
@@ -564,9 +564,9 @@ class WordListServiceTest extends TestCase
     public function getTsvExportSqlWithIds(): void
     {
         $result = $this->service->getTsvExportSql([1, 2], '', '', '', '', '');
-        $this->assertStringContainsString('WoID in', $result['sql']);
+        $this->assertStringContainsString('id in', $result['sql']);
         $this->assertSame([1, 2], $result['params']);
-        $this->assertStringContainsString('WoStatus', $result['sql']);
+        $this->assertStringContainsString('status', $result['sql']);
     }
 
     #[Test]
@@ -575,13 +575,13 @@ class WordListServiceTest extends TestCase
         $result = $this->service->getTsvExportSql(
             [],
             '',
-            ' and WoLgID = ?',
+            ' and language_id = ?',
             '',
             '',
             '',
             [2]
         );
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertStringNotContainsString('word_occurrences', $result['sql']);
         $this->assertSame([2], $result['params']);
     }
@@ -592,7 +592,7 @@ class WordListServiceTest extends TestCase
         $result = $this->service->getFlexibleExportSql(
             [],
             '',
-            ' and WoLgID = ?',
+            ' and language_id = ?',
             '',
             '',
             '',
@@ -600,7 +600,7 @@ class WordListServiceTest extends TestCase
         );
         $this->assertIsArray($result);
         $this->assertStringContainsString('LgExportTemplate', $result['sql']);
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertStringNotContainsString('word_occurrences', $result['sql']);
         $this->assertSame([3], $result['params']);
     }
@@ -609,7 +609,7 @@ class WordListServiceTest extends TestCase
     public function getFlexibleExportSqlWithIds(): void
     {
         $result = $this->service->getFlexibleExportSql([5, 6], '', '', '', '', '');
-        $this->assertStringContainsString('WoID in', $result['sql']);
+        $this->assertStringContainsString('id in', $result['sql']);
         $this->assertSame([5, 6], $result['params']);
         $this->assertStringContainsString('LgExportTemplate', $result['sql']);
     }
@@ -632,7 +632,7 @@ class WordListServiceTest extends TestCase
         $result = $this->service->getAnkiExportSql(
             [1],
             '99',
-            ' and WoLgID = ?',
+            ' and language_id = ?',
             '',
             '',
             '',

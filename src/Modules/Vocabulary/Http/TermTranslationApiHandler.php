@@ -193,20 +193,20 @@ class TermTranslationApiHandler
         $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         // Use raw SQL for complex INSERT with dynamic columns.
-        // INSERTs can't use forTablePrepared; inject WoUsID into the
+        // INSERTs can't use forTablePrepared; inject user_id into the
         // column/value list via getUserIdForInsert instead.
         $bindings = [$lang, $textlc, $text, $data, '', ''];
         $userScopeColumn = '';
         $userScopeValue = '';
         $userIdForInsert = UserScopedQuery::getUserIdForInsert('words');
         if ($userIdForInsert !== null) {
-            $userScopeColumn = ', WoUsID';
+            $userScopeColumn = ', user_id';
             $userScopeValue = ', ?';
             $bindings[] = $userIdForInsert;
         }
         $sql = "INSERT INTO words (
-                WoLgID, WoTextLC, WoText, WoStatus, WoTranslation,
-                WoSentence, WoRomanization, WoStatusChanged,
+                language_id, text_lc, text, status, translation,
+                sentence, romanization, status_changed_at,
                 {$scoreColumns}{$userScopeColumn}
             ) VALUES(?, ?, ?, 1, ?, ?, ?, NOW(), {$scoreValues}{$userScopeValue})";
 
@@ -238,21 +238,21 @@ class TermTranslationApiHandler
      * @param int    $wid      Word ID
      * @param string $newTrans New translation
      *
-     * @return string WoTextLC, lowercase version of the word
+     * @return string text_lc, lowercase version of the word
      */
     public function editTermTranslation(int $wid, string $newTrans): string
     {
         $oldtrans = (string) QueryBuilder::table('words')
-            ->select(['WoTranslation'])
-            ->where('WoID', '=', $wid)
-            ->valuePrepared('WoTranslation');
+            ->select(['translation'])
+            ->where('id', '=', $wid)
+            ->valuePrepared('translation');
 
         $oldtransarr = preg_split('/[' . StringUtils::getSeparators() . ']/u', $oldtrans);
         if ($oldtransarr === false) {
             return (string) QueryBuilder::table('words')
-                ->select(['WoTextLC'])
-                ->where('WoID', '=', $wid)
-                ->valuePrepared('WoTextLC');
+                ->select(['text_lc'])
+                ->where('id', '=', $wid)
+                ->valuePrepared('text_lc');
         }
         $oldtransarr = array_map('trim', $oldtransarr);
 
@@ -263,14 +263,14 @@ class TermTranslationApiHandler
                 $oldtrans .= ' ' . StringUtils::getFirstSeparator() . ' ' . $newTrans;
             }
             QueryBuilder::table('words')
-                ->where('WoID', '=', $wid)
-                ->updatePrepared(['WoTranslation' => $oldtrans]);
+                ->where('id', '=', $wid)
+                ->updatePrepared(['translation' => $oldtrans]);
         }
 
         return (string) QueryBuilder::table('words')
-            ->select(['WoTextLC'])
-            ->where('WoID', '=', $wid)
-            ->valuePrepared('WoTextLC');
+            ->select(['text_lc'])
+            ->where('id', '=', $wid)
+            ->valuePrepared('text_lc');
     }
 
     /**
@@ -285,7 +285,7 @@ class TermTranslationApiHandler
     public function checkUpdateTranslation(int $wid, string $newTrans): array
     {
         $cntWords = QueryBuilder::table('words')
-            ->where('WoID', '=', $wid)
+            ->where('id', '=', $wid)
             ->countPrepared();
 
         if ($cntWords == 1) {

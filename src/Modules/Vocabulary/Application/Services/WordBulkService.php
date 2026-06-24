@@ -60,7 +60,7 @@ class WordBulkService
         // - Single-word word_occurrences.Ti2WoID set to NULL (ON DELETE SET NULL)
         // - word_tag_map deleted (ON DELETE CASCADE)
         $count = QueryBuilder::table('words')
-            ->whereIn('WoID', $ids)
+            ->whereIn('id', $ids)
             ->deletePrepared();
 
         return $count;
@@ -90,15 +90,15 @@ class WordBulkService
             if ($status > 0) {
                 // Increment status
                 $sql = "UPDATE words
-                        SET WoStatus = WoStatus + 1, WoStatusChanged = NOW(), {$scoreUpdate}
-                        WHERE WoStatus IN (1,2,3,4) AND WoID IN ({$placeholders})"
+                        SET status = status + 1, status_changed_at = NOW(), {$scoreUpdate}
+                        WHERE status IN (1,2,3,4) AND id IN ({$placeholders})"
                         . UserScopedQuery::forTablePrepared('words', $ids);
                 return Connection::preparedExecute($sql, $ids);
             } else {
                 // Decrement status
                 $sql = "UPDATE words
-                        SET WoStatus = WoStatus - 1, WoStatusChanged = NOW(), {$scoreUpdate}
-                        WHERE WoStatus IN (2,3,4,5) AND WoID IN ({$placeholders})"
+                        SET status = status - 1, status_changed_at = NOW(), {$scoreUpdate}
+                        WHERE status IN (2,3,4,5) AND id IN ({$placeholders})"
                         . UserScopedQuery::forTablePrepared('words', $ids);
                 return Connection::preparedExecute($sql, $ids);
             }
@@ -108,8 +108,8 @@ class WordBulkService
         /** @var array<int, int> $bindings */
         $bindings = array_merge([$status], $ids);
         $sql = "UPDATE words
-                SET WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate}
-                WHERE WoID IN ({$placeholders})"
+                SET status = ?, status_changed_at = NOW(), {$scoreUpdate}
+                WHERE id IN ({$placeholders})"
                 . UserScopedQuery::forTablePrepared('words', $bindings);
 
         return Connection::preparedExecute($sql, $bindings);
@@ -134,8 +134,8 @@ class WordBulkService
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
         $sql = "UPDATE words
-                SET WoStatusChanged = NOW(), {$scoreUpdate}
-                WHERE WoID IN ({$placeholders})"
+                SET status_changed_at = NOW(), {$scoreUpdate}
+                WHERE id IN ({$placeholders})"
                 . UserScopedQuery::forTablePrepared('words', $ids);
 
         return Connection::preparedExecute($sql, $ids);
@@ -158,7 +158,7 @@ class WordBulkService
         $ids = array_map('intval', $wordIds);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-        $sql = "UPDATE words SET WoSentence = NULL WHERE WoID IN ({$placeholders})"
+        $sql = "UPDATE words SET sentence = NULL WHERE id IN ({$placeholders})"
             . UserScopedQuery::forTablePrepared('words', $ids);
 
         return Connection::preparedExecute($sql, $ids);
@@ -181,7 +181,7 @@ class WordBulkService
         $ids = array_map('intval', $wordIds);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-        $sql = "UPDATE words SET WoText = WoTextLC WHERE WoID IN ({$placeholders})"
+        $sql = "UPDATE words SET text = text_lc WHERE id IN ({$placeholders})"
             . UserScopedQuery::forTablePrepared('words', $ids);
 
         return Connection::preparedExecute($sql, $ids);
@@ -205,8 +205,8 @@ class WordBulkService
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
         $sql = "UPDATE words
-             SET WoText = CONCAT(UPPER(LEFT(WoTextLC, 1)), SUBSTRING(WoTextLC, 2))
-             WHERE WoID IN ({$placeholders})"
+             SET text = CONCAT(UPPER(LEFT(text_lc, 1)), SUBSTRING(text_lc, 2))
+             WHERE id IN ({$placeholders})"
              . UserScopedQuery::forTablePrepared('words', $ids);
 
         return Connection::preparedExecute($sql, $ids);
@@ -226,7 +226,7 @@ class WordBulkService
         $bindings = [];
         /** @var int $max */
         $max = (int) Connection::preparedFetchValue(
-            "SELECT COALESCE(MAX(WoID), 0) AS max_id FROM words WHERE 1=1"
+            "SELECT COALESCE(MAX(id), 0) AS max_id FROM words WHERE 1=1"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
             'max_id'
@@ -248,8 +248,8 @@ class WordBulkService
 
                 $bindings = [$row['lg'], $textlc, $row['text'], $row['status'], $trans];
                 $sql = "INSERT INTO words (
-                        WoLgID, WoTextLC, WoText, WoStatus, WoTranslation, WoSentence,
-                        WoRomanization, WoStatusChanged, {$scoreColumns}"
+                        language_id, text_lc, text, status, translation, sentence,
+                        romanization, status_changed_at, {$scoreColumns}"
                         . UserScopedQuery::insertColumn('words')
                     . ") VALUES (?, ?, ?, ?, ?, '', '', NOW(), {$scoreValues}"
                         . UserScopedQuery::insertValuePrepared('words', $bindings)
@@ -272,15 +272,15 @@ class WordBulkService
      *
      * @param int $maxWoId The max word ID before insertion
      *
-     * @return array<int, array<string, mixed>> Array of rows with WoID, WoTextLC, WoStatus, WoTranslation
+     * @return array<int, array<string, mixed>> Array of rows with id, text_lc, status, translation
      */
     public function getNewWordsAfter(int $maxWoId): array
     {
         $bindings = [$maxWoId];
         return Connection::preparedFetchAll(
-            "SELECT WoID, WoTextLC, WoStatus, WoTranslation
+            "SELECT id, text_lc, status, translation
              FROM words
-             WHERE WoID > ?"
+             WHERE id > ?"
              . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );

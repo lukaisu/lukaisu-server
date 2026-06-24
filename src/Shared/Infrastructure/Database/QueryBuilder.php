@@ -30,39 +30,39 @@ use Lukaisu\Shared\Infrastructure\Globals;
  * ```php
  * // SELECT query
  * $users = QueryBuilder::table('words')
- *     ->select(['WoID', 'WoText'])
- *     ->where('WoLgID', '=', 1)
- *     ->orderBy('WoText')
+ *     ->select(['id', 'text'])
+ *     ->where('language_id', '=', 1)
+ *     ->orderBy('text')
  *     ->limit(10)
  *     ->get();
  *
  * // INSERT query
  * $id = QueryBuilder::table('words')
- *     ->insert(['WoText' => 'hello', 'WoLgID' => 1]);
+ *     ->insert(['text' => 'hello', 'language_id' => 1]);
  * ```
  *
  * Usage (Prepared Statements - recommended):
  * ```php
  * // SELECT with prepared statement
  * $users = QueryBuilder::table('words')
- *     ->select(['WoID', 'WoText'])
- *     ->where('WoLgID', '=', 1)
- *     ->orderBy('WoText')
+ *     ->select(['id', 'text'])
+ *     ->where('language_id', '=', 1)
+ *     ->orderBy('text')
  *     ->limit(10)
  *     ->getPrepared();
  *
  * // INSERT with prepared statement
  * $id = QueryBuilder::table('words')
- *     ->insertPrepared(['WoText' => 'hello', 'WoLgID' => 1]);
+ *     ->insertPrepared(['text' => 'hello', 'language_id' => 1]);
  *
  * // UPDATE with prepared statement
  * QueryBuilder::table('words')
- *     ->where('WoID', '=', 5)
- *     ->updatePrepared(['WoStatus' => 2]);
+ *     ->where('id', '=', 5)
+ *     ->updatePrepared(['status' => 2]);
  *
  * // DELETE with prepared statement
  * QueryBuilder::table('words')
- *     ->where('WoID', '=', 5)
+ *     ->where('id', '=', 5)
  *     ->deletePrepared();
  * ```
  *
@@ -81,7 +81,7 @@ class QueryBuilder
     private const USER_SCOPED_TABLES = [
         'languages' => 'LgUsID',
         'texts' => 'TxUsID',
-        'words' => 'WoUsID',
+        'words' => 'user_id',
         'tags' => 'TgUsID',
         'text_tags' => 'T2UsID',
         'news_feeds' => 'user_id',

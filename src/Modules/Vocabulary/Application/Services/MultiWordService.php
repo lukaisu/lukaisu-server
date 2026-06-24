@@ -86,8 +86,8 @@ class MultiWordService
         ];
 
         $sql = "INSERT INTO words (
-                WoLgID, WoTextLC, WoText, WoStatus, WoTranslation, WoSentence,
-                WoNotes, WoRomanization, WoWordCount, WoStatusChanged, {$scoreColumns}"
+                language_id, text_lc, text, status, translation, sentence,
+                notes, romanization, word_count, status_changed_at, {$scoreColumns}"
                 . UserScopedQuery::insertColumn('words')
             . ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), {$scoreValues}"
                 . UserScopedQuery::insertValuePrepared('words', $bindings)
@@ -139,9 +139,9 @@ class MultiWordService
                 $wordId
             ];
             $sql = "UPDATE words SET
-                    WoText = ?, WoTranslation = ?, WoSentence = ?, WoNotes = ?, WoRomanization = ?,
-                    WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate}
-                    WHERE WoID = ?"
+                    text = ?, translation = ?, sentence = ?, notes = ?, romanization = ?,
+                    status = ?, status_changed_at = NOW(), {$scoreUpdate}
+                    WHERE id = ?"
                     . UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute($sql, $bindings);
         } else {
@@ -155,8 +155,8 @@ class MultiWordService
                 $wordId
             ];
             $sql = "UPDATE words SET
-                    WoText = ?, WoTranslation = ?, WoSentence = ?, WoNotes = ?, WoRomanization = ?, {$scoreUpdate}
-                    WHERE WoID = ?"
+                    text = ?, translation = ?, sentence = ?, notes = ?, romanization = ?, {$scoreUpdate}
+                    WHERE id = ?"
                     . UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute($sql, $bindings);
         }
@@ -184,8 +184,8 @@ class MultiWordService
     {
         $bindings = [$wordId];
         $record = Connection::preparedFetchOne(
-            "SELECT WoText, WoLgID, WoTranslation, WoSentence, WoNotes, WoRomanization, WoStatus
-             FROM words WHERE WoID = ?"
+            "SELECT text, language_id, translation, sentence, notes, romanization, status
+             FROM words WHERE id = ?"
              . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
@@ -195,13 +195,13 @@ class MultiWordService
         }
 
         return [
-            'text' => (string) $record['WoText'],
-            'lgid' => (int) $record['WoLgID'],
-            'translation' => ExportService::replaceTabNewline((string) $record['WoTranslation']),
-            'sentence' => ExportService::replaceTabNewline((string) $record['WoSentence']),
-            'notes' => ExportService::replaceTabNewline((string) ($record['WoNotes'] ?? '')),
-            'romanization' => (string) $record['WoRomanization'],
-            'status' => (int) $record['WoStatus']
+            'text' => (string) $record['text'],
+            'lgid' => (int) $record['language_id'],
+            'translation' => ExportService::replaceTabNewline((string) $record['translation']),
+            'sentence' => ExportService::replaceTabNewline((string) $record['sentence']),
+            'notes' => ExportService::replaceTabNewline((string) ($record['notes'] ?? '')),
+            'romanization' => (string) $record['romanization'],
+            'status' => (int) $record['status']
         ];
     }
 
@@ -217,10 +217,10 @@ class MultiWordService
     public function deleteMultiWord(int $wordId): int
     {
         $result = QueryBuilder::table('words')
-            ->where('WoID', '=', $wordId)
+            ->where('id', '=', $wordId)
             ->delete();
 
-        Maintenance::adjustAutoIncrement('words', 'WoID');
+        Maintenance::adjustAutoIncrement('words', 'id');
 
         QueryBuilder::table('word_occurrences')
             ->where('Ti2WordCount', '>', 1)
@@ -243,11 +243,11 @@ class MultiWordService
         $bindings = [$langId, $textlc];
         /** @var int|null $wid */
         $wid = Connection::preparedFetchValue(
-            "SELECT WoID FROM words
-             WHERE WoLgID = ? AND WoTextLC = ?"
+            "SELECT id FROM words
+             WHERE language_id = ? AND text_lc = ?"
              . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
-            'WoID'
+            'id'
         );
         return $wid;
     }

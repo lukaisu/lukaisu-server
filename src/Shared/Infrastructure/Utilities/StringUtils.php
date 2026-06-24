@@ -73,7 +73,7 @@ class StringUtils
      * Used in the reading view as the `data_hex` attribute that ties every
      * occurrence of the same term together, so a status change can restyle them
      * all in one client-side pass. The token is a truncated SHA-256 of the text:
-     * deterministic, recomputable from `WoTextLC`, never reversed back to text,
+     * deterministic, recomputable from `text_lc`, never reversed back to text,
      * and pure `[0-9a-f]` so it is selector-safe with no escaping.
      *
      * (Replaces the original `¤`/hex CSS-class encoder, whose byte-vs-codepoint

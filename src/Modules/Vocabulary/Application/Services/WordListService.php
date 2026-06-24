@@ -342,11 +342,11 @@ class WordListService
             $bindings2 = [];
             $inClause2 = Connection::buildPreparedInClause($ownedIds, $bindings2);
             Connection::preparedExecute(
-                'DELETE FROM words WHERE WoID in ' . $inClause2,
+                'DELETE FROM words WHERE id in ' . $inClause2,
                 $bindings2
             );
 
-            Maintenance::adjustAutoIncrement('words', 'WoID');
+            Maintenance::adjustAutoIncrement('words', 'id');
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -382,12 +382,12 @@ class WordListService
             return array_values(array_map('intval', $ids));
         }
         $rows = Connection::preparedFetchAll(
-            'SELECT WoID FROM words WHERE WoID in ' . $inClause . $userScope,
+            'SELECT id FROM words WHERE id in ' . $inClause . $userScope,
             $bindings
         );
         $owned = [];
         foreach ($rows as $row) {
-            $owned[] = (int) $row['WoID'];
+            $owned[] = (int) $row['id'];
         }
         return $owned;
     }
@@ -413,8 +413,8 @@ class WordListService
             $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute(
                 'update words
-                set WoStatus=WoStatus+1, WoStatusChanged = NOW(),' . $scoreUpdate . '
-                where WoStatus in (1,2,3,4) and WoID in ' . $inClause . $userScope,
+                set status=status+1, status_changed_at = NOW(),' . $scoreUpdate . '
+                where status in (1,2,3,4) and id in ' . $inClause . $userScope,
                 $bindings
             );
             return "Updated Status (+1)";
@@ -425,8 +425,8 @@ class WordListService
             $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute(
                 'update words
-                set WoStatus=WoStatus-1, WoStatusChanged = NOW(),' . $scoreUpdate . '
-                where WoStatus in (2,3,4,5) and WoID in ' . $inClause . $userScope,
+                set status=status-1, status_changed_at = NOW(),' . $scoreUpdate . '
+                where status in (2,3,4,5) and id in ' . $inClause . $userScope,
                 $bindings
             );
             return "Updated Status (-1)";
@@ -438,8 +438,8 @@ class WordListService
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         Connection::preparedExecute(
             'update words
-            set WoStatus=?, WoStatusChanged = NOW(),' . $scoreUpdate . '
-            where WoID in ' . $inClause . $userScope,
+            set status=?, status_changed_at = NOW(),' . $scoreUpdate . '
+            where id in ' . $inClause . $userScope,
             $bindings
         );
         return "Updated Status (=" . $newStatus . ")";
@@ -460,8 +460,8 @@ class WordListService
 
         Connection::preparedExecute(
             'update words
-            set WoStatusChanged = NOW(),' . TermStatusService::makeScoreRandomInsertUpdate('u') . '
-            where WoID in ' . $inClause . $userScope,
+            set status_changed_at = NOW(),' . TermStatusService::makeScoreRandomInsertUpdate('u') . '
+            where id in ' . $inClause . $userScope,
             $bindings
         );
         return "Updated Status Date (= Now)";
@@ -482,8 +482,8 @@ class WordListService
 
         Connection::preparedExecute(
             'update words
-            set WoSentence = NULL
-            where WoID in ' . $inClause . $userScope,
+            set sentence = NULL
+            where id in ' . $inClause . $userScope,
             $bindings
         );
         return "Term Sentence(s) deleted";
@@ -504,8 +504,8 @@ class WordListService
 
         Connection::preparedExecute(
             'update words
-            set WoText = WoTextLC
-            where WoID in ' . $inClause . $userScope,
+            set text = text_lc
+            where id in ' . $inClause . $userScope,
             $bindings
         );
         return "Term(s) set to lowercase";
@@ -526,10 +526,10 @@ class WordListService
 
         Connection::preparedExecute(
             'update words
-            set WoText = CONCAT(
-                UPPER(LEFT(WoTextLC,1)),SUBSTRING(WoTextLC,2)
+            set text = CONCAT(
+                UPPER(LEFT(text_lc,1)),SUBSTRING(text_lc,2)
             )
-            where WoID in ' . $inClause . $userScope,
+            where id in ' . $inClause . $userScope,
             $bindings
         );
         return "Term(s) capitalized";
@@ -559,12 +559,12 @@ class WordListService
         // - word_tag_map deleted (ON DELETE CASCADE)
         $bindings = [$wordId];
         Connection::preparedExecute(
-            'DELETE FROM words WHERE WoID = ?'
+            'DELETE FROM words WHERE id = ?'
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
 
-        Maintenance::adjustAutoIncrement('words', 'WoID');
+        Maintenance::adjustAutoIncrement('words', 'id');
     }
 
     // =========================================================================
@@ -607,7 +607,7 @@ class WordListService
         $bindings = [$wordId];
         $record = Connection::preparedFetchOne(
             'SELECT * FROM words, languages
-            WHERE LgID = WoLgID AND WoID = ?'
+            WHERE LgID = language_id AND id = ?'
             . UserScopedQuery::forTablePrepared('words', $bindings)
             . UserScopedQuery::forTablePrepared('languages', $bindings, 'languages'),
             $bindings
@@ -617,20 +617,20 @@ class WordListService
             return null;
         }
 
-        $transl = ExportService::replaceTabNewline((string)$record['WoTranslation']);
+        $transl = ExportService::replaceTabNewline((string)$record['translation']);
         if ($transl == '*') {
             $transl = '';
         }
 
         return [
-            'WoID' => $record['WoID'],
-            'WoLgID' => $record['WoLgID'],
-            'WoText' => $record['WoText'],
-            'WoTextLC' => $record['WoTextLC'],
-            'WoTranslation' => $transl,
-            'WoRomanization' => $record['WoRomanization'],
-            'WoSentence' => ExportService::replaceTabNewline((string)($record['WoSentence'] ?? '')),
-            'WoStatus' => $record['WoStatus'],
+            'id' => $record['id'],
+            'language_id' => $record['language_id'],
+            'text' => $record['text'],
+            'text_lc' => $record['text_lc'],
+            'translation' => $transl,
+            'romanization' => $record['romanization'],
+            'sentence' => ExportService::replaceTabNewline((string)($record['sentence'] ?? '')),
+            'status' => $record['status'],
             'LgName' => $record['LgName'],
             'LgRightToLeft' => $record['LgRightToLeft'],
             'LgShowRomanization' => $record['LgShowRomanization'],
@@ -649,24 +649,24 @@ class WordListService
      */
     public function saveNewWord(array $data): int
     {
-        $translation = ExportService::replaceTabNewline((string)($data['WoTranslation'] ?? ''));
+        $translation = ExportService::replaceTabNewline((string)($data['translation'] ?? ''));
         if ($translation == '') {
             $translation = '*';
         }
 
-        $textLc = mb_strtolower((string)$data["WoText"], 'UTF-8');
-        $sentence = ExportService::replaceTabNewline((string)($data["WoSentence"] ?? ''));
-        $romanization = (string)($data["WoRomanization"] ?? '');
+        $textLc = mb_strtolower((string)$data["text"], 'UTF-8');
+        $sentence = ExportService::replaceTabNewline((string)($data["sentence"] ?? ''));
+        $romanization = (string)($data["romanization"] ?? '');
 
         $scoreColumns = TermStatusService::makeScoreRandomInsertUpdate('iv');
         $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
         $bindings = [
-            (int)$data["WoLgID"], $textLc, (string)$data["WoText"],
-            (int)$data["WoStatus"], $translation, $sentence, $romanization
+            (int)$data["language_id"], $textLc, (string)$data["text"],
+            (int)$data["status"], $translation, $sentence, $romanization
         ];
-        $sql = "INSERT INTO words (WoLgID, WoTextLC, WoText, "
-            . "WoStatus, WoTranslation, WoSentence, WoRomanization, WoStatusChanged, {$scoreColumns}"
+        $sql = "INSERT INTO words (language_id, text_lc, text, "
+            . "status, translation, sentence, romanization, status_changed_at, {$scoreColumns}"
             . UserScopedQuery::insertColumn('words')
             . ") VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), {$scoreValues}"
             . UserScopedQuery::insertValuePrepared('words', $bindings)
@@ -681,19 +681,19 @@ class WordListService
         Maintenance::initWordCount();
         $bindings = [$wid];
         $len = (int)Connection::preparedFetchValue(
-            'SELECT WoWordCount FROM words WHERE WoID = ?'
+            'SELECT word_count FROM words WHERE id = ?'
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
-            'WoWordCount'
+            'word_count'
         );
         if ($len > 1) {
-            (new ExpressionService())->insertExpressions($textLc, (int)$data["WoLgID"], (int)$wid, $len, 1);
+            (new ExpressionService())->insertExpressions($textLc, (int)$data["language_id"], (int)$wid, $len, 1);
         } else {
             Connection::preparedExecute(
                 'UPDATE word_occurrences
                 SET Ti2WoID = ?
                 WHERE Ti2LgID = ? AND LOWER(Ti2Text) = ?',
-                [$wid, (int)$data["WoLgID"], $textLc]
+                [$wid, (int)$data["language_id"], $textLc]
             );
         }
 
@@ -709,40 +709,40 @@ class WordListService
      */
     public function updateWord(array $data): string
     {
-        $translation = ExportService::replaceTabNewline((string)($data['WoTranslation'] ?? ''));
+        $translation = ExportService::replaceTabNewline((string)($data['translation'] ?? ''));
         if ($translation == '') {
             $translation = '*';
         }
 
-        $textLc = mb_strtolower((string)$data["WoText"], 'UTF-8');
-        $sentence = ExportService::replaceTabNewline((string)($data["WoSentence"] ?? ''));
-        $romanization = (string)($data["WoRomanization"] ?? '');
+        $textLc = mb_strtolower((string)$data["text"], 'UTF-8');
+        $sentence = ExportService::replaceTabNewline((string)($data["sentence"] ?? ''));
+        $romanization = (string)($data["romanization"] ?? '');
 
         $oldstatus = (int)$data["WoOldStatus"];
-        $newstatus = (int)$data["WoStatus"];
+        $newstatus = (int)$data["status"];
 
         if ($oldstatus != $newstatus) {
             $bindings = [
-                (string)$data["WoText"], $textLc, $translation, $sentence,
-                $romanization, $newstatus, (int)$data["WoID"]
+                (string)$data["text"], $textLc, $translation, $sentence,
+                $romanization, $newstatus, (int)$data["id"]
             ];
             $affected = Connection::preparedExecute(
                 'UPDATE words
-                SET WoText = ?, WoTextLC = ?, WoTranslation = ?, WoSentence = ?,
-                    WoRomanization = ?, WoStatus = ?, WoStatusChanged = NOW(),' .
+                SET text = ?, text_lc = ?, translation = ?, sentence = ?,
+                    romanization = ?, status = ?, status_changed_at = NOW(),' .
                 TermStatusService::makeScoreRandomInsertUpdate('u') .
-                ' WHERE WoID = ?'
+                ' WHERE id = ?'
                 . UserScopedQuery::forTablePrepared('words', $bindings),
                 $bindings
             );
         } else {
-            $bindings = [(string)$data["WoText"], $textLc, $translation, $sentence, $romanization, (int)$data["WoID"]];
+            $bindings = [(string)$data["text"], $textLc, $translation, $sentence, $romanization, (int)$data["id"]];
             $affected = Connection::preparedExecute(
                 'UPDATE words
-                SET WoText = ?, WoTextLC = ?, WoTranslation = ?, WoSentence = ?,
-                    WoRomanization = ?,' .
+                SET text = ?, text_lc = ?, translation = ?, sentence = ?,
+                    romanization = ?,' .
                 TermStatusService::makeScoreRandomInsertUpdate('u') .
-                ' WHERE WoID = ?'
+                ' WHERE id = ?'
                 . UserScopedQuery::forTablePrepared('words', $bindings),
                 $bindings
             );

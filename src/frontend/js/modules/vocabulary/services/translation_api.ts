@@ -58,7 +58,7 @@ export function deleteTranslation(): void {
   if (frame === undefined) {
     return;
   }
-  const translationInput = frame.document.querySelector<HTMLInputElement | HTMLTextAreaElement>('[name="WoTranslation"]');
+  const translationInput = frame.document.querySelector<HTMLInputElement | HTMLTextAreaElement>('[name="translation"]');
   if (translationInput && translationInput.value.trim().length) {
     translationInput.value = '';
     frame.lukaisuFormCheck.makeDirty();
@@ -74,7 +74,7 @@ export function addTranslation(s: string): void {
     alert('Translation can not be copied!');
     return;
   }
-  const word_trans = (frame.document.forms[0] as HTMLFormElement & { WoTranslation: HTMLInputElement }).WoTranslation;
+  const word_trans = (frame.document.forms[0] as HTMLFormElement & { translation: HTMLInputElement }).translation;
   if (typeof word_trans !== 'object') {
     alert('Translation can not be copied!');
     return;

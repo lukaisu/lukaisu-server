@@ -346,7 +346,7 @@ describe('bulk_translate.ts', () => {
               </td>
             </tr>
             <tr>
-              <td><input name="WoTranslation" value=""></td>
+              <td><input name="translation" value=""></td>
             </tr>
           </table>
         `;

@@ -75,13 +75,13 @@ class WordLinkingService
      */
     public function linkAllTextItems(): void
     {
-        // words has WoUsID - user scope auto-applied
+        // words has user_id - user scope auto-applied
         // word_occurrences inherits user context via Ti2TxID -> texts FK
         Connection::execute(
             "UPDATE words
              JOIN word_occurrences
-             ON Ti2WoID IS NULL AND LOWER(Ti2Text) = WoTextLC AND Ti2LgID = WoLgID
-             SET Ti2WoID = WoID"
+             ON Ti2WoID IS NULL AND LOWER(Ti2Text) = text_lc AND Ti2LgID = language_id
+             SET Ti2WoID = id"
         );
     }
 
@@ -119,12 +119,12 @@ class WordLinkingService
     public function linkNewWordsToTextItems(int $maxWoId): void
     {
         // word_occurrences inherits user context via Ti2TxID -> texts FK
-        // words has WoUsID - user scope auto-applied
+        // words has user_id - user scope auto-applied
         Connection::preparedExecute(
             "UPDATE word_occurrences
              JOIN words
-             ON LOWER(Ti2Text) = WoTextLC AND Ti2WordCount = 1 AND Ti2LgID = WoLgID AND WoID > ?
-             SET Ti2WoID = WoID",
+             ON LOWER(Ti2Text) = text_lc AND Ti2WordCount = 1 AND Ti2LgID = language_id AND id > ?
+             SET Ti2WoID = id",
             [$maxWoId]
         );
     }

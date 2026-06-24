@@ -85,7 +85,7 @@ class MySqlTermRepositoryTest extends TestCase
         $this->assertTrue($this->refClass->hasProperty('primaryKey'));
         $prop = $this->refClass->getProperty('primaryKey');
         $this->assertTrue($prop->isProtected());
-        $this->assertSame('WoID', $prop->getDefaultValue());
+        $this->assertSame('id', $prop->getDefaultValue());
     }
 
     #[Test]
@@ -98,11 +98,11 @@ class MySqlTermRepositoryTest extends TestCase
         $default = $prop->getDefaultValue();
         $this->assertIsArray($default);
         $this->assertArrayHasKey('id', $default);
-        $this->assertSame('WoID', $default['id']);
+        $this->assertSame('id', $default['id']);
         $this->assertArrayHasKey('languageId', $default);
-        $this->assertSame('WoLgID', $default['languageId']);
+        $this->assertSame('language_id', $default['languageId']);
         $this->assertArrayHasKey('status', $default);
-        $this->assertSame('WoStatus', $default['status']);
+        $this->assertSame('status', $default['status']);
     }
 
     #[Test]
@@ -328,7 +328,7 @@ class MySqlTermRepositoryTest extends TestCase
         $this->assertSame(0, $params[0]->getDefaultValue()); // languageId
         $this->assertSame(1, $params[1]->getDefaultValue()); // page
         $this->assertSame(20, $params[2]->getDefaultValue()); // perPage
-        $this->assertSame('WoText', $params[3]->getDefaultValue()); // orderBy
+        $this->assertSame('text', $params[3]->getDefaultValue()); // orderBy
         $this->assertSame('ASC', $params[4]->getDefaultValue()); // direction
     }
 
@@ -626,7 +626,7 @@ class MySqlTermRepositoryTest extends TestCase
         $methodSource = implode("\n", array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
 
         $this->assertStringContainsString('updatePrepared', $methodSource);
-        $this->assertStringContainsString('WoStatusChanged', $methodSource);
+        $this->assertStringContainsString('status_changed_at', $methodSource);
     }
 
     // =========================================================================
@@ -745,7 +745,7 @@ class MySqlTermRepositoryTest extends TestCase
         $methodSource = implode("\n", array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
 
         $this->assertStringContainsString('preparedFetchAll', $methodSource);
-        $this->assertStringContainsString('GROUP BY WoWordCount', $methodSource);
+        $this->assertStringContainsString('GROUP BY word_count', $methodSource);
     }
 
     // =========================================================================
@@ -765,8 +765,8 @@ class MySqlTermRepositoryTest extends TestCase
         $methodSource = implode("\n", array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
 
         $this->assertStringContainsString('preparedFetchAll', $methodSource);
-        $this->assertStringContainsString("WoTranslation = ''", $methodSource);
-        $this->assertStringContainsString("WoTranslation = '*'", $methodSource);
+        $this->assertStringContainsString("translation = ''", $methodSource);
+        $this->assertStringContainsString("translation = '*'", $methodSource);
     }
 
     // =========================================================================

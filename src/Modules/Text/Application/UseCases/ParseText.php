@@ -142,8 +142,8 @@ class ParseText
                 WHERE Ti2TxID IN ({$placeholders})
                 AND Ti2SeID = SeID
                 AND Ti2TxID = TxID
-                AND Ti2WoID = WoID
-                AND WoStatus < 98
+                AND Ti2WoID = id
+                AND status < 98
                 AND Ti2WoID > 0"
                 . UserScopedQuery::forTablePrepared('texts', $ids)
                 . UserScopedQuery::forTablePrepared('words', $ids);
@@ -155,7 +155,7 @@ class ParseText
         foreach ($rows as $row) {
             $bindings = [(int) $row['Ti2SeID'], (int) $row['Ti2WoID']];
             Connection::preparedExecute(
-                "UPDATE words SET WoSentence = ? WHERE WoID = ?"
+                "UPDATE words SET sentence = ? WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings),
                 $bindings
             );

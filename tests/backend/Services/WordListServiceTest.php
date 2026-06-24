@@ -75,7 +75,7 @@ class WordListServiceTest extends TestCase
         }
 
         // Clean up test words and language
-        Connection::query("DELETE FROM words WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM words WHERE language_id = " . self::$testLangId);
         Connection::query("DELETE FROM languages WHERE LgName = 'WordListTestLang'");
 
         // Reset auto_increment
@@ -90,7 +90,7 @@ class WordListServiceTest extends TestCase
         }
 
         // Clean up test words
-        Connection::query("DELETE FROM words WHERE WoText LIKE 'list_test_%'");
+        Connection::query("DELETE FROM words WHERE text LIKE 'list_test_%'");
     }
 
     // ===== Constructor and basic tests =====
@@ -117,7 +117,7 @@ class WordListServiceTest extends TestCase
         $service = new WordListService();
         $result = $service->buildLangCondition('5');
 
-        $this->assertStringContainsString('WoLgID=5', $result);
+        $this->assertStringContainsString('language_id=5', $result);
     }
 
     public function testBuildLangConditionWithEmptyLanguage(): void
@@ -142,7 +142,7 @@ class WordListServiceTest extends TestCase
         $result = $service->buildStatusCondition('1');
 
         $this->assertNotEmpty($result);
-        $this->assertStringContainsString('WoStatus', $result);
+        $this->assertStringContainsString('status', $result);
     }
 
     public function testBuildStatusConditionWithEmptyStatus(): void
@@ -166,7 +166,7 @@ class WordListServiceTest extends TestCase
         $service = new WordListService();
         $result = $service->buildQueryCondition('test', 'term', '');
 
-        $this->assertStringContainsString('WoText', $result);
+        $this->assertStringContainsString('text', $result);
         $this->assertStringContainsString('like', $result);
     }
 
@@ -179,7 +179,7 @@ class WordListServiceTest extends TestCase
         $service = new WordListService();
         $result = $service->buildQueryCondition('test', 'rom', '');
 
-        $this->assertStringContainsString('WoRomanization', $result);
+        $this->assertStringContainsString('romanization', $result);
     }
 
     public function testBuildQueryConditionWithTranslationMode(): void
@@ -191,7 +191,7 @@ class WordListServiceTest extends TestCase
         $service = new WordListService();
         $result = $service->buildQueryCondition('test', 'transl', '');
 
-        $this->assertStringContainsString('WoTranslation', $result);
+        $this->assertStringContainsString('translation', $result);
     }
 
     public function testBuildQueryConditionWithEmptyQuery(): void
@@ -267,7 +267,7 @@ class WordListServiceTest extends TestCase
         $service = new WordListService();
 
         // Filter for a language with no words
-        $count = $service->countWords('', ' and WoLgID=999999', '', '', '');
+        $count = $service->countWords('', ' and language_id=999999', '', '', '');
 
         $this->assertEquals(0, $count);
     }
@@ -283,21 +283,21 @@ class WordListServiceTest extends TestCase
 
         // Create test words
         $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_count1',
-            'WoStatus' => 1,
-            'WoTranslation' => 'count test 1'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_count1',
+            'status' => 1,
+            'translation' => 'count test 1'
         ]);
         $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_count2',
-            'WoStatus' => 1,
-            'WoTranslation' => 'count test 2'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_count2',
+            'status' => 1,
+            'translation' => 'count test 2'
         ]);
 
         $count = $listService->countWords(
             '',
-            ' and WoLgID=' . self::$testLangId,
+            ' and language_id=' . self::$testLangId,
             '',
             '',
             ''
@@ -317,10 +317,10 @@ class WordListServiceTest extends TestCase
 
         // Create a word to delete
         $result = $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_delete',
-            'WoStatus' => 1,
-            'WoTranslation' => 'delete test'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_delete',
+            'status' => 1,
+            'translation' => 'delete test'
         ]);
         $wordId = $result['id'];
 
@@ -345,10 +345,10 @@ class WordListServiceTest extends TestCase
         $ids = [];
         for ($i = 1; $i <= 3; $i++) {
             $result = $wordService->create([
-                'WoLgID' => self::$testLangId,
-                'WoText' => "list_test_dellist_$i",
-                'WoStatus' => 1,
-                'WoTranslation' => "delete list test $i"
+                'language_id' => self::$testLangId,
+                'text' => "list_test_dellist_$i",
+                'status' => 1,
+                'translation' => "delete list test $i"
             ]);
             $ids[] = $result['id'];
         }
@@ -376,10 +376,10 @@ class WordListServiceTest extends TestCase
 
         // Create a word with status 1
         $result = $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_status',
-            'WoStatus' => 1,
-            'WoTranslation' => 'status test'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_status',
+            'status' => 1,
+            'translation' => 'status test'
         ]);
         $wordId = $result['id'];
 
@@ -390,7 +390,7 @@ class WordListServiceTest extends TestCase
 
         // Verify
         $word = $wordService->findById($wordId);
-        $this->assertEquals('5', $word['WoStatus']);
+        $this->assertEquals('5', $word['status']);
     }
 
     public function testUpdateStatusByIdListRelativeIncrement(): void
@@ -404,10 +404,10 @@ class WordListServiceTest extends TestCase
 
         // Create a word with status 2
         $result = $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_incr',
-            'WoStatus' => 2,
-            'WoTranslation' => 'increment test'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_incr',
+            'status' => 2,
+            'translation' => 'increment test'
         ]);
         $wordId = $result['id'];
 
@@ -416,7 +416,7 @@ class WordListServiceTest extends TestCase
 
         // Verify status is now 3
         $word = $wordService->findById($wordId);
-        $this->assertEquals('3', $word['WoStatus']);
+        $this->assertEquals('3', $word['status']);
     }
 
     public function testUpdateStatusDateByIdList(): void
@@ -430,10 +430,10 @@ class WordListServiceTest extends TestCase
 
         // Create a word
         $result = $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_date',
-            'WoStatus' => 1,
-            'WoTranslation' => 'date test'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_date',
+            'status' => 1,
+            'translation' => 'date test'
         ]);
         $wordId = $result['id'];
 
@@ -454,11 +454,11 @@ class WordListServiceTest extends TestCase
 
         // Create a word with sentence
         $result = $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_sent',
-            'WoStatus' => 1,
-            'WoTranslation' => 'sentence test',
-            'WoSentence' => 'This is a {list_test_sent} sentence.'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_sent',
+            'status' => 1,
+            'translation' => 'sentence test',
+            'sentence' => 'This is a {list_test_sent} sentence.'
         ]);
         $wordId = $result['id'];
 
@@ -469,7 +469,7 @@ class WordListServiceTest extends TestCase
 
         // Verify sentence is null
         $word = $wordService->findById($wordId);
-        $this->assertNull($word['WoSentence']);
+        $this->assertNull($word['sentence']);
     }
 
     public function testToLowercaseByIdList(): void
@@ -483,10 +483,10 @@ class WordListServiceTest extends TestCase
 
         // Create a word with mixed case
         $result = $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'List_Test_Case',
-            'WoStatus' => 1,
-            'WoTranslation' => 'case test'
+            'language_id' => self::$testLangId,
+            'text' => 'List_Test_Case',
+            'status' => 1,
+            'translation' => 'case test'
         ]);
         $wordId = $result['id'];
 
@@ -497,7 +497,7 @@ class WordListServiceTest extends TestCase
 
         // Verify text is now lowercase
         $word = $wordService->findById($wordId);
-        $this->assertEquals('list_test_case', $word['WoText']);
+        $this->assertEquals('list_test_case', $word['text']);
     }
 
     public function testCapitalizeByIdList(): void
@@ -511,10 +511,10 @@ class WordListServiceTest extends TestCase
 
         // Create a word in lowercase
         $result = $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_cap',
-            'WoStatus' => 1,
-            'WoTranslation' => 'capitalize test'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_cap',
+            'status' => 1,
+            'translation' => 'capitalize test'
         ]);
         $wordId = $result['id'];
 
@@ -525,7 +525,7 @@ class WordListServiceTest extends TestCase
 
         // Verify text is capitalized
         $word = $wordService->findById($wordId);
-        $this->assertEquals('List_test_cap', $word['WoText']);
+        $this->assertEquals('List_test_cap', $word['text']);
     }
 
     // ===== Regex validation tests =====
@@ -581,21 +581,21 @@ class WordListServiceTest extends TestCase
 
         // Create a word
         $result = $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_edit',
-            'WoStatus' => 2,
-            'WoTranslation' => 'edit test'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_edit',
+            'status' => 2,
+            'translation' => 'edit test'
         ]);
         $wordId = $result['id'];
 
         $formData = $listService->getEditFormData($wordId);
 
         $this->assertNotNull($formData);
-        $this->assertEquals($wordId, $formData['WoID']);
-        $this->assertEquals(self::$testLangId, $formData['WoLgID']);
-        $this->assertEquals('list_test_edit', $formData['WoText']);
-        $this->assertEquals('edit test', $formData['WoTranslation']);
-        $this->assertEquals(2, $formData['WoStatus']);
+        $this->assertEquals($wordId, $formData['id']);
+        $this->assertEquals(self::$testLangId, $formData['language_id']);
+        $this->assertEquals('list_test_edit', $formData['text']);
+        $this->assertEquals('edit test', $formData['translation']);
+        $this->assertEquals(2, $formData['status']);
     }
 
     public function testGetEditFormDataWithNonExistentWord(): void
@@ -622,8 +622,8 @@ class WordListServiceTest extends TestCase
         $result = $service->getAnkiExportSql([1, 2, 3], '', '', '', '', '');
 
         $this->assertIsArray($result);
-        $this->assertStringContainsString('WoID', $result['sql']);
-        $this->assertStringContainsString('WoTranslation', $result['sql']);
+        $this->assertStringContainsString('id', $result['sql']);
+        $this->assertStringContainsString('translation', $result['sql']);
         $this->assertStringContainsString('?', $result['sql']);
         $this->assertSame([1, 2, 3], $result['params']);
     }
@@ -638,7 +638,7 @@ class WordListServiceTest extends TestCase
         $result = $service->getTsvExportSql([1, 2, 3], '', '', '', '', '');
 
         $this->assertIsArray($result);
-        $this->assertStringContainsString('WoStatus', $result['sql']);
+        $this->assertStringContainsString('status', $result['sql']);
         $this->assertStringContainsString('?', $result['sql']);
         $this->assertSame([1, 2, 3], $result['params']);
     }
@@ -668,7 +668,7 @@ class WordListServiceTest extends TestCase
         $result = $service->getTestWordIdsSql('', '', '', '', '');
 
         $this->assertIsArray($result);
-        $this->assertStringContainsString('WoID', $result['sql']);
+        $this->assertStringContainsString('id', $result['sql']);
         $this->assertStringContainsString('words', $result['sql']);
         $this->assertEmpty($result['params']);
     }
@@ -686,21 +686,21 @@ class WordListServiceTest extends TestCase
 
         // Create test words
         $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_filter1',
-            'WoStatus' => 1,
-            'WoTranslation' => 'filter test 1'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_filter1',
+            'status' => 1,
+            'translation' => 'filter test 1'
         ]);
         $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_filter2',
-            'WoStatus' => 1,
-            'WoTranslation' => 'filter test 2'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_filter2',
+            'status' => 1,
+            'translation' => 'filter test 2'
         ]);
 
         $ids = $listService->getFilteredWordIds(
             '',
-            ' and WoLgID=' . self::$testLangId,
+            ' and language_id=' . self::$testLangId,
             '',
             '',
             ''
@@ -723,14 +723,14 @@ class WordListServiceTest extends TestCase
 
         // Create test word
         $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_listword',
-            'WoStatus' => 1,
-            'WoTranslation' => 'list word test'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_listword',
+            'status' => 1,
+            'translation' => 'list word test'
         ]);
 
         $filters = [
-            'whLang' => ' and WoLgID=' . self::$testLangId,
+            'whLang' => ' and language_id=' . self::$testLangId,
             'whStat' => '',
             'whQuery' => '',
             'whTag' => '',
@@ -743,9 +743,9 @@ class WordListServiceTest extends TestCase
 
         $found = false;
         foreach ($result as $record) {
-            if ($record['WoText'] === 'list_test_listword') {
+            if ($record['text'] === 'list_test_listword') {
                 $found = true;
-                $this->assertEquals('list word test', $record['WoTranslation']);
+                $this->assertEquals('list word test', $record['translation']);
             }
         }
 
@@ -764,12 +764,12 @@ class WordListServiceTest extends TestCase
         $listService = new WordListService();
 
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_save',
-            'WoStatus' => 1,
-            'WoTranslation' => 'save test',
-            'WoSentence' => '',
-            'WoRomanization' => ''
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_save',
+            'status' => 1,
+            'translation' => 'save test',
+            'sentence' => '',
+            'romanization' => ''
         ];
 
         $wordId = $listService->saveNewWord($data);
@@ -794,22 +794,22 @@ class WordListServiceTest extends TestCase
 
         // Create word first
         $result = $wordService->create([
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'list_test_update',
-            'WoStatus' => 1,
-            'WoTranslation' => 'original'
+            'language_id' => self::$testLangId,
+            'text' => 'list_test_update',
+            'status' => 1,
+            'translation' => 'original'
         ]);
         $wordId = $result['id'];
 
         // Update it
         $data = [
-            'WoID' => $wordId,
-            'WoText' => 'list_test_update',
-            'WoStatus' => 3,
+            'id' => $wordId,
+            'text' => 'list_test_update',
+            'status' => 3,
             'WoOldStatus' => 1,
-            'WoTranslation' => 'updated',
-            'WoSentence' => 'New sentence',
-            'WoRomanization' => 'roman'
+            'translation' => 'updated',
+            'sentence' => 'New sentence',
+            'romanization' => 'roman'
         ];
 
         $result = $listService->updateWord($data);
@@ -819,7 +819,7 @@ class WordListServiceTest extends TestCase
 
         // Verify changes
         $word = $wordService->findById($wordId);
-        $this->assertEquals('3', $word['WoStatus']);
-        $this->assertEquals('updated', $word['WoTranslation']);
+        $this->assertEquals('3', $word['status']);
+        $this->assertEquals('updated', $word['translation']);
     }
 }

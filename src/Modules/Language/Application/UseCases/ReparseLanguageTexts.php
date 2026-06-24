@@ -131,8 +131,8 @@ class ReparseLanguageTexts
             ->delete();
         Maintenance::adjustAutoIncrement('sentences', 'SeID');
         QueryBuilder::table('words')
-            ->where('WoLgID', '=', $id)
-            ->updatePrepared(['WoWordCount' => 0]);
+            ->where('language_id', '=', $id)
+            ->updatePrepared(['word_count' => 0]);
         Maintenance::initWordCount();
 
         $rows = QueryBuilder::table('texts')

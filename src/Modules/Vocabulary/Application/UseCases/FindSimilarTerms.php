@@ -64,9 +64,9 @@ class FindSimilarTerms
 
         // Fetch words with their status for weighting
         $rows = QueryBuilder::table('words')
-            ->select(['WoID', 'WoTextLC', 'WoStatus'])
-            ->where('WoLgID', '=', $languageId)
-            ->where('WoTextLC', '<>', $comparedTermLc)
+            ->select(['id', 'text_lc', 'status'])
+            ->where('language_id', '=', $languageId)
+            ->where('text_lc', '<>', $comparedTermLc)
             ->getPrepared();
 
         $termlsd = [];
@@ -74,18 +74,18 @@ class FindSimilarTerms
             // Calculate combined similarity (character pairs + phonetic)
             $baseSimilarity = $this->calculator->getCombinedSimilarityRanking(
                 $comparedTermLc,
-                (string)$record["WoTextLC"],
+                (string)$record["text_lc"],
                 $phoneticWeight
             );
 
             // Apply status weight to boost learned words
-            $status = (int) $record["WoStatus"];
+            $status = (int) $record["status"];
             $statusWeight = $this->calculator->getStatusWeight($status);
             $weightedSimilarity = $baseSimilarity * $statusWeight;
 
             // Only include if base similarity meets minimum threshold
             if ($baseSimilarity >= $minRanking) {
-                $termlsd[(int) $record["WoID"]] = $weightedSimilarity;
+                $termlsd[(int) $record["id"]] = $weightedSimilarity;
             }
         }
 
@@ -116,11 +116,11 @@ class FindSimilarTerms
     public function formatTerm(int $termId, string $compare): string
     {
         $record = QueryBuilder::table('words')
-            ->select(['WoText', 'WoTranslation', 'WoRomanization'])
-            ->where('WoID', '=', $termId)
+            ->select(['text', 'translation', 'romanization'])
+            ->where('id', '=', $termId)
             ->firstPrepared();
         if ($record !== null) {
-            $term = htmlspecialchars((string)($record["WoText"] ?? ''), ENT_QUOTES, 'UTF-8');
+            $term = htmlspecialchars((string)($record["text"] ?? ''), ENT_QUOTES, 'UTF-8');
             if (stripos($compare, $term) !== false) {
                 $term = '<span class="has-text-danger">' . $term . '</span>';
             } else {
@@ -130,12 +130,12 @@ class FindSimilarTerms
                     $term
                 );
             }
-            $tra = (string) $record["WoTranslation"];
+            $tra = (string) $record["translation"];
             if ($tra == "*") {
                 $tra = "???";
             }
-            if (trim((string) $record["WoRomanization"]) !== '') {
-                $rom = (string) $record["WoRomanization"];
+            if (trim((string) $record["romanization"]) !== '') {
+                $rom = (string) $record["romanization"];
                 $romd = " [$rom]";
             } else {
                 $rom = "";

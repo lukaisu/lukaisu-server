@@ -149,8 +149,8 @@ class TermEditController extends VocabularyBaseController
      */
     private function handleEditWordOperation(): bool
     {
-        $textlc = trim(Escaping::prepareTextdata(InputValidator::getString('WoTextLC')));
-        $text = trim(Escaping::prepareTextdata(InputValidator::getString('WoText')));
+        $textlc = trim(Escaping::prepareTextdata(InputValidator::getString('text_lc')));
+        $text = trim(Escaping::prepareTextdata(InputValidator::getString('text')));
 
         // Validate lowercase matches
         if (mb_strtolower($text, 'UTF-8') != $textlc) {
@@ -165,7 +165,7 @@ class TermEditController extends VocabularyBaseController
             return true;
         }
 
-        $translation = ExportService::replaceTabNewline(InputValidator::getString('WoTranslation'));
+        $translation = ExportService::replaceTabNewline(InputValidator::getString('translation'));
         if ($translation == '') {
             $translation = '*';
         }
@@ -176,12 +176,12 @@ class TermEditController extends VocabularyBaseController
         if ($op == 'Save') {
             // Insert new term
             $result = $this->getCrudService()->create($requestData);
-            $hex = $this->getContextService()->textToClassName(InputValidator::getString('WoTextLC'));
+            $hex = $this->getContextService()->textToClassName(InputValidator::getString('text_lc'));
             $oldStatus = 0;
             $titletext = "New Term: " . htmlspecialchars($textlc, ENT_QUOTES, 'UTF-8');
         } else {
             // Update existing term
-            $result = $this->getCrudService()->update(InputValidator::getInt('WoID', 0) ?? 0, $requestData);
+            $result = $this->getCrudService()->update(InputValidator::getInt('id', 0) ?? 0, $requestData);
             $hex = null;
             $oldStatus = InputValidator::getString('WoOldStatus');
             $titletext = "Edit Term: " . htmlspecialchars($textlc, ENT_QUOTES, 'UTF-8');
@@ -197,8 +197,8 @@ class TermEditController extends VocabularyBaseController
 
         // Prepare view variables
         $textId = InputValidator::getInt('tid', 0) ?? 0;
-        $status = InputValidator::getString('WoStatus');
-        $romanization = InputValidator::getString('WoRomanization');
+        $status = InputValidator::getString('status');
+        $romanization = InputValidator::getString('romanization');
         $fromAnn = InputValidator::getString('fromAnn');
 
         $tagList = TagsFacade::getWordTagList($wid, false);
@@ -264,8 +264,8 @@ class TermEditController extends VocabularyBaseController
             if ($wordData === null) {
                 throw new \RuntimeException("Cannot access term and language: word ID not found");
             }
-            $term = (string) $wordData['WoText'];
-            $lang = (int) $wordData['WoLgID'];
+            $term = (string) $wordData['text'];
+            $lang = (int) $wordData['language_id'];
             $termlc = mb_strtolower($term, 'UTF-8');
             $new = false;
         }
@@ -289,13 +289,13 @@ class TermEditController extends VocabularyBaseController
             $dictLinksHtml = $this->dictionaryAdapter->createDictLinksInEditWin(
                 $lang,
                 $term,
-                'document.forms[0].WoSentence',
+                'document.forms[0].sentence',
                 !InputValidator::hasFromGet('nodict')
             );
             $sentenceAreaHtml = $this->getSentenceService()->renderExampleSentencesArea(
                 $lang,
                 $termlc,
-                'document.forms.newword.WoSentence',
+                'document.forms.newword.sentence',
                 0
             );
             $wordTagsHtml = TagsFacade::getWordTagsHtml(0);
@@ -325,17 +325,17 @@ class TermEditController extends VocabularyBaseController
                 throw new \RuntimeException("Cannot access word data: word ID not found");
             }
 
-            $status = (int)$wordData['WoStatus'];
+            $status = (int)$wordData['status'];
             if ($fromAnn == '' && $status >= 98) {
                 $status = 1;
             }
 
-            $sentence = ExportService::replaceTabNewline((string)$wordData['WoSentence']);
+            $sentence = ExportService::replaceTabNewline((string)$wordData['sentence']);
             if ($sentence == '' && $textId !== 0 && $ord !== 0) {
                 $sentence = $contextService->getSentenceForTerm($textId, $ord, $termlc);
             }
 
-            $transl = ExportService::replaceTabNewline((string)$wordData['WoTranslation']);
+            $transl = ExportService::replaceTabNewline((string)$wordData['translation']);
             if ($transl == '*') {
                 $transl = '';
             }
@@ -350,21 +350,21 @@ class TermEditController extends VocabularyBaseController
             if ($fromAnn !== '') {
                 $dictLinksHtml = $this->dictionaryAdapter->createDictLinksInEditWin2(
                     $lang,
-                    'WoSentence',
-                    'WoText'
+                    'sentence',
+                    'text'
                 );
             } else {
                 $dictLinksHtml = $this->dictionaryAdapter->createDictLinksInEditWin(
                     $lang,
                     $term,
-                    'WoSentence',
+                    'sentence',
                     !InputValidator::hasFromGet('nodict')
                 );
             }
             $sentenceAreaHtml = $this->getSentenceService()->renderExampleSentencesArea(
                 $lang,
                 $termlc,
-                'WoSentence',
+                'sentence',
                 $wid
             );
             $wordTagsHtml = TagsFacade::getWordTagsHtml($wid);
@@ -403,7 +403,7 @@ class TermEditController extends VocabularyBaseController
      */
     public function editTerm(array $params): void
     {
-        $translation_raw = ExportService::replaceTabNewline(InputValidator::getString('WoTranslation'));
+        $translation_raw = ExportService::replaceTabNewline(InputValidator::getString('translation'));
         $translation = ($translation_raw == '') ? '*' : $translation_raw;
 
         $op = InputValidator::getString('op');
@@ -427,8 +427,8 @@ class TermEditController extends VocabularyBaseController
      */
     private function handleEditTermOperation(string $translation): bool
     {
-        $woTextLC = InputValidator::getString('WoTextLC');
-        $woText = InputValidator::getString('WoText');
+        $woTextLC = InputValidator::getString('text_lc');
+        $woText = InputValidator::getString('text');
         $textlc = trim(Escaping::prepareTextdata($woTextLC));
         $text = trim(Escaping::prepareTextdata($woText));
 
@@ -452,10 +452,10 @@ class TermEditController extends VocabularyBaseController
             echo '<h1>' . $titletext . '</h1>';
 
             $oldstatus = InputValidator::getString('WoOldStatus');
-            $newstatus = InputValidator::getString('WoStatus');
-            $woId = InputValidator::getInt('WoID', 0) ?? 0;
-            $woSentence = InputValidator::getString('WoSentence');
-            $woRomanization = InputValidator::getString('WoRomanization');
+            $newstatus = InputValidator::getString('status');
+            $woId = InputValidator::getInt('id', 0) ?? 0;
+            $woSentence = InputValidator::getString('sentence');
+            $woRomanization = InputValidator::getString('romanization');
 
             $scoreRandomUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
             $sentenceEscaped = ExportService::replaceTabNewline($woSentence);
@@ -467,9 +467,9 @@ class TermEditController extends VocabularyBaseController
                     $newstatus, $woId
                 ];
                 $sql = "UPDATE words SET
-                    WoText = ?, WoTranslation = ?, WoSentence = ?, WoRomanization = ?,
-                    WoStatus = ?, WoStatusChanged = NOW(), {$scoreRandomUpdate}
-                    WHERE WoID = ?"
+                    text = ?, translation = ?, sentence = ?, romanization = ?,
+                    status = ?, status_changed_at = NOW(), {$scoreRandomUpdate}
+                    WHERE id = ?"
                     . \Lukaisu\Shared\Infrastructure\Database\UserScopedQuery::forTablePrepared('words', $bindings);
                 Connection::preparedExecute($sql, $bindings);
             } else {
@@ -479,9 +479,9 @@ class TermEditController extends VocabularyBaseController
                     $woId
                 ];
                 $sql = "UPDATE words SET
-                    WoText = ?, WoTranslation = ?, WoSentence = ?, WoRomanization = ?,
+                    text = ?, translation = ?, sentence = ?, romanization = ?,
                     {$scoreRandomUpdate}
-                    WHERE WoID = ?"
+                    WHERE id = ?"
                     . \Lukaisu\Shared\Infrastructure\Database\UserScopedQuery::forTablePrepared('words', $bindings);
                 Connection::preparedExecute($sql, $bindings);
             }
@@ -492,8 +492,8 @@ class TermEditController extends VocabularyBaseController
 
             /** @var int|null $lang */
             $lang = QueryBuilder::table('words')
-                ->where('WoID', '=', $wid)
-                ->valuePrepared('WoLgID');
+                ->where('id', '=', $wid)
+                ->valuePrepared('language_id');
             if (!isset($lang)) {
                 throw new \RuntimeException('Cannot retrieve language: word not found');
             }
@@ -550,20 +550,20 @@ class TermEditController extends VocabularyBaseController
         $wid = (int) $widParam;
 
         $record = QueryBuilder::table('words')
-            ->select(['WoText', 'WoLgID', 'WoTranslation', 'WoSentence', 'WoNotes', 'WoRomanization', 'WoStatus'])
-            ->where('WoID', '=', $wid)
+            ->select(['text', 'language_id', 'translation', 'sentence', 'notes', 'romanization', 'status'])
+            ->where('id', '=', $wid)
             ->firstPrepared();
         if ($record !== null) {
-            $term = (string) $record['WoText'];
-            $lang = (int) $record['WoLgID'];
-            $transl = ExportService::replaceTabNewline((string)$record['WoTranslation']);
+            $term = (string) $record['text'];
+            $lang = (int) $record['language_id'];
+            $transl = ExportService::replaceTabNewline((string)$record['translation']);
             if ($transl == '*') {
                 $transl = '';
             }
-            $sentence = ExportService::replaceTabNewline((string)$record['WoSentence']);
-            $notes = ExportService::replaceTabNewline((string)($record['WoNotes'] ?? ''));
-            $rom = (string)$record['WoRomanization'];
-            $status = (int)$record['WoStatus'];
+            $sentence = ExportService::replaceTabNewline((string)$record['sentence']);
+            $notes = ExportService::replaceTabNewline((string)($record['notes'] ?? ''));
+            $rom = (string)$record['romanization'];
+            $status = (int)$record['status'];
             $showRoman = (bool) QueryBuilder::table('languages')
                 ->where('LgID', '=', $lang)
                 ->valuePrepared('LgShowRomanization');
@@ -580,13 +580,13 @@ class TermEditController extends VocabularyBaseController
         $dictLinksHtml = $this->dictionaryAdapter->createDictLinksInEditWin(
             $lang,
             $term,
-            'document.forms[0].WoSentence',
+            'document.forms[0].sentence',
             true
         );
         $sentenceAreaHtml = $this->getSentenceService()->renderExampleSentencesArea(
             $lang,
             $termlc,
-            'document.forms.editword.WoSentence',
+            'document.forms.editword.sentence',
             $wid
         );
         $wordTagsHtml = TagsFacade::getWordTagsHtml($wid);
@@ -698,7 +698,7 @@ class TermEditController extends VocabularyBaseController
 
                 echo '<p>' . htmlspecialchars($result['message'], ENT_QUOTES, 'UTF-8') . '</p>';
 
-                $woLgId = InputValidator::getInt('WoLgID', 0) ?? 0;
+                $woLgId = InputValidator::getInt('language_id', 0) ?? 0;
                 $len = $crudService->getWordCount($wid);
                 if ($len > 1) {
                     $this->getExpressionService()->insertExpressions($result['textlc'], $woLgId, $wid, $len, 0);
@@ -707,12 +707,12 @@ class TermEditController extends VocabularyBaseController
 
                     // Prepare view variables
                     $hex = $contextService->textToClassName($result['textlc']);
-                    $translation = ExportService::replaceTabNewline(InputValidator::getString('WoTranslation'));
+                    $translation = ExportService::replaceTabNewline(InputValidator::getString('translation'));
                     if ($translation === '') {
                         $translation = '*';
                     }
-                    $status = InputValidator::getString('WoStatus');
-                    $romanization = InputValidator::getString('WoRomanization');
+                    $status = InputValidator::getString('status');
+                    $romanization = InputValidator::getString('romanization');
                     $text = $result['text'];
                     $textId = InputValidator::getInt('tid', 0) ?? 0;
                     $success = true;
@@ -746,7 +746,7 @@ class TermEditController extends VocabularyBaseController
             $showRoman = $langData['showRoman'];
 
             $showSimilarTerms = (int) Settings::getWithDefault("set-similar-terms-count") > 0;
-            $dictLinksHtml = $this->dictionaryAdapter->createDictLinksInEditWin3($lang, 'WoSentence', 'WoText');
+            $dictLinksHtml = $this->dictionaryAdapter->createDictLinksInEditWin3($lang, 'sentence', 'text');
             $wordTagsHtml = TagsFacade::getWordTagsHtml(0);
 
             PageLayoutHelper::renderPageStart('New Term', true, 'terms');
@@ -773,15 +773,15 @@ class TermEditController extends VocabularyBaseController
     private function getWordFormData(): array
     {
         return [
-            'WoID' => InputValidator::getInt('WoID'),
-            'WoLgID' => InputValidator::getInt('WoLgID', 0) ?? 0,
-            'WoText' => InputValidator::getString('WoText'),
-            'WoTextLC' => InputValidator::getString('WoTextLC'),
-            'WoStatus' => InputValidator::getString('WoStatus'),
+            'id' => InputValidator::getInt('id'),
+            'language_id' => InputValidator::getInt('language_id', 0) ?? 0,
+            'text' => InputValidator::getString('text'),
+            'text_lc' => InputValidator::getString('text_lc'),
+            'status' => InputValidator::getString('status'),
             'WoOldStatus' => InputValidator::getString('WoOldStatus'),
-            'WoTranslation' => InputValidator::getString('WoTranslation'),
-            'WoRomanization' => InputValidator::getString('WoRomanization'),
-            'WoSentence' => InputValidator::getString('WoSentence'),
+            'translation' => InputValidator::getString('translation'),
+            'romanization' => InputValidator::getString('romanization'),
+            'sentence' => InputValidator::getString('sentence'),
             'tid' => InputValidator::getInt('tid'),
             'ord' => InputValidator::getInt('ord'),
             'len' => InputValidator::getInt('len'),

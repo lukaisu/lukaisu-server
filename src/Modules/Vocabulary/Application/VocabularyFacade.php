@@ -114,7 +114,7 @@ class VocabularyFacade
     /**
      * Create term from array data (backward compatible).
      *
-     * @param array $data Term data with WoLgID, WoText, WoStatus, etc.
+     * @param array $data Term data with language_id, text, status, etc.
      *
      * @return array{id: int, message: string, success: bool, textlc: string, text: string}
      */
@@ -417,7 +417,7 @@ class VocabularyFacade
         int $languageId = 0,
         int $page = 1,
         int $perPage = 20,
-        string $orderBy = 'WoText',
+        string $orderBy = 'text',
         string $direction = 'ASC'
     ): array {
         return $this->repository->findPaginated($languageId, $page, $perPage, $orderBy, $direction);

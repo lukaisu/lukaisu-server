@@ -316,10 +316,10 @@ class TermCrudApiHandler
     {
         $record = QueryBuilder::table('words')
             ->select([
-                'WoID', 'WoText', 'WoTextLC', 'WoLemma', 'WoLemmaLC', 'WoTranslation',
-                'WoRomanization', 'WoStatus', 'WoLgID', 'WoSentence', 'WoNotes'
+                'id', 'text', 'text_lc', 'lemma', 'lemma_lc', 'translation',
+                'romanization', 'status', 'language_id', 'sentence', 'notes'
             ])
-            ->where('WoID', '=', $termId)
+            ->where('id', '=', $termId)
             ->firstPrepared();
 
         if ($record === null) {
@@ -336,25 +336,25 @@ class TermCrudApiHandler
         $tags = array_map(fn($row) => (string)$row['TgText'], $tagsResult);
 
         // Process translation - highlight annotation if provided
-        $translation = (string)$record['WoTranslation'];
+        $translation = (string)$record['translation'];
         if ($ann !== null && $ann !== '' && $translation !== '' && $translation !== '*') {
             $translation = str_replace($ann, '<b>' . $ann . '</b>', $translation);
         }
 
         return [
-            'id' => (int)$record['WoID'],
-            'text' => (string)$record['WoText'],
-            'textLc' => (string)$record['WoTextLC'],
-            'lemma' => (string)($record['WoLemma'] ?? ''),
-            'lemmaLc' => (string)($record['WoLemmaLC'] ?? ''),
+            'id' => (int)$record['id'],
+            'text' => (string)$record['text'],
+            'textLc' => (string)$record['text_lc'],
+            'lemma' => (string)($record['lemma'] ?? ''),
+            'lemmaLc' => (string)($record['lemma_lc'] ?? ''),
             'translation' => $translation,
-            'romanization' => (string)$record['WoRomanization'],
-            'status' => (int)$record['WoStatus'],
-            'langId' => (int)$record['WoLgID'],
-            'sentence' => (string)$record['WoSentence'],
-            'notes' => (string)($record['WoNotes'] ?? ''),
+            'romanization' => (string)$record['romanization'],
+            'status' => (int)$record['status'],
+            'langId' => (int)$record['language_id'],
+            'sentence' => (string)$record['sentence'],
+            'notes' => (string)($record['notes'] ?? ''),
             'tags' => $tags,
-            'statusLabel' => TermStatusService::getStatusName((int)$record['WoStatus'])
+            'statusLabel' => TermStatusService::getStatusName((int)$record['status'])
         ];
     }
 
@@ -476,10 +476,10 @@ class TermCrudApiHandler
         if ($wordId !== null && $wordId > 0) {
             $termData = QueryBuilder::table('words')
                 ->select([
-                    'WoID', 'WoText', 'WoTextLC', 'WoLemma', 'WoLemmaLC', 'WoTranslation',
-                    'WoRomanization', 'WoSentence', 'WoNotes', 'WoStatus', 'WoLgID'
+                    'id', 'text', 'text_lc', 'lemma', 'lemma_lc', 'translation',
+                    'romanization', 'sentence', 'notes', 'status', 'language_id'
                 ])
-                ->where('WoID', '=', $wordId)
+                ->where('id', '=', $wordId)
                 ->firstPrepared();
 
             if ($termData === null) {
@@ -496,22 +496,22 @@ class TermCrudApiHandler
             $tags = array_map(fn($row) => (string)$row['TgText'], $tagsResult);
 
             $term = [
-                'id' => (int) $termData['WoID'],
-                'text' => (string) $termData['WoText'],
-                'textLc' => (string) $termData['WoTextLC'],
-                'lemma' => (string) ($termData['WoLemma'] ?? ''),
-                'lemmaLc' => (string) ($termData['WoLemmaLC'] ?? ''),
-                'hex' => StringUtils::toClassName((string) $termData['WoTextLC']),
-                'translation' => (string) $termData['WoTranslation'],
-                'romanization' => (string) $termData['WoRomanization'],
-                'sentence' => (string) $termData['WoSentence'],
-                'notes' => (string) ($termData['WoNotes'] ?? ''),
-                'status' => (int) $termData['WoStatus'],
+                'id' => (int) $termData['id'],
+                'text' => (string) $termData['text'],
+                'textLc' => (string) $termData['text_lc'],
+                'lemma' => (string) ($termData['lemma'] ?? ''),
+                'lemmaLc' => (string) ($termData['lemma_lc'] ?? ''),
+                'hex' => StringUtils::toClassName((string) $termData['text_lc']),
+                'translation' => (string) $termData['translation'],
+                'romanization' => (string) $termData['romanization'],
+                'sentence' => (string) $termData['sentence'],
+                'notes' => (string) ($termData['notes'] ?? ''),
+                'status' => (int) $termData['status'],
                 'tags' => $tags
             ];
 
             // Get similar terms
-            $similarTerms = $this->getSimilarTermsForEdit($langId, (string) $termData['WoTextLC'], $wordId);
+            $similarTerms = $this->getSimilarTermsForEdit($langId, (string) $termData['text_lc'], $wordId);
 
             return [
                 'isNew' => false,
@@ -592,16 +592,16 @@ class TermCrudApiHandler
             }
 
             $record = QueryBuilder::table('words')
-                ->select(['WoID', 'WoText', 'WoTranslation', 'WoStatus'])
-                ->where('WoID', '=', $termId)
+                ->select(['id', 'text', 'translation', 'status'])
+                ->where('id', '=', $termId)
                 ->firstPrepared();
 
             if ($record !== null) {
                 $result[] = [
-                    'id' => (int) $record['WoID'],
-                    'text' => (string) $record['WoText'],
-                    'translation' => (string) $record['WoTranslation'],
-                    'status' => (int) $record['WoStatus']
+                    'id' => (int) $record['id'],
+                    'text' => (string) $record['text'],
+                    'translation' => (string) $record['translation'],
+                    'status' => (int) $record['status']
                 ];
             }
         }
@@ -680,13 +680,13 @@ class TermCrudApiHandler
         $userScopeValue = '';
         $userIdForInsert = UserScopedQuery::getUserIdForInsert('words');
         if ($userIdForInsert !== null) {
-            $userScopeColumn = ', WoUsID';
+            $userScopeColumn = ', user_id';
             $userScopeValue = ', ?';
             $bindings[] = $userIdForInsert;
         }
         $sql = "INSERT INTO words (
-                WoLgID, WoTextLC, WoText, WoLemma, WoLemmaLC, WoStatus, WoTranslation,
-                WoSentence, WoNotes, WoRomanization, WoStatusChanged,
+                language_id, text_lc, text, lemma, lemma_lc, status, translation,
+                sentence, notes, romanization, status_changed_at,
                 {$scoreColumns}{$userScopeColumn}
             ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), {$scoreValues}{$userScopeValue})";
 
@@ -757,15 +757,15 @@ class TermCrudApiHandler
     {
         // Get existing term data
         $existing = QueryBuilder::table('words')
-            ->select(['WoID', 'WoText', 'WoTextLC', 'WoLgID', 'WoStatus'])
-            ->where('WoID', '=', $termId)
+            ->select(['id', 'text', 'text_lc', 'language_id', 'status'])
+            ->where('id', '=', $termId)
             ->firstPrepared();
 
         if ($existing === null) {
             return ['error' => 'Term not found'];
         }
 
-        $status = (int) ($data['status'] ?? $existing['WoStatus']);
+        $status = (int) ($data['status'] ?? $existing['status']);
 
         // Validate status
         if (!TermStatus::isValid($status)) {
@@ -790,16 +790,16 @@ class TermCrudApiHandler
         $bindings = [$translation, $romanization, $sentence, $notes, $lemma, $lemmaLc, $status, $termId];
         Connection::preparedExecute(
             "UPDATE words SET
-             WoTranslation = ?,
-             WoRomanization = ?,
-             WoSentence = ?,
-             WoNotes = ?,
-             WoLemma = ?,
-             WoLemmaLC = ?,
-             WoStatus = ?,
-             WoStatusChanged = NOW(),
+             translation = ?,
+             romanization = ?,
+             sentence = ?,
+             notes = ?,
+             lemma = ?,
+             lemma_lc = ?,
+             status = ?,
+             status_changed_at = NOW(),
              {$scoreUpdate}
-             WHERE WoID = ?"
+             WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             [$translation, $romanization, $sentence, $notes, $lemma, $lemmaLc, $status, $termId]
         );
@@ -820,11 +820,11 @@ class TermCrudApiHandler
             'success' => true,
             'term' => [
                 'id' => $termId,
-                'text' => (string) $existing['WoText'],
-                'textLc' => (string) $existing['WoTextLC'],
+                'text' => (string) $existing['text'],
+                'textLc' => (string) $existing['text_lc'],
                 'lemma' => $lemma ?? '',
                 'lemmaLc' => $lemmaLc ?? '',
-                'hex' => StringUtils::toClassName((string) $existing['WoTextLC']),
+                'hex' => StringUtils::toClassName((string) $existing['text_lc']),
                 'translation' => $translation === '*' ? '' : $translation,
                 'romanization' => $romanization,
                 'sentence' => $sentence,

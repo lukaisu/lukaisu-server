@@ -79,7 +79,7 @@ class WordDiscoveryServiceTest extends TestCase
         }
 
         // Clean up test words
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE language_id = " . self::$testLangId);
         // Clean up test language
         Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . self::$testLangId);
     }
@@ -97,7 +97,7 @@ class WordDiscoveryServiceTest extends TestCase
         }
 
         // Clean up test words after each test
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoText LIKE 'test%'");
+        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE text LIKE 'test%'");
     }
 
     // ===== setStatus() tests =====
@@ -110,10 +110,10 @@ class WordDiscoveryServiceTest extends TestCase
 
         // Create a word
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testsetstatus',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testsetstatus',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->crudService->create($data);
         $wordId = $createResult['id'];
@@ -123,7 +123,7 @@ class WordDiscoveryServiceTest extends TestCase
 
         // Verify status changed
         $word = $this->crudService->findById($wordId);
-        $this->assertEquals('5', $word['WoStatus']);
+        $this->assertEquals('5', $word['status']);
     }
 
     public function testSetStatusToWellKnown(): void
@@ -133,10 +133,10 @@ class WordDiscoveryServiceTest extends TestCase
         }
 
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testwellknown',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testwellknown',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->crudService->create($data);
         $wordId = $createResult['id'];
@@ -144,7 +144,7 @@ class WordDiscoveryServiceTest extends TestCase
         $this->service->setStatus($wordId, 99);
 
         $word = $this->crudService->findById($wordId);
-        $this->assertEquals('99', $word['WoStatus']);
+        $this->assertEquals('99', $word['status']);
     }
 
     public function testSetStatusToIgnored(): void
@@ -154,10 +154,10 @@ class WordDiscoveryServiceTest extends TestCase
         }
 
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testignored',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testignored',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->crudService->create($data);
         $wordId = $createResult['id'];
@@ -165,7 +165,7 @@ class WordDiscoveryServiceTest extends TestCase
         $this->service->setStatus($wordId, 98);
 
         $word = $this->crudService->findById($wordId);
-        $this->assertEquals('98', $word['WoStatus']);
+        $this->assertEquals('98', $word['status']);
     }
 
     // ===== createWithStatus() tests =====
@@ -188,7 +188,7 @@ class WordDiscoveryServiceTest extends TestCase
 
         // Verify status
         $word = $this->crudService->findById($result['id']);
-        $this->assertEquals('99', $word['WoStatus']);
+        $this->assertEquals('99', $word['status']);
     }
 
     public function testCreateWithStatusIgnored(): void
@@ -208,7 +208,7 @@ class WordDiscoveryServiceTest extends TestCase
         $this->assertEquals(1, $result['rows']);
 
         $word = $this->crudService->findById($result['id']);
-        $this->assertEquals('98', $word['WoStatus']);
+        $this->assertEquals('98', $word['status']);
     }
 
     public function testCreateWithStatusExistingWord(): void
@@ -219,10 +219,10 @@ class WordDiscoveryServiceTest extends TestCase
 
         // Create a word first
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testexisting',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testexisting',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->crudService->create($data);
         $existingId = $createResult['id'];

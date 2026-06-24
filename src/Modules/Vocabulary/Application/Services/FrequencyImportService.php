@@ -169,18 +169,18 @@ class FrequencyImportService
         /** @var list<int|string> $params */
         $params = [];
         foreach ($words as $word) {
-            $params[] = $word;                    // WoText
-            $params[] = mb_strtolower($word);     // WoTextLC
-            $params[] = $langId;                  // WoLgID
-            $params[] = 1;                        // WoStatus
+            $params[] = $word;                    // text
+            $params[] = mb_strtolower($word);     // text_lc
+            $params[] = $langId;                  // language_id
+            $params[] = 1;                        // status
             if ($userId !== null) {
                 $params[] = $userId;
             }
         }
 
         $sql = "INSERT IGNORE INTO words (
-                WoText, WoTextLC, WoLgID, WoStatus, WoStatusChanged,
-                WoTodayScore, WoTomorrowScore, WoRandom"
+                text, text_lc, language_id, status, status_changed_at,
+                today_score, tomorrow_score, random"
             . UserScopedQuery::insertColumn('words')
             . ") VALUES " . implode(',', $placeholders);
 

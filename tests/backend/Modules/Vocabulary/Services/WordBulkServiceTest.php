@@ -78,7 +78,7 @@ class WordBulkServiceTest extends TestCase
         }
 
         // Clean up test words
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE language_id = " . self::$testLangId);
         // Clean up test language
         Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . self::$testLangId);
     }
@@ -96,7 +96,7 @@ class WordBulkServiceTest extends TestCase
         }
 
         // Clean up test words after each test
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoText LIKE 'test%'");
+        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE text LIKE 'test%'");
     }
 
     // ===== deleteMultiple() tests =====
@@ -111,10 +111,10 @@ class WordBulkServiceTest extends TestCase
         $ids = [];
         for ($i = 1; $i <= 3; $i++) {
             $data = [
-                'WoLgID' => self::$testLangId,
-                'WoText' => "testdelmulti$i",
-                'WoStatus' => 1,
-                'WoTranslation' => "translation $i",
+                'language_id' => self::$testLangId,
+                'text' => "testdelmulti$i",
+                'status' => 1,
+                'translation' => "translation $i",
             ];
             $result = $this->crudService->create($data);
             $ids[] = $result['id'];
@@ -152,10 +152,10 @@ class WordBulkServiceTest extends TestCase
         $ids = [];
         for ($i = 1; $i <= 3; $i++) {
             $data = [
-                'WoLgID' => self::$testLangId,
-                'WoText' => "teststatmulti$i",
-                'WoStatus' => 1,
-                'WoTranslation' => "translation $i",
+                'language_id' => self::$testLangId,
+                'text' => "teststatmulti$i",
+                'status' => 1,
+                'translation' => "translation $i",
             ];
             $result = $this->crudService->create($data);
             $ids[] = $result['id'];
@@ -168,7 +168,7 @@ class WordBulkServiceTest extends TestCase
         // Verify
         foreach ($ids as $id) {
             $word = $this->crudService->findById($id);
-            $this->assertEquals('5', $word['WoStatus']);
+            $this->assertEquals('5', $word['status']);
         }
     }
 
@@ -180,10 +180,10 @@ class WordBulkServiceTest extends TestCase
 
         // Create a word with status 2
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testincrement',
-            'WoStatus' => 2,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testincrement',
+            'status' => 2,
+            'translation' => 'translation',
         ];
         $createResult = $this->crudService->create($data);
         $wordId = $createResult['id'];
@@ -193,7 +193,7 @@ class WordBulkServiceTest extends TestCase
 
         // Verify status is now 3
         $word = $this->crudService->findById($wordId);
-        $this->assertEquals('3', $word['WoStatus']);
+        $this->assertEquals('3', $word['status']);
     }
 
     public function testUpdateStatusMultipleDecrement(): void
@@ -204,10 +204,10 @@ class WordBulkServiceTest extends TestCase
 
         // Create a word with status 4
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testdecrement',
-            'WoStatus' => 4,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testdecrement',
+            'status' => 4,
+            'translation' => 'translation',
         ];
         $createResult = $this->crudService->create($data);
         $wordId = $createResult['id'];
@@ -217,7 +217,7 @@ class WordBulkServiceTest extends TestCase
 
         // Verify status is now 3
         $word = $this->crudService->findById($wordId);
-        $this->assertEquals('3', $word['WoStatus']);
+        $this->assertEquals('3', $word['status']);
     }
 
     public function testUpdateStatusMultipleWithEmptyArray(): void
@@ -240,11 +240,11 @@ class WordBulkServiceTest extends TestCase
 
         // Create a word with a sentence
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testdelsent',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
-            'WoSentence' => 'This is a {testdelsent} sentence.',
+            'language_id' => self::$testLangId,
+            'text' => 'testdelsent',
+            'status' => 1,
+            'translation' => 'translation',
+            'sentence' => 'This is a {testdelsent} sentence.',
         ];
         $createResult = $this->crudService->create($data);
         $wordId = $createResult['id'];
@@ -255,7 +255,7 @@ class WordBulkServiceTest extends TestCase
 
         // Verify sentence is null
         $word = $this->crudService->findById($wordId);
-        $this->assertNull($word['WoSentence']);
+        $this->assertNull($word['sentence']);
     }
 
     // ===== toLowercaseMultiple() tests =====
@@ -268,10 +268,10 @@ class WordBulkServiceTest extends TestCase
 
         // Create a word with mixed case
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'TestLower',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'TestLower',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->crudService->create($data);
         $wordId = $createResult['id'];
@@ -282,7 +282,7 @@ class WordBulkServiceTest extends TestCase
 
         // Verify text is lowercase
         $word = $this->crudService->findById($wordId);
-        $this->assertEquals('testlower', $word['WoText']);
+        $this->assertEquals('testlower', $word['text']);
     }
 
     // ===== capitalizeMultiple() tests =====
@@ -295,10 +295,10 @@ class WordBulkServiceTest extends TestCase
 
         // Create a lowercase word
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testcapital',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testcapital',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->crudService->create($data);
         $wordId = $createResult['id'];
@@ -309,7 +309,7 @@ class WordBulkServiceTest extends TestCase
 
         // Verify text is capitalized
         $word = $this->crudService->findById($wordId);
-        $this->assertEquals('Testcapital', $word['WoText']);
+        $this->assertEquals('Testcapital', $word['text']);
     }
 
     // ===== bulkSaveTerms() tests =====
@@ -347,12 +347,12 @@ class WordBulkServiceTest extends TestCase
         $wordData2 = $this->crudService->findById($word2);
         $wordData3 = $this->crudService->findById($word3);
 
-        $this->assertEquals('1', $wordData1['WoStatus']);
-        $this->assertEquals('2', $wordData2['WoStatus']);
-        $this->assertEquals('3', $wordData3['WoStatus']);
+        $this->assertEquals('1', $wordData1['status']);
+        $this->assertEquals('2', $wordData2['status']);
+        $this->assertEquals('3', $wordData3['status']);
 
         // Verify empty translation becomes '*'
-        $this->assertEquals('*', $wordData3['WoTranslation']);
+        $this->assertEquals('*', $wordData3['translation']);
     }
 
     public function testBulkSaveTermsWithEmptyArrayReturnsMaxId(): void
@@ -380,10 +380,10 @@ class WordBulkServiceTest extends TestCase
 
         // Create a word
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testnewafter',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testnewafter',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $this->crudService->create($data);
 
@@ -392,7 +392,7 @@ class WordBulkServiceTest extends TestCase
 
         $found = false;
         foreach ($res as $record) {
-            if ($record['WoTextLC'] === 'testnewafter') {
+            if ($record['text_lc'] === 'testnewafter') {
                 $found = true;
                 break;
             }

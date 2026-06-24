@@ -46,7 +46,7 @@ class SubmitAnswerTest extends TestCase
     /**
      * Pass the ownership pre-check in SubmitAnswer::execute() by mocking
      * the user-scoped getWordStatus() lookup. Pass null to test the
-     * "foreign WoID" rejection path.
+     * "foreign id" rejection path.
      */
     private function mockOwnershipCheck(?int $currentStatus): void
     {

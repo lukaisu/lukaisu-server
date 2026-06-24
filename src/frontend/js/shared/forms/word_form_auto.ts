@@ -36,7 +36,7 @@ function getTermText(): string {
 function setTranslation(translation: string): void {
   const form = document.forms.namedItem('newword') as HTMLFormElement | null;
   if (form) {
-    const translationField = form.elements.namedItem('WoTranslation') as HTMLTextAreaElement | null;
+    const translationField = form.elements.namedItem('translation') as HTMLTextAreaElement | null;
     if (translationField) {
       translationField.value = translation;
     }
@@ -49,7 +49,7 @@ function setTranslation(translation: string): void {
 function setRomanization(romanization: string): void {
   const form = document.forms.namedItem('newword') as HTMLFormElement | null;
   if (form) {
-    const romanField = form.elements.namedItem('WoRomanization') as HTMLInputElement | null;
+    const romanField = form.elements.namedItem('romanization') as HTMLInputElement | null;
     if (romanField) {
       romanField.value = romanization;
     }

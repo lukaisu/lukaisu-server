@@ -59,26 +59,26 @@ class WordCrudService
      * Create a new word/term.
      *
      * @param array $data Word data with keys:
-     *                    - WoLgID: Language ID
-     *                    - WoText: Term text
-     *                    - WoStatus: Learning status (1-5)
-     *                    - WoTranslation: Translation text
-     *                    - WoSentence: Example sentence
-     *                    - WoNotes: Personal notes
-     *                    - WoRomanization: Romanization/phonetic
-     *                    - WoLemma: Lemma/base form (optional)
+     *                    - language_id: Language ID
+     *                    - text: Term text
+     *                    - status: Learning status (1-5)
+     *                    - translation: Translation text
+     *                    - sentence: Example sentence
+     *                    - notes: Personal notes
+     *                    - romanization: Romanization/phonetic
+     *                    - lemma: Lemma/base form (optional)
      *
      * @return array{id: int, message: string, success: bool, textlc: string, text: string}
      */
     public function create(array $data): array
     {
-        $text = trim(Escaping::prepareTextdata((string) $data['WoText']));
+        $text = trim(Escaping::prepareTextdata((string) $data['text']));
         $textlc = mb_strtolower($text, 'UTF-8');
-        $translation = $this->normalizeTranslation((string) ($data['WoTranslation'] ?? ''));
+        $translation = $this->normalizeTranslation((string) ($data['translation'] ?? ''));
 
         // Handle lemma field
-        $lemma = isset($data['WoLemma']) && $data['WoLemma'] !== ''
-            ? trim((string) $data['WoLemma'])
+        $lemma = isset($data['lemma']) && $data['lemma'] !== ''
+            ? trim((string) $data['lemma'])
             : null;
         $lemmaLc = $lemma !== null ? mb_strtolower($lemma, 'UTF-8') : null;
 
@@ -87,20 +87,20 @@ class WordCrudService
             $scoreValues = TermStatusService::makeScoreRandomInsertUpdate('id');
 
             $bindings = [
-                $data['WoLgID'],
+                $data['language_id'],
                 $textlc,
                 $text,
                 $lemma,
                 $lemmaLc,
-                $data['WoStatus'],
+                $data['status'],
                 $translation,
-                ExportService::replaceTabNewline((string) ($data['WoSentence'] ?? '')),
-                ExportService::replaceTabNewline((string) ($data['WoNotes'] ?? '')),
-                (string) ($data['WoRomanization'] ?? '')
+                ExportService::replaceTabNewline((string) ($data['sentence'] ?? '')),
+                ExportService::replaceTabNewline((string) ($data['notes'] ?? '')),
+                (string) ($data['romanization'] ?? '')
             ];
             $sql = "INSERT INTO words (
-                    WoLgID, WoTextLC, WoText, WoLemma, WoLemmaLC, WoStatus, WoTranslation,
-                    WoSentence, WoNotes, WoRomanization, WoStatusChanged, {$scoreColumns}"
+                    language_id, text_lc, text, lemma, lemma_lc, status, translation,
+                    sentence, notes, romanization, status_changed_at, {$scoreColumns}"
                     . UserScopedQuery::insertColumn('words')
                 . ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), {$scoreValues}"
                     . UserScopedQuery::insertValuePrepared('words', $bindings)
@@ -145,16 +145,16 @@ class WordCrudService
      */
     public function update(int $wordId, array $data): array
     {
-        $text = trim(Escaping::prepareTextdata((string) $data['WoText']));
+        $text = trim(Escaping::prepareTextdata((string) $data['text']));
         $textlc = mb_strtolower($text, 'UTF-8');
-        $translation = $this->normalizeTranslation((string) ($data['WoTranslation'] ?? ''));
-        $sentence = ExportService::replaceTabNewline((string) ($data['WoSentence'] ?? ''));
-        $notes = ExportService::replaceTabNewline((string) ($data['WoNotes'] ?? ''));
-        $roman = (string) ($data['WoRomanization'] ?? '');
+        $translation = $this->normalizeTranslation((string) ($data['translation'] ?? ''));
+        $sentence = ExportService::replaceTabNewline((string) ($data['sentence'] ?? ''));
+        $notes = ExportService::replaceTabNewline((string) ($data['notes'] ?? ''));
+        $roman = (string) ($data['romanization'] ?? '');
 
         // Handle lemma field
-        $lemma = isset($data['WoLemma']) && $data['WoLemma'] !== ''
-            ? trim((string) $data['WoLemma'])
+        $lemma = isset($data['lemma']) && $data['lemma'] !== ''
+            ? trim((string) $data['lemma'])
             : null;
         $lemmaLc = $lemma !== null ? mb_strtolower($lemma, 'UTF-8') : null;
 
@@ -162,24 +162,24 @@ class WordCrudService
 
         $bindings = [$text, $translation, $sentence, $notes, $roman, $lemma, $lemmaLc];
 
-        if (isset($data['WoOldStatus']) && $data['WoOldStatus'] != $data['WoStatus']) {
+        if (isset($data['WoOldStatus']) && $data['WoOldStatus'] != $data['status']) {
             // Status changed - update status and timestamp
-            $bindings[] = (int) $data['WoStatus'];
+            $bindings[] = (int) $data['status'];
             $bindings[] = $wordId;
             $sql = "UPDATE words SET
-                WoText = ?, WoTranslation = ?, WoSentence = ?, WoNotes = ?, WoRomanization = ?,
-                WoLemma = ?, WoLemmaLC = ?,
-                WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate}
-                WHERE WoID = ?"
+                text = ?, translation = ?, sentence = ?, notes = ?, romanization = ?,
+                lemma = ?, lemma_lc = ?,
+                status = ?, status_changed_at = NOW(), {$scoreUpdate}
+                WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute($sql, $bindings);
         } else {
             // Status unchanged
             $bindings[] = $wordId;
             $sql = "UPDATE words SET
-                WoText = ?, WoTranslation = ?, WoSentence = ?, WoNotes = ?, WoRomanization = ?,
-                WoLemma = ?, WoLemmaLC = ?, {$scoreUpdate}
-                WHERE WoID = ?"
+                text = ?, translation = ?, sentence = ?, notes = ?, romanization = ?,
+                lemma = ?, lemma_lc = ?, {$scoreUpdate}
+                WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings);
             Connection::preparedExecute($sql, $bindings);
         }
@@ -243,7 +243,7 @@ class WordCrudService
         // - Single-word word_occurrences.Ti2WoID set to NULL (ON DELETE SET NULL)
         // - word_tag_map deleted (ON DELETE CASCADE)
         QueryBuilder::table('words')
-            ->where('WoID', '=', $wordId)
+            ->where('id', '=', $wordId)
             ->deletePrepared();
     }
 
@@ -259,10 +259,10 @@ class WordCrudService
         $bindings = [$wordId];
         /** @var int $count */
         $count = (int) Connection::preparedFetchValue(
-            "SELECT WoWordCount FROM words WHERE WoID = ?"
+            "SELECT word_count FROM words WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
-            'WoWordCount'
+            'word_count'
         );
         return $count;
     }
@@ -278,8 +278,8 @@ class WordCrudService
     {
         $bindings = [$wordId];
         $record = Connection::preparedFetchOne(
-            "SELECT WoText, WoTranslation, WoRomanization
-             FROM words WHERE WoID = ?"
+            "SELECT text, translation, romanization
+             FROM words WHERE id = ?"
              . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
@@ -289,9 +289,9 @@ class WordCrudService
         }
 
         return [
-            'text' => (string) $record['WoText'],
-            'translation' => ExportService::replaceTabNewline((string) $record['WoTranslation']),
-            'romanization' => (string) $record['WoRomanization']
+            'text' => (string) $record['text'],
+            'translation' => ExportService::replaceTabNewline((string) $record['translation']),
+            'romanization' => (string) $record['romanization']
         ];
     }
 
@@ -307,10 +307,10 @@ class WordCrudService
         $bindings = [$wordId];
         /** @var string|null $term */
         $term = Connection::preparedFetchValue(
-            "SELECT WoText FROM words WHERE WoID = ?"
+            "SELECT text FROM words WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
-            'WoText'
+            'text'
         );
         return $term;
     }
@@ -326,8 +326,8 @@ class WordCrudService
     {
         $bindings = [$wordId];
         $record = Connection::preparedFetchOne(
-            "SELECT WoLgID, WoText, WoTranslation, WoSentence, WoNotes, WoRomanization, WoStatus
-             FROM words WHERE WoID = ?"
+            "SELECT language_id, text, translation, sentence, notes, romanization, status
+             FROM words WHERE id = ?"
              . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
@@ -336,19 +336,19 @@ class WordCrudService
             return null;
         }
 
-        $translation = ExportService::replaceTabNewline((string) $record['WoTranslation']);
+        $translation = ExportService::replaceTabNewline((string) $record['translation']);
         if ($translation === '*') {
             $translation = '';
         }
 
         return [
-            'langId' => (int) $record['WoLgID'],
-            'text' => (string) $record['WoText'],
+            'langId' => (int) $record['language_id'],
+            'text' => (string) $record['text'],
             'translation' => $translation,
-            'sentence' => (string) $record['WoSentence'],
-            'notes' => (string) ($record['WoNotes'] ?? ''),
-            'romanization' => (string) $record['WoRomanization'],
-            'status' => (int) $record['WoStatus']
+            'sentence' => (string) $record['sentence'],
+            'notes' => (string) ($record['notes'] ?? ''),
+            'romanization' => (string) $record['romanization'],
+            'status' => (int) $record['status']
         ];
     }
 
@@ -368,17 +368,17 @@ class WordCrudService
         }
 
         $bindings = [ExportService::replaceTabNewline($value), $wordId];
-        $sql = "UPDATE words SET WoTranslation = ? WHERE WoID = ?"
+        $sql = "UPDATE words SET translation = ? WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings);
         Connection::preparedExecute($sql, $bindings);
 
         $bindings = [$wordId];
         /** @var string $translation */
         $translation = (string) Connection::preparedFetchValue(
-            "SELECT WoTranslation FROM words WHERE WoID = ?"
+            "SELECT translation FROM words WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
-            'WoTranslation'
+            'translation'
         );
         return $translation;
     }
@@ -394,17 +394,17 @@ class WordCrudService
     public function updateRomanization(int $wordId, string $value): string
     {
         $bindings = [trim($value), $wordId];
-        $sql = "UPDATE words SET WoRomanization = ? WHERE WoID = ?"
+        $sql = "UPDATE words SET romanization = ? WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings);
         Connection::preparedExecute($sql, $bindings);
 
         $bindings = [$wordId];
         /** @var string $roman */
         $roman = (string) Connection::preparedFetchValue(
-            "SELECT WoRomanization FROM words WHERE WoID = ?"
+            "SELECT romanization FROM words WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
-            'WoRomanization'
+            'romanization'
         );
         return $roman === '' ? '*' : $roman;
     }
@@ -431,36 +431,36 @@ class WordCrudService
      */
     private function termEntityToArray(Term $term): array
     {
-        // Preserve null semantics for WoSentence - empty string means null in DB
+        // Preserve null semantics for sentence - empty string means null in DB
         $sentence = $term->sentence();
         if ($sentence === '') {
             $sentence = null;
         }
 
-        // Preserve null semantics for WoNotes - empty string means null in DB
+        // Preserve null semantics for notes - empty string means null in DB
         $notes = $term->notes();
         if ($notes === '') {
             $notes = null;
         }
 
         return [
-            'WoID' => $term->id()->toInt(),
-            'WoLgID' => $term->languageId()->toInt(),
-            'WoText' => $term->text(),
-            'WoTextLC' => $term->textLowercase(),
-            'WoLemma' => $term->lemma(),
-            'WoLemmaLC' => $term->lemmaLc(),
-            'WoStatus' => $term->status()->toInt(),
-            'WoTranslation' => $term->translation(),
-            'WoSentence' => $sentence,
-            'WoNotes' => $notes,
-            'WoRomanization' => $term->romanization(),
-            'WoWordCount' => $term->wordCount(),
-            'WoCreated' => $term->createdAt()->format('Y-m-d H:i:s'),
-            'WoStatusChanged' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
-            'WoTodayScore' => $term->todayScore(),
-            'WoTomorrowScore' => $term->tomorrowScore(),
-            'WoRandom' => $term->random(),
+            'id' => $term->id()->toInt(),
+            'language_id' => $term->languageId()->toInt(),
+            'text' => $term->text(),
+            'text_lc' => $term->textLowercase(),
+            'lemma' => $term->lemma(),
+            'lemma_lc' => $term->lemmaLc(),
+            'status' => $term->status()->toInt(),
+            'translation' => $term->translation(),
+            'sentence' => $sentence,
+            'notes' => $notes,
+            'romanization' => $term->romanization(),
+            'word_count' => $term->wordCount(),
+            'created_at' => $term->createdAt()->format('Y-m-d H:i:s'),
+            'status_changed_at' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
+            'today_score' => $term->todayScore(),
+            'tomorrow_score' => $term->tomorrowScore(),
+            'random' => $term->random(),
         ];
     }
 }

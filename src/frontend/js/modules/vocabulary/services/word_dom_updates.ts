@@ -290,9 +290,9 @@ export function deleteMultiWordFromDOM(wid: number, showAll: boolean): void {
 }
 
 export interface BulkWordUpdateParams {
-  WoID: number;
-  WoTextLC: string;
-  WoStatus: number | string;
+  id: number;
+  text_lc: string;
+  status: number | string;
   translation: string;
   hex: string;
 }
@@ -308,9 +308,9 @@ export function updateBulkWordInDOM(term: BulkWordUpdateParams, useTooltip: bool
 
   context.querySelectorAll<HTMLElement>(`[data_hex="${term.hex}"]`).forEach(el => {
     el.classList.remove('status0');
-    el.classList.add(`status${term.WoStatus}`, `word${term.WoID}`);
-    el.setAttribute('data_wid', String(term.WoID));
-    el.setAttribute('data_status', String(term.WoStatus));
+    el.classList.add(`status${term.status}`, `word${term.id}`);
+    el.setAttribute('data_wid', String(term.id));
+    el.setAttribute('data_status', String(term.status));
     el.setAttribute('data_trans', term.translation);
 
     if (useTooltip) {

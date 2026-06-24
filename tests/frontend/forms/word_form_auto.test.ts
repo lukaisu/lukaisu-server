@@ -70,7 +70,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="Bonjour" />
         <form name="newword">
-          <textarea name="WoTranslation"></textarea>
+          <textarea name="translation"></textarea>
         </form>
       `;
 
@@ -86,7 +86,7 @@ describe('word_form_auto.ts', () => {
 
       expect(getLibreTranslateTranslation).toHaveBeenCalled();
 
-      const translationField = document.querySelector('textarea[name="WoTranslation"]') as HTMLTextAreaElement;
+      const translationField = document.querySelector('textarea[name="translation"]') as HTMLTextAreaElement;
       expect(translationField.value).toBe('Hello');
     });
 
@@ -94,7 +94,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="Test" />
         <form name="newword">
-          <textarea name="WoTranslation"></textarea>
+          <textarea name="translation"></textarea>
         </form>
       `;
 
@@ -120,7 +120,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="" />
         <form name="newword">
-          <textarea name="WoTranslation"></textarea>
+          <textarea name="translation"></textarea>
         </form>
       `;
 
@@ -139,7 +139,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="Test" />
         <form name="newword">
-          <textarea name="WoTranslation"></textarea>
+          <textarea name="translation"></textarea>
         </form>
       `;
 
@@ -161,7 +161,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="Test" />
         <form name="newword">
-          <textarea name="WoTranslation"></textarea>
+          <textarea name="translation"></textarea>
         </form>
       `;
 
@@ -182,7 +182,7 @@ describe('word_form_auto.ts', () => {
     it('handles missing wordfield element', async () => {
       document.body.innerHTML = `
         <form name="newword">
-          <textarea name="WoTranslation"></textarea>
+          <textarea name="translation"></textarea>
         </form>
       `;
 
@@ -207,7 +207,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="日本語" />
         <form name="newword">
-          <input name="WoRomanization" type="text" value="" />
+          <input name="romanization" type="text" value="" />
         </form>
       `;
 
@@ -217,7 +217,7 @@ describe('word_form_auto.ts', () => {
 
       expect(getPhoneticTextAsync).toHaveBeenCalledWith('日本語', 3);
 
-      const romanField = document.querySelector('input[name="WoRomanization"]') as HTMLInputElement;
+      const romanField = document.querySelector('input[name="romanization"]') as HTMLInputElement;
       expect(romanField.value).toBe('nihongo');
     });
 
@@ -225,7 +225,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="" />
         <form name="newword">
-          <input name="WoRomanization" type="text" value="" />
+          <input name="romanization" type="text" value="" />
         </form>
       `;
 
@@ -238,7 +238,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="テスト" />
         <form name="newword">
-          <input name="WoRomanization" type="text" value="" />
+          <input name="romanization" type="text" value="" />
         </form>
       `;
 
@@ -254,7 +254,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="Test" />
         <form name="newword">
-          <input name="WoRomanization" type="text" value="" />
+          <input name="romanization" type="text" value="" />
         </form>
       `;
 
@@ -262,7 +262,7 @@ describe('word_form_auto.ts', () => {
 
       await autoRomanization(1);
 
-      const romanField = document.querySelector('input[name="WoRomanization"]') as HTMLInputElement;
+      const romanField = document.querySelector('input[name="romanization"]') as HTMLInputElement;
       expect(romanField.value).toBe('');
     });
 
@@ -270,7 +270,7 @@ describe('word_form_auto.ts', () => {
       document.body.innerHTML = `
         <input id="wordfield" value="Test" />
         <form name="newword">
-          <input name="WoRomanization" type="text" value="" />
+          <input name="romanization" type="text" value="" />
         </form>
       `;
 
@@ -278,14 +278,14 @@ describe('word_form_auto.ts', () => {
 
       await autoRomanization(1);
 
-      const romanField = document.querySelector('input[name="WoRomanization"]') as HTMLInputElement;
+      const romanField = document.querySelector('input[name="romanization"]') as HTMLInputElement;
       expect(romanField.value).toBe('');
     });
 
     it('handles missing wordfield element', async () => {
       document.body.innerHTML = `
         <form name="newword">
-          <input name="WoRomanization" type="text" value="" />
+          <input name="romanization" type="text" value="" />
         </form>
       `;
 
@@ -311,8 +311,8 @@ describe('word_form_auto.ts', () => {
         </script>
         <input id="wordfield" value="" />
         <form name="newword">
-          <textarea name="WoTranslation"></textarea>
-          <input name="WoRomanization" type="text" />
+          <textarea name="translation"></textarea>
+          <input name="romanization" type="text" />
         </form>
       `;
 
@@ -328,8 +328,8 @@ describe('word_form_auto.ts', () => {
         </script>
         <input id="wordfield" value="" />
         <form name="newword">
-          <textarea name="WoTranslation"></textarea>
-          <input name="WoRomanization" type="text" />
+          <textarea name="translation"></textarea>
+          <input name="romanization" type="text" />
         </form>
       `;
 

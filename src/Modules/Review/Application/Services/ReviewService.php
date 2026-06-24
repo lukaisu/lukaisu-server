@@ -131,24 +131,24 @@ class ReviewService
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
                 /** @var array<int, int> $params */
                 $params = array_values(array_map('intval', $ids));
-                return ['sql' => " words WHERE WoID IN ($placeholders) ", 'params' => $params];
+                return ['sql' => " words WHERE id IN ($placeholders) ", 'params' => $params];
             case 'texts':
                 $ids = is_array($selection) ? $selection : [$selection];
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
                 /** @var array<int, int> $params */
                 $params = array_values(array_map('intval', $ids));
                 return [
-                    'sql' => ' words, word_occurrences WHERE Ti2LgID = WoLgID AND Ti2WoID = WoID'
+                    'sql' => ' words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id'
                         . " AND Ti2TxID IN ($placeholders) ",
                     'params' => $params
                 ];
             case 'lang':
                 $langId = is_array($selection) ? ($selection[0] ?? 0) : $selection;
-                return ['sql' => " words WHERE WoLgID = ? ", 'params' => [$langId]];
+                return ['sql' => " words WHERE language_id = ? ", 'params' => [$langId]];
             case 'text':
                 $textId = is_array($selection) ? ($selection[0] ?? 0) : $selection;
                 return [
-                    'sql' => " words, word_occurrences WHERE Ti2LgID = WoLgID AND Ti2WoID = WoID AND Ti2TxID = ? ",
+                    'sql' => " words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID = ? ",
                     'params' => [$textId]
                 ];
             default:
@@ -169,7 +169,7 @@ class ReviewService
     public function validateReviewSelection(string $reviewsql, array $params = []): array
     {
         $langCount = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT WoLgID) AS cnt FROM $reviewsql",
+            "SELECT COUNT(DISTINCT language_id) AS cnt FROM $reviewsql",
             $params,
             'cnt'
         );
@@ -235,7 +235,7 @@ class ReviewService
                     /** @var mixed $nameRawFromQuery */
                     $nameRawFromQuery = Connection::preparedFetchValue(
                         "SELECT LgName
-                        FROM languages, {$result['sql']} AND LgID = WoLgID"
+                        FROM languages, {$result['sql']} AND LgID = language_id"
                         . $userScope . "
                         LIMIT 1",
                         array_merge($result['params'], $bindings),
@@ -282,17 +282,17 @@ class ReviewService
     public function getReviewCounts(string $reviewsql, array $params = []): array
     {
         $due = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT WoID) AS cnt
-            FROM $reviewsql AND WoStatus BETWEEN 1 AND 5
-            AND WoTranslation != '' AND WoTranslation != '*' AND WoTodayScore < 0",
+            "SELECT COUNT(DISTINCT id) AS cnt
+            FROM $reviewsql AND status BETWEEN 1 AND 5
+            AND translation != '' AND translation != '*' AND today_score < 0",
             $params,
             'cnt'
         );
 
         $total = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT WoID) AS cnt
-            FROM $reviewsql AND WoStatus BETWEEN 1 AND 5
-            AND WoTranslation != '' AND WoTranslation != '*'",
+            "SELECT COUNT(DISTINCT id) AS cnt
+            FROM $reviewsql AND status BETWEEN 1 AND 5
+            AND translation != '' AND translation != '*'",
             $params,
             'cnt'
         );
@@ -311,9 +311,9 @@ class ReviewService
     public function getTomorrowReviewCount(string $reviewsql, array $params = []): int
     {
         return (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT WoID) AS cnt
-            FROM $reviewsql AND WoStatus BETWEEN 1 AND 5
-            AND WoTranslation != '' AND WoTranslation != '*' AND WoTomorrowScore < 0",
+            "SELECT COUNT(DISTINCT id) AS cnt
+            FROM $reviewsql AND status BETWEEN 1 AND 5
+            AND translation != '' AND translation != '*' AND tomorrow_score < 0",
             $params,
             'cnt'
         );
@@ -332,15 +332,15 @@ class ReviewService
         $pass = 0;
         while ($pass < 2) {
             $pass++;
-            $sql = "SELECT DISTINCT WoID, WoText, WoTextLC, WoTranslation,
-                WoRomanization, WoSentence, WoLgID,
-                (IFNULL(WoSentence, '') NOT LIKE CONCAT('%{', WoText, '}%')) AS notvalid,
-                WoStatus,
-                DATEDIFF(NOW(), WoStatusChanged) AS Days, WoTodayScore AS Score
-                FROM $reviewsql AND WoStatus BETWEEN 1 AND 5
-                AND WoTranslation != '' AND WoTranslation != '*' AND WoTodayScore < 0 " .
-                ($pass == 1 ? 'AND WoRandom > RAND()' : '') . '
-                ORDER BY WoTodayScore, WoRandom
+            $sql = "SELECT DISTINCT id, text, text_lc, translation,
+                romanization, sentence, language_id,
+                (IFNULL(sentence, '') NOT LIKE CONCAT('%{', text, '}%')) AS notvalid,
+                status,
+                DATEDIFF(NOW(), status_changed_at) AS Days, today_score AS Score
+                FROM $reviewsql AND status BETWEEN 1 AND 5
+                AND translation != '' AND translation != '*' AND today_score < 0 " .
+                ($pass == 1 ? 'AND random > RAND()' : '') . '
+                ORDER BY today_score, random
                 LIMIT 1';
 
             $rows = Connection::preparedFetchAll($sql, $params);
@@ -444,9 +444,9 @@ class ReviewService
     {
         /** @var mixed $langIdRaw */
         $langIdRaw = Connection::preparedFetchValue(
-            "SELECT WoLgID FROM $reviewsql LIMIT 1",
+            "SELECT language_id FROM $reviewsql LIMIT 1",
             $params,
-            'WoLgID'
+            'language_id'
         );
         return is_numeric($langIdRaw) ? (int) $langIdRaw : null;
     }
@@ -462,25 +462,25 @@ class ReviewService
     public function updateWordStatus(int $wordId, int $newStatus): array
     {
         $oldStatus = (int) QueryBuilder::table('words')
-            ->where('WoID', '=', $wordId)
-            ->valuePrepared('WoStatus');
+            ->where('id', '=', $wordId)
+            ->valuePrepared('status');
 
         $oldScore = (int) QueryBuilder::table('words')
-            ->where('WoID', '=', $wordId)
-            ->valuePrepared('GREATEST(0, ROUND(WoTodayScore, 0))');
+            ->where('id', '=', $wordId)
+            ->valuePrepared('GREATEST(0, ROUND(today_score, 0))');
 
         // Complex UPDATE with dynamic score calculation
         Connection::preparedExecute(
             "UPDATE words
-            SET WoStatus = ?, WoStatusChanged = NOW(), " .
+            SET status = ?, status_changed_at = NOW(), " .
             TermStatusService::makeScoreRandomInsertUpdate('u') . "
-            WHERE WoID = ?",
+            WHERE id = ?",
             [$newStatus, $wordId]
         );
 
         $newScore = (int) QueryBuilder::table('words')
-            ->where('WoID', '=', $wordId)
-            ->valuePrepared('GREATEST(0, ROUND(WoTodayScore, 0))');
+            ->where('id', '=', $wordId)
+            ->valuePrepared('GREATEST(0, ROUND(today_score, 0))');
 
         return [
             'oldStatus' => $oldStatus,
@@ -535,8 +535,8 @@ class ReviewService
     {
         /** @var mixed $textRaw */
         $textRaw = QueryBuilder::table('words')
-            ->where('WoID', '=', $wordId)
-            ->valuePrepared('WoText');
+            ->where('id', '=', $wordId)
+            ->valuePrepared('text');
         return is_string($textRaw) ? $textRaw : null;
     }
 
@@ -603,11 +603,11 @@ class ReviewService
      */
     public function getTableReviewWords(string $reviewsql, array $params = []): array
     {
-        $sql = "SELECT DISTINCT WoID, WoText, WoTranslation, WoRomanization,
-            WoSentence, WoStatus, WoTodayScore AS Score
-            FROM $reviewsql AND WoStatus BETWEEN 1 AND 5
-            AND WoTranslation != '' AND WoTranslation != '*'
-            ORDER BY WoTodayScore, WoRandom * RAND()";
+        $sql = "SELECT DISTINCT id, text, translation, romanization,
+            sentence, status, today_score AS Score
+            FROM $reviewsql AND status BETWEEN 1 AND 5
+            AND translation != '' AND translation != '*'
+            ORDER BY today_score, random * RAND()";
 
         return Connection::preparedFetchAll($sql, $params);
     }
@@ -653,7 +653,7 @@ class ReviewService
             $bindings = [];
             $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
             $totalCount = (int) Connection::preparedFetchValue(
-                "SELECT COUNT(DISTINCT WoID) AS cnt FROM $reviewsql" . $userScope,
+                "SELECT COUNT(DISTINCT id) AS cnt FROM $reviewsql" . $userScope,
                 array_merge($reviewParams, $bindings),
                 'cnt'
             );
@@ -664,7 +664,7 @@ class ReviewService
             /** @var mixed $langNameRaw */
             $langNameRaw = Connection::preparedFetchValue(
                 "SELECT LgName
-                FROM languages, {$reviewsql} AND LgID = WoLgID"
+                FROM languages, {$reviewsql} AND LgID = language_id"
                 . $userScope2 . "
                 LIMIT 1",
                 array_merge($reviewParams, $bindings2),
@@ -676,7 +676,7 @@ class ReviewService
             }
         } elseif ($langId !== null) {
             $property = "lang=$langId";
-            $reviewsql = " words WHERE WoLgID = ? ";
+            $reviewsql = " words WHERE language_id = ? ";
             $reviewParams = [$langId];
 
             /** @var mixed $langNameRawFromLang */
@@ -687,7 +687,7 @@ class ReviewService
             $title = "All Terms in " . $langName;
         } elseif ($textId !== null) {
             $property = "text=$textId";
-            $reviewsql = " words, word_occurrences WHERE Ti2LgID = WoLgID AND Ti2WoID = WoID AND Ti2TxID = ? ";
+            $reviewsql = " words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID = ? ";
             $reviewParams = [$textId];
 
             /** @var mixed $titleRaw */
@@ -813,10 +813,10 @@ class ReviewService
         $baseType = $this->getBaseReviewType($testType);
 
         if ($baseType == 1) {
-            $tagList = TagsFacade::getWordTagList((int) $wordData['WoID'], false);
+            $tagList = TagsFacade::getWordTagList((int) $wordData['id'], false);
             $tagFormatted = $tagList !== '' ? ' [' . $tagList . ']' : '';
-            $translation = isset($wordData['WoTranslation']) && is_string($wordData['WoTranslation'])
-                ? $wordData['WoTranslation']
+            $translation = isset($wordData['translation']) && is_string($wordData['translation'])
+                ? $wordData['translation']
                 : '';
             $trans = ExportService::replaceTabNewline($translation) . $tagFormatted;
             return $wordMode ? $trans : "[$trans]";

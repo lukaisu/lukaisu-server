@@ -85,7 +85,7 @@ class QueryBuilderUserScopeTest extends TestCase
             ->withoutUserScope()
             ->toSql();
 
-        $this->assertStringNotContainsString('WoUsID', $sql);
+        $this->assertStringNotContainsString('user_id', $sql);
     }
 
     public function testWithoutUserScopeThrowsForNonAdmin(): void
@@ -128,7 +128,7 @@ class QueryBuilderUserScopeTest extends TestCase
         $sql = $qb->toSql();
 
         // Should not contain user filter when multi-user is disabled
-        $this->assertStringNotContainsString('WoUsID', $sql);
+        $this->assertStringNotContainsString('user_id', $sql);
     }
 
     public function testUserScopeNotAppliedWhenNoUser(): void
@@ -139,7 +139,7 @@ class QueryBuilderUserScopeTest extends TestCase
         $sql = QueryBuilder::table('words')->toSql();
 
         // Should not contain user filter when no user is authenticated
-        $this->assertStringNotContainsString('WoUsID', $sql);
+        $this->assertStringNotContainsString('user_id', $sql);
     }
 
     public function testUserScopeNotAppliedToNonScopedTable(): void
@@ -168,12 +168,12 @@ class QueryBuilderUserScopeTest extends TestCase
         // Access the toSqlPrepared after applyUserScope is called
         // We need to mock this or call get() to trigger it
         // For now, test via prepared statement method
-        $sql = $qb->where('WoID', '>', 0)->toSqlPrepared();
+        $sql = $qb->where('id', '>', 0)->toSqlPrepared();
         $bindings = $qb->getBindings();
 
         // The applyUserScope is called in getPrepared, not toSqlPrepared
         // So we check the SQL generation behavior
-        $this->assertStringContainsString('WoID', $sql);
+        $this->assertStringContainsString('id', $sql);
     }
 
     public function testUserScopeAppliedToLanguagesTable(): void
@@ -278,7 +278,7 @@ class QueryBuilderUserScopeTest extends TestCase
         Globals::setCurrentUserId(42);
 
         $condition = UserScopedQuery::forTable('words');
-        $this->assertEquals(' AND WoUsID = 42', $condition);
+        $this->assertEquals(' AND user_id = 42', $condition);
     }
 
     public function testUserScopedQueryForTableWithAlias(): void
@@ -287,7 +287,7 @@ class QueryBuilderUserScopeTest extends TestCase
         Globals::setCurrentUserId(42);
 
         $condition = UserScopedQuery::forTable('words', 'w');
-        $this->assertEquals(' AND w.WoUsID = 42', $condition);
+        $this->assertEquals(' AND w.user_id = 42', $condition);
     }
 
     public function testUserScopedQueryForTablePrepared(): void
@@ -298,7 +298,7 @@ class QueryBuilderUserScopeTest extends TestCase
         $bindings = [];
         $condition = UserScopedQuery::forTablePrepared('words', $bindings);
 
-        $this->assertEquals(' AND WoUsID = ?', $condition);
+        $this->assertEquals(' AND user_id = ?', $condition);
         $this->assertEquals([42], $bindings);
     }
 
@@ -310,7 +310,7 @@ class QueryBuilderUserScopeTest extends TestCase
         $bindings = [];
         $condition = UserScopedQuery::forTablePrepared('words', $bindings, 'w');
 
-        $this->assertEquals(' AND w.WoUsID = ?', $condition);
+        $this->assertEquals(' AND w.user_id = ?', $condition);
         $this->assertEquals([42], $bindings);
     }
 
@@ -320,7 +320,7 @@ class QueryBuilderUserScopeTest extends TestCase
         Globals::setCurrentUserId(42);
 
         $where = UserScopedQuery::whereClause('words');
-        $this->assertEquals('WHERE WoUsID = 42', $where);
+        $this->assertEquals('WHERE user_id = 42', $where);
     }
 
     public function testUserScopedQueryWhereClauseWithAlias(): void
@@ -329,7 +329,7 @@ class QueryBuilderUserScopeTest extends TestCase
         Globals::setCurrentUserId(42);
 
         $where = UserScopedQuery::whereClause('words', 'w');
-        $this->assertEquals('WHERE w.WoUsID = 42', $where);
+        $this->assertEquals('WHERE w.user_id = 42', $where);
     }
 
     public function testUserScopedQueryWhereClausePrepared(): void
@@ -340,7 +340,7 @@ class QueryBuilderUserScopeTest extends TestCase
         $bindings = [];
         $where = UserScopedQuery::whereClausePrepared('words', $bindings);
 
-        $this->assertEquals('WHERE WoUsID = ?', $where);
+        $this->assertEquals('WHERE user_id = ?', $where);
         $this->assertEquals([42], $bindings);
     }
 
@@ -387,7 +387,7 @@ class QueryBuilderUserScopeTest extends TestCase
 
         $this->assertEquals('LgUsID', $tables['languages']);
         $this->assertEquals('TxUsID', $tables['texts']);
-        $this->assertEquals('WoUsID', $tables['words']);
+        $this->assertEquals('user_id', $tables['words']);
         $this->assertEquals('TgUsID', $tables['tags']);
         $this->assertEquals('T2UsID', $tables['text_tags']);
         $this->assertEquals('user_id', $tables['news_feeds']);

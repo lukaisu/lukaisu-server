@@ -16,7 +16,7 @@
 
 import Dexie, { type Table } from 'dexie';
 
-/** Word status values (mirrors the server `WoStatus`). */
+/** Word status values (mirrors the server `status`). */
 export const WordStatus = {
   /** Unknown — not stored as a row; rendered when an occurrence has no word. */
   UNKNOWN: 0,

@@ -170,7 +170,7 @@ class ListLanguages
                 ->whereNotNull('TxArchivedAt')
                 ->count(),
             'words' => QueryBuilder::table('words')
-                ->where('WoLgID', '=', $lid)
+                ->where('language_id', '=', $lid)
                 ->count(),
             'feeds' => QueryBuilder::table('news_feeds')
                 ->where('language_id', '=', $lid)

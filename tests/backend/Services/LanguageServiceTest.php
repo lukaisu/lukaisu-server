@@ -509,7 +509,7 @@ class LanguageServiceTest extends TestCase
 
         // Add a related word
         Connection::query(
-            "INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoWordCount, WoStatusChanged)
+            "INSERT INTO words (language_id, text, text_lc, status, word_count, status_changed_at)
              VALUES ($id, 'test', 'test', 1, 1, NOW())"
         );
 
@@ -521,7 +521,7 @@ class LanguageServiceTest extends TestCase
         $this->assertTrue($this->service->exists($id));
 
         // Cleanup
-        Connection::query("DELETE FROM words WHERE WoLgID = $id");
+        Connection::query("DELETE FROM words WHERE language_id = $id");
     }
 
     // ===== getRelatedDataCounts() tests =====
@@ -558,7 +558,7 @@ class LanguageServiceTest extends TestCase
 
         // Add a word
         Connection::query(
-            "INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoWordCount, WoStatusChanged)
+            "INSERT INTO words (language_id, text, text_lc, status, word_count, status_changed_at)
              VALUES ($id, 'word', 'word', 1, 1, NOW())"
         );
 
@@ -571,7 +571,7 @@ class LanguageServiceTest extends TestCase
 
         // Cleanup
         Connection::query("DELETE FROM texts WHERE TxLgID = $id");
-        Connection::query("DELETE FROM words WHERE WoLgID = $id");
+        Connection::query("DELETE FROM words WHERE language_id = $id");
     }
 
     // ===== canDelete() tests =====

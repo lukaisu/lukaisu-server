@@ -8,9 +8,9 @@
  * - $cleanUp: bool - Whether to clean up right frames
  * - $tooltipMode: int - Tooltip display mode (1 = show)
  * - $newWords: array - Array of newly created words with keys:
- *     - WoID: int - Word ID
- *     - WoTextLC: string - Lowercase word text
- *     - WoStatus: int - Word status
+ *     - id: int - Word ID
+ *     - text_lc: string - Lowercase word text
+ *     - status: int - Word status
  *     - translation: string - Word translation
  *     - hex: string - Hex class name for CSS
  *

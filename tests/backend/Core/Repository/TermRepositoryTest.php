@@ -77,7 +77,7 @@ class TermRepositoryTest extends TestCase
 
         $prefix = '';
         // Clean up test terms
-        Connection::query("DELETE FROM {$prefix}words WHERE WoText LIKE 'TermRepoTest_%'");
+        Connection::query("DELETE FROM {$prefix}words WHERE text LIKE 'TermRepoTest_%'");
         // Clean up test language
         if (self::$testLanguageId > 0) {
             Connection::query("DELETE FROM {$prefix}languages WHERE LgID = " . self::$testLanguageId);
@@ -97,7 +97,7 @@ class TermRepositoryTest extends TestCase
 
         // Clean up terms created during this test
         $prefix = '';
-        Connection::query("DELETE FROM {$prefix}words WHERE WoText LIKE 'TermRepoTest_%'");
+        Connection::query("DELETE FROM {$prefix}words WHERE text LIKE 'TermRepoTest_%'");
         self::$testTermIds = [];
     }
 
@@ -123,9 +123,9 @@ class TermRepositoryTest extends TestCase
 
         Connection::query(
             "INSERT INTO {$prefix}words (
-                WoLgID, WoText, WoTextLC, WoStatus, WoTranslation, WoSentence,
-                WoRomanization, WoWordCount, WoCreated, WoStatusChanged,
-                WoTodayScore, WoTomorrowScore, WoRandom
+                language_id, text, text_lc, status, translation, sentence,
+                romanization, word_count, created_at, status_changed_at,
+                today_score, tomorrow_score, random
             ) VALUES (
                 " . self::$testLanguageId . ", '$escapedText', '$escapedTextLc', $status,
                 '$escapedTranslation', '', '', $wordCount, NOW(), NOW(), 0, 0, RAND()
@@ -259,7 +259,7 @@ class TermRepositoryTest extends TestCase
         $this->createTestTermInDb('TermRepoTest_Count1');
         $this->createTestTermInDb('TermRepoTest_Count2');
 
-        $count = $this->repository->count(['WoLgID' => self::$testLanguageId]);
+        $count = $this->repository->count(['language_id' => self::$testLanguageId]);
 
         $this->assertGreaterThanOrEqual(2, $count);
     }
@@ -589,7 +589,7 @@ class TermRepositoryTest extends TestCase
             self::$testLanguageId,
             1,
             3,
-            'WoText',
+            'text',
             'ASC'
         );
 

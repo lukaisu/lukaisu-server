@@ -121,21 +121,21 @@ class GetTermByIdTest extends TestCase
         $result = $this->useCase->executeAsArray(42);
 
         $this->assertIsArray($result);
-        $this->assertEquals(42, $result['WoID']);
-        $this->assertEquals(1, $result['WoLgID']);
-        $this->assertEquals('TestWord', $result['WoText']);
-        $this->assertEquals('testword', $result['WoTextLC']);
-        $this->assertEquals(3, $result['WoStatus']);
-        $this->assertEquals('Translation', $result['WoTranslation']);
-        $this->assertEquals('Example sentence', $result['WoSentence']);
-        $this->assertEquals('Some notes', $result['WoNotes']);
-        $this->assertEquals('romanization', $result['WoRomanization']);
-        $this->assertEquals(1, $result['WoWordCount']);
-        $this->assertEquals('2024-01-15 10:30:00', $result['WoCreated']);
-        $this->assertEquals('2024-01-16 11:00:00', $result['WoStatusChanged']);
-        $this->assertEquals(0.5, $result['WoTodayScore']);
-        $this->assertEquals(0.7, $result['WoTomorrowScore']);
-        $this->assertEquals(0.3, $result['WoRandom']);
+        $this->assertEquals(42, $result['id']);
+        $this->assertEquals(1, $result['language_id']);
+        $this->assertEquals('TestWord', $result['text']);
+        $this->assertEquals('testword', $result['text_lc']);
+        $this->assertEquals(3, $result['status']);
+        $this->assertEquals('Translation', $result['translation']);
+        $this->assertEquals('Example sentence', $result['sentence']);
+        $this->assertEquals('Some notes', $result['notes']);
+        $this->assertEquals('romanization', $result['romanization']);
+        $this->assertEquals(1, $result['word_count']);
+        $this->assertEquals('2024-01-15 10:30:00', $result['created_at']);
+        $this->assertEquals('2024-01-16 11:00:00', $result['status_changed_at']);
+        $this->assertEquals(0.5, $result['today_score']);
+        $this->assertEquals(0.7, $result['tomorrow_score']);
+        $this->assertEquals(0.3, $result['random']);
     }
 
     public function testExecuteAsArrayReturnsNullWhenNotFound(): void
@@ -169,21 +169,21 @@ class GetTermByIdTest extends TestCase
         $result = $this->useCase->executeAsArray(42);
 
         $expectedKeys = [
-            'WoID',
-            'WoLgID',
-            'WoText',
-            'WoTextLC',
-            'WoStatus',
-            'WoTranslation',
-            'WoSentence',
-            'WoNotes',
-            'WoRomanization',
-            'WoWordCount',
-            'WoCreated',
-            'WoStatusChanged',
-            'WoTodayScore',
-            'WoTomorrowScore',
-            'WoRandom',
+            'id',
+            'language_id',
+            'text',
+            'text_lc',
+            'status',
+            'translation',
+            'sentence',
+            'notes',
+            'romanization',
+            'word_count',
+            'created_at',
+            'status_changed_at',
+            'today_score',
+            'tomorrow_score',
+            'random',
         ];
 
         foreach ($expectedKeys as $key) {

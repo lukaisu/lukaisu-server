@@ -36,12 +36,12 @@ class TermStatusService
      */
     public const SCORE_FORMULA_TODAY = '
         GREATEST(-125, CASE
-            WHEN WoStatus > 5 THEN 100
-            WHEN WoStatus = 1 THEN ROUND(-7 * DATEDIFF(NOW(),WoStatusChanged))
-            WHEN WoStatus = 2 THEN ROUND(6.9 - 3.5 * DATEDIFF(NOW(),WoStatusChanged))
-            WHEN WoStatus = 3 THEN ROUND(20 - 2.3 * DATEDIFF(NOW(),WoStatusChanged))
-            WHEN WoStatus = 4 THEN ROUND(46.4 - 1.75 * DATEDIFF(NOW(),WoStatusChanged))
-            WHEN WoStatus = 5 THEN ROUND(100 - 1.4 * DATEDIFF(NOW(),WoStatusChanged))
+            WHEN status > 5 THEN 100
+            WHEN status = 1 THEN ROUND(-7 * DATEDIFF(NOW(),status_changed_at))
+            WHEN status = 2 THEN ROUND(6.9 - 3.5 * DATEDIFF(NOW(),status_changed_at))
+            WHEN status = 3 THEN ROUND(20 - 2.3 * DATEDIFF(NOW(),status_changed_at))
+            WHEN status = 4 THEN ROUND(46.4 - 1.75 * DATEDIFF(NOW(),status_changed_at))
+            WHEN status = 5 THEN ROUND(100 - 1.4 * DATEDIFF(NOW(),status_changed_at))
         END)';
 
     /**
@@ -49,12 +49,12 @@ class TermStatusService
      */
     public const SCORE_FORMULA_TOMORROW = '
         GREATEST(-125, CASE
-            WHEN WoStatus > 5 THEN 100
-            WHEN WoStatus = 1 THEN ROUND(-7 -7 * DATEDIFF(NOW(),WoStatusChanged))
-            WHEN WoStatus = 2 THEN ROUND(3.4 - 3.5 * DATEDIFF(NOW(),WoStatusChanged))
-            WHEN WoStatus = 3 THEN ROUND(17.7 - 2.3 * DATEDIFF(NOW(),WoStatusChanged))
-            WHEN WoStatus = 4 THEN ROUND(44.65 - 1.75 * DATEDIFF(NOW(),WoStatusChanged))
-            WHEN WoStatus = 5 THEN ROUND(98.6 - 1.4 * DATEDIFF(NOW(),WoStatusChanged))
+            WHEN status > 5 THEN 100
+            WHEN status = 1 THEN ROUND(-7 -7 * DATEDIFF(NOW(),status_changed_at))
+            WHEN status = 2 THEN ROUND(3.4 - 3.5 * DATEDIFF(NOW(),status_changed_at))
+            WHEN status = 3 THEN ROUND(17.7 - 2.3 * DATEDIFF(NOW(),status_changed_at))
+            WHEN status = 4 THEN ROUND(44.65 - 1.75 * DATEDIFF(NOW(),status_changed_at))
+            WHEN status = 5 THEN ROUND(98.6 - 1.4 * DATEDIFF(NOW(),status_changed_at))
         END)';
 
     /**
@@ -121,7 +121,7 @@ class TermStatusService
      * Generate SQL fragment for score columns in INSERT/UPDATE statements.
      *
      * @param 'iv'|'id'|'u'|string $type Type of SQL fragment:
-     *                                   - 'iv': Column names for INSERT (WoTodayScore, WoTomorrowScore, WoRandom)
+     *                                   - 'iv': Column names for INSERT (today_score, tomorrow_score, random)
      *                                   - 'id': Values for INSERT (computed formulas)
      *                                   - 'u': SET clause for UPDATE (column = value pairs)
      *
@@ -130,10 +130,10 @@ class TermStatusService
     public static function makeScoreRandomInsertUpdate(string $type): string
     {
         return match ($type) {
-            'iv' => ' WoTodayScore, WoTomorrowScore, WoRandom ',
+            'iv' => ' today_score, tomorrow_score, random ',
             'id' => ' ' . self::SCORE_FORMULA_TODAY . ', ' . self::SCORE_FORMULA_TOMORROW . ', RAND() ',
-            'u' => ' WoTodayScore = ' . self::SCORE_FORMULA_TODAY .
-                ', WoTomorrowScore = ' . self::SCORE_FORMULA_TOMORROW . ', WoRandom = RAND() ',
+            'u' => ' today_score = ' . self::SCORE_FORMULA_TODAY .
+                ', tomorrow_score = ' . self::SCORE_FORMULA_TOMORROW . ', random = RAND() ',
             default => '',
         };
     }

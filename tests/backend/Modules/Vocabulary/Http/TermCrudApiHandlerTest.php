@@ -1252,8 +1252,8 @@ class TermCrudApiHandlerTest extends TestCase
     {
         $source = $this->getMethodSource('createTermFull');
 
-        $this->assertStringContainsString('WoLemma', $source);
-        $this->assertStringContainsString('WoLemmaLC', $source);
+        $this->assertStringContainsString('lemma', $source);
+        $this->assertStringContainsString('lemma_lc', $source);
         $this->assertStringContainsString('mb_strtolower($lemma', $source);
     }
 
@@ -1330,8 +1330,8 @@ class TermCrudApiHandlerTest extends TestCase
     {
         $source = $this->getMethodSource('updateTermFull');
 
-        $this->assertStringContainsString('WoLemma = ?', $source);
-        $this->assertStringContainsString('WoLemmaLC = ?', $source);
+        $this->assertStringContainsString('lemma = ?', $source);
+        $this->assertStringContainsString('lemma_lc = ?', $source);
     }
 
     public function testUpdateTermFullUsesScoreRandomUpdate(): void

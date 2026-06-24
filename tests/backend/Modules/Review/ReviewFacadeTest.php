@@ -141,7 +141,7 @@ class ReviewFacadeTest extends TestCase
         $sql = $config->toSqlProjectionPrepared($params);
 
         $this->assertStringContainsString('words', $sql);
-        $this->assertStringContainsString('WoLgID = ?', $sql);
+        $this->assertStringContainsString('language_id = ?', $sql);
         $this->assertEquals([5], $params);
     }
 
@@ -163,7 +163,7 @@ class ReviewFacadeTest extends TestCase
         $params = [];
         $sql = $config->toSqlProjectionPrepared($params);
 
-        $this->assertStringContainsString('WoID IN (?,?,?)', $sql);
+        $this->assertStringContainsString('id IN (?,?,?)', $sql);
         $this->assertEquals([1, 2, 3], $params);
     }
 
@@ -304,7 +304,7 @@ class ReviewFacadeTest extends TestCase
         $this->assertArrayHasKey('sql', $result);
         $this->assertArrayHasKey('params', $result);
         $this->assertStringContainsString('words', $result['sql']);
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertSame([1], $result['params']);
     }
 
@@ -323,7 +323,7 @@ class ReviewFacadeTest extends TestCase
         $result = $this->facade->getReviewSql(ReviewConfiguration::KEY_WORDS, [1, 2, 3]);
 
         $this->assertIsArray($result);
-        $this->assertStringContainsString('WoID IN', $result['sql']);
+        $this->assertStringContainsString('id IN', $result['sql']);
         $this->assertSame([1, 2, 3], $result['params']);
     }
 
@@ -420,7 +420,7 @@ class ReviewFacadeTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = ' words WHERE WoLgID = 999999 ';
+        $sql = ' words WHERE language_id = 999999 ';
         $result = $this->facade->getReviewCounts($sql);
 
         $this->assertIsArray($result);
@@ -436,7 +436,7 @@ class ReviewFacadeTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = ' words WHERE WoLgID = 999999 ';
+        $sql = ' words WHERE language_id = 999999 ';
         $result = $this->facade->getTomorrowReviewCount($sql);
 
         $this->assertIsInt($result);
@@ -449,7 +449,7 @@ class ReviewFacadeTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = ' words WHERE WoLgID = 999999 ';
+        $sql = ' words WHERE language_id = 999999 ';
         $result = $this->facade->getNextWord($sql);
 
         $this->assertNull($result);
@@ -461,7 +461,7 @@ class ReviewFacadeTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = ' words WHERE WoLgID = 999999 ';
+        $sql = ' words WHERE language_id = 999999 ';
         $result = $this->facade->getLanguageIdFromReviewSql($sql);
 
         // Should return null for non-existent language
@@ -532,7 +532,7 @@ class ReviewFacadeTest extends TestCase
         // Type 2 = words
         $result = $this->facade->buildSelectionReviewSql(2, '1,2,3');
         $this->assertIsArray($result);
-        $this->assertStringContainsString('WoID IN', $result['sql']);
+        $this->assertStringContainsString('id IN', $result['sql']);
         $this->assertSame([1, 2, 3], $result['params']);
 
         // Type 3 = texts
@@ -542,7 +542,7 @@ class ReviewFacadeTest extends TestCase
         $this->assertSame([10, 20], $result['params']);
 
         // Type 1 = unknown selection type (returns null)
-        $result = $this->facade->buildSelectionReviewSql(1, 'words WHERE WoLgID = 1');
+        $result = $this->facade->buildSelectionReviewSql(1, 'words WHERE language_id = 1');
         $this->assertNull($result);
     }
 

@@ -121,13 +121,13 @@ CREATE TABLE IF NOT EXISTS temp_word_occurrences (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS temp_words (
-    WoText varchar(250) DEFAULT NULL,
-    WoTextLC varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-    WoTranslation varchar(500) NOT NULL DEFAULT '*',
-    WoRomanization varchar(100) DEFAULT NULL,
-    WoSentence varchar(1000) DEFAULT NULL,
-    WoTaglist varchar(255) DEFAULT NULL,
-    PRIMARY KEY(WoTextLC)
+    text varchar(250) DEFAULT NULL,
+    text_lc varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+    translation varchar(500) NOT NULL DEFAULT '*',
+    romanization varchar(100) DEFAULT NULL,
+    sentence varchar(1000) DEFAULT NULL,
+    tag_list varchar(255) DEFAULT NULL,
+    PRIMARY KEY(text_lc)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS texts (
@@ -151,38 +151,38 @@ CREATE TABLE IF NOT EXISTS texts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS words (
-    WoID mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
-    WoUsID int(10) unsigned DEFAULT NULL,
-    WoLgID tinyint(3) unsigned NOT NULL,
-    WoText varchar(250) NOT NULL,
-    WoTextLC varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-    WoLemma varchar(250) DEFAULT NULL,
-    WoLemmaLC varchar(250) DEFAULT NULL,
-    WoStatus tinyint(4) NOT NULL,
-    WoTranslation varchar(500) NOT NULL DEFAULT '*',
-    WoRomanization varchar(100) DEFAULT NULL,
-    WoSentence varchar(1000) DEFAULT NULL,
-    WoNotes varchar(1000) DEFAULT NULL,
-    WoWordCount tinyint(3) unsigned NOT NULL DEFAULT 0,
-    WoCreated timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    WoStatusChanged timestamp NOT NULL DEFAULT '1970-01-01 12:00:00',
-    WoTodayScore double NOT NULL DEFAULT '0',
-    WoTomorrowScore double NOT NULL DEFAULT '0',
-    WoRandom double NOT NULL DEFAULT '0',
-    PRIMARY KEY (WoID),
-    KEY WoUsID (WoUsID),
-    UNIQUE KEY WoTextLCLgID (WoTextLC,WoLgID),
-    KEY WoLgID (WoLgID),
-    KEY WoStatus (WoStatus),
-    KEY WoTranslation (WoTranslation(20)),
-    KEY WoCreated (WoCreated),
-    KEY WoStatusChanged (WoStatusChanged),
-    KEY WoWordCount(WoWordCount),
-    KEY WoTodayScore (WoTodayScore),
-    KEY WoTomorrowScore (WoTomorrowScore),
-    KEY WoRandom (WoRandom),
-    KEY idx_words_lemma (WoLemmaLC, WoLgID),
-    CONSTRAINT fk_words_user FOREIGN KEY (WoUsID) REFERENCES users(UsID) ON DELETE CASCADE
+    id mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+    user_id int(10) unsigned DEFAULT NULL,
+    language_id tinyint(3) unsigned NOT NULL,
+    text varchar(250) NOT NULL,
+    text_lc varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+    lemma varchar(250) DEFAULT NULL,
+    lemma_lc varchar(250) DEFAULT NULL,
+    status tinyint(4) NOT NULL,
+    translation varchar(500) NOT NULL DEFAULT '*',
+    romanization varchar(100) DEFAULT NULL,
+    sentence varchar(1000) DEFAULT NULL,
+    notes varchar(1000) DEFAULT NULL,
+    word_count tinyint(3) unsigned NOT NULL DEFAULT 0,
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status_changed_at timestamp NOT NULL DEFAULT '1970-01-01 12:00:00',
+    today_score double NOT NULL DEFAULT '0',
+    tomorrow_score double NOT NULL DEFAULT '0',
+    random double NOT NULL DEFAULT '0',
+    PRIMARY KEY (id),
+    KEY user_id (user_id),
+    UNIQUE KEY WoTextLCLgID (text_lc,language_id),
+    KEY language_id (language_id),
+    KEY status (status),
+    KEY translation (translation(20)),
+    KEY created_at (created_at),
+    KEY status_changed_at (status_changed_at),
+    KEY word_count(word_count),
+    KEY today_score (today_score),
+    KEY tomorrow_score (tomorrow_score),
+    KEY random (random),
+    KEY idx_words_lemma (lemma_lc, language_id),
+    CONSTRAINT fk_words_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

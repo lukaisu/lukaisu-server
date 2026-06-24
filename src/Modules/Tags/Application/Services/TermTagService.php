@@ -248,10 +248,10 @@ class TermTagService
 
         $bindings = [$tagId];
         $inClause = Connection::buildPreparedInClause($ids, $bindings);
-        $sql = 'SELECT WoID
+        $sql = 'SELECT id
             FROM words
-            LEFT JOIN word_tag_map ON WoID = WtWoID AND WtTgID = ?
-            WHERE WtTgID IS NULL AND WoID IN ' . $inClause
+            LEFT JOIN word_tag_map ON id = WtWoID AND WtTgID = ?
+            WHERE WtTgID IS NULL AND id IN ' . $inClause
             . UserScopedQuery::forTablePrepared('words', $bindings, 'words');
         $rows = Connection::preparedFetchAll($sql, $bindings);
 
@@ -259,7 +259,7 @@ class TermTagService
         foreach ($rows as $record) {
             Connection::preparedExecute(
                 'INSERT IGNORE INTO word_tag_map (WtWoID, WtTgID) VALUES(?, ?)',
-                [(int)$record['WoID'], $tagId]
+                [(int)$record['id'], $tagId]
             );
             $count++;
         }
@@ -297,7 +297,7 @@ class TermTagService
 
         $bindings = [];
         $inClause = Connection::buildPreparedInClause($ids, $bindings);
-        $sql = 'SELECT WoID FROM words WHERE WoID IN ' . $inClause
+        $sql = 'SELECT id FROM words WHERE id IN ' . $inClause
             . UserScopedQuery::forTablePrepared('words', $bindings, 'words');
         $rows = Connection::preparedFetchAll($sql, $bindings);
 
@@ -305,7 +305,7 @@ class TermTagService
         foreach ($rows as $record) {
             $count++;
             QueryBuilder::table('word_tag_map')
-                ->where('WtWoID', '=', (int)$record['WoID'])
+                ->where('WtWoID', '=', (int)$record['id'])
                 ->where('WtTgID', '=', $tagId)
                 ->delete();
         }
@@ -338,7 +338,7 @@ class TermTagService
             $bindings = [];
             $sql = "SELECT TgID, TgText
                 FROM words, tags, word_tag_map
-                WHERE TgID = WtTgID AND WtWoID = WoID"
+                WHERE TgID = WtTgID AND WtWoID = id"
                 . UserScopedQuery::forTablePrepared('words', $bindings)
                 . UserScopedQuery::forTablePrepared('tags', $bindings)
                 . " GROUP BY TgID
@@ -347,7 +347,7 @@ class TermTagService
             $bindings = [$langId];
             $sql = "SELECT TgID, TgText
                 FROM words, tags, word_tag_map
-                WHERE TgID = WtTgID AND WtWoID = WoID AND WoLgID = ?"
+                WHERE TgID = WtTgID AND WtWoID = id AND language_id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings)
                 . UserScopedQuery::forTablePrepared('tags', $bindings)
                 . " GROUP BY TgID

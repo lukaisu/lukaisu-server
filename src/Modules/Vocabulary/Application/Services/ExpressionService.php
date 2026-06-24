@@ -363,15 +363,15 @@ class ExpressionService
         $showType = $showAll ? "m" : "";
 
         $record = QueryBuilder::table('words')
-            ->where('WoID', '=', $wid)
+            ->where('id', '=', $wid)
             ->getPrepared()[0] ?? null;
 
-        $woStatus = (int)($record["WoStatus"] ?? 1);
+        $woStatus = (int)($record["status"] ?? 1);
         $attrs = [
             "class" => "click mword {$showType}wsty word$wid status" . $woStatus,
             "data_hex" => $hex,
-            "data_trans" => (string)($record["WoTranslation"] ?? ''),
-            "data_rom" => (string)($record["WoRomanization"] ?? ''),
+            "data_trans" => (string)($record["translation"] ?? ''),
+            "data_rom" => (string)($record["romanization"] ?? ''),
             "data_code" => $len,
             "data_status" => $woStatus,
             "data_wid" => $wid
@@ -406,15 +406,15 @@ class ExpressionService
         $showType = $showAll ? "m" : "";
 
         $record = QueryBuilder::table('words')
-            ->where('WoID', '=', $wid)
+            ->where('id', '=', $wid)
             ->getPrepared()[0] ?? null;
 
-        $woStatus = (int)($record["WoStatus"] ?? 1);
+        $woStatus = (int)($record["status"] ?? 1);
         $attrs = [
             "class" => "click mword {$showType}wsty word$wid status" . $woStatus,
             "data_hex" => $hex,
-            "data_trans" => (string)($record["WoTranslation"] ?? ''),
-            "data_rom" => (string)($record["WoRomanization"] ?? ''),
+            "data_trans" => (string)($record["translation"] ?? ''),
+            "data_rom" => (string)($record["romanization"] ?? ''),
             "data_code" => $len,
             "data_status" => $woStatus,
             "data_wid" => $wid

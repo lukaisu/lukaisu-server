@@ -206,7 +206,7 @@ final readonly class ReviewConfiguration
             ? $this->selection
             : (int) (is_array($this->selection) ? ($this->selection[0] ?? 0) : $this->selection);
         $params[] = $langId;
-        return " words WHERE WoLgID = ? " . self::appendUserScope($params) . " ";
+        return " words WHERE language_id = ? " . self::appendUserScope($params) . " ";
     }
 
     /**
@@ -222,7 +222,7 @@ final readonly class ReviewConfiguration
             ? $this->selection
             : (int) (is_array($this->selection) ? ($this->selection[0] ?? 0) : $this->selection);
         $params[] = $textId;
-        return " words, word_occurrences WHERE Ti2LgID = WoLgID AND Ti2WoID = WoID AND Ti2TxID = ? "
+        return " words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID = ? "
             . self::appendUserScope($params) . " ";
     }
 
@@ -240,7 +240,7 @@ final readonly class ReviewConfiguration
         foreach ($ids as $id) {
             $params[] = (int) $id;
         }
-        return " words WHERE WoID IN ($placeholders) " . self::appendUserScope($params) . " ";
+        return " words WHERE id IN ($placeholders) " . self::appendUserScope($params) . " ";
     }
 
     /**
@@ -257,7 +257,7 @@ final readonly class ReviewConfiguration
         foreach ($ids as $id) {
             $params[] = (int) $id;
         }
-        return " words, word_occurrences WHERE Ti2LgID = WoLgID AND Ti2WoID = WoID AND Ti2TxID IN ($placeholders) "
+        return " words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID IN ($placeholders) "
             . self::appendUserScope($params) . " ";
     }
 
@@ -337,7 +337,7 @@ final readonly class ReviewConfiguration
      *
      * @param array<int, int|string> $params Reference to params array
      *
-     * @return string SQL scope fragment (e.g. " AND WoUsID = ?")
+     * @return string SQL scope fragment (e.g. " AND user_id = ?")
      */
     private static function appendUserScope(array &$params): string
     {
@@ -354,6 +354,6 @@ final readonly class ReviewConfiguration
             return '';
         }
         $params[] = $userId;
-        return ' AND WoUsID = ?';
+        return ' AND user_id = ?';
     }
 }

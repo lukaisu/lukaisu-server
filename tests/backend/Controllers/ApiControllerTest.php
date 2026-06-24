@@ -265,7 +265,7 @@ class ApiControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT WoID, WoText, WoTextLC, WoTranslation, WoStatus
+        $sql = "SELECT id, text, text_lc, translation, status
                 FROM " . Globals::table('words') . " LIMIT 10";
         $result = Connection::query($sql);
 

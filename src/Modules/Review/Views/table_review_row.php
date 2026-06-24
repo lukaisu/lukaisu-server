@@ -44,12 +44,12 @@ $span1 = $isRtl ? '<span dir="rtl">' : '';
 $span2 = $isRtl ? '</span>' : '';
 
 // Extract typed values from word array
-$woId = (int) ($word['WoID'] ?? 0);
-$woText = (string) ($word['WoText'] ?? '');
-$woTranslation = (string) ($word['WoTranslation'] ?? '');
-$woRomanization = (string) ($word['WoRomanization'] ?? '');
-$woSentence = (string) ($word['WoSentence'] ?? '');
-$woStatus = (int) ($word['WoStatus'] ?? 0);
+$woId = (int) ($word['id'] ?? 0);
+$woText = (string) ($word['text'] ?? '');
+$woTranslation = (string) ($word['translation'] ?? '');
+$woRomanization = (string) ($word['romanization'] ?? '');
+$woSentence = (string) ($word['sentence'] ?? '');
+$woStatus = (int) ($word['status'] ?? 0);
 $woScore = (int) ($word['Score'] ?? 0);
 
 $sent = htmlspecialchars(ExportService::replaceTabNewline($woSentence), ENT_QUOTES, 'UTF-8');

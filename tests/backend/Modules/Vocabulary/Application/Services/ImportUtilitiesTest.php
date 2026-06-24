@@ -108,7 +108,7 @@ class ImportUtilitiesTest extends TestCase
 
         $this->assertArrayHasKey('columns', $result);
         $this->assertArrayHasKey('fields', $result);
-        $this->assertSame('WoText', $result['columns'][1]);
+        $this->assertSame('text', $result['columns'][1]);
         $this->assertSame(1, $result['fields']['txt']);
     }
 
@@ -126,8 +126,8 @@ class ImportUtilitiesTest extends TestCase
     {
         $result = $this->utilities->parseColumnMapping([1 => 'w', 2 => 't'], false);
 
-        $this->assertSame('WoText', $result['columns'][1]);
-        $this->assertSame('WoTranslation', $result['columns'][2]);
+        $this->assertSame('text', $result['columns'][1]);
+        $this->assertSame('translation', $result['columns'][2]);
         $this->assertSame(2, $result['fields']['tr']);
     }
 
@@ -136,7 +136,7 @@ class ImportUtilitiesTest extends TestCase
     {
         $result = $this->utilities->parseColumnMapping([1 => 'w', 2 => 'r'], false);
 
-        $this->assertSame('WoRomanization', $result['columns'][2]);
+        $this->assertSame('romanization', $result['columns'][2]);
         $this->assertSame(2, $result['fields']['ro']);
     }
 
@@ -145,7 +145,7 @@ class ImportUtilitiesTest extends TestCase
     {
         $result = $this->utilities->parseColumnMapping([1 => 'w', 2 => 's'], false);
 
-        $this->assertSame('WoSentence', $result['columns'][2]);
+        $this->assertSame('sentence', $result['columns'][2]);
         $this->assertSame(2, $result['fields']['se']);
     }
 
@@ -165,7 +165,7 @@ class ImportUtilitiesTest extends TestCase
         $result = $this->utilities->parseColumnMapping([1 => 'w', 2 => 'x', 3 => 't'], false);
 
         $this->assertSame('@dummy', $result['columns'][2]);
-        $this->assertSame('WoTranslation', $result['columns'][3]);
+        $this->assertSame('translation', $result['columns'][3]);
     }
 
     #[Test]
@@ -184,7 +184,7 @@ class ImportUtilitiesTest extends TestCase
         $result = $this->utilities->parseColumnMapping([1 => 'w', 3 => 't'], false);
 
         $this->assertSame('@dummy', $result['columns'][2]);
-        $this->assertSame('WoTranslation', $result['columns'][3]);
+        $this->assertSame('translation', $result['columns'][3]);
     }
 
     #[Test]

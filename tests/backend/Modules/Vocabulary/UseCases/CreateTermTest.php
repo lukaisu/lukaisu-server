@@ -272,14 +272,14 @@ class CreateTermTest extends TestCase
         $this->repository->method('save')->willReturn(42);
 
         $result = $this->useCase->executeFromArray([
-            'WoLgID' => 1,
-            'WoText' => 'Hello',
-            'WoStatus' => 2,
-            'WoTranslation' => 'Bonjour',
-            'WoSentence' => 'Hello world',
-            'WoNotes' => 'Common greeting',
-            'WoRomanization' => '',
-            'WoWordCount' => 1
+            'language_id' => 1,
+            'text' => 'Hello',
+            'status' => 2,
+            'translation' => 'Bonjour',
+            'sentence' => 'Hello world',
+            'notes' => 'Common greeting',
+            'romanization' => '',
+            'word_count' => 1
         ]);
 
         $this->assertTrue($result['success']);
@@ -291,9 +291,9 @@ class CreateTermTest extends TestCase
     public function testExecuteFromArrayReturnsFailureOnEmptyText(): void
     {
         $result = $this->useCase->executeFromArray([
-            'WoLgID' => 1,
-            'WoText' => '',
-            'WoStatus' => 1
+            'language_id' => 1,
+            'text' => '',
+            'status' => 1
         ]);
 
         $this->assertFalse($result['success']);
@@ -306,9 +306,9 @@ class CreateTermTest extends TestCase
         $this->repository->method('termExists')->willReturn(true);
 
         $result = $this->useCase->executeFromArray([
-            'WoLgID' => 1,
-            'WoText' => 'Hello',
-            'WoStatus' => 1
+            'language_id' => 1,
+            'text' => 'Hello',
+            'status' => 1
         ]);
 
         $this->assertFalse($result['success']);
@@ -321,8 +321,8 @@ class CreateTermTest extends TestCase
         $this->repository->method('save')->willReturn(1);
 
         $result = $this->useCase->executeFromArray([
-            'WoLgID' => 1,
-            'WoText' => 'Test'
+            'language_id' => 1,
+            'text' => 'Test'
         ]);
 
         $this->assertTrue($result['success']);
@@ -336,8 +336,8 @@ class CreateTermTest extends TestCase
         );
 
         $result = $this->useCase->executeFromArray([
-            'WoLgID' => 1,
-            'WoText' => 'Test'
+            'language_id' => 1,
+            'text' => 'Test'
         ]);
 
         $this->assertFalse($result['success']);
@@ -352,8 +352,8 @@ class CreateTermTest extends TestCase
         );
 
         $result = $this->useCase->executeFromArray([
-            'WoLgID' => 1,
-            'WoText' => 'Test'
+            'language_id' => 1,
+            'text' => 'Test'
         ]);
 
         $this->assertFalse($result['success']);

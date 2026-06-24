@@ -99,8 +99,8 @@ class MultiWordController extends VocabularyBaseController
      */
     private function handleMultiWordOperation(): void
     {
-        $textlc = trim(InputValidator::getString('WoTextLC'));
-        $text = trim(InputValidator::getString('WoText'));
+        $textlc = trim(InputValidator::getString('text_lc'));
+        $text = trim(InputValidator::getString('text'));
 
         // Validate lowercase matches
         if (mb_strtolower($text, 'UTF-8') != $textlc) {
@@ -114,13 +114,13 @@ class MultiWordController extends VocabularyBaseController
             return;
         }
 
-        $translationRaw = ExportService::replaceTabNewline(InputValidator::getString('WoTranslation'));
+        $translationRaw = ExportService::replaceTabNewline(InputValidator::getString('translation'));
         $translation = ($translationRaw == '') ? '*' : $translationRaw;
 
-        $woText = InputValidator::getString('WoText');
-        $woRomanization = InputValidator::getString('WoRomanization');
-        $woSentence = InputValidator::getString('WoSentence');
-        $woStatus = InputValidator::getInt('WoStatus', 0) ?? 0;
+        $woText = InputValidator::getString('text');
+        $woRomanization = InputValidator::getString('romanization');
+        $woSentence = InputValidator::getString('sentence');
+        $woStatus = InputValidator::getInt('status', 0) ?? 0;
         $data = [
             'text' => Escaping::prepareTextdata($woText),
             'textlc' => Escaping::prepareTextdata($textlc),
@@ -136,7 +136,7 @@ class MultiWordController extends VocabularyBaseController
         if ($op == 'Save') {
             // Insert new multi-word
             $data['status'] = $woStatus;
-            $data['lgid'] = InputValidator::getInt('WoLgID', 0) ?? 0;
+            $data['lgid'] = InputValidator::getInt('language_id', 0) ?? 0;
             $data['wordcount'] = InputValidator::getInt('len', 0) ?? 0;
 
             $titletext = "New Term: " . htmlspecialchars($data['textlc'], ENT_QUOTES, 'UTF-8');
@@ -147,7 +147,7 @@ class MultiWordController extends VocabularyBaseController
             $wid = $result['id'];
         } else {
             // Update existing multi-word
-            $wid = InputValidator::getInt('WoID', 0) ?? 0;
+            $wid = InputValidator::getInt('id', 0) ?? 0;
             $oldStatus = InputValidator::getInt('WoOldStatus', 0) ?? 0;
             $newStatus = $woStatus;
 
@@ -273,13 +273,13 @@ class MultiWordController extends VocabularyBaseController
         $dictLinksHtml = $this->dictionaryAdapter->createDictLinksInEditWin(
             (int) $lgid,
             $termText,
-            'document.forms[0].WoSentence',
+            'document.forms[0].sentence',
             !InputValidator::hasFromGet('nodict')
         );
         $sentenceAreaHtml = $this->getSentenceService()->renderExampleSentencesArea(
             (int) $lgid,
             $textlc,
-            'document.forms.newword.WoSentence',
+            'document.forms.newword.sentence',
             -1
         );
         $wordTagsHtml = TagsFacade::getWordTagsHtml(0);
@@ -325,13 +325,13 @@ class MultiWordController extends VocabularyBaseController
         $dictLinksHtml = $this->dictionaryAdapter->createDictLinksInEditWin(
             $lgid,
             $termText,
-            'document.forms[0].WoSentence',
+            'document.forms[0].sentence',
             !InputValidator::hasFromGet('nodict')
         );
         $sentenceAreaHtml = $this->getSentenceService()->renderExampleSentencesArea(
             $lgid,
             $textlc,
-            'document.forms.editword.WoSentence',
+            'document.forms.editword.sentence',
             $wid
         );
         $wordTagsHtml = TagsFacade::getWordTagsHtml($wid);

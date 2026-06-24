@@ -60,19 +60,19 @@ $phNotes = htmlspecialchars(__('vocabulary.form.placeholder_notes'), ENT_QUOTES,
 <form name="newword" class="validate" action="/word/new" method="post"
 data-lukaisu-clear-frame="true">
     <?php echo \Lukaisu\Shared\UI\Helpers\FormHelper::csrfField(); ?>
-    <input type="hidden" name="WoLgID" id="langfield" value="<?php echo $lang; ?>" />
+    <input type="hidden" name="language_id" id="langfield" value="<?php echo $lang; ?>" />
     <input type="hidden" name="tid" value="<?php echo $textId; ?>" />
 
     <div class="box">
         <div class="field">
-            <label class="label" for="WoText"><?= __('vocabulary.form.new_term') ?></label>
+            <label class="label" for="text"><?= __('vocabulary.form.new_term') ?></label>
             <div class="control has-icons-right">
                 <input <?php echo $scrdir; ?>
                        class="input notempty setfocus checkoutsidebmp"
                        data_info="New Term"
                        type="text"
-                       name="WoText"
-                       id="WoText"
+                       name="text"
+                       id="text"
                        value=""
                        maxlength="250"
                        placeholder="<?= $phWord ?>" />
@@ -86,15 +86,15 @@ data-lukaisu-clear-frame="true">
         </div>
 
         <div class="field">
-            <label class="label" for="WoLemma"><?= __('vocabulary.common.lemma') ?></label>
+            <label class="label" for="lemma"><?= __('vocabulary.common.lemma') ?></label>
             <div class="control">
                 <input <?php echo $scrdir; ?>
                        type="text"
                        class="input checkoutsidebmp checklength"
                        data_maxlength="250"
                        data_info="Lemma"
-                       name="WoLemma"
-                       id="WoLemma"
+                       name="lemma"
+                       id="lemma"
                        value=""
                        maxlength="250"
                        placeholder="<?= $phLemma ?>" />
@@ -116,7 +116,7 @@ data-lukaisu-clear-frame="true">
                 <textarea class="textarea textarea-noreturn checklength checkoutsidebmp"
                           data_maxlength="500"
                           data_info="Translation"
-                          name="WoTranslation"
+                          name="translation"
                           rows="3"
                           placeholder="<?= $phTrans ?>"></textarea>
             </div>
@@ -136,7 +136,7 @@ data-lukaisu-clear-frame="true">
                 <input type="text"
                        class="input checkoutsidebmp"
                        data_info="Romanization"
-                       name="WoRomanization"
+                       name="romanization"
                        value=""
                        maxlength="100"
                        placeholder="<?= $phRom ?>" />
@@ -148,8 +148,8 @@ data-lukaisu-clear-frame="true">
             <label class="label"><?= __('vocabulary.form.sentence_label') ?></label>
             <div class="control">
                 <textarea <?php echo $scrdir; ?>
-                          name="WoSentence"
-                          id="WoSentence"
+                          name="sentence"
+                          id="sentence"
                           rows="3"
                           class="textarea textarea-noreturn checklength checkoutsidebmp"
                           data_maxlength="1000"
@@ -162,8 +162,8 @@ data-lukaisu-clear-frame="true">
         <div class="field">
             <label class="label"><?= __('vocabulary.common.notes') ?></label>
             <div class="control">
-                <textarea name="WoNotes"
-                          id="WoNotes"
+                <textarea name="notes"
+                          id="notes"
                           rows="3"
                           class="textarea textarea-noreturn checklength checkoutsidebmp"
                           data_maxlength="1000"

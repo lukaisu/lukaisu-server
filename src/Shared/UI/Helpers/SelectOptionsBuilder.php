@@ -493,7 +493,7 @@ class SelectOptionsBuilder
                 $title = $escapedName;
             }
             $result .= '<span class="status' . $n . '" title="' . $title . '">';
-            $result .= '&nbsp;<input type="radio" name="WoStatus" value="' . $n . '"';
+            $result .= '&nbsp;<input type="radio" name="status" value="' . $n . '"';
             if ($selected == $n) {
                 $result .= ' checked="checked"';
             }

@@ -80,9 +80,9 @@ class MultiWordApiHandler
 
             // Get word count
             $wordCount = (int) QueryBuilder::table('words')
-                ->select(['WoWordCount'])
-                ->where('WoID', '=', $wordId)
-                ->valuePrepared('WoWordCount');
+                ->select(['word_count'])
+                ->where('id', '=', $wordId)
+                ->valuePrepared('word_count');
 
             $text = $data['text'];
             return [
@@ -108,25 +108,25 @@ class MultiWordApiHandler
         // Try to find existing term by text (case-insensitive)
         $textLc = mb_strtolower($text, 'UTF-8');
         $existingWord = QueryBuilder::table('words')
-            ->select(['WoID', 'WoText', 'WoTranslation', 'WoRomanization', 'WoSentence', 'WoStatus', 'WoWordCount'])
-            ->where('WoTextLC', '=', $textLc)
-            ->where('WoLgID', '=', $lgid)
-            ->where('WoWordCount', '>', 1)
+            ->select(['id', 'text', 'translation', 'romanization', 'sentence', 'status', 'word_count'])
+            ->where('text_lc', '=', $textLc)
+            ->where('language_id', '=', $lgid)
+            ->where('word_count', '>', 1)
             ->firstPrepared();
 
         if ($existingWord !== null) {
             // Found existing multi-word term
             return [
-                'id' => (int) $existingWord['WoID'],
-                'text' => (string) $existingWord['WoText'],
+                'id' => (int) $existingWord['id'],
+                'text' => (string) $existingWord['text'],
                 'textLc' => $textLc,
-                'translation' => (string) ($existingWord['WoTranslation'] ?? ''),
-                'romanization' => (string) ($existingWord['WoRomanization'] ?? ''),
-                'sentence' => (string) ($existingWord['WoSentence'] ?? ''),
+                'translation' => (string) ($existingWord['translation'] ?? ''),
+                'romanization' => (string) ($existingWord['romanization'] ?? ''),
+                'sentence' => (string) ($existingWord['sentence'] ?? ''),
                 'notes' => '',
-                'status' => (int) $existingWord['WoStatus'],
+                'status' => (int) $existingWord['status'],
                 'langId' => $lgid,
-                'wordCount' => (int) $existingWord['WoWordCount'],
+                'wordCount' => (int) $existingWord['word_count'],
                 'isNew' => false
             ];
         }

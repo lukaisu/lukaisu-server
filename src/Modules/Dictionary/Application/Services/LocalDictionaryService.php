@@ -497,8 +497,8 @@ class LocalDictionaryService
      * Create vocabulary terms (status 1) from dictionary entries.
      *
      * Uses INSERT IGNORE to skip terms that already exist in the
-     * vocabulary for this language. Sets WoStatus = 1 (new/unknown)
-     * and WoTranslation from the dictionary definition.
+     * vocabulary for this language. Sets status = 1 (new/unknown)
+     * and translation from the dictionary definition.
      *
      * @param int $dictId     Dictionary ID
      * @param int $languageId Language ID
@@ -517,9 +517,9 @@ class LocalDictionaryService
         $userValue = UserScopedQuery::insertValuePrepared('words', $bindings);
 
         $sql = "INSERT IGNORE INTO {$wordsTable} (
-                    WoLgID, WoTextLC, WoText, WoStatus, WoTranslation,
-                    WoSentence, WoRomanization, WoStatusChanged,
-                    WoTodayScore, WoTomorrowScore, WoRandom{$userColumn}
+                    language_id, text_lc, text, status, translation,
+                    sentence, romanization, status_changed_at,
+                    today_score, tomorrow_score, random{$userColumn}
                 )
                 SELECT ?, le.LeTermLc, le.LeTerm, 1, le.LeDefinition,
                        '', '', NOW(),

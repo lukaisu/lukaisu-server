@@ -98,9 +98,9 @@ class TermStatusServiceTest extends TestCase
     public function makeScoreRandomInsertUpdateIvReturnsColumnNames(): void
     {
         $result = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $this->assertStringContainsString('WoTodayScore', $result);
-        $this->assertStringContainsString('WoTomorrowScore', $result);
-        $this->assertStringContainsString('WoRandom', $result);
+        $this->assertStringContainsString('today_score', $result);
+        $this->assertStringContainsString('tomorrow_score', $result);
+        $this->assertStringContainsString('random', $result);
     }
 
     #[Test]
@@ -116,9 +116,9 @@ class TermStatusServiceTest extends TestCase
     public function makeScoreRandomInsertUpdateUReturnsSetClauses(): void
     {
         $result = TermStatusService::makeScoreRandomInsertUpdate('u');
-        $this->assertStringContainsString('WoTodayScore =', $result);
-        $this->assertStringContainsString('WoTomorrowScore =', $result);
-        $this->assertStringContainsString('WoRandom = RAND()', $result);
+        $this->assertStringContainsString('today_score =', $result);
+        $this->assertStringContainsString('tomorrow_score =', $result);
+        $this->assertStringContainsString('random = RAND()', $result);
     }
 
     #[Test]
@@ -388,8 +388,8 @@ class TermStatusServiceTest extends TestCase
     {
         $formula = TermStatusService::SCORE_FORMULA_TODAY;
         $this->assertStringContainsString('GREATEST(-125', $formula);
-        $this->assertStringContainsString('WHEN WoStatus > 5 THEN 100', $formula);
-        $this->assertStringContainsString('DATEDIFF(NOW(),WoStatusChanged)', $formula);
+        $this->assertStringContainsString('WHEN status > 5 THEN 100', $formula);
+        $this->assertStringContainsString('DATEDIFF(NOW(),status_changed_at)', $formula);
     }
 
     #[Test]
@@ -397,7 +397,7 @@ class TermStatusServiceTest extends TestCase
     {
         $formula = TermStatusService::SCORE_FORMULA_TOMORROW;
         $this->assertStringContainsString('GREATEST(-125', $formula);
-        $this->assertStringContainsString('WHEN WoStatus > 5 THEN 100', $formula);
+        $this->assertStringContainsString('WHEN status > 5 THEN 100', $formula);
     }
 
     #[Test]

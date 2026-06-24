@@ -138,9 +138,9 @@ class TermImportController extends VocabularyBaseController
         $newWords = [];
         foreach ($res as $record) {
             $record['hex'] = StringUtils::toClassName(
-                Escaping::prepareTextdata((string)$record['WoTextLC'])
+                Escaping::prepareTextdata((string)$record['text_lc'])
             );
-            $record['translation'] = (string)$record['WoTranslation'];
+            $record['translation'] = (string)$record['translation'];
             $newWords[] = $record;
         }
 
@@ -338,7 +338,7 @@ class TermImportController extends VocabularyBaseController
         try {
             $ignoreFirst = InputValidator::getString("IgnFirstLine") === '1';
             $overwrite = InputValidator::getInt("Over", 0) ?? 0;
-            $status = InputValidator::getInt("WoStatus", 1) ?? 1;
+            $status = InputValidator::getInt("status", 1) ?? 1;
             $translDelim = InputValidator::getString("transl_delim");
 
             // Get last update timestamp before import

@@ -219,14 +219,14 @@ class ReviewFacade
         }
 
         return [
-            'WoID' => $word->id,
-            'WoText' => $word->text,
-            'WoTextLC' => $word->textLowercase,
-            'WoTranslation' => $word->translation,
-            'WoRomanization' => $word->romanization,
-            'WoSentence' => $word->sentence,
-            'WoLgID' => $word->languageId,
-            'WoStatus' => $word->status,
+            'id' => $word->id,
+            'text' => $word->text,
+            'text_lc' => $word->textLowercase,
+            'translation' => $word->translation,
+            'romanization' => $word->romanization,
+            'sentence' => $word->sentence,
+            'language_id' => $word->languageId,
+            'status' => $word->status,
             'Days' => $word->daysOld,
             'Score' => $word->score,
             'notvalid' => $word->needsNewSentence() ? 1 : 0
@@ -391,11 +391,11 @@ class ReviewFacade
      */
     public function getTableReviewWords(string $reviewsql, array $params = []): array
     {
-        $sql = "SELECT DISTINCT WoID, WoText, WoTranslation, WoRomanization,
-            WoSentence, WoStatus, WoTodayScore AS Score
-            FROM $reviewsql AND WoStatus BETWEEN 1 AND 5
-            AND WoTranslation != '' AND WoTranslation != '*'
-            ORDER BY WoTodayScore, WoRandom * RAND()";
+        $sql = "SELECT DISTINCT id, text, translation, romanization,
+            sentence, status, today_score AS Score
+            FROM $reviewsql AND status BETWEEN 1 AND 5
+            AND translation != '' AND translation != '*'
+            ORDER BY today_score, random * RAND()";
 
         return Connection::preparedFetchAll($sql, $params);
     }
@@ -678,10 +678,10 @@ class ReviewFacade
         $baseType = $this->getBaseReviewType($testType);
 
         if ($baseType === 1) {
-            $tagList = \Lukaisu\Modules\Tags\Application\TagsFacade::getWordTagList((int) $wordData['WoID'], false);
+            $tagList = \Lukaisu\Modules\Tags\Application\TagsFacade::getWordTagList((int) $wordData['id'], false);
             $tagFormatted = $tagList !== '' ? ' [' . $tagList . ']' : '';
-            $translation = isset($wordData['WoTranslation']) && is_string($wordData['WoTranslation'])
-                ? $wordData['WoTranslation']
+            $translation = isset($wordData['translation']) && is_string($wordData['translation'])
+                ? $wordData['translation']
                 : '';
             $trans = ExportService::replaceTabNewline($translation) . $tagFormatted;
             return $wordMode ? $trans : "[$trans]";

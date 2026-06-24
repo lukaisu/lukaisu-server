@@ -54,11 +54,11 @@ trait TermQueryMethods
     public function findByStatus(int $status, ?int $languageId = null): array
     {
         $query = $this->query()
-            ->where('WoStatus', '=', $status)
-            ->orderBy('WoText');
+            ->where('status', '=', $status)
+            ->orderBy('text');
 
         if ($languageId !== null) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -75,16 +75,16 @@ trait TermQueryMethods
     public function findLearning(?int $languageId = null): array
     {
         $query = $this->query()
-            ->whereIn('WoStatus', [
+            ->whereIn('status', [
                 TermStatus::NEW,
                 TermStatus::LEARNING_2,
                 TermStatus::LEARNING_3,
                 TermStatus::LEARNING_4
             ])
-            ->orderBy('WoText');
+            ->orderBy('text');
 
         if ($languageId !== null) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -101,11 +101,11 @@ trait TermQueryMethods
     public function findKnown(?int $languageId = null): array
     {
         $query = $this->query()
-            ->whereIn('WoStatus', [TermStatus::LEARNED, TermStatus::WELL_KNOWN])
-            ->orderBy('WoText');
+            ->whereIn('status', [TermStatus::LEARNED, TermStatus::WELL_KNOWN])
+            ->orderBy('text');
 
         if ($languageId !== null) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -130,11 +130,11 @@ trait TermQueryMethods
     public function findMultiWord(?int $languageId = null): array
     {
         $query = $this->query()
-            ->where('WoWordCount', '>', 1)
-            ->orderBy('WoText');
+            ->where('word_count', '>', 1)
+            ->orderBy('text');
 
         if ($languageId !== null) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -155,11 +155,11 @@ trait TermQueryMethods
     public function findSingleWord(?int $languageId = null): array
     {
         $query = $this->query()
-            ->where('WoWordCount', '=', 1)
-            ->orderBy('WoText');
+            ->where('word_count', '=', 1)
+            ->orderBy('text');
 
         if ($languageId !== null) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -181,10 +181,10 @@ trait TermQueryMethods
     public function findByLemma(int $languageId, string $lemmaLc): array
     {
         $rows = $this->query()
-            ->where('WoLgID', '=', $languageId)
-            ->where('WoLemmaLC', '=', $lemmaLc)
-            ->orderBy('WoWordCount')
-            ->orderBy('WoText')
+            ->where('language_id', '=', $languageId)
+            ->where('lemma_lc', '=', $lemmaLc)
+            ->orderBy('word_count')
+            ->orderBy('text')
             ->getPrepared();
 
         return array_map(
@@ -200,13 +200,13 @@ trait TermQueryMethods
         int $languageId = 0,
         int $page = 1,
         int $perPage = 20,
-        string $orderBy = 'WoText',
+        string $orderBy = 'text',
         string $direction = 'ASC'
     ): array {
         $query = $this->query();
 
         if ($languageId > 0) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $total = (clone $query)->countPrepared();
@@ -244,12 +244,12 @@ trait TermQueryMethods
         $searchPattern = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $query) . '%';
 
         $dbQuery = $this->query()
-            ->where('WoText', 'LIKE', $searchPattern)
-            ->orderBy('WoText')
+            ->where('text', 'LIKE', $searchPattern)
+            ->orderBy('text')
             ->limit($limit);
 
         if ($languageId !== null) {
-            $dbQuery->where('WoLgID', '=', $languageId);
+            $dbQuery->where('language_id', '=', $languageId);
         }
 
         $rows = $dbQuery->getPrepared();
@@ -274,12 +274,12 @@ trait TermQueryMethods
         $searchPattern = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $query) . '%';
 
         $dbQuery = $this->query()
-            ->where('WoTranslation', 'LIKE', $searchPattern)
-            ->orderBy('WoText')
+            ->where('translation', 'LIKE', $searchPattern)
+            ->orderBy('text')
             ->limit($limit);
 
         if ($languageId !== null) {
-            $dbQuery->where('WoLgID', '=', $languageId);
+            $dbQuery->where('language_id', '=', $languageId);
         }
 
         $rows = $dbQuery->getPrepared();
@@ -299,20 +299,20 @@ trait TermQueryMethods
         int $limit = 100
     ): array {
         $query = $this->query()
-            ->whereIn('WoStatus', [
+            ->whereIn('status', [
                 TermStatus::NEW,
                 TermStatus::LEARNING_2,
                 TermStatus::LEARNING_3,
                 TermStatus::LEARNING_4,
                 TermStatus::LEARNED
             ])
-            ->where('WoTodayScore', '<=', $scoreThreshold)
-            ->orderBy('WoTodayScore', 'ASC')
-            ->orderBy('WoRandom', 'ASC')
+            ->where('today_score', '<=', $scoreThreshold)
+            ->orderBy('today_score', 'ASC')
+            ->orderBy('random', 'ASC')
             ->limit($limit);
 
         if ($languageId !== null) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -329,11 +329,11 @@ trait TermQueryMethods
     public function findRecent(?int $languageId = null, int $limit = 50): array
     {
         $query = $this->query()
-            ->orderBy('WoCreated', 'DESC')
+            ->orderBy('created_at', 'DESC')
             ->limit($limit);
 
         if ($languageId !== null) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -362,12 +362,12 @@ trait TermQueryMethods
         $sinceDate = date('Y-m-d H:i:s', $timestamp !== false ? $timestamp : time());
 
         $query = $this->query()
-            ->where('WoStatusChanged', '>=', $sinceDate)
-            ->orderBy('WoStatusChanged', 'DESC')
+            ->where('status_changed_at', '>=', $sinceDate)
+            ->orderBy('status_changed_at', 'DESC')
             ->limit($limit);
 
         if ($languageId !== null) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -389,9 +389,9 @@ trait TermQueryMethods
     {
         // Use raw SQL for OR condition on translation (empty or '*')
         $rows = Connection::preparedFetchAll(
-            "SELECT * FROM words WHERE (WoTranslation = '' OR WoTranslation = '*')"
-            . ($languageId !== null ? " AND WoLgID = ?" : "")
-            . " ORDER BY WoText",
+            "SELECT * FROM words WHERE (translation = '' OR translation = '*')"
+            . ($languageId !== null ? " AND language_id = ?" : "")
+            . " ORDER BY text",
             $languageId !== null ? [$languageId] : []
         );
 
@@ -412,25 +412,25 @@ trait TermQueryMethods
     public function getForSelect(int $languageId = 0, int $maxNameLength = 40): array
     {
         $query = $this->query()
-            ->select(['WoID', 'WoText', 'WoLgID'])
-            ->orderBy('WoText');
+            ->select(['id', 'text', 'language_id'])
+            ->orderBy('text');
 
         if ($languageId > 0) {
-            $query->where('WoLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
         $result = [];
 
         foreach ($rows as $row) {
-            $text = (string) $row['WoText'];
+            $text = (string) $row['text'];
             if (mb_strlen($text, 'UTF-8') > $maxNameLength) {
                 $text = mb_substr($text, 0, $maxNameLength, 'UTF-8') . '...';
             }
             $result[] = [
-                'id' => (int) $row['WoID'],
+                'id' => (int) $row['id'],
                 'text' => $text,
-                'language_id' => (int) $row['WoLgID'],
+                'language_id' => (int) $row['language_id'],
             ];
         }
 
@@ -448,26 +448,26 @@ trait TermQueryMethods
     {
         $row = $this->query()
             ->select([
-                'WoID',
-                'WoText',
-                'WoLgID',
-                'WoStatus',
-                'WoTranslation',
+                'id',
+                'text',
+                'language_id',
+                'status',
+                'translation',
             ])
-            ->where('WoID', '=', $termId)
+            ->where('id', '=', $termId)
             ->firstPrepared();
 
         if ($row === null) {
             return null;
         }
 
-        $translation = (string) ($row['WoTranslation'] ?? '');
+        $translation = (string) ($row['translation'] ?? '');
 
         return [
-            'id' => (int) $row['WoID'],
-            'text' => (string) $row['WoText'],
-            'language_id' => (int) $row['WoLgID'],
-            'status' => (int) $row['WoStatus'],
+            'id' => (int) $row['id'],
+            'text' => (string) $row['text'],
+            'language_id' => (int) $row['language_id'],
+            'status' => (int) $row['status'],
             'has_translation' => $translation !== '' && $translation !== '*',
         ];
     }

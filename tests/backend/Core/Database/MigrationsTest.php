@@ -67,9 +67,9 @@ class MigrationsTest extends TestCase
                 "INSERT INTO languages (LgName) VALUES ('Test');"
             ],
             'INSERT INTO multiple columns' => [
-                "INSERT INTO words (WoLgID, WoText) VALUES (1, 'test');",
+                "INSERT INTO words (language_id, text) VALUES (1, 'test');",
                 "lukaisu_",
-                "INSERT INTO lukaisu_words (WoLgID, WoText) VALUES (1, 'test');"
+                "INSERT INTO lukaisu_words (language_id, text) VALUES (1, 'test');"
             ],
         ];
     }

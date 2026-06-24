@@ -41,7 +41,7 @@ class LemmaStatisticsService
         $bindings = [$languageId];
 
         $total = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(*) as cnt FROM words WHERE WoLgID = ? AND WoWordCount = 1"
+            "SELECT COUNT(*) as cnt FROM words WHERE language_id = ? AND word_count = 1"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
             'cnt'
@@ -50,7 +50,7 @@ class LemmaStatisticsService
         $bindings = [$languageId];
         $withLemma = (int) Connection::preparedFetchValue(
             "SELECT COUNT(*) as cnt FROM words
-             WHERE WoLgID = ? AND WoWordCount = 1 AND WoLemma IS NOT NULL AND WoLemma != ''"
+             WHERE language_id = ? AND word_count = 1 AND lemma IS NOT NULL AND lemma != ''"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
             'cnt'
@@ -58,8 +58,8 @@ class LemmaStatisticsService
 
         $bindings = [$languageId];
         $uniqueLemmas = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT WoLemmaLC) as cnt FROM words
-             WHERE WoLgID = ? AND WoWordCount = 1 AND WoLemmaLC IS NOT NULL AND WoLemmaLC != ''"
+            "SELECT COUNT(DISTINCT lemma_lc) as cnt FROM words
+             WHERE language_id = ? AND word_count = 1 AND lemma_lc IS NOT NULL AND lemma_lc != ''"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
             'cnt'
@@ -85,7 +85,7 @@ class LemmaStatisticsService
         $bindings = [$languageId];
 
         return Connection::preparedExecute(
-            "UPDATE words SET WoLemma = NULL, WoLemmaLC = NULL WHERE WoLgID = ?"
+            "UPDATE words SET lemma = NULL, lemma_lc = NULL WHERE language_id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
@@ -133,11 +133,11 @@ class LemmaStatisticsService
             "SELECT COUNT(DISTINCT LOWER(ti.Ti2Text)) as cnt
              FROM word_occurrences ti
              JOIN texts ON ti.Ti2TxID = TxID
-             JOIN words w ON w.WoLgID = ? AND LOWER(ti.Ti2Text) = w.WoLemmaLC
+             JOIN words w ON w.language_id = ? AND LOWER(ti.Ti2Text) = w.lemma_lc
              WHERE ti.Ti2LgID = ?
                AND ti.Ti2WoID IS NULL
                AND ti.Ti2WordCount = 1
-               AND w.WoWordCount = 1"
+               AND w.word_count = 1"
             . UserScopedQuery::forTablePrepared('texts', $bindings)
             . UserScopedQuery::forTablePrepared('words', $bindings, 'w'),
             $bindings,
@@ -171,8 +171,8 @@ class LemmaStatisticsService
             "SELECT family_size, COUNT(*) as lemma_count FROM (
                 SELECT COUNT(*) as family_size
                 FROM words
-                WHERE WoLgID = ? AND WoLemmaLC IS NOT NULL AND WoLemmaLC != ''{$userScope}
-                GROUP BY WoLemmaLC
+                WHERE language_id = ? AND lemma_lc IS NOT NULL AND lemma_lc != ''{$userScope}
+                GROUP BY lemma_lc
              ) AS family_sizes
              GROUP BY family_size
              ORDER BY family_size",
@@ -203,11 +203,11 @@ class LemmaStatisticsService
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $statusDistribution = Connection::preparedFetchAll(
             "SELECT
-                ROUND(AVG(CASE WHEN WoStatus <= 5 THEN WoStatus ELSE NULL END)) as avg_status,
-                COUNT(DISTINCT WoLemmaLC) as lemma_count
+                ROUND(AVG(CASE WHEN status <= 5 THEN status ELSE NULL END)) as avg_status,
+                COUNT(DISTINCT lemma_lc) as lemma_count
              FROM words
-             WHERE WoLgID = ? AND WoLemmaLC IS NOT NULL AND WoLemmaLC != ''{$userScope}
-             GROUP BY WoLemmaLC
+             WHERE language_id = ? AND lemma_lc IS NOT NULL AND lemma_lc != ''{$userScope}
+             GROUP BY lemma_lc
              HAVING avg_status IS NOT NULL",
             $bindings
         );

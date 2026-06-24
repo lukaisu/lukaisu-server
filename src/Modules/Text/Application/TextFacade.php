@@ -769,18 +769,18 @@ class TextFacade
         $count = 0;
 
         $statusFilter = $activeOnly
-            ? " AND WoStatus != 98 AND WoStatus != 99"
+            ? " AND status != 98 AND status != 99"
             : "";
 
         $wordScope = UserScopedQuery::forTablePrepared('words', $ids);
         $occScope = UserScopedQuery::forTablePrepared('word_occurrences', $ids, '', 'texts');
-        $sql = "SELECT WoID, WoTextLC, MIN(Ti2SeID) AS SeID
+        $sql = "SELECT id, text_lc, MIN(Ti2SeID) AS SeID
             FROM words, word_occurrences
-            WHERE Ti2LgID = WoLgID AND Ti2WoID = WoID AND Ti2TxID IN ({$placeholders})
+            WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID IN ({$placeholders})
             {$statusFilter}
-            AND IFNULL(WoSentence,'') NOT LIKE CONCAT('%{',WoText,'}%'){$wordScope}{$occScope}
-            GROUP BY WoID
-            ORDER BY WoID, MIN(Ti2SeID)";
+            AND IFNULL(sentence,'') NOT LIKE CONCAT('%{',text,'}%'){$wordScope}{$occScope}
+            GROUP BY id
+            ORDER BY id, MIN(Ti2SeID)";
 
         $records = Connection::preparedFetchAll($sql, $ids);
         $sentenceCount = (int) Settings::getWithDefault('set-term-sentence-count');
@@ -788,12 +788,12 @@ class TextFacade
         foreach ($records as $record) {
             $sent = $this->sentenceService->formatSentence(
                 (int)$record['SeID'],
-                (string)$record['WoTextLC'],
+                (string)$record['text_lc'],
                 $sentenceCount
             );
-            $bindings = [ExportService::replaceTabNewline($sent[1]), $record['WoID']];
+            $bindings = [ExportService::replaceTabNewline($sent[1]), $record['id']];
             $count += Connection::preparedExecute(
-                "UPDATE words SET WoSentence = ? WHERE WoID = ?"
+                "UPDATE words SET sentence = ? WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings),
                 $bindings
             );
@@ -925,8 +925,8 @@ class TextFacade
     {
         $translations = [];
         $alltrans = (string) QueryBuilder::table('words')
-            ->where('WoID', '=', $wordId)
-            ->valuePrepared('WoTranslation');
+            ->where('id', '=', $wordId)
+            ->valuePrepared('translation');
         $transarr = preg_split('/[' . StringUtils::getSeparators() . ']/u', $alltrans);
         if ($transarr === false) {
             return $translations;
@@ -1009,7 +1009,7 @@ class TextFacade
         if (count($vals) > 2 && ctype_digit($vals[2])) {
             $wid = (int) $vals[2];
             $tempWid = QueryBuilder::table('words')
-                ->where('WoID', '=', $wid)
+                ->where('id', '=', $wid)
                 ->countPrepared();
             if ($tempWid < 1) {
                 $wid = null;

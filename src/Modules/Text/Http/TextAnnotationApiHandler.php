@@ -268,8 +268,8 @@ class TextAnnotationApiHandler
         $set = false;
         if ($widset) {
             $alltrans = (string) QueryBuilder::table('words')
-                ->where('WoID', '=', $wid)
-                ->valuePrepared('WoTranslation');
+                ->where('id', '=', $wid)
+                ->valuePrepared('translation');
             $transarr = preg_split('/[' . StringUtils::getSeparators() . ']/u', $alltrans);
             $set = false;
             if ($transarr === false) {
@@ -445,7 +445,7 @@ class TextAnnotationApiHandler
                     $strWid = $vals[2];
                     if (is_numeric($strWid)) {
                         $tempWid = QueryBuilder::table('words')
-                            ->where('WoID', '=', $strWid)
+                            ->where('id', '=', $strWid)
                             ->countPrepared();
                         if ($tempWid < 1) {
                             $wid = null;

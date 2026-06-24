@@ -39,14 +39,14 @@ class WordListFilterBuilderTest extends TestCase
     public function buildLangConditionReturnsConditionWithoutParams(): void
     {
         $result = $this->builder->buildLangCondition('5');
-        $this->assertSame(' and WoLgID=5', $result);
+        $this->assertSame(' and language_id=5', $result);
     }
 
     #[Test]
     public function buildLangConditionCastsToInt(): void
     {
         $result = $this->builder->buildLangCondition('abc');
-        $this->assertSame(' and WoLgID=0', $result);
+        $this->assertSame(' and language_id=0', $result);
     }
 
     #[Test]
@@ -54,7 +54,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildLangCondition('7', $params);
-        $this->assertSame(' and WoLgID = ?', $result);
+        $this->assertSame(' and language_id = ?', $result);
         $this->assertSame([7], $params);
     }
 
@@ -72,7 +72,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildLangCondition('abc', $params);
-        $this->assertSame(' and WoLgID = ?', $result);
+        $this->assertSame(' and language_id = ?', $result);
         $this->assertSame([0], $params);
     }
 
@@ -88,7 +88,7 @@ class WordListFilterBuilderTest extends TestCase
     public function buildLangConditionLargeId(): void
     {
         $result = $this->builder->buildLangCondition('999999');
-        $this->assertSame(' and WoLgID=999999', $result);
+        $this->assertSame(' and language_id=999999', $result);
     }
 
     // =========================================================================
@@ -105,56 +105,56 @@ class WordListFilterBuilderTest extends TestCase
     public function buildStatusConditionSingleStatus(): void
     {
         $result = $this->builder->buildStatusCondition('1');
-        $this->assertSame(' and WoStatus = 1', $result);
+        $this->assertSame(' and status = 1', $result);
     }
 
     #[Test]
     public function buildStatusConditionRange12(): void
     {
         $result = $this->builder->buildStatusCondition('12');
-        $this->assertSame(' and (WoStatus between 1 and 2)', $result);
+        $this->assertSame(' and (status between 1 and 2)', $result);
     }
 
     #[Test]
     public function buildStatusConditionRange15(): void
     {
         $result = $this->builder->buildStatusCondition('15');
-        $this->assertSame(' and (WoStatus between 1 and 5)', $result);
+        $this->assertSame(' and (status between 1 and 5)', $result);
     }
 
     #[Test]
     public function buildStatusConditionRange25(): void
     {
         $result = $this->builder->buildStatusCondition('25');
-        $this->assertSame(' and (WoStatus between 2 and 5)', $result);
+        $this->assertSame(' and (status between 2 and 5)', $result);
     }
 
     #[Test]
     public function buildStatusConditionRange45(): void
     {
         $result = $this->builder->buildStatusCondition('45');
-        $this->assertSame(' and (WoStatus between 4 and 5)', $result);
+        $this->assertSame(' and (status between 4 and 5)', $result);
     }
 
     #[Test]
     public function buildStatusCondition599(): void
     {
         $result = $this->builder->buildStatusCondition('599');
-        $this->assertSame(' and WoStatus in (5,99)', $result);
+        $this->assertSame(' and status in (5,99)', $result);
     }
 
     #[Test]
     public function buildStatusConditionIgnored(): void
     {
         $result = $this->builder->buildStatusCondition('98');
-        $this->assertSame(' and WoStatus = 98', $result);
+        $this->assertSame(' and status = 98', $result);
     }
 
     #[Test]
     public function buildStatusConditionWellKnown(): void
     {
         $result = $this->builder->buildStatusCondition('99');
-        $this->assertSame(' and WoStatus = 99', $result);
+        $this->assertSame(' and status = 99', $result);
     }
 
     #[Test]
@@ -182,7 +182,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildQueryCondition('hello', 'term', '', $params);
-        $this->assertSame(' and (WoText like ?)', $result);
+        $this->assertSame(' and (text like ?)', $result);
         $this->assertSame(['hello'], $params);
     }
 
@@ -191,7 +191,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildQueryCondition('test', 'rom', '', $params);
-        $this->assertSame(" and (IFNULL(WoRomanization,'*') like ?)", $result);
+        $this->assertSame(" and (IFNULL(romanization,'*') like ?)", $result);
         $this->assertSame(['test'], $params);
     }
 
@@ -200,7 +200,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildQueryCondition('meaning', 'transl', '', $params);
-        $this->assertSame(' and (WoTranslation like ?)', $result);
+        $this->assertSame(' and (translation like ?)', $result);
         $this->assertSame(['meaning'], $params);
     }
 
@@ -209,7 +209,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildQueryCondition('test', 'term,rom', '', $params);
-        $this->assertSame(" and (WoText like ? or IFNULL(WoRomanization,'*') like ?)", $result);
+        $this->assertSame(" and (text like ? or IFNULL(romanization,'*') like ?)", $result);
         $this->assertSame(['test', 'test'], $params);
     }
 
@@ -218,7 +218,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildQueryCondition('test', 'rom,transl', '', $params);
-        $this->assertSame(" and (IFNULL(WoRomanization,'*') like ? or WoTranslation like ?)", $result);
+        $this->assertSame(" and (IFNULL(romanization,'*') like ? or translation like ?)", $result);
         $this->assertSame(['test', 'test'], $params);
     }
 
@@ -227,7 +227,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildQueryCondition('test', 'term,transl', '', $params);
-        $this->assertSame(' and (WoText like ? or WoTranslation like ?)', $result);
+        $this->assertSame(' and (text like ? or translation like ?)', $result);
         $this->assertSame(['test', 'test'], $params);
     }
 
@@ -237,7 +237,7 @@ class WordListFilterBuilderTest extends TestCase
         $params = [];
         $result = $this->builder->buildQueryCondition('test', 'term,rom,transl', '', $params);
         $this->assertSame(
-            " and (WoText like ? or IFNULL(WoRomanization,'*') like ? or WoTranslation like ?)",
+            " and (text like ? or IFNULL(romanization,'*') like ? or translation like ?)",
             $result
         );
         $this->assertSame(['test', 'test', 'test'], $params);
@@ -249,7 +249,7 @@ class WordListFilterBuilderTest extends TestCase
         $params = [];
         $result = $this->builder->buildQueryCondition('test', 'unknown', '', $params);
         $this->assertSame(
-            " and (WoText like ? or IFNULL(WoRomanization,'*') like ? or WoTranslation like ?)",
+            " and (text like ? or IFNULL(romanization,'*') like ? or translation like ?)",
             $result
         );
         $this->assertSame(['test', 'test', 'test'], $params);
@@ -284,7 +284,7 @@ class WordListFilterBuilderTest extends TestCase
     {
         $params = [];
         $result = $this->builder->buildQueryCondition('^test$', 'term', 'r', $params);
-        $this->assertSame(' and (WoText rlike ?)', $result);
+        $this->assertSame(' and (text rlike ?)', $result);
         $this->assertSame(['^test$'], $params);
     }
 

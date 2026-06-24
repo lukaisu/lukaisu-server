@@ -16,8 +16,8 @@ DELETE FROM word_occurrences WHERE Ti2TxID IN (SELECT TxID FROM texts WHERE TxTi
 DELETE FROM sentences WHERE SeTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM text_tag_map WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
-DELETE FROM word_tag_map WHERE WtWoID IN (SELECT WoID FROM words WHERE WoText LIKE 'fktest_%');
-DELETE FROM words WHERE WoText LIKE 'fktest_%';
+DELETE FROM word_tag_map WHERE WtWoID IN (SELECT id FROM words WHERE text LIKE 'fktest_%');
+DELETE FROM words WHERE text LIKE 'fktest_%';
 -- Note: archivedtexts merged into texts table, cleanup already handled by texts DELETE above
 DELETE FROM feed_links WHERE title LIKE 'FK_TEST_%';
 DELETE FROM news_feeds WHERE name LIKE 'FK_TEST_%';
@@ -161,7 +161,7 @@ VALUES (@test_lang_id, @sn_test_text_id, 1, 'Sentence', 1);
 SET @sn_test_sentence_id = LAST_INSERT_ID();
 
 -- Create a word
-INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoTranslation, WoWordCount)
+INSERT INTO words (language_id, text, text_lc, status, translation, word_count)
 VALUES (@test_lang_id, 'fktest_word', 'fktest_word', 1, 'test translation', 1);
 
 SET @sn_test_word_id = LAST_INSERT_ID();
@@ -175,7 +175,7 @@ SELECT IF(Ti2WoID = @sn_test_word_id, 'SETUP: TextItem linked to word', 'SETUP F
 FROM word_occurrences WHERE Ti2TxID = @sn_test_text_id AND Ti2Order = 1;
 
 -- Delete word - Ti2WoID should become NULL
-DELETE FROM words WHERE WoID = @sn_test_word_id;
+DELETE FROM words WHERE id = @sn_test_word_id;
 
 -- Verify Ti2WoID is now NULL (not deleted, just unlinked)
 SELECT IF(Ti2WoID IS NULL, 'PASS: Ti2WoID set to NULL', 'FAIL: Ti2WoID not NULL') AS result
@@ -192,7 +192,7 @@ FROM word_occurrences WHERE Ti2TxID = @sn_test_text_id AND Ti2Order = 1;
 SELECT '--- Test 6: word_tag_map -> words CASCADE ---' AS test;
 
 -- Create word and tag
-INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoTranslation, WoWordCount)
+INSERT INTO words (language_id, text, text_lc, status, translation, word_count)
 VALUES (@test_lang_id, 'fktest_tagged', 'fktest_tagged', 1, 'test', 1);
 
 SET @wt_test_word_id = LAST_INSERT_ID();
@@ -207,7 +207,7 @@ SELECT IF(COUNT(*) = 1, 'SETUP: Wordtag created', 'SETUP FAIL') AS result
 FROM word_tag_map WHERE WtWoID = @wt_test_word_id;
 
 -- Delete word - should cascade to word_tag_map
-DELETE FROM words WHERE WoID = @wt_test_word_id;
+DELETE FROM words WHERE id = @wt_test_word_id;
 
 -- Verify wordtag was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Wordtag deleted via CASCADE', 'FAIL: Wordtag not deleted') AS result
@@ -220,7 +220,7 @@ FROM word_tag_map WHERE WtWoID = @wt_test_word_id;
 SELECT '--- Test 7: word_tag_map -> tags CASCADE ---' AS test;
 
 -- Create word and tag
-INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoTranslation, WoWordCount)
+INSERT INTO words (language_id, text, text_lc, status, translation, word_count)
 VALUES (@test_lang_id, 'fktest_tagged2', 'fktest_tagged2', 1, 'test', 1);
 
 SET @wt2_test_word_id = LAST_INSERT_ID();
@@ -463,8 +463,8 @@ DELETE FROM word_occurrences WHERE Ti2TxID IN (SELECT TxID FROM texts WHERE TxTi
 DELETE FROM sentences WHERE SeTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM text_tag_map WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
-DELETE FROM word_tag_map WHERE WtWoID IN (SELECT WoID FROM words WHERE WoText LIKE 'fktest_%');
-DELETE FROM words WHERE WoText LIKE 'fktest_%';
+DELETE FROM word_tag_map WHERE WtWoID IN (SELECT id FROM words WHERE text LIKE 'fktest_%');
+DELETE FROM words WHERE text LIKE 'fktest_%';
 -- Note: archivedtexts merged into texts table, cleanup already handled by texts DELETE above
 DELETE FROM feed_links WHERE title LIKE 'FK_TEST_%';
 DELETE FROM news_feeds WHERE name LIKE 'FK_TEST_%';

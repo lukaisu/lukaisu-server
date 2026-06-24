@@ -246,10 +246,10 @@ class VocabularyFacadeTest extends TestCase
 
         $this->createTerm->expects($this->once())
             ->method('executeFromArray')
-            ->with(['WoLgID' => 1, 'WoText' => 'Hello'])
+            ->with(['language_id' => 1, 'text' => 'Hello'])
             ->willReturn($expectedResult);
 
-        $result = $this->facade->createTermFromArray(['WoLgID' => 1, 'WoText' => 'Hello']);
+        $result = $this->facade->createTermFromArray(['language_id' => 1, 'text' => 'Hello']);
 
         $this->assertSame($expectedResult, $result);
     }
@@ -257,14 +257,14 @@ class VocabularyFacadeTest extends TestCase
     public function testCreateTermFromArrayWithFullData(): void
     {
         $data = [
-            'WoLgID' => 1,
-            'WoText' => 'Hello',
-            'WoStatus' => 2,
-            'WoTranslation' => 'Greeting',
-            'WoSentence' => 'Hello world',
-            'WoNotes' => 'Common word',
-            'WoRomanization' => 'helo',
-            'WoWordCount' => 1
+            'language_id' => 1,
+            'text' => 'Hello',
+            'status' => 2,
+            'translation' => 'Greeting',
+            'sentence' => 'Hello world',
+            'notes' => 'Common word',
+            'romanization' => 'helo',
+            'word_count' => 1
         ];
 
         $expectedResult = [
@@ -297,10 +297,10 @@ class VocabularyFacadeTest extends TestCase
 
         $this->createTerm->expects($this->once())
             ->method('executeFromArray')
-            ->with(['WoLgID' => 1, 'WoText' => ''])
+            ->with(['language_id' => 1, 'text' => ''])
             ->willReturn($expectedResult);
 
-        $result = $this->facade->createTermFromArray(['WoLgID' => 1, 'WoText' => '']);
+        $result = $this->facade->createTermFromArray(['language_id' => 1, 'text' => '']);
 
         $this->assertFalse($result['success']);
     }
@@ -366,16 +366,16 @@ class VocabularyFacadeTest extends TestCase
     public function testGetTermAsArrayDelegatesToGetTermByIdUseCase(): void
     {
         $expectedArray = [
-            'WoID' => 1,
-            'WoLgID' => 1,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
-            'WoSentence' => 'Example sentence',
-            'WoNotes' => 'Notes',
-            'WoRomanization' => 'romanization',
-            'WoWordCount' => 1
+            'id' => 1,
+            'language_id' => 1,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'status' => 1,
+            'translation' => 'translation',
+            'sentence' => 'Example sentence',
+            'notes' => 'Notes',
+            'romanization' => 'romanization',
+            'word_count' => 1
         ];
 
         $this->getTermById->expects($this->once())
@@ -485,7 +485,7 @@ class VocabularyFacadeTest extends TestCase
 
     public function testUpdateTermFromArrayDelegatesToUpdateTermUseCase(): void
     {
-        $data = ['WoID' => 1, 'WoStatus' => 2];
+        $data = ['id' => 1, 'status' => 2];
         $expectedResult = ['id' => 1, 'message' => 'Term updated', 'success' => true];
 
         $this->updateTerm->expects($this->once())
@@ -501,12 +501,12 @@ class VocabularyFacadeTest extends TestCase
     public function testUpdateTermFromArrayWithFullData(): void
     {
         $data = [
-            'WoID' => 1,
-            'WoStatus' => 3,
-            'WoTranslation' => 'new meaning',
-            'WoSentence' => 'new example',
-            'WoNotes' => 'new notes',
-            'WoRomanization' => 'new roman'
+            'id' => 1,
+            'status' => 3,
+            'translation' => 'new meaning',
+            'sentence' => 'new example',
+            'notes' => 'new notes',
+            'romanization' => 'new roman'
         ];
         $expectedResult = ['id' => 1, 'message' => 'Term updated', 'success' => true];
 
@@ -530,10 +530,10 @@ class VocabularyFacadeTest extends TestCase
 
         $this->updateTerm->expects($this->once())
             ->method('executeFromArray')
-            ->with(['WoID' => 999])
+            ->with(['id' => 999])
             ->willReturn($expectedResult);
 
-        $result = $this->facade->updateTermFromArray(['WoID' => 999]);
+        $result = $this->facade->updateTermFromArray(['id' => 999]);
 
         $this->assertFalse($result['success']);
     }
@@ -1164,7 +1164,7 @@ class VocabularyFacadeTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('findPaginated')
-            ->with(1, 1, 20, 'WoText', 'ASC')
+            ->with(1, 1, 20, 'text', 'ASC')
             ->willReturn($expectedResult);
 
         $result = $this->facade->listTerms(1);
@@ -1184,7 +1184,7 @@ class VocabularyFacadeTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('findPaginated')
-            ->with(1, 3, 10, 'WoText', 'ASC')
+            ->with(1, 3, 10, 'text', 'ASC')
             ->willReturn($expectedResult);
 
         $result = $this->facade->listTerms(1, 3, 10);
@@ -1204,10 +1204,10 @@ class VocabularyFacadeTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('findPaginated')
-            ->with(1, 1, 20, 'WoStatus', 'DESC')
+            ->with(1, 1, 20, 'status', 'DESC')
             ->willReturn($expectedResult);
 
-        $result = $this->facade->listTerms(1, 1, 20, 'WoStatus', 'DESC');
+        $result = $this->facade->listTerms(1, 1, 20, 'status', 'DESC');
 
         $this->assertSame($expectedResult, $result);
     }
@@ -1224,7 +1224,7 @@ class VocabularyFacadeTest extends TestCase
 
         $this->repository->expects($this->once())
             ->method('findPaginated')
-            ->with(0, 1, 20, 'WoText', 'ASC')
+            ->with(0, 1, 20, 'text', 'ASC')
             ->willReturn($expectedResult);
 
         $result = $this->facade->listTerms();

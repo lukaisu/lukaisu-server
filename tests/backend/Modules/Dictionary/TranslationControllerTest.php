@@ -94,7 +94,7 @@ class TranslationControllerTest extends TestCase
 
         // Clean up test data
         $wordsTable = Globals::table('words');
-        Connection::query("DELETE FROM " . $wordsTable . " WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM " . $wordsTable . " WHERE language_id = " . self::$testLangId);
         $langTable = Globals::table('languages');
         Connection::query(
             "DELETE FROM " . $langTable . " WHERE LgName = 'TranslationControllerTestLang'"

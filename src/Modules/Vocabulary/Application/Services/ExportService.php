@@ -197,8 +197,8 @@ class ExportService
         $lpar = ($rtlScript ? ']' : '[');
         $rpar = ($rtlScript ? '[' : ']');
 
-        $rawSentence = (string)$record["WoSentence"];
-        $woText = (string)$record["WoText"];
+        $rawSentence = (string)$record["sentence"];
+        $woText = (string)$record["text"];
 
         // If sentence doesn't have {word} markup but contains the word, add it
         if (!str_contains($rawSentence, '{' . $woText . '}') && str_contains($rawSentence, $woText)) {
@@ -223,12 +223,12 @@ class ExportService
 
         $woTextDisplay = htmlspecialchars(self::replaceTabNewline($woText), ENT_QUOTES, 'UTF-8');
         return $span1 . $woTextDisplay . $span2 . "\t" .
-            htmlspecialchars(self::replaceTabNewline((string)$record["WoTranslation"]), ENT_QUOTES, 'UTF-8') . "\t" .
-            htmlspecialchars(self::replaceTabNewline((string)$record["WoRomanization"]), ENT_QUOTES, 'UTF-8') . "\t" .
+            htmlspecialchars(self::replaceTabNewline((string)$record["translation"]), ENT_QUOTES, 'UTF-8') . "\t" .
+            htmlspecialchars(self::replaceTabNewline((string)$record["romanization"]), ENT_QUOTES, 'UTF-8') . "\t" .
             $span1 . $sent1 . $span2 . "\t" .
             $span1 . $sent2 . $span2 . "\t" .
             htmlspecialchars(self::replaceTabNewline((string)$record["LgName"]), ENT_QUOTES, 'UTF-8') . "\t" .
-            htmlspecialchars((string)$record["WoID"], ENT_QUOTES, 'UTF-8') . "\t" .
+            htmlspecialchars((string)$record["id"], ENT_QUOTES, 'UTF-8') . "\t" .
             htmlspecialchars((string)$record["taglist"], ENT_QUOTES, 'UTF-8') .
             "\r\n";
     }
@@ -248,15 +248,15 @@ class ExportService
         // with a .txt extension, but users routinely rename and open
         // exports in spreadsheets — without the guard, an attacker
         // could store an =cmd|...!A1 payload in a translation and
-        // execute it on import. WoStatus and WoID are numeric, no
+        // execute it on import. status and id are numeric, no
         // escaping needed.
-        return CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["WoText"])) . "\t" .
-            CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["WoTranslation"])) . "\t" .
-            CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["WoSentence"])) . "\t" .
-            CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["WoRomanization"])) . "\t" .
-            (string)($record["WoStatus"] ?? '') . "\t" .
+        return CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["text"])) . "\t" .
+            CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["translation"])) . "\t" .
+            CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["sentence"])) . "\t" .
+            CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["romanization"])) . "\t" .
+            (string)($record["status"] ?? '') . "\t" .
             CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["LgName"])) . "\t" .
-            (string)($record["WoID"] ?? '') . "\t" .
+            (string)($record["id"] ?? '') . "\t" .
             CsvFormulaGuard::escapeCell((string)($record["taglist"] ?? '')) . "\r\n";
     }
 
@@ -273,16 +273,16 @@ class ExportService
             return '';
         }
 
-        $woid = (string)$record['WoID'];
+        $woid = (string)$record['id'];
         $langname = self::replaceTabNewline((string)$record['LgName']);
         $rtlScript = (int)$record['LgRightToLeft'] === 1;
         $span1 = ($rtlScript ? '<span dir="rtl">' : '');
         $span2 = ($rtlScript ? '</span>' : '');
-        $term = self::replaceTabNewline((string)$record['WoText']);
-        $term_lc = self::replaceTabNewline((string)$record['WoTextLC']);
-        $transl = self::replaceTabNewline((string)$record['WoTranslation']);
-        $rom = self::replaceTabNewline((string)$record['WoRomanization']);
-        $sent_raw = self::replaceTabNewline((string)$record['WoSentence']);
+        $term = self::replaceTabNewline((string)$record['text']);
+        $term_lc = self::replaceTabNewline((string)$record['text_lc']);
+        $transl = self::replaceTabNewline((string)$record['translation']);
+        $rom = self::replaceTabNewline((string)$record['romanization']);
+        $sent_raw = self::replaceTabNewline((string)$record['sentence']);
         $sent = str_replace('{', '', str_replace('}', '', $sent_raw));
         $sent_c = self::maskTermInSentenceV2($sent_raw);
         $sent_d = str_replace('{', '[', str_replace('}', ']', $sent_raw));
@@ -292,7 +292,7 @@ class ExportService
             '{{c1::',
             str_replace('}', '::' . $transl . '}}', $sent_raw)
         );
-        $status = (string)$record['WoStatus'];
+        $status = (string)$record['status'];
         $taglist = trim((string)$record['taglist']);
 
         $output = self::replaceTabNewline((string)$record['LgExportTemplate']);

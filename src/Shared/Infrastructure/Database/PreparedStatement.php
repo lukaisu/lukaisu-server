@@ -28,16 +28,16 @@ use Lukaisu\Shared\Infrastructure\Exception\DatabaseException;
  * Usage:
  * ```php
  * // Simple query with parameters
- * $stmt = Connection::prepare('SELECT * FROM words WHERE WoLgID = ? AND WoStatus = ?');
+ * $stmt = Connection::prepare('SELECT * FROM words WHERE language_id = ? AND status = ?');
  * $rows = $stmt->bind('ii', $langId, $status)->fetchAll();
  *
  * // Insert with parameters
- * $stmt = Connection::prepare('INSERT INTO words (WoText, WoLgID) VALUES (?, ?)');
+ * $stmt = Connection::prepare('INSERT INTO words (text, language_id) VALUES (?, ?)');
  * $stmt->bind('si', $text, $langId)->execute();
  * $insertId = $stmt->insertId();
  *
  * // Update with parameters
- * $stmt = Connection::prepare('UPDATE words SET WoStatus = ? WHERE WoID = ?');
+ * $stmt = Connection::prepare('UPDATE words SET status = ? WHERE id = ?');
  * $affected = $stmt->bind('ii', $status, $wordId)->execute();
  * ```
  *

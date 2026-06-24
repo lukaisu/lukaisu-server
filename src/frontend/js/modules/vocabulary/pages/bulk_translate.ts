@@ -157,7 +157,7 @@ export function bulkTranslateApp(config: BulkTranslateConfig = {
       const form1 = document.querySelector<HTMLFormElement>('[name="form1"]');
       if (form1) {
         form1.addEventListener('submit', () => {
-          const currentTranslation = document.querySelector<HTMLElement>('[name="WoTranslation"]');
+          const currentTranslation = document.querySelector<HTMLElement>('[name="translation"]');
           if (currentTranslation) {
             currentTranslation.setAttribute('name', currentTranslation.getAttribute('data_name') ?? '');
           }
@@ -342,8 +342,8 @@ export function bulkTranslateApp(config: BulkTranslateConfig = {
 
       openDictionaryPopup(dictUrl);
 
-      // Swap WoTranslation name attributes to track current input
-      const currentTranslation = document.querySelector<HTMLElement>('[name="WoTranslation"]');
+      // Swap translation name attributes to track current input
+      const currentTranslation = document.querySelector<HTMLElement>('[name="translation"]');
       if (currentTranslation) {
         currentTranslation.setAttribute('name', currentTranslation.getAttribute('data_name') ?? '');
       }
@@ -353,7 +353,7 @@ export function bulkTranslateApp(config: BulkTranslateConfig = {
       const el = nextRow?.firstElementChild as HTMLElement | null;
       if (el) {
         el.setAttribute('data_name', el.getAttribute('name') ?? '');
-        el.setAttribute('name', 'WoTranslation');
+        el.setAttribute('name', 'translation');
       }
     },
 

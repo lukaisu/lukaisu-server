@@ -1,6 +1,6 @@
 /**
  * Review scheduling — TypeScript port of the server's `TermStatusService`
- * spaced-repetition scoring (`WoTodayScore` / `WoTomorrowScore`).
+ * spaced-repetition scoring (`today_score` / `tomorrow_score`).
  *
  * A word's "score" decays linearly from a per-status base; when it drops below
  * zero the word is due. Higher statuses decay slower, so they resurface less

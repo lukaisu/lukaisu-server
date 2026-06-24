@@ -255,12 +255,12 @@ class TextPrintService
         $bindings = [$textId];
         $sql = "SELECT
                     CASE WHEN Ti2WordCount>0 THEN Ti2WordCount ELSE 1 END AS Code,
-                    CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE WoText END AS TiText,
+                    CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE text END AS TiText,
                     Ti2Order,
                     CASE WHEN Ti2WordCount > 0 THEN 0 ELSE 1 END as TiIsNotWord,
-                    WoID, WoTranslation, WoRomanization, WoStatus
+                    id, translation, romanization, status
                 FROM word_occurrences
-                LEFT JOIN words ON (Ti2WoID = WoID) AND (Ti2LgID = WoLgID)
+                LEFT JOIN words ON (Ti2WoID = id) AND (Ti2LgID = language_id)
                 WHERE Ti2TxID = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings, 'words') . "
                 ORDER BY Ti2Order asc, Ti2WordCount desc";
@@ -375,13 +375,13 @@ class TextPrintService
         $bindings = [$textId];
         $sql = "SELECT
                     CASE WHEN Ti2WordCount>0 THEN Ti2WordCount ELSE 1 END AS wordCount,
-                    CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE WoText END AS text,
+                    CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE text END AS text,
                     Ti2Order AS position,
                     CASE WHEN Ti2WordCount > 0 THEN 0 ELSE 1 END as isNotWord,
-                    WoID AS wordId, WoTranslation AS translation,
-                    WoRomanization AS romanization, WoStatus AS status
+                    id AS wordId, translation AS translation,
+                    romanization AS romanization, status AS status
                 FROM word_occurrences
-                LEFT JOIN words ON (Ti2WoID = WoID) AND (Ti2LgID = WoLgID)
+                LEFT JOIN words ON (Ti2WoID = id) AND (Ti2LgID = language_id)
                 WHERE Ti2TxID = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings, 'words') . "
                 ORDER BY Ti2Order asc, Ti2WordCount desc";

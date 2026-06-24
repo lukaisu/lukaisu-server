@@ -113,15 +113,15 @@ class TextStatisticsService
 
         // Raw SQL needed for complex aggregation with DISTINCT and implicit JOIN
         // word_occurrences inherits user context via Ti2TxID -> texts FK
-        // words has user scope (WoUsID), need to apply user filtering
+        // words has user scope (user_id), need to apply user filtering
         $bindings = [];
         $inClause = Connection::buildPreparedInClause($textIds, $bindings);
         $sql = "SELECT Ti2TxID AS text, COUNT(DISTINCT Ti2WoID) AS unique_cnt,
-            COUNT(Ti2WoID) AS total, WoStatus AS status
+            COUNT(Ti2WoID) AS total, status AS status
             FROM word_occurrences, words
-            WHERE Ti2WoID != 0 AND Ti2TxID IN {$inClause} AND Ti2WoID = WoID"
+            WHERE Ti2WoID != 0 AND Ti2TxID IN {$inClause} AND Ti2WoID = id"
             . UserScopedQuery::forTablePrepared('words', $bindings, 'words') .
-            " GROUP BY Ti2TxID, WoStatus";
+            " GROUP BY Ti2TxID, status";
         $rows = Connection::preparedFetchAll($sql, $bindings);
         foreach ($rows as $record) {
             $textId = (int) $record['text'];

@@ -105,7 +105,7 @@ class DeleteLanguage
                 ->whereNotNull('TxArchivedAt')
                 ->count(),
             'words' => QueryBuilder::table('words')
-                ->where('WoLgID', '=', $id)
+                ->where('language_id', '=', $id)
                 ->count(),
             'feeds' => QueryBuilder::table('news_feeds')
                 ->where('language_id', '=', $id)

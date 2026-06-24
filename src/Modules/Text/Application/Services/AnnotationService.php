@@ -129,14 +129,14 @@ class AnnotationService
         $bindings = [$textId];
         $sql = "SELECT
             CASE WHEN Ti2WordCount>0 THEN Ti2WordCount ELSE 1 END AS Code,
-            CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE WoText END AS TiText,
+            CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE text END AS TiText,
             Ti2Order,
             CASE WHEN Ti2WordCount > 0 THEN 0 ELSE 1 END AS TiIsNotWord,
-            WoID, WoTranslation
+            id, translation
             FROM (
                 word_occurrences
                 LEFT JOIN words
-                ON Ti2WoID = WoID AND Ti2LgID = WoLgID
+                ON Ti2WoID = id AND Ti2LgID = language_id
             )
             WHERE Ti2TxID = ?"
             . UserScopedQuery::forTablePrepared('word_occurrences', $bindings) . "
@@ -161,9 +161,9 @@ class AnnotationService
             } else {
                 $until = $order + 2 * ($actcode - 1);
                 $saveterm = (string)$record['TiText'];
-                if (isset($record['WoID'])) {
-                    $savetrans = (string)$record['WoTranslation'];
-                    $savewordid = (string)$record['WoID'];
+                if (isset($record['id'])) {
+                    $savetrans = (string)$record['translation'];
+                    $savewordid = (string)$record['id'];
                 }
             }
             // Append the annotation

@@ -134,7 +134,7 @@ class ReviewServiceTest extends TestCase
         $result = $this->service->getReviewSql('words', [10, 20]);
         $this->assertArrayHasKey('sql', $result);
         $this->assertArrayHasKey('params', $result);
-        $this->assertStringContainsString('WoID IN (?,?)', $result['sql']);
+        $this->assertStringContainsString('id IN (?,?)', $result['sql']);
         $this->assertSame([10, 20], $result['params']);
     }
 
@@ -151,7 +151,7 @@ class ReviewServiceTest extends TestCase
     public function getReviewSqlLangReturnsSingleParam(): void
     {
         $result = $this->service->getReviewSql('lang', 7);
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertSame([7], $result['params']);
     }
 
@@ -175,7 +175,7 @@ class ReviewServiceTest extends TestCase
     public function getReviewSqlWordsWithSingleIntCastsToArray(): void
     {
         $result = $this->service->getReviewSql('words', 42);
-        $this->assertStringContainsString('WoID IN (?)', $result['sql']);
+        $this->assertStringContainsString('id IN (?)', $result['sql']);
         $this->assertSame([42], $result['params']);
     }
 
@@ -202,7 +202,7 @@ class ReviewServiceTest extends TestCase
     {
         $result = $this->service->buildSelectionReviewSql(2, '10,20,30');
         $this->assertNotNull($result);
-        $this->assertStringContainsString('WoID IN', $result['sql']);
+        $this->assertStringContainsString('id IN', $result['sql']);
         $this->assertSame([10, 20, 30], $result['params']);
     }
 

@@ -44,10 +44,10 @@ trait TermStatsMethods
     public function updateStatus(int $termId, int $status): bool
     {
         $affected = $this->query()
-            ->where('WoID', '=', $termId)
+            ->where('id', '=', $termId)
             ->updatePrepared([
-                'WoStatus' => $status,
-                'WoStatusChanged' => date('Y-m-d H:i:s'),
+                'status' => $status,
+                'status_changed_at' => date('Y-m-d H:i:s'),
             ]);
 
         return $affected > 0;
@@ -59,8 +59,8 @@ trait TermStatsMethods
     public function updateTranslation(int $termId, string $translation): bool
     {
         $affected = $this->query()
-            ->where('WoID', '=', $termId)
-            ->updatePrepared(['WoTranslation' => $translation]);
+            ->where('id', '=', $termId)
+            ->updatePrepared(['translation' => $translation]);
 
         return $affected > 0;
     }
@@ -71,8 +71,8 @@ trait TermStatsMethods
     public function updateRomanization(int $termId, string $romanization): bool
     {
         $affected = $this->query()
-            ->where('WoID', '=', $termId)
-            ->updatePrepared(['WoRomanization' => $romanization]);
+            ->where('id', '=', $termId)
+            ->updatePrepared(['romanization' => $romanization]);
 
         return $affected > 0;
     }
@@ -88,8 +88,8 @@ trait TermStatsMethods
     public function updateSentence(int $termId, string $sentence): bool
     {
         $affected = $this->query()
-            ->where('WoID', '=', $termId)
-            ->updatePrepared(['WoSentence' => $sentence]);
+            ->where('id', '=', $termId)
+            ->updatePrepared(['sentence' => $sentence]);
 
         return $affected > 0;
     }
@@ -105,8 +105,8 @@ trait TermStatsMethods
     public function updateNotes(int $termId, string $notes): bool
     {
         $affected = $this->query()
-            ->where('WoID', '=', $termId)
-            ->updatePrepared(['WoNotes' => $notes]);
+            ->where('id', '=', $termId)
+            ->updatePrepared(['notes' => $notes]);
 
         return $affected > 0;
     }
@@ -124,10 +124,10 @@ trait TermStatsMethods
         $lemmaLc = $lemma !== null && $lemma !== '' ? mb_strtolower($lemma, 'UTF-8') : null;
 
         $affected = $this->query()
-            ->where('WoID', '=', $termId)
+            ->where('id', '=', $termId)
             ->updatePrepared([
-                'WoLemma' => $lemma,
-                'WoLemmaLC' => $lemmaLc,
+                'lemma' => $lemma,
+                'lemma_lc' => $lemmaLc,
             ]);
 
         return $affected > 0;
@@ -145,10 +145,10 @@ trait TermStatsMethods
     public function updateScores(int $termId, float $todayScore, float $tomorrowScore): bool
     {
         $affected = $this->query()
-            ->where('WoID', '=', $termId)
+            ->where('id', '=', $termId)
             ->updatePrepared([
-                'WoTodayScore' => $todayScore,
-                'WoTomorrowScore' => $tomorrowScore,
+                'today_score' => $todayScore,
+                'tomorrow_score' => $tomorrowScore,
             ]);
 
         return $affected > 0;
@@ -162,11 +162,11 @@ trait TermStatsMethods
     public function getLanguagesWithTerms(): array
     {
         $rows = $this->query()
-            ->select('DISTINCT WoLgID')
+            ->select('DISTINCT language_id')
             ->getPrepared();
 
         return array_map(
-            fn(array $row) => (int) $row['WoLgID'],
+            fn(array $row) => (int) $row['language_id'],
             $rows
         );
     }
@@ -178,13 +178,13 @@ trait TermStatsMethods
     {
         $baseQuery = $this->query();
         if ($languageId !== null) {
-            $baseQuery->where('WoLgID', '=', $languageId);
+            $baseQuery->where('language_id', '=', $languageId);
         }
 
         $total = (clone $baseQuery)->countPrepared();
 
         $learning = (clone $baseQuery)
-            ->whereIn('WoStatus', [
+            ->whereIn('status', [
                 TermStatus::NEW,
                 TermStatus::LEARNING_2,
                 TermStatus::LEARNING_3,
@@ -193,15 +193,15 @@ trait TermStatsMethods
             ->countPrepared();
 
         $known = (clone $baseQuery)
-            ->whereIn('WoStatus', [TermStatus::LEARNED, TermStatus::WELL_KNOWN])
+            ->whereIn('status', [TermStatus::LEARNED, TermStatus::WELL_KNOWN])
             ->countPrepared();
 
         $ignored = (clone $baseQuery)
-            ->where('WoStatus', '=', TermStatus::IGNORED)
+            ->where('status', '=', TermStatus::IGNORED)
             ->countPrepared();
 
         $multiWord = (clone $baseQuery)
-            ->where('WoWordCount', '>', 1)
+            ->where('word_count', '>', 1)
             ->countPrepared();
 
         return [
@@ -224,7 +224,7 @@ trait TermStatsMethods
     {
         $baseQuery = $this->query();
         if ($languageId !== null) {
-            $baseQuery->where('WoLgID', '=', $languageId);
+            $baseQuery->where('language_id', '=', $languageId);
         }
 
         $statuses = [
@@ -240,7 +240,7 @@ trait TermStatsMethods
         $distribution = [];
         foreach ($statuses as $status) {
             $distribution[$status] = (clone $baseQuery)
-                ->where('WoStatus', '=', $status)
+                ->where('status', '=', $status)
                 ->countPrepared();
         }
 
@@ -257,7 +257,7 @@ trait TermStatsMethods
         }
 
         return $this->query()
-            ->whereIn('WoID', array_map('intval', $termIds))
+            ->whereIn('id', array_map('intval', $termIds))
             ->deletePrepared();
     }
 
@@ -271,10 +271,10 @@ trait TermStatsMethods
         }
 
         return $this->query()
-            ->whereIn('WoID', array_map('intval', $termIds))
+            ->whereIn('id', array_map('intval', $termIds))
             ->updatePrepared([
-                'WoStatus' => $status,
-                'WoStatusChanged' => date('Y-m-d H:i:s'),
+                'status' => $status,
+                'status_changed_at' => date('Y-m-d H:i:s'),
             ]);
     }
 
@@ -287,21 +287,21 @@ trait TermStatsMethods
      */
     public function getWordCountDistribution(?int $languageId = null): array
     {
-        $sql = "SELECT WoWordCount, COUNT(*) as cnt FROM words";
+        $sql = "SELECT word_count, COUNT(*) as cnt FROM words";
         $params = [];
 
         if ($languageId !== null) {
-            $sql .= " WHERE WoLgID = ?";
+            $sql .= " WHERE language_id = ?";
             $params[] = $languageId;
         }
 
-        $sql .= " GROUP BY WoWordCount ORDER BY WoWordCount";
+        $sql .= " GROUP BY word_count ORDER BY word_count";
 
         $rows = Connection::preparedFetchAll($sql, $params);
 
         $distribution = [];
         foreach ($rows as $row) {
-            $distribution[(int) $row['WoWordCount']] = (int) $row['cnt'];
+            $distribution[(int) $row['word_count']] = (int) $row['cnt'];
         }
 
         return $distribution;

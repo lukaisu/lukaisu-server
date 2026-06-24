@@ -63,7 +63,7 @@ class TextDisplayServiceTest extends TestCase
 
             // Create a test word with romanization
             Connection::query(
-                "INSERT INTO words (WoLgID, WoTextLC, WoText, WoStatus, WoTranslation, WoRomanization) " .
+                "INSERT INTO words (language_id, text_lc, text, status, translation, romanization) " .
                 "VALUES (" . self::$testLangId . ", 'testword', 'testword', 1, 'test translation', 'testwɜːd')"
             );
             self::$testWordId = (int)Connection::fetchValue(
@@ -83,7 +83,7 @@ class TextDisplayServiceTest extends TestCase
             Connection::query("DELETE FROM texts WHERE TxID = " . self::$testTextId);
         }
         if (self::$testWordId > 0) {
-            Connection::query("DELETE FROM words WHERE WoID = " . self::$testWordId);
+            Connection::query("DELETE FROM words WHERE id = " . self::$testWordId);
         }
     }
 

@@ -108,19 +108,19 @@ class ImportUtilities
             } else {
                 switch ($columns[$j]) {
                     case 'w':
-                        $col[$j] = $removeSpaces ? '@wotext' : 'WoText';
+                        $col[$j] = $removeSpaces ? '@wotext' : 'text';
                         $fields["txt"] = $j;
                         break;
                     case 't':
-                        $col[$j] = 'WoTranslation';
+                        $col[$j] = 'translation';
                         $fields["tr"] = $j;
                         break;
                     case 'r':
-                        $col[$j] = 'WoRomanization';
+                        $col[$j] = 'romanization';
                         $fields["ro"] = $j;
                         break;
                     case 's':
-                        $col[$j] = 'WoSentence';
+                        $col[$j] = 'sentence';
                         $fields["se"] = $j;
                         break;
                     case 'g':
@@ -218,8 +218,8 @@ class ImportUtilities
     public function handleMultiwords(int $langId, string $lastUpdate): void
     {
         $mwords = QueryBuilder::table('words')
-            ->where('WoWordCount', '>', 1)
-            ->where('WoCreated', '>', $lastUpdate)
+            ->where('word_count', '>', 1)
+            ->where('created_at', '>', $lastUpdate)
             ->countPrepared();
 
         if ($mwords > 40) {
@@ -247,14 +247,14 @@ class ImportUtilities
             $allPlaceholders = [];
             $allParams = [];
             $rows = QueryBuilder::table('words')
-                ->select(['WoID', 'WoTextLC', 'WoWordCount'])
-                ->where('WoWordCount', '>', 1)
-                ->where('WoCreated', '>', $lastUpdate)
+                ->select(['id', 'text_lc', 'word_count'])
+                ->where('word_count', '>', 1)
+                ->where('created_at', '>', $lastUpdate)
                 ->getPrepared();
             foreach ($rows as $record) {
-                $len = (int) $record['WoWordCount'];
-                $wid = (int) $record['WoID'];
-                $textlc = (string) $record['WoTextLC'];
+                $len = (int) $record['word_count'];
+                $wid = (int) $record['id'];
+                $textlc = (string) $record['text_lc'];
                 $expressionService = new ExpressionService();
                 $result = $expressionService->insertExpressions($textlc, $langId, $wid, $len, 2);
                 if ($result !== null) {
@@ -280,7 +280,7 @@ class ImportUtilities
     public function getLastWordUpdate(): ?string
     {
         $result = QueryBuilder::table('words')
-            ->select(['MAX(WoStatusChanged) AS max_date'])
+            ->select(['MAX(status_changed_at) AS max_date'])
             ->first();
         return $result !== null ? (string)$result['max_date'] : null;
     }
@@ -296,9 +296,9 @@ class ImportUtilities
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $sql = "UPDATE words
             JOIN word_occurrences
-            ON WoWordCount=1 AND Ti2WoID IS NULL AND lower(Ti2Text)=WoTextLC AND Ti2LgID = WoLgID"
+            ON word_count=1 AND Ti2WoID IS NULL AND lower(Ti2Text)=text_lc AND Ti2LgID = language_id"
             . $userScope
-            . " SET Ti2WoID=WoID";
+            . " SET Ti2WoID=id";
         Connection::preparedExecute($sql, $bindings);
     }
 
@@ -312,7 +312,7 @@ class ImportUtilities
     public function countImportedTerms(string $lastUpdate): int
     {
         return QueryBuilder::table('words')
-            ->where('WoStatusChanged', '>', $lastUpdate)
+            ->where('status_changed_at', '>', $lastUpdate)
             ->countPrepared();
     }
 
@@ -332,17 +332,17 @@ class ImportUtilities
         $bindings[] = $offset;
         $bindings[] = $limit;
 
-        $sql = "SELECT w.WoID, w.WoText, w.WoTextLC, w.WoTranslation,
-                w.WoRomanization, w.WoSentence, w.WoStatus,
+        $sql = "SELECT w.id, w.text, w.text_lc, w.translation,
+                w.romanization, w.sentence, w.status,
                 GROUP_CONCAT(t.TgText ORDER BY t.TgText SEPARATOR ', ') as taglist,
-                CASE WHEN w.WoSentence != '' AND w.WoSentence LIKE CONCAT('%{', w.WoText, '}%')
+                CASE WHEN w.sentence != '' AND w.sentence LIKE CONCAT('%{', w.text, '}%')
                     THEN 1 ELSE 0 END as SentOK
             FROM words w
-            LEFT JOIN word_tag_map wt ON w.WoID = wt.WtWoID
+            LEFT JOIN word_tag_map wt ON w.id = wt.WtWoID
             LEFT JOIN tags t ON wt.WtTgID = t.TgID
-            WHERE w.WoStatusChanged > ?{$userScope}
-            GROUP BY w.WoID
-            ORDER BY w.WoText
+            WHERE w.status_changed_at > ?{$userScope}
+            GROUP BY w.id
+            ORDER BY w.text
             LIMIT ?, ?";
 
         return Connection::preparedFetchAll($sql, $bindings);

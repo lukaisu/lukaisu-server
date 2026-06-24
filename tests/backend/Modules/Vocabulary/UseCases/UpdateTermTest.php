@@ -238,9 +238,9 @@ class UpdateTermTest extends TestCase
         $this->repository->method('save');
 
         $result = $this->useCase->executeFromArray([
-            'WoID' => 42,
-            'WoStatus' => 3,
-            'WoTranslation' => 'Updated'
+            'id' => 42,
+            'status' => 3,
+            'translation' => 'Updated'
         ]);
 
         $this->assertTrue($result['success']);
@@ -253,8 +253,8 @@ class UpdateTermTest extends TestCase
         $this->repository->method('find')->willReturn(null);
 
         $result = $this->useCase->executeFromArray([
-            'WoID' => 999,
-            'WoStatus' => 2
+            'id' => 999,
+            'status' => 2
         ]);
 
         $this->assertFalse($result['success']);
@@ -267,7 +267,7 @@ class UpdateTermTest extends TestCase
         $this->repository->method('find')->willReturn(null);
 
         $result = $this->useCase->executeFromArray([
-            'WoStatus' => 2
+            'status' => 2
         ]);
 
         $this->assertFalse($result['success']);
@@ -280,8 +280,8 @@ class UpdateTermTest extends TestCase
             ->willThrowException(new \Exception('Database error'));
 
         $result = $this->useCase->executeFromArray([
-            'WoID' => 42,
-            'WoStatus' => 2
+            'id' => 42,
+            'status' => 2
         ]);
 
         $this->assertFalse($result['success']);
@@ -297,8 +297,8 @@ class UpdateTermTest extends TestCase
 
         // Only update translation, other fields not provided
         $result = $this->useCase->executeFromArray([
-            'WoID' => 42,
-            'WoTranslation' => 'Only translation updated'
+            'id' => 42,
+            'translation' => 'Only translation updated'
         ]);
 
         $this->assertTrue($result['success']);

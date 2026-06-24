@@ -30,16 +30,16 @@ use Lukaisu\Shared\Infrastructure\Database\PreparedStatement;
  * use Lukaisu\Shared\Infrastructure\Database\DB;
  *
  * // Query builder
- * $words = DB::table('words')->where('WoLgID', 1)->get();
+ * $words = DB::table('words')->where('language_id', 1)->get();
  *
  * // Raw queries
- * $result = DB::query('SELECT * FROM words WHERE WoID = 1');
+ * $result = DB::query('SELECT * FROM words WHERE id = 1');
  * $rows = DB::fetchAll('SELECT * FROM words LIMIT 10');
- * $row = DB::fetchOne('SELECT * FROM words WHERE WoID = 1');
+ * $row = DB::fetchOne('SELECT * FROM words WHERE id = 1');
  * $value = DB::fetchValue('SELECT COUNT(*) AS cnt FROM words', 'cnt');
  *
  * // Execute non-SELECT queries
- * $affected = DB::execute('UPDATE words SET WoStatus = 2 WHERE WoID = 1');
+ * $affected = DB::execute('UPDATE words SET status = 2 WHERE id = 1');
  *
  * // Escaping
  * $safe = DB::escape($userInput);

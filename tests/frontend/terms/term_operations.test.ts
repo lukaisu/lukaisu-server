@@ -70,36 +70,36 @@ describe('term_operations.ts', () => {
   // ===========================================================================
 
   describe('setTransRoman', () => {
-    it('sets translation in WoTranslation textarea', () => {
-      document.body.innerHTML = '<textarea name="WoTranslation"></textarea>';
+    it('sets translation in translation textarea', () => {
+      document.body.innerHTML = '<textarea name="translation"></textarea>';
 
       setTransRoman('hello', '');
 
-      expect((document.querySelector('textarea[name="WoTranslation"]') as HTMLTextAreaElement).value).toBe('hello');
+      expect((document.querySelector('textarea[name="translation"]') as HTMLTextAreaElement).value).toBe('hello');
     });
 
-    it('sets romanization in WoRomanization input', () => {
-      document.body.innerHTML = '<input name="WoRomanization" />';
+    it('sets romanization in romanization input', () => {
+      document.body.innerHTML = '<input name="romanization" />';
 
       setTransRoman('', 'pinyin');
 
-      expect((document.querySelector('input[name="WoRomanization"]') as HTMLInputElement).value).toBe('pinyin');
+      expect((document.querySelector('input[name="romanization"]') as HTMLInputElement).value).toBe('pinyin');
     });
 
     it('sets both translation and romanization', () => {
       document.body.innerHTML = `
-        <textarea name="WoTranslation"></textarea>
-        <input name="WoRomanization" />
+        <textarea name="translation"></textarea>
+        <input name="romanization" />
       `;
 
       setTransRoman('hello', 'hola');
 
-      expect((document.querySelector('textarea[name="WoTranslation"]') as HTMLTextAreaElement).value).toBe('hello');
-      expect((document.querySelector('input[name="WoRomanization"]') as HTMLInputElement).value).toBe('hola');
+      expect((document.querySelector('textarea[name="translation"]') as HTMLTextAreaElement).value).toBe('hello');
+      expect((document.querySelector('input[name="romanization"]') as HTMLInputElement).value).toBe('hola');
     });
 
     it('calls lukaisuFormCheck.makeDirty when translation is set', () => {
-      document.body.innerHTML = '<textarea name="WoTranslation"></textarea>';
+      document.body.innerHTML = '<textarea name="translation"></textarea>';
 
       setTransRoman('test', '');
 
@@ -107,7 +107,7 @@ describe('term_operations.ts', () => {
     });
 
     it('calls lukaisuFormCheck.makeDirty when romanization is set', () => {
-      document.body.innerHTML = '<input name="WoRomanization" />';
+      document.body.innerHTML = '<input name="romanization" />';
 
       setTransRoman('', 'test');
 
@@ -124,34 +124,34 @@ describe('term_operations.ts', () => {
 
     it('handles empty strings', () => {
       document.body.innerHTML = `
-        <textarea name="WoTranslation">existing</textarea>
-        <input name="WoRomanization" value="existing" />
+        <textarea name="translation">existing</textarea>
+        <input name="romanization" value="existing" />
       `;
 
       setTransRoman('', '');
 
-      expect((document.querySelector('textarea[name="WoTranslation"]') as HTMLTextAreaElement).value).toBe('');
-      expect((document.querySelector('input[name="WoRomanization"]') as HTMLInputElement).value).toBe('');
+      expect((document.querySelector('textarea[name="translation"]') as HTMLTextAreaElement).value).toBe('');
+      expect((document.querySelector('input[name="romanization"]') as HTMLInputElement).value).toBe('');
     });
 
     it('handles special characters in translation', () => {
-      document.body.innerHTML = '<textarea name="WoTranslation"></textarea>';
+      document.body.innerHTML = '<textarea name="translation"></textarea>';
 
       setTransRoman('<script>alert("xss")</script>', '');
 
-      expect((document.querySelector('textarea[name="WoTranslation"]') as HTMLTextAreaElement).value).toBe('<script>alert("xss")</script>');
+      expect((document.querySelector('textarea[name="translation"]') as HTMLTextAreaElement).value).toBe('<script>alert("xss")</script>');
     });
 
     it('handles unicode characters', () => {
       document.body.innerHTML = `
-        <textarea name="WoTranslation"></textarea>
-        <input name="WoRomanization" />
+        <textarea name="translation"></textarea>
+        <input name="romanization" />
       `;
 
       setTransRoman('日本語', 'にほんご');
 
-      expect((document.querySelector('textarea[name="WoTranslation"]') as HTMLTextAreaElement).value).toBe('日本語');
-      expect((document.querySelector('input[name="WoRomanization"]') as HTMLInputElement).value).toBe('にほんご');
+      expect((document.querySelector('textarea[name="translation"]') as HTMLTextAreaElement).value).toBe('日本語');
+      expect((document.querySelector('input[name="romanization"]') as HTMLInputElement).value).toBe('にほんご');
     });
   });
 
@@ -799,17 +799,17 @@ describe('term_operations.ts', () => {
   // ===========================================================================
 
   describe('Edge Cases', () => {
-    it('setTransRoman handles multiple WoTranslation textareas (only first)', () => {
+    it('setTransRoman handles multiple translation textareas (only first)', () => {
       document.body.innerHTML = `
-        <textarea name="WoTranslation"></textarea>
-        <textarea name="WoTranslation"></textarea>
+        <textarea name="translation"></textarea>
+        <textarea name="translation"></textarea>
       `;
 
       // With querySelector, only the first matching element is selected
       setTransRoman('test', '');
 
       // The function uses querySelector which gets the first element only
-      expect((document.querySelectorAll('textarea[name="WoTranslation"]')[0] as HTMLTextAreaElement).value).toBe('test');
+      expect((document.querySelectorAll('textarea[name="translation"]')[0] as HTMLTextAreaElement).value).toBe('test');
     });
 
     it('createTranslationRadio handles very long translations', () => {

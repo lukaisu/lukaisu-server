@@ -661,12 +661,12 @@ class ExportServiceTest extends TestCase
         $record = [
             'LgRegexpWordCharacters' => 'a-zA-Z',
             'LgRightToLeft' => 0,
-            'WoSentence' => 'This is a {test} sentence.',
-            'WoText' => 'test',
-            'WoTranslation' => 'prueba',
-            'WoRomanization' => '',
+            'sentence' => 'This is a {test} sentence.',
+            'text' => 'test',
+            'translation' => 'prueba',
+            'romanization' => '',
             'LgName' => 'English',
-            'WoID' => '123',
+            'id' => '123',
             'taglist' => 'tag1, tag2',
         ];
 
@@ -687,12 +687,12 @@ class ExportServiceTest extends TestCase
         $record = [
             'LgRegexpWordCharacters' => '\x{0600}-\x{06FF}',
             'LgRightToLeft' => 1,
-            'WoSentence' => 'This is a {مرحبا} sentence.',
-            'WoText' => 'مرحبا',
-            'WoTranslation' => 'hello',
-            'WoRomanization' => 'marhaba',
+            'sentence' => 'This is a {مرحبا} sentence.',
+            'text' => 'مرحبا',
+            'translation' => 'hello',
+            'romanization' => 'marhaba',
             'LgName' => 'Arabic',
-            'WoID' => '456',
+            'id' => '456',
             'taglist' => '',
         ];
 
@@ -710,12 +710,12 @@ class ExportServiceTest extends TestCase
         $record = [
             'LgRegexpWordCharacters' => 'MECAB',
             'LgRightToLeft' => 0,
-            'WoSentence' => '日本語の{単語}です。',
-            'WoText' => '単語',
-            'WoTranslation' => 'word',
-            'WoRomanization' => 'tango',
+            'sentence' => '日本語の{単語}です。',
+            'text' => '単語',
+            'translation' => 'word',
+            'romanization' => 'tango',
             'LgName' => 'Japanese',
-            'WoID' => '789',
+            'id' => '789',
             'taglist' => 'japanese',
         ];
 
@@ -731,19 +731,19 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatTsvRow');
 
         $record = [
-            'WoText' => "test\tword",
-            'WoTranslation' => "prueba\nnewline",
-            'WoSentence' => 'This is a {test} sentence.',
-            'WoRomanization' => '',
-            'WoStatus' => '2',
+            'text' => "test\tword",
+            'translation' => "prueba\nnewline",
+            'sentence' => 'This is a {test} sentence.',
+            'romanization' => '',
+            'status' => '2',
             'LgName' => 'English',
-            'WoID' => '123',
+            'id' => '123',
             'taglist' => 'tag1',
         ];
 
         $result = $method->invoke($this->exportService, $record);
 
-        // Tab and newline in WoText/WoTranslation should be converted to spaces
+        // Tab and newline in text/translation should be converted to spaces
         $this->assertStringNotContainsString("\n", str_replace("\r\n", '', $result));
         $this->assertStringContainsString('test word', $result);
         $this->assertStringContainsString('prueba newline', $result);
@@ -756,12 +756,12 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatTsvRow');
 
         $record = [
-            'WoText' => 'test',
-            'WoTranslation' => 'prueba',
-            'WoSentence' => '',
-            'WoRomanization' => '',
+            'text' => 'test',
+            'translation' => 'prueba',
+            'sentence' => '',
+            'romanization' => '',
             'LgName' => 'English',
-            // Missing WoStatus, WoID, taglist
+            // Missing status, id, taglist
         ];
 
         $result = $method->invoke($this->exportService, $record);
@@ -776,15 +776,15 @@ class ExportServiceTest extends TestCase
 
         $record = [
             'LgExportTemplate' => '%w\t%t\t%s\n',
-            'WoID' => '123',
+            'id' => '123',
             'LgName' => 'English',
             'LgRightToLeft' => 0,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'prueba',
-            'WoRomanization' => '',
-            'WoSentence' => 'A {test} here.',
-            'WoStatus' => '2',
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'prueba',
+            'romanization' => '',
+            'sentence' => 'A {test} here.',
+            'status' => '2',
             'taglist' => 'tag1',
         ];
 
@@ -802,15 +802,15 @@ class ExportServiceTest extends TestCase
 
         $record = [
             'LgExportTemplate' => '$w\t$t',
-            'WoID' => '123',
+            'id' => '123',
             'LgName' => 'English',
             'LgRightToLeft' => 0,
-            'WoText' => '<script>alert(1)</script>',
-            'WoTextLC' => '<script>alert(1)</script>',
-            'WoTranslation' => '"quoted"',
-            'WoRomanization' => '',
-            'WoSentence' => 'A {test} here.',
-            'WoStatus' => '2',
+            'text' => '<script>alert(1)</script>',
+            'text_lc' => '<script>alert(1)</script>',
+            'translation' => '"quoted"',
+            'romanization' => '',
+            'sentence' => 'A {test} here.',
+            'status' => '2',
             'taglist' => '',
         ];
 
@@ -827,15 +827,15 @@ class ExportServiceTest extends TestCase
 
         $record = [
             'LgExportTemplate' => '%w\\t%t\\n%r\\r%%',
-            'WoID' => '123',
+            'id' => '123',
             'LgName' => 'English',
             'LgRightToLeft' => 0,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'prueba',
-            'WoRomanization' => 'romanized',
-            'WoSentence' => 'A {test} here.',
-            'WoStatus' => '2',
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'prueba',
+            'romanization' => 'romanized',
+            'sentence' => 'A {test} here.',
+            'status' => '2',
             'taglist' => '',
         ];
 
@@ -852,7 +852,7 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatFlexibleRow');
 
         $record = [
-            'WoID' => '123',
+            'id' => '123',
             'LgName' => 'English',
             // Missing LgExportTemplate
         ];
@@ -868,15 +868,15 @@ class ExportServiceTest extends TestCase
 
         $record = [
             'LgExportTemplate' => '$x\t$y',
-            'WoID' => '123',
+            'id' => '123',
             'LgName' => 'English',
             'LgRightToLeft' => 0,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'prueba',
-            'WoRomanization' => '',
-            'WoSentence' => 'A {test} here.',
-            'WoStatus' => '2',
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'prueba',
+            'romanization' => '',
+            'sentence' => 'A {test} here.',
+            'status' => '2',
             'taglist' => '',
         ];
 
@@ -895,15 +895,15 @@ class ExportServiceTest extends TestCase
 
         $record = [
             'LgExportTemplate' => '%c',
-            'WoID' => '123',
+            'id' => '123',
             'LgName' => 'English',
             'LgRightToLeft' => 0,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'prueba',
-            'WoRomanization' => '',
-            'WoSentence' => 'A {test} here.',
-            'WoStatus' => '2',
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'prueba',
+            'romanization' => '',
+            'sentence' => 'A {test} here.',
+            'status' => '2',
             'taglist' => '',
         ];
 
@@ -919,15 +919,15 @@ class ExportServiceTest extends TestCase
 
         $record = [
             'LgExportTemplate' => '%d',
-            'WoID' => '123',
+            'id' => '123',
             'LgName' => 'English',
             'LgRightToLeft' => 0,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'prueba',
-            'WoRomanization' => '',
-            'WoSentence' => 'A {test} here.',
-            'WoStatus' => '2',
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'prueba',
+            'romanization' => '',
+            'sentence' => 'A {test} here.',
+            'status' => '2',
             'taglist' => '',
         ];
 
@@ -943,15 +943,15 @@ class ExportServiceTest extends TestCase
 
         $record = [
             'LgExportTemplate' => '$w\t$s',
-            'WoID' => '123',
+            'id' => '123',
             'LgName' => 'Arabic',
             'LgRightToLeft' => 1,
-            'WoText' => 'مرحبا',
-            'WoTextLC' => 'مرحبا',
-            'WoTranslation' => 'hello',
-            'WoRomanization' => '',
-            'WoSentence' => 'A {مرحبا} here.',
-            'WoStatus' => '2',
+            'text' => 'مرحبا',
+            'text_lc' => 'مرحبا',
+            'translation' => 'hello',
+            'romanization' => '',
+            'sentence' => 'A {مرحبا} here.',
+            'status' => '2',
             'taglist' => '',
         ];
 
@@ -967,15 +967,15 @@ class ExportServiceTest extends TestCase
 
         $record = [
             'LgExportTemplate' => '%w|%t|%s|%r|%a|%k|%z|%l|%n',
-            'WoID' => '999',
+            'id' => '999',
             'LgName' => 'English',
             'LgRightToLeft' => 0,
-            'WoText' => 'TEST',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'TRANSLATION',
-            'WoRomanization' => 'ROMAN',
-            'WoSentence' => 'A {test} sentence.',
-            'WoStatus' => '3',
+            'text' => 'TEST',
+            'text_lc' => 'test',
+            'translation' => 'TRANSLATION',
+            'romanization' => 'ROMAN',
+            'sentence' => 'A {test} sentence.',
+            'status' => '3',
             'taglist' => 'tag1,tag2',
         ];
 

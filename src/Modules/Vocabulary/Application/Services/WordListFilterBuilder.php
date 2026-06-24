@@ -51,9 +51,9 @@ class WordListFilterBuilder
         }
         if ($params !== null) {
             $params[] = (int)$langId;
-            return ' and WoLgID = ?';
+            return ' and language_id = ?';
         }
-        return ' and WoLgID=' . (int)$langId;
+        return ' and language_id=' . (int)$langId;
     }
 
     /**
@@ -68,7 +68,7 @@ class WordListFilterBuilder
         if ($status == '') {
             return '';
         }
-        return ' and ' . StatusHelper::makeCondition('WoStatus', (int)$status);
+        return ' and ' . StatusHelper::makeCondition('status', (int)$status);
     }
 
     /**
@@ -103,13 +103,13 @@ class WordListFilterBuilder
         $op = $regexMode . 'like';
 
         $fieldSets = [
-            'term,rom,transl' => ['WoText', "IFNULL(WoRomanization,'*')", 'WoTranslation'],
-            'term,rom' => ['WoText', "IFNULL(WoRomanization,'*')"],
-            'rom,transl' => ["IFNULL(WoRomanization,'*')", 'WoTranslation'],
-            'term,transl' => ['WoText', 'WoTranslation'],
-            'term' => ['WoText'],
-            'rom' => ["IFNULL(WoRomanization,'*')"],
-            'transl' => ['WoTranslation'],
+            'term,rom,transl' => ['text', "IFNULL(romanization,'*')", 'translation'],
+            'term,rom' => ['text', "IFNULL(romanization,'*')"],
+            'rom,transl' => ["IFNULL(romanization,'*')", 'translation'],
+            'term,transl' => ['text', 'translation'],
+            'term' => ['text'],
+            'rom' => ["IFNULL(romanization,'*')"],
+            'transl' => ['translation'],
         ];
 
         $fields = $fieldSets[$queryMode] ?? $fieldSets['term,rom,transl'];
@@ -136,21 +136,21 @@ class WordListFilterBuilder
 
         switch ($queryMode) {
             case 'term,rom,transl':
-                return " and (WoText $whQuery or IFNULL(WoRomanization,'*') $whQuery or WoTranslation $whQuery)";
+                return " and (text $whQuery or IFNULL(romanization,'*') $whQuery or translation $whQuery)";
             case 'term,rom':
-                return " and (WoText $whQuery or IFNULL(WoRomanization,'*') $whQuery)";
+                return " and (text $whQuery or IFNULL(romanization,'*') $whQuery)";
             case 'rom,transl':
-                return " and (IFNULL(WoRomanization,'*') $whQuery or WoTranslation $whQuery)";
+                return " and (IFNULL(romanization,'*') $whQuery or translation $whQuery)";
             case 'term,transl':
-                return " and (WoText $whQuery or WoTranslation $whQuery)";
+                return " and (text $whQuery or translation $whQuery)";
             case 'term':
-                return " and (WoText $whQuery)";
+                return " and (text $whQuery)";
             case 'rom':
-                return " and (IFNULL(WoRomanization,'*') $whQuery)";
+                return " and (IFNULL(romanization,'*') $whQuery)";
             case 'transl':
-                return " and (WoTranslation $whQuery)";
+                return " and (translation $whQuery)";
             default:
-                return " and (WoText $whQuery or IFNULL(WoRomanization,'*') $whQuery or WoTranslation $whQuery)";
+                return " and (text $whQuery or IFNULL(romanization,'*') $whQuery or translation $whQuery)";
         }
     }
 

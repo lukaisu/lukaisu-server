@@ -102,7 +102,7 @@ class Validation
                     return '';
                 }
                 $currentlang_int = (int)$currentlang;
-                $lang_condition = " AND WoLgID = ?";
+                $lang_condition = " AND language_id = ?";
                 $bindings[] = $currentlang_int;
             }
 
@@ -110,7 +110,7 @@ class Validation
                 ? IN (
                     SELECT TgID
                     FROM words, tags, word_tag_map
-                    WHERE TgID = WtTgID AND WtWoID = WoID" .
+                    WHERE TgID = WtTgID AND WtWoID = id" .
                     $lang_condition .
                     " group by TgID order by TgText
                 )

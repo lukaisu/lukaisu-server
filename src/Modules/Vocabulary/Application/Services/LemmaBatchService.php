@@ -120,8 +120,8 @@ class LemmaBatchService
             /** @var array<int, string> $words */
             $words = [];
             foreach ($terms as $term) {
-                $wordId = (int)($term['WoID'] ?? 0);
-                $textLc = (string)($term['WoTextLC'] ?? '');
+                $wordId = (int)($term['id'] ?? 0);
+                $textLc = (string)($term['text_lc'] ?? '');
                 $words[$wordId] = $textLc;
             }
 
@@ -131,11 +131,11 @@ class LemmaBatchService
             // Update terms with found lemmas
             foreach ($terms as $term) {
                 $stats['processed']++;
-                $textLc = (string)($term['WoTextLC'] ?? '');
+                $textLc = (string)($term['text_lc'] ?? '');
                 $lemma = $lemmas[$textLc] ?? null;
 
                 if ($lemma !== null) {
-                    $this->updateTermLemma((int)($term['WoID'] ?? 0), $lemma);
+                    $this->updateTermLemma((int)($term['id'] ?? 0), $lemma);
                     $stats['updated']++;
                 } else {
                     $stats['skipped']++;
@@ -171,12 +171,12 @@ class LemmaBatchService
 
         /** @var array<int, array<string, mixed>> */
         return Connection::preparedFetchAll(
-            "SELECT WoID, WoText, WoTextLC
+            "SELECT id, text, text_lc
              FROM words
-             WHERE WoLgID = ?
-               AND WoWordCount = 1
-               AND (WoLemma IS NULL OR WoLemma = ''){$userScope}
-             ORDER BY WoID
+             WHERE language_id = ?
+               AND word_count = 1
+               AND (lemma IS NULL OR lemma = ''){$userScope}
+             ORDER BY id
              LIMIT ? OFFSET ?",
             $bindings
         );
@@ -194,7 +194,7 @@ class LemmaBatchService
         $bindings = [$lemma, $lemmaLc, $termId];
 
         Connection::preparedExecute(
-            "UPDATE words SET WoLemma = ?, WoLemmaLC = ? WHERE WoID = ?"
+            "UPDATE words SET lemma = ?, lemma_lc = ? WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings
         );
@@ -245,20 +245,20 @@ class LemmaBatchService
         $bindings = [$languageId, $termId];
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $candidates = Connection::preparedFetchAll(
-            "SELECT WoID, WoTextLC FROM words
-             WHERE WoLgID = ?
-               AND WoWordCount = 1
-               AND (WoLemma IS NULL OR WoLemma = '')
-               AND WoID != ?{$userScope}",
+            "SELECT id, text_lc FROM words
+             WHERE language_id = ?
+               AND word_count = 1
+               AND (lemma IS NULL OR lemma = '')
+               AND id != ?{$userScope}",
             $bindings
         );
 
         $updated = 0;
         foreach ($candidates as $candidate) {
-            $wordText = (string)($candidate['WoTextLC'] ?? '');
+            $wordText = (string)($candidate['text_lc'] ?? '');
             $suggestedLemma = $this->lemmatizer->lemmatize($wordText, $languageCode);
             if ($suggestedLemma !== null && mb_strtolower($suggestedLemma, 'UTF-8') === $lemmaLc) {
-                $this->updateTermLemma((int)($candidate['WoID'] ?? 0), $lemma);
+                $this->updateTermLemma((int)($candidate['id'] ?? 0), $lemma);
                 $updated++;
             }
         }
@@ -274,7 +274,7 @@ class LemmaBatchService
      * lemmatized form.
      *
      * Example: Text item "runs" with no exact match -> lemmatize to "run"
-     * -> find word with WoLemmaLC = "run" -> link text item to that word
+     * -> find word with lemma_lc = "run" -> link text item to that word
      *
      * @param int    $languageId   Language ID
      * @param string $languageCode ISO language code for lemmatizer
@@ -387,19 +387,19 @@ class LemmaBatchService
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $bindings[] = $lemmaLc;
 
-        // Prefer words where WoTextLC equals the lemma (base form),
+        // Prefer words where text_lc equals the lemma (base form),
         // otherwise any word with matching lemma
         $row = Connection::preparedFetchOne(
-            "SELECT WoID FROM words
-             WHERE WoLgID = ?
-               AND WoWordCount = 1
-               AND (WoLemmaLC = ? OR WoTextLC = ?){$userScope}
-             ORDER BY CASE WHEN WoTextLC = ? THEN 0 ELSE 1 END, WoID
+            "SELECT id FROM words
+             WHERE language_id = ?
+               AND word_count = 1
+               AND (lemma_lc = ? OR text_lc = ?){$userScope}
+             ORDER BY CASE WHEN text_lc = ? THEN 0 ELSE 1 END, id
              LIMIT 1",
             $bindings
         );
 
-        return $row !== null ? (int)$row['WoID'] : null;
+        return $row !== null ? (int)$row['id'] : null;
     }
 
     /**
@@ -449,7 +449,7 @@ class LemmaBatchService
      */
     public function linkTextItemsByLemmaSql(int $languageId, ?int $textId = null): int
     {
-        // Scope both the words subquery (by WoUsID) and the unmatched text
+        // Scope both the words subquery (by user_id) and the unmatched text
         // items pool (by TxUsID, joined via Ti2TxID → texts) so this never
         // links one user's rows to another user's vocabulary.
         $bindings = [$languageId];
@@ -460,16 +460,16 @@ class LemmaBatchService
         $sql = "UPDATE word_occurrences ti
                 JOIN (
                     SELECT ti2.Ti2ID,
-                           (SELECT w.WoID FROM words w
-                            WHERE w.WoLgID = ?
-                              AND w.WoWordCount = 1
-                              AND (w.WoLemmaLC = LOWER(ti2.Ti2Text) OR w.WoTextLC = LOWER(ti2.Ti2Text))"
+                           (SELECT w.id FROM words w
+                            WHERE w.language_id = ?
+                              AND w.word_count = 1
+                              AND (w.lemma_lc = LOWER(ti2.Ti2Text) OR w.text_lc = LOWER(ti2.Ti2Text))"
                               . $wordsScope . "
                             ORDER BY CASE
-                                WHEN w.WoTextLC = LOWER(ti2.Ti2Text) THEN 0
-                                WHEN w.WoLemmaLC = LOWER(ti2.Ti2Text) THEN 1
+                                WHEN w.text_lc = LOWER(ti2.Ti2Text) THEN 0
+                                WHEN w.lemma_lc = LOWER(ti2.Ti2Text) THEN 1
                                 ELSE 2
-                            END, w.WoID
+                            END, w.id
                             LIMIT 1
                            ) as MatchedWoID
                     FROM word_occurrences ti2

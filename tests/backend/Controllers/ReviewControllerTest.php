@@ -516,9 +516,9 @@ class ReviewControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $_SESSION['testsql'] = 'SELECT * FROM words WHERE WoStatus < 5';
+        $_SESSION['testsql'] = 'SELECT * FROM words WHERE status < 5';
 
-        $this->assertEquals('SELECT * FROM words WHERE WoStatus < 5', $_SESSION['testsql']);
+        $this->assertEquals('SELECT * FROM words WHERE status < 5', $_SESSION['testsql']);
     }
 
     // ===== Test property determination =====
@@ -611,7 +611,7 @@ class ReviewControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT WoID, WoText, WoStatus FROM " . Globals::table('words') . " LIMIT 10";
+        $sql = "SELECT id, text, status FROM " . Globals::table('words') . " LIMIT 10";
         $result = Connection::query($sql);
 
         $this->assertInstanceOf(\mysqli_result::class, $result);
@@ -624,7 +624,7 @@ class ReviewControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT COUNT(*) AS value FROM " . Globals::table('words') . " WHERE WoStatus BETWEEN 1 AND 5";
+        $sql = "SELECT COUNT(*) AS value FROM " . Globals::table('words') . " WHERE status BETWEEN 1 AND 5";
         $result = Connection::fetchValue($sql);
 
         $this->assertIsNumeric($result);
@@ -727,9 +727,9 @@ class ReviewControllerTest extends TestCase
 
         $service = new ReviewService();
 
-        // The method expects a subquery format like "(SELECT WoID FROM words) AS t"
+        // The method expects a subquery format like "(SELECT id FROM words) AS t"
         // Use proper subquery syntax
-        $subquery = "(SELECT WoID, WoLgID FROM " . Globals::table('words') . " WHERE WoLgID = 1 LIMIT 1) AS subq";
+        $subquery = "(SELECT id, language_id FROM " . Globals::table('words') . " WHERE language_id = 1 LIMIT 1) AS subq";
 
         $result = $service->validateReviewSelection($subquery);
 

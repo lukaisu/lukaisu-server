@@ -104,7 +104,7 @@ class TranslationServiceTest extends TestCase
         Connection::query("DELETE FROM word_occurrences WHERE Ti2TxID = " . self::$testTextId);
         Connection::query("DELETE FROM sentences WHERE SeLgID = " . self::$testLangId);
         Connection::query("DELETE FROM texts WHERE TxTitle = 'TranslationServiceTestText'");
-        Connection::query("DELETE FROM words WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM words WHERE language_id = " . self::$testLangId);
         Connection::query("DELETE FROM languages WHERE LgName = 'TranslationServiceTestLang'");
     }
 

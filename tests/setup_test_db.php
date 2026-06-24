@@ -294,7 +294,7 @@ if (!in_array($fkMigration, $appliedMigrations)) {
         "ALTER TABLE texts ADD CONSTRAINT fk_texts_language " .
             "FOREIGN KEY (TxLgID) REFERENCES languages(LgID) ON DELETE CASCADE",
         "ALTER TABLE words ADD CONSTRAINT fk_words_language " .
-            "FOREIGN KEY (WoLgID) REFERENCES languages(LgID) ON DELETE CASCADE",
+            "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
         "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_language " .
             "FOREIGN KEY (SeLgID) REFERENCES languages(LgID) ON DELETE CASCADE",
         "ALTER TABLE news_feeds ADD CONSTRAINT fk_news_feeds_language " .
@@ -312,10 +312,10 @@ if (!in_array($fkMigration, $appliedMigrations)) {
         // Word reference (SET NULL for unknown words)
         "ALTER TABLE word_occurrences MODIFY COLUMN Ti2WoID mediumint(8) unsigned DEFAULT NULL",
         "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_word " .
-            "FOREIGN KEY (Ti2WoID) REFERENCES words(WoID) ON DELETE SET NULL",
+            "FOREIGN KEY (Ti2WoID) REFERENCES words(id) ON DELETE SET NULL",
         // Word tags
         "ALTER TABLE word_tag_map ADD CONSTRAINT fk_word_tag_map_word " .
-            "FOREIGN KEY (WtWoID) REFERENCES words(WoID) ON DELETE CASCADE",
+            "FOREIGN KEY (WtWoID) REFERENCES words(id) ON DELETE CASCADE",
         "ALTER TABLE word_tag_map ADD CONSTRAINT fk_word_tag_map_tag " .
             "FOREIGN KEY (WtTgID) REFERENCES tags(TgID) ON DELETE CASCADE",
         // Text tags

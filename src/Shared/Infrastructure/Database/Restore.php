@@ -375,7 +375,7 @@ class Restore
             [$userId]
         );
         Connection::preparedExecute(
-            'DELETE FROM word_tag_map WHERE WtWoID IN (SELECT WoID FROM words WHERE WoUsID = ?)',
+            'DELETE FROM word_tag_map WHERE WtWoID IN (SELECT id FROM words WHERE user_id = ?)',
             [$userId]
         );
         Connection::preparedExecute(
@@ -394,7 +394,7 @@ class Restore
         // Level 2: Direct user-scoped tables.
         Connection::preparedExecute('DELETE FROM news_feeds WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM texts WHERE TxUsID = ?', [$userId]);
-        Connection::preparedExecute('DELETE FROM words WHERE WoUsID = ?', [$userId]);
+        Connection::preparedExecute('DELETE FROM words WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM tags WHERE TgUsID = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM text_tags WHERE T2UsID = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM languages WHERE LgUsID = ?', [$userId]);
@@ -496,7 +496,7 @@ class Restore
             [
                 'languages'          => 'LgUsID',
                 'texts'              => 'TxUsID',
-                'words'              => 'WoUsID',
+                'words'              => 'user_id',
                 'tags'                => 'TgUsID',
                 'text_tags'          => 'T2UsID',
                 'news_feeds'         => 'user_id',

@@ -21,12 +21,12 @@ import { iconHtml } from '@shared/icons/icons';
 
 // Interface for imported term record
 interface ImportedTerm {
-  WoID: number;
-  WoText: string;
-  WoTranslation: string;
-  WoRomanization: string;
-  WoSentence: string;
-  WoStatus: number;
+  id: number;
+  text: string;
+  translation: string;
+  romanization: string;
+  sentence: string;
+  status: number;
   SentOK: number;
   taglist: string;
 }
@@ -451,23 +451,23 @@ export function wordUploadResultApp(config: UploadResultConfig = { lastUpdate: '
      * Format a term row as HTML.
      */
     formatTermRow(term: ImportedTerm): string {
-      const statusInfo = this.getStatusInfo(term.WoStatus);
+      const statusInfo = this.getStatusInfo(term.status);
 
       return `<tr>
         <td>
-          <span${this.rtl ? ' dir="rtl"' : ''}>${escapeHtml(term.WoText)}</span>
+          <span${this.rtl ? ' dir="rtl"' : ''}>${escapeHtml(term.text)}</span>
           <span class="has-text-grey"> / </span>
-          <span id="roman${term.WoID}" class="edit_area clickedit has-text-grey-dark">${term.WoRomanization !== '' ? escapeHtml(term.WoRomanization) : '*'}</span>
+          <span id="roman${term.id}" class="edit_area clickedit has-text-grey-dark">${term.romanization !== '' ? escapeHtml(term.romanization) : '*'}</span>
         </td>
         <td>
-          <span id="trans${term.WoID}" class="edit_area clickedit">${escapeHtml(term.WoTranslation)}</span>
+          <span id="trans${term.id}" class="edit_area clickedit">${escapeHtml(term.translation)}</span>
         </td>
         <td>
           <span class="tags">${renderTags(term.taglist)}</span>
         </td>
         <td class="has-text-centered">
           ${term.SentOK !== 0
-    ? iconHtml('check', { title: escapeHtml(term.WoSentence), alt: 'Yes', className: 'has-text-success' })
+    ? iconHtml('check', { title: escapeHtml(term.sentence), alt: 'Yes', className: 'has-text-success' })
     : iconHtml('x', { title: '(No valid sentence)', alt: 'No', className: 'has-text-danger' })
 }
         </td>

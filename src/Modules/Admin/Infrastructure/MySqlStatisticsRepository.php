@@ -36,14 +36,14 @@ class MySqlStatisticsRepository
     public function getTermCountsByLanguageAndStatus(): array
     {
         $results = QueryBuilder::table('words')
-            ->selectRaw('WoLgID, WoStatus, COUNT(*) AS term_count')
-            ->groupBy(['WoLgID', 'WoStatus'])
+            ->selectRaw('language_id, status, COUNT(*) AS term_count')
+            ->groupBy(['language_id', 'status'])
             ->getPrepared();
 
         $termStat = [];
         foreach ($results as $record) {
-            $lgId = (string) $record['WoLgID'];
-            $status = (int) $record['WoStatus'];
+            $lgId = (string) $record['language_id'];
+            $status = (int) $record['status'];
             $termStat[$lgId][$status] = (int) $record['term_count'];
         }
 
@@ -75,18 +75,18 @@ class MySqlStatisticsRepository
     {
         $results = QueryBuilder::table('words')
             ->select([
-                'WoLgID',
-                'TO_DAYS(curdate()) - TO_DAYS(cast(WoCreated as date)) AS Created',
-                'count(WoID) as value'
+                'language_id',
+                'TO_DAYS(curdate()) - TO_DAYS(cast(created_at as date)) AS Created',
+                'count(id) as value'
             ])
-            ->whereIn('WoStatus', [1, 2, 3, 4, 5, 99])
-            ->groupBy(['WoLgID', 'Created'])
+            ->whereIn('status', [1, 2, 3, 4, 5, 99])
+            ->groupBy(['language_id', 'Created'])
             ->getPrepared();
 
         /** @var array<int, array<int, int>> $termCreated */
         $termCreated = [];
         foreach ($results as $record) {
-            $lgId = (int) ($record['WoLgID'] ?? 0);
+            $lgId = (int) ($record['language_id'] ?? 0);
             $created = (int) ($record['Created'] ?? 0);
             $termCreated[$lgId][$created] = (int) ($record['value'] ?? 0);
         }
@@ -103,12 +103,12 @@ class MySqlStatisticsRepository
     {
         $results = QueryBuilder::table('words')
             ->select([
-                'WoLgID',
-                'WoStatus',
-                'TO_DAYS(curdate()) - TO_DAYS(cast(WoStatusChanged as date)) AS Changed',
-                'count(WoID) as value'
+                'language_id',
+                'status',
+                'TO_DAYS(curdate()) - TO_DAYS(cast(status_changed_at as date)) AS Changed',
+                'count(id) as value'
             ])
-            ->groupBy(['WoLgID', 'WoStatus', 'WoStatusChanged'])
+            ->groupBy(['language_id', 'status', 'status_changed_at'])
             ->getPrepared();
 
         /** @var array<int, array<int, int>> $termActive */
@@ -117,9 +117,9 @@ class MySqlStatisticsRepository
         $termKnown = [];
 
         foreach ($results as $record) {
-            $status = (int) ($record['WoStatus'] ?? 0);
+            $status = (int) ($record['status'] ?? 0);
             if ($status > 0) {
-                $lgId = (int) ($record['WoLgID'] ?? 0);
+                $lgId = (int) ($record['language_id'] ?? 0);
                 $changed = (int) ($record['Changed'] ?? 0);
                 $value = (int) ($record['value'] ?? 0);
 

@@ -463,7 +463,7 @@ class Migrations
                         Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount,
                         Ti2Text
                     )
-                    SELECT IFNULL(WoID,0), TiLgID, TiTxID, TiSeID, TiOrder,
+                    SELECT IFNULL(id,0), TiLgID, TiTxID, TiSeID, TiOrder,
                     CASE WHEN TiIsNotWord = 1 THEN 0 ELSE TiWordCount END as WordCount,
                     CASE
                         WHEN STRCMP(TiText COLLATE utf8_bin,TiTextLC)!=0 OR TiWordCount=1
@@ -471,8 +471,8 @@ class Migrations
                         ELSE ''
                     END AS Text
                     FROM textitems
-                    LEFT JOIN words ON TiTextLC=WoTextLC AND TiLgID=WoLgID
-                    WHERE TiWordCount<2 OR WoID IS NOT NULL"
+                    LEFT JOIN words ON TiTextLC=text_lc AND TiLgID=language_id
+                    WHERE TiWordCount<2 OR id IS NOT NULL"
                 );
                 QueryBuilder::table('textitems')->truncate();
             }
@@ -493,7 +493,7 @@ class Migrations
             Connection::execute(
                 "UPDATE words
                 SET " . TermStatusService::makeScoreRandomInsertUpdate('u') . "
-                WHERE WoTodayScore>=-100 AND WoStatus<98"
+                WHERE today_score>=-100 AND status<98"
             );
             // Clean up orphaned word_tag_map (tags deleted)
             Connection::execute(
@@ -504,8 +504,8 @@ class Migrations
             // Clean up orphaned word_tag_map (words deleted)
             Connection::execute(
                 "DELETE word_tag_map
-                FROM (word_tag_map LEFT JOIN words ON WtWoID = WoID)
-                WHERE WoID IS NULL"
+                FROM (word_tag_map LEFT JOIN words ON WtWoID = id)
+                WHERE id IS NULL"
             );
             // Clean up orphaned text_tag_map (text_tags deleted)
             Connection::execute(

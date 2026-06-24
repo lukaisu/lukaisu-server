@@ -138,8 +138,8 @@ class WordListQueryServiceTest extends TestCase
         $method = new ReflectionMethod(WordListQueryService::class, 'getWordsList');
         $source = $this->getMethodSource($method);
 
-        $this->assertStringContainsString('WoTextLC', $source);
-        $this->assertStringContainsString('WoTodayScore', $source);
+        $this->assertStringContainsString('text_lc', $source);
+        $this->assertStringContainsString('today_score', $source);
         $this->assertStringContainsString('textswordcount desc', $source);
     }
 
@@ -303,7 +303,7 @@ class WordListQueryServiceTest extends TestCase
         $method = new ReflectionMethod(WordListQueryService::class, 'getFilteredWordIds');
         $source = $this->getMethodSource($method);
 
-        $this->assertStringContainsString('(int) $record[\'WoID\']', $source);
+        $this->assertStringContainsString('(int) $record[\'id\']', $source);
     }
 
     #[Test]

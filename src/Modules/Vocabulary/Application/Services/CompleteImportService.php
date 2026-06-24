@@ -176,11 +176,11 @@ class CompleteImportService
             ($ignoreFirst ? "IGNORE 1 LINES " : "") .
             "$columnsClause SET " .
             ($removeSpaces ?
-                'WoTextLC = LOWER(REPLACE(@wotext," ","")), WoText = REPLACE(@wotext," ","")' :
-                'WoTextLC = LOWER(WoText)');
+                'text_lc = LOWER(REPLACE(@wotext," ","")), text = REPLACE(@wotext," ","")' :
+                'text_lc = LOWER(text)');
 
         if ($fields["tl"] != 0) {
-            $sql .= ', WoTaglist = REPLACE(@taglist, " ", ",")';
+            $sql .= ', tag_list = REPLACE(@taglist, " ", ",")';
         }
 
         Connection::execute($sql);
@@ -239,7 +239,7 @@ class CompleteImportService
 
             /** @var list<string> $row */
             $row = [];
-            // Fill WoText and WoTextLC
+            // Fill text and text_lc
             if ($removeSpaces) {
                 $row[] = str_replace(" ", "", $wotext);
                 $row[] = mb_strtolower(str_replace(" ", "", $wotext));
@@ -298,7 +298,7 @@ class CompleteImportService
         }
 
         // Build placeholder string for one row
-        $rowPlaceholders = '(?, ?';  // WoText, WoTextLC
+        $rowPlaceholders = '(?, ?';  // text, text_lc
         if ($fields["tr"] != 0) {
             $rowPlaceholders .= ', ?';
         }
@@ -323,11 +323,11 @@ class CompleteImportService
         }
 
         $sql = "INSERT INTO temp_words(
-                WoText, WoTextLC" .
-                ($fields["tr"] != 0 ? ', WoTranslation' : '') .
-                ($fields["ro"] != 0 ? ', WoRomanization' : '') .
-                ($fields["se"] != 0 ? ', WoSentence' : '') .
-                ($fields["tl"] != 0 ? ", WoTaglist" : "") .
+                text, text_lc" .
+                ($fields["tr"] != 0 ? ', translation' : '') .
+                ($fields["ro"] != 0 ? ', romanization' : '') .
+                ($fields["se"] != 0 ? ', sentence' : '') .
+                ($fields["tl"] != 0 ? ", tag_list" : "") .
             ")
             VALUES " . implode(',', $placeholders);
 
@@ -365,7 +365,7 @@ class CompleteImportService
         }
 
         $seplen = mb_strlen($wosep, 'UTF-8');
-        $woTrRepl = 'words.WoTranslation';
+        $woTrRepl = 'words.translation';
         $replaceParams = [];
         for ($i = 1; $i < $seplen; $i++) {
             $woTrRepl = 'REPLACE(' . $woTrRepl . ', ?, ?)';
@@ -375,7 +375,7 @@ class CompleteImportService
 
         // Insert existing translations. The user-scope clause goes inside the
         // inner subquery's join condition so its placeholder sits between
-        // `WoLgID = ?` and the trailing CHAR_LENGTH `?`.
+        // `language_id = ?` and the trailing CHAR_LENGTH `?`.
         $bindings = array_merge(
             $replaceParams,
             [$wosep[0], $wosep[0], $langId]
@@ -384,24 +384,24 @@ class CompleteImportService
         $bindings[] = $wosep[0];
 
         $sql = "INSERT IGNORE INTO merge_words(MText,MTranslation)
-            SELECT b.WoTextLC,
+            SELECT b.text_lc,
             trim(
                 SUBSTRING_INDEX(
-                    SUBSTRING_INDEX(b.WoTranslation, ?, numbers.n),
+                    SUBSTRING_INDEX(b.translation, ?, numbers.n),
                     ?, -1
                 )
             ) name
             FROM numbers
             INNER JOIN (
-                SELECT words.WoTextLC as WoTextLC, $woTrRepl as WoTranslation
+                SELECT words.text_lc as text_lc, $woTrRepl as translation
                 FROM temp_words
                 LEFT JOIN words
-                ON words.WoTextLC = temp_words.WoTextLC
-                    AND words.WoTranslation != '*'
-                    AND words.WoLgID = ?{$userScope}
+                ON words.text_lc = temp_words.text_lc
+                    AND words.translation != '*'
+                    AND words.language_id = ?{$userScope}
             ) b
-            ON CHAR_LENGTH(b.WoTranslation)-CHAR_LENGTH(REPLACE(b.WoTranslation, ?, ''))>= numbers.n-1
-            ORDER BY b.WoTextLC, n";
+            ON CHAR_LENGTH(b.translation)-CHAR_LENGTH(REPLACE(b.translation, ?, ''))>= numbers.n-1
+            ORDER BY b.text_lc, n";
 
         $stmt = Connection::prepare($sql);
         $stmt->bindValues($bindings);
@@ -418,7 +418,7 @@ class CompleteImportService
         }
 
         $seplen = mb_strlen($tesep, 'UTF-8');
-        $woTrRepl = 'temp_words.WoTranslation';
+        $woTrRepl = 'temp_words.translation';
         $replaceParams2 = [];
         for ($i = 1; $i < $seplen; $i++) {
             $woTrRepl = 'REPLACE(' . $woTrRepl . ', ?, ?)';
@@ -434,7 +434,7 @@ class CompleteImportService
 
         $stmt = Connection::prepare(
             "INSERT IGNORE INTO merge_words(MText,MTranslation)
-            SELECT temp_words.WoTextLC,
+            SELECT temp_words.text_lc,
             trim(
                 SUBSTRING_INDEX(
                     SUBSTRING_INDEX($woTrRepl, ?,
@@ -444,8 +444,8 @@ class CompleteImportService
             ) name
             FROM numbers
             INNER JOIN temp_words
-            ON CHAR_LENGTH(temp_words.WoTranslation)-CHAR_LENGTH(REPLACE($woTrRepl, ?, ''))>= numbers.n-1
-            ORDER BY temp_words.WoTextLC, n"
+            ON CHAR_LENGTH(temp_words.translation)-CHAR_LENGTH(REPLACE($woTrRepl, ?, ''))>= numbers.n-1
+            ORDER BY temp_words.text_lc, n"
         );
         $stmt->bindValues($params2);
         $stmt->execute();
@@ -468,8 +468,8 @@ class CompleteImportService
                 FROM merge_words
                 GROUP BY MText
             ) A
-            ON MText=WoTextLC
-            SET WoTranslation = Translation",
+            ON MText=text_lc
+            SET translation = Translation",
             [$wosep]
         );
 
@@ -489,54 +489,54 @@ class CompleteImportService
     private function executeMainImportQuery(int $langId, array $fields, int $status, int $overwrite): void
     {
         if ($overwrite != 3 && $overwrite != 5) {
-            // Stamp WoUsID on every imported row. Without this, multi-user
-            // installs silently lost imports: rows landed with WoUsID NULL
+            // Stamp user_id on every imported row. Without this, multi-user
+            // installs silently lost imports: rows landed with user_id NULL
             // and then never showed up in the caller's vocab list (the
-            // QueryBuilder filter `WoUsID = currentUserId` excluded them).
+            // QueryBuilder filter `user_id = currentUserId` excluded them).
             $userScopeCol = UserScopedQuery::insertColumn('words');
             $userScopeVal = UserScopedQuery::insertValue('words');
 
             $sql = "INSERT " . ($overwrite != 0 ? '' : 'IGNORE ') .
                 " INTO words (
-                    WoTextLC, WoText, WoTranslation, WoRomanization, WoSentence,
-                    WoStatus, WoStatusChanged, WoLgID{$userScopeCol},
+                    text_lc, text, translation, romanization, sentence,
+                    status, status_changed_at, language_id{$userScopeCol},
                     " . TermStatusService::makeScoreRandomInsertUpdate('iv') . "
                 )
                 SELECT *, $langId as LgID{$userScopeVal}, " . TermStatusService::makeScoreRandomInsertUpdate('id') . "
                 FROM (
-                    SELECT WoTextLC, WoText, WoTranslation, WoRomanization,
-                    WoSentence, $status AS WoStatus,
-                    NOW() AS WoStatusChanged
+                    SELECT text_lc, text, translation, romanization,
+                    sentence, $status AS status,
+                    NOW() AS status_changed_at
                     FROM temp_words
                 ) AS tw";
 
             if ($overwrite == 1 || $overwrite == 4) {
                 $sql .= " ON DUPLICATE KEY UPDATE " .
-                    ($fields["tr"] ? "words.WoTranslation = tw.WoTranslation, " : "") .
-                    ($fields["ro"] ? "words.WoRomanization = tw.WoRomanization, " : '') .
-                    ($fields["se"] ? "words.WoSentence = tw.WoSentence, " : '') .
-                    "words.WoStatus = tw.WoStatus,
-                    words.WoStatusChanged = tw.WoStatusChanged";
+                    ($fields["tr"] ? "words.translation = tw.translation, " : "") .
+                    ($fields["ro"] ? "words.romanization = tw.romanization, " : '') .
+                    ($fields["se"] ? "words.sentence = tw.sentence, " : '') .
+                    "words.status = tw.status,
+                    words.status_changed_at = tw.status_changed_at";
             }
 
             if ($overwrite == 2) {
                 $sql .= " ON DUPLICATE KEY UPDATE
-                    words.WoTranslation = CASE
-                        WHEN words.WoTranslation = \"*\" THEN tw.WoTranslation
-                        ELSE words.WoTranslation
+                    words.translation = CASE
+                        WHEN words.translation = \"*\" THEN tw.translation
+                        ELSE words.translation
                     END,
-                    words.WoRomanization = CASE
-                        WHEN words.WoRomanization IS NULL THEN tw.WoRomanization
-                        ELSE words.WoRomanization
+                    words.romanization = CASE
+                        WHEN words.romanization IS NULL THEN tw.romanization
+                        ELSE words.romanization
                     END,
-                    words.WoSentence = CASE
-                        WHEN words.WoSentence IS NULL THEN tw.WoSentence
-                        ELSE words.WoSentence
+                    words.sentence = CASE
+                        WHEN words.sentence IS NULL THEN tw.sentence
+                        ELSE words.sentence
                     END,
-                    words.WoStatusChanged = CASE
-                        WHEN words.WoSentence IS NULL OR words.WoRomanization IS NULL OR words.WoTranslation = \"*\"
-                        THEN tw.WoStatusChanged
-                        ELSE words.WoStatusChanged
+                    words.status_changed_at = CASE
+                        WHEN words.sentence IS NULL OR words.romanization IS NULL OR words.translation = \"*\"
+                        THEN tw.status_changed_at
+                        ELSE words.status_changed_at
                     END";
             }
 
@@ -545,7 +545,7 @@ class CompleteImportService
         }
 
         // Overwrite modes 3 and 5: only update existing, don't insert new.
-        // forTablePrepared appends ` AND a.WoUsID = ?` and pushes the
+        // forTablePrepared appends ` AND a.user_id = ?` and pushes the
         // current user id into $bindings; switching the call from
         // `Connection::execute` to `preparedExecute` is what binds it.
         // Pre-fix the `?` was unbound and the statement either failed
@@ -553,24 +553,24 @@ class CompleteImportService
         $bindings = [];
         $sql = "UPDATE words AS a
             JOIN temp_words AS b
-            ON a.WoTextLC = b.WoTextLC SET
-            a.WoTranslation = CASE
-                WHEN b.WoTranslation = '' OR b.WoTranslation = '*' THEN a.WoTranslation
-                ELSE b.WoTranslation
+            ON a.text_lc = b.text_lc SET
+            a.translation = CASE
+                WHEN b.translation = '' OR b.translation = '*' THEN a.translation
+                ELSE b.translation
             END,
-            a.WoRomanization = CASE
-                WHEN b.WoRomanization IS NULL OR b.WoRomanization = '' THEN a.WoRomanization
-                ELSE b.WoRomanization
+            a.romanization = CASE
+                WHEN b.romanization IS NULL OR b.romanization = '' THEN a.romanization
+                ELSE b.romanization
             END,
-            a.WoSentence = CASE
-                WHEN b.WoSentence IS NULL OR b.WoSentence = '' THEN a.WoSentence
-                ELSE b.WoSentence
+            a.sentence = CASE
+                WHEN b.sentence IS NULL OR b.sentence = '' THEN a.sentence
+                ELSE b.sentence
             END,
-            a.WoStatusChanged = CASE
-                WHEN (b.WoTranslation = '' OR b.WoTranslation = '*')
-                    AND (b.WoRomanization IS NULL OR b.WoRomanization = '')
-                    AND (b.WoSentence IS NULL OR b.WoSentence = '')
-                THEN a.WoStatusChanged
+            a.status_changed_at = CASE
+                WHEN (b.translation = '' OR b.translation = '*')
+                    AND (b.romanization IS NULL OR b.romanization = '')
+                    AND (b.sentence IS NULL OR b.sentence = '')
+                THEN a.status_changed_at
                 ELSE NOW()
             END"
             . UserScopedQuery::forTablePrepared('words', $bindings, 'a');
@@ -598,16 +598,16 @@ class CompleteImportService
         Connection::execute(
             "INSERT IGNORE INTO tags (TgText{$tagInsertCol})
             SELECT name{$tagInsertVal} FROM (
-                SELECT temp_words.WoTextLC,
+                SELECT temp_words.text_lc,
                 SUBSTRING_INDEX(
                     SUBSTRING_INDEX(
-                        temp_words.WoTaglist, ',',
+                        temp_words.tag_list, ',',
                         numbers.n
                     ), ',', -1) name
                 FROM numbers
                 INNER JOIN temp_words
-                ON CHAR_LENGTH(temp_words.WoTaglist)-CHAR_LENGTH(REPLACE(temp_words.WoTaglist, ',', ''))>= numbers.n-1
-                ORDER BY WoTextLC, n) A"
+                ON CHAR_LENGTH(temp_words.tag_list)-CHAR_LENGTH(REPLACE(temp_words.tag_list, ',', ''))>= numbers.n-1
+                ORDER BY text_lc, n) A"
         );
 
         // Link words to tags. Scope BOTH `words` and `tags` to the
@@ -620,18 +620,18 @@ class CompleteImportService
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings)
             . UserScopedQuery::forTablePrepared('tags', $bindings);
         $sql = "INSERT IGNORE INTO word_tag_map
-            SELECT WoID, TgID
+            SELECT id, TgID
             FROM (
-                SELECT temp_words.WoTextLC, SUBSTRING_INDEX(
+                SELECT temp_words.text_lc, SUBSTRING_INDEX(
                     SUBSTRING_INDEX(
-                        temp_words.WoTaglist, ',', numbers.n
+                        temp_words.tag_list, ',', numbers.n
                     ), ',', -1) name
                 FROM numbers
                 INNER JOIN temp_words
-                ON CHAR_LENGTH(temp_words.WoTaglist)-CHAR_LENGTH(REPLACE(temp_words.WoTaglist, ',', ''))>= numbers.n-1
-                ORDER BY WoTextLC, n
+                ON CHAR_LENGTH(temp_words.tag_list)-CHAR_LENGTH(REPLACE(temp_words.tag_list, ',', ''))>= numbers.n-1
+                ORDER BY text_lc, n
             ) A, tags, words
-            WHERE name=TgText AND A.WoTextLC=words.WoTextLC AND WoLgID=?"
+            WHERE name=TgText AND A.text_lc=words.text_lc AND language_id=?"
             . $userScope;
 
         Connection::preparedExecute($sql, $bindings);
@@ -681,7 +681,7 @@ class CompleteImportService
                 FIELDS TERMINATED BY '$delimiter' ENCLOSED BY '\"' LINES TERMINATED BY '\\n' " .
                 ($ignoreFirst ? "IGNORE 1 LINES " : "") .
                 "$columns
-                SET WoTextLC = REPLACE(@taglist, ' ', ',')";
+                SET text_lc = REPLACE(@taglist, ' ', ',')";
             Connection::execute($sql);
         } else {
             $handle = fopen($fileName, 'r');
@@ -730,7 +730,7 @@ class CompleteImportService
             }
 
             if (!empty($placeholders)) {
-                $sql = "INSERT INTO temp_words(WoTextLC)
+                $sql = "INSERT INTO temp_words(text_lc)
                     VALUES " . implode(',', $placeholders);
                 Connection::preparedExecute($sql, $params);
             }
@@ -755,12 +755,12 @@ class CompleteImportService
             SELECT NAME{$tagInsertVal} FROM (
                 SELECT SUBSTRING_INDEX(
                     SUBSTRING_INDEX(
-                        temp_words.WoTextLC, ',', numbers.n
+                        temp_words.text_lc, ',', numbers.n
                     ), ',', -1) name
                 FROM numbers
                 INNER JOIN temp_words
-                ON CHAR_LENGTH(temp_words.WoTextLC)-CHAR_LENGTH(REPLACE(temp_words.WoTextLC, ',', ''))>= numbers.n-1
-                ORDER BY WoTextLC, n) A");
+                ON CHAR_LENGTH(temp_words.text_lc)-CHAR_LENGTH(REPLACE(temp_words.text_lc, ',', ''))>= numbers.n-1
+                ORDER BY text_lc, n) A");
 
         $this->cleanupTempTables();
         TagsFacade::getAllTermTags(true);

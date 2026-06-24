@@ -848,7 +848,7 @@ echo PageLayoutHelper::buildActionCard($actions);
                     <div class="field has-addons">
                         <div class="control is-expanded">
                             <div class="select is-fullwidth">
-                                <select class="notempty" name="WoStatus" required>
+                                <select class="notempty" name="status" required>
                                     <?php echo SelectOptionsBuilder::forWordStatus(null, false, false); ?>
                                 </select>
                             </div>

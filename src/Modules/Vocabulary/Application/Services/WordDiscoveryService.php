@@ -53,7 +53,7 @@ class WordDiscoveryService
     }
 
     /**
-     * Get unknown words in a text (words without a WoID).
+     * Get unknown words in a text (words without a id).
      *
      * @param int $textId Text ID
      *
@@ -63,7 +63,7 @@ class WordDiscoveryService
     {
         // word_occurrences inherits user context via Ti2TxID -> texts FK.
         // words is LEFT JOINed; the user-scope must live in the JOIN ON
-        // clause, otherwise WHERE WoID IS NULL would still match other
+        // clause, otherwise WHERE id IS NULL would still match other
         // users' words (and a flat AND in WHERE would block the IS-NULL).
         $joinScopeBindings = [];
         $joinScope = UserScopedQuery::forTablePrepared('words', $joinScopeBindings, 'words');
@@ -71,15 +71,15 @@ class WordDiscoveryService
         return Connection::preparedFetchAll(
             "SELECT DISTINCT Ti2Text, LOWER(Ti2Text) AS Ti2TextLC
              FROM (word_occurrences LEFT JOIN words
-                   ON LOWER(Ti2Text) = WoTextLC AND Ti2LgID = WoLgID{$joinScope})
-             WHERE WoID IS NULL AND Ti2WordCount = 1 AND Ti2TxID = ?
+                   ON LOWER(Ti2Text) = text_lc AND Ti2LgID = language_id{$joinScope})
+             WHERE id IS NULL AND Ti2WordCount = 1 AND Ti2TxID = ?
              ORDER BY Ti2Order",
             $bindings
         );
     }
 
     /**
-     * Get all unknown words in a text (words without a WoID).
+     * Get all unknown words in a text (words without a id).
      *
      * @param int $textId Text ID
      *
@@ -88,7 +88,7 @@ class WordDiscoveryService
     public function getAllUnknownWordsInText(int $textId): array
     {
         // Use Ti2WoID IS NULL to match how the reading interface identifies
-        // unknown words (joined via Ti2WoID = WoID). This avoids disagreement
+        // unknown words (joined via Ti2WoID = id). This avoids disagreement
         // with the text-based join when a word was learned in another text
         // but Ti2WoID was not yet updated in this text.
         $bindings = [$textId];
@@ -143,10 +143,10 @@ class WordDiscoveryService
         $bindings = [$termlc];
         /** @var int|null $existingId */
         $existingId = Connection::preparedFetchValue(
-            "SELECT WoID FROM words WHERE WoTextLC = ?"
+            "SELECT id FROM words WHERE text_lc = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
-            'WoID'
+            'id'
         );
 
         if ($existingId !== null) {
@@ -158,7 +158,7 @@ class WordDiscoveryService
 
         $bindings = [$langId, $term, $termlc, $status];
         $sql = "INSERT INTO words (
-                WoLgID, WoText, WoTextLC, WoStatus, WoStatusChanged, {$scoreColumns}"
+                language_id, text, text_lc, status, status_changed_at, {$scoreColumns}"
                 . UserScopedQuery::insertColumn('words')
             . ") VALUES (?, ?, ?, ?, NOW(), {$scoreValues}"
                 . UserScopedQuery::insertValuePrepared('words', $bindings)
@@ -193,7 +193,7 @@ class WordDiscoveryService
 
         $bindings = [$langId, $term, $termlc, $status];
         $sql = "INSERT INTO words (
-                WoLgID, WoText, WoTextLC, WoStatus, WoWordCount, WoStatusChanged, {$scoreColumns}"
+                language_id, text, text_lc, status, word_count, status_changed_at, {$scoreColumns}"
                 . UserScopedQuery::insertColumn('words')
             . ") VALUES (?, ?, ?, ?, 1, NOW(), {$scoreValues}"
                 . UserScopedQuery::insertValuePrepared('words', $bindings)
@@ -249,8 +249,8 @@ class WordDiscoveryService
 
         $bindings = [$langId, $wordlc, $text, $status, $translation];
         $sql = "INSERT INTO words (
-                WoLgID, WoTextLC, WoText, WoStatus, WoTranslation, WoSentence,
-                WoRomanization, WoStatusChanged, {$scoreColumns}"
+                language_id, text_lc, text, status, translation, sentence,
+                romanization, status_changed_at, {$scoreColumns}"
                 . UserScopedQuery::insertColumn('words')
             . ") VALUES (?, ?, ?, ?, ?, '', '', NOW(), {$scoreValues}"
                 . UserScopedQuery::insertValuePrepared('words', $bindings)
@@ -289,10 +289,10 @@ class WordDiscoveryService
     {
         $bindings = [$termlc, $langId];
         $wid = Connection::preparedFetchValue(
-            "SELECT WoID FROM words WHERE WoTextLC = ? AND WoLgID = ?"
+            "SELECT id FROM words WHERE text_lc = ? AND language_id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings),
             $bindings,
-            'WoID'
+            'id'
         );
 
         if ($wid !== null) {
@@ -301,7 +301,7 @@ class WordDiscoveryService
             /** @var list<int|string> $updateBindings */
             $updateBindings = [$status, (int) $wid];
             Connection::preparedExecute(
-                "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate} WHERE WoID = ?"
+                "UPDATE words SET status = ?, status_changed_at = NOW(), {$scoreUpdate} WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('words', $updateBindings),
                 $updateBindings
             );
@@ -321,7 +321,7 @@ class WordDiscoveryService
             /** @var list<int|string> $bindings */
             $bindings = [$langId, $term, $termlc, $status];
             $sql = "INSERT INTO words (
-                    WoLgID, WoText, WoTextLC, WoStatus, WoStatusChanged, {$scoreColumns}"
+                    language_id, text, text_lc, status, status_changed_at, {$scoreColumns}"
                     . UserScopedQuery::insertColumn('words')
                 . ") VALUES (?, ?, ?, ?, NOW(), {$scoreValues}"
                     . UserScopedQuery::insertValuePrepared('words', $bindings)
@@ -364,7 +364,7 @@ class WordDiscoveryService
     {
         $scoreUpdate = TermStatusService::makeScoreRandomInsertUpdate('u');
         $bindings = [$status, $wordId];
-        $sql = "UPDATE words SET WoStatus = ?, WoStatusChanged = NOW(), {$scoreUpdate} WHERE WoID = ?"
+        $sql = "UPDATE words SET status = ?, status_changed_at = NOW(), {$scoreUpdate} WHERE id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings);
         Connection::preparedExecute($sql, $bindings);
     }

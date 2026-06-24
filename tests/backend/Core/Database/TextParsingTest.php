@@ -72,7 +72,7 @@ class TextParsingTest extends TestCase
             "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
         );
         Connection::query(
-            "DELETE FROM $words WHERE WoLgID IN " .
+            "DELETE FROM $words WHERE language_id IN " .
             "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
         );
         Connection::query("DELETE FROM $languages WHERE LgName = '$langName'");
@@ -110,7 +110,7 @@ class TextParsingTest extends TestCase
             Connection::query("DELETE FROM $word_occurrences WHERE Ti2LgID = " . self::$testLanguageId);
             Connection::query("DELETE FROM $sentences WHERE SeLgID = " . self::$testLanguageId);
             Connection::query("DELETE FROM $texts WHERE TxLgID = " . self::$testLanguageId);
-            Connection::query("DELETE FROM $words WHERE WoLgID = " . self::$testLanguageId);
+            Connection::query("DELETE FROM $words WHERE language_id = " . self::$testLanguageId);
             Connection::query("DELETE FROM $languages WHERE LgID = " . self::$testLanguageId);
         }
     }
@@ -803,7 +803,7 @@ class TextParsingTest extends TestCase
         $words = Globals::table('words');
 
         // Create a multi-word expression (lowercase to match parsed text)
-        $sql = "INSERT INTO $words (WoLgID, WoText, WoTextLC, WoTranslation, WoStatus, WoWordCount)
+        $sql = "INSERT INTO $words (language_id, text, text_lc, translation, status, word_count)
                 VALUES (" . self::$testLanguageId . ", 'test word', 'test word', 'translation', 1, 2)";
         Connection::query($sql);
         $wordId = mysqli_insert_id(Globals::getDbConnection());
@@ -827,7 +827,7 @@ class TextParsingTest extends TestCase
         Connection::query("DELETE FROM $word_occurrences WHERE Ti2TxID = $textId");
         Connection::query("DELETE FROM $sentences WHERE SeTxID = $textId");
         Connection::query("DELETE FROM $texts WHERE TxID = $textId");
-        Connection::query("DELETE FROM $words WHERE WoID = $wordId");
+        Connection::query("DELETE FROM $words WHERE id = $wordId");
     }
 
     // ===== Additional edge case tests =====
@@ -884,7 +884,7 @@ class TextParsingTest extends TestCase
         $words = Globals::table('words');
 
         // Create a known word
-        $sql = "INSERT INTO $words (WoLgID, WoText, WoTextLC, WoTranslation, WoStatus, WoWordCount)
+        $sql = "INSERT INTO $words (language_id, text, text_lc, translation, status, word_count)
                 VALUES (" . self::$testLanguageId . ", 'known', 'known', 'bekannt', 99, 1)";
         Connection::query($sql);
         $wordId = mysqli_insert_id(Globals::getDbConnection());
@@ -896,7 +896,7 @@ class TextParsingTest extends TestCase
         // Can't assert exact percentage since "word" and "test" are still unknown
 
         // Clean up
-        Connection::query("DELETE FROM $words WHERE WoID = $wordId");
+        Connection::query("DELETE FROM $words WHERE id = $wordId");
     }
 
     public function testParseAndSaveMultipleSentences(): void

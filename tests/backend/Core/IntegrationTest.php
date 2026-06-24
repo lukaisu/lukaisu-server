@@ -573,7 +573,7 @@ class IntegrationTest extends TestCase
         $lang_id = (int)Connection::lastInsertId();
 
         Connection::query(
-            "INSERT INTO words (WoText, WoTextLC, WoStatus, WoLgID)
+            "INSERT INTO words (text, text_lc, status, language_id)
              VALUES ('testword', 'testword', 1, $lang_id)"
         );
         $word_id = (int)Connection::lastInsertId();
@@ -593,7 +593,7 @@ class IntegrationTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM word_tag_map WHERE WtWoID = $word_id");
-        Connection::query("DELETE FROM words WHERE WoID = $word_id");
+        Connection::query("DELETE FROM words WHERE id = $word_id");
         Connection::query("DELETE FROM tags WHERE TgID = $tag_id");
         Connection::query("DELETE FROM languages WHERE LgID = $lang_id");
     }

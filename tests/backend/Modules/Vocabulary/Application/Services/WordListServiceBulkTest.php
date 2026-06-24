@@ -289,7 +289,7 @@ class WordListServiceBulkTest extends TestCase
         $methodSource = implode("\n", array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
 
         // +1 branch should only update statuses 1-4 (max becomes 5)
-        $this->assertStringContainsString('WoStatus in (1,2,3,4)', $methodSource);
+        $this->assertStringContainsString('status in (1,2,3,4)', $methodSource);
     }
 
     #[Test]
@@ -305,7 +305,7 @@ class WordListServiceBulkTest extends TestCase
         $methodSource = implode("\n", array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
 
         // -1 branch should only update statuses 2-5 (min becomes 1)
-        $this->assertStringContainsString('WoStatus in (2,3,4,5)', $methodSource);
+        $this->assertStringContainsString('status in (2,3,4,5)', $methodSource);
     }
 
     #[Test]
@@ -320,8 +320,8 @@ class WordListServiceBulkTest extends TestCase
         $lines = explode("\n", $source);
         $methodSource = implode("\n", array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
 
-        // Absolute branch should use "WoStatus=?" (parameterized, not interpolated)
-        $this->assertStringContainsString("set WoStatus=?", $methodSource);
+        // Absolute branch should use "status=?" (parameterized, not interpolated)
+        $this->assertStringContainsString("set status=?", $methodSource);
     }
 
     // =========================================================================

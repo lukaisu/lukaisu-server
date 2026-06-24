@@ -71,9 +71,9 @@ class TextReadingService
                 $exprs[] = array($actcode, $tiText, $actcode);
             }
 
-            if (isset($record['WoID'])) {
-                $woId = (int)$record['WoID'];
-                $woStatus = (int)$record['WoStatus'];
+            if (isset($record['id'])) {
+                $woId = (int)$record['id'];
+                $woStatus = (int)$record['status'];
                 $ti2Order = (int)$record['Ti2Order'];
                 $tiTextLC = (string)($record['TiTextLC'] ?? '');
                 $attributes = array(
@@ -91,12 +91,12 @@ class TextReadingService
                     'data_order' => $ti2Order,
                     'data_wid' => $woId,
                     'data_trans' => htmlspecialchars(
-                        ExportService::replaceTabNewline((string)($record['WoTranslation'] ?? '')) .
+                        ExportService::replaceTabNewline((string)($record['translation'] ?? '')) .
                         (($tags = TagsFacade::getWordTagList($woId, false)) ? ' [' . $tags . ']' : ''),
                         ENT_QUOTES,
                         'UTF-8'
                     ),
-                    'data_rom' => htmlspecialchars((string)($record['WoRomanization'] ?? ''), ENT_QUOTES, 'UTF-8'),
+                    'data_rom' => htmlspecialchars((string)($record['romanization'] ?? ''), ENT_QUOTES, 'UTF-8'),
                     'data_status' => $woStatus,
                     'data_code' => $actcode,
                     'data_text' => htmlspecialchars($tiText, ENT_QUOTES, 'UTF-8')
@@ -119,10 +119,10 @@ class TextReadingService
             $tiText = (string)($record['TiText'] ?? '');
             $tiTextLC = (string)($record['TiTextLC'] ?? '');
             $ti2Order = (int)$record['Ti2Order'];
-            if (isset($record['WoID'])) {
+            if (isset($record['id'])) {
                 // Word found status 1-5|98|99
-                $woId = (int)$record['WoID'];
-                $woStatus = (int)$record['WoStatus'];
+                $woId = (int)$record['id'];
+                $woStatus = (int)$record['status'];
                 $attributes = array(
                     'id' => $spanid,
                     'class' => implode(
@@ -137,12 +137,12 @@ class TextReadingService
                     'data_order' => $ti2Order,
                     'data_wid' => $woId,
                     'data_trans' => htmlspecialchars(
-                        ExportService::replaceTabNewline((string)($record['WoTranslation'] ?? '')) .
+                        ExportService::replaceTabNewline((string)($record['translation'] ?? '')) .
                         (($tags = TagsFacade::getWordTagList($woId, false)) ? ' [' . $tags . ']' : ''),
                         ENT_QUOTES,
                         'UTF-8'
                     ),
-                    'data_rom' => htmlspecialchars((string)($record['WoRomanization'] ?? ''), ENT_QUOTES, 'UTF-8'),
+                    'data_rom' => htmlspecialchars((string)($record['romanization'] ?? ''), ENT_QUOTES, 'UTF-8'),
                     'data_status' => $woStatus
                 );
             } else {
@@ -269,16 +269,16 @@ class TextReadingService
     {
         $res = QueryBuilder::table('word_occurrences')
             ->selectRaw('CASE WHEN `Ti2WordCount`>0 THEN Ti2WordCount ELSE 1 END AS Code')
-            ->selectRaw('CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE `WoText` END AS TiText')
-            ->selectRaw('CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN LOWER(Ti2Text) ELSE `WoTextLC` END AS TiTextLC')
+            ->selectRaw('CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE `text` END AS TiText')
+            ->selectRaw('CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN LOWER(Ti2Text) ELSE `text_lc` END AS TiTextLC')
             ->select(['Ti2Order', 'Ti2SeID'])
             ->selectRaw('CASE WHEN `Ti2WordCount`>0 THEN 0 ELSE 1 END AS TiIsNotWord')
             ->selectRaw(
                 'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN CHAR_LENGTH(Ti2Text) ' .
-                'ELSE CHAR_LENGTH(`WoTextLC`) END AS TiTextLength'
+                'ELSE CHAR_LENGTH(`text_lc`) END AS TiTextLength'
             )
-            ->select(['WoID', 'WoText', 'WoStatus', 'WoTranslation', 'WoRomanization'])
-            ->leftJoin('words', 'Ti2WoID', '=', 'WoID')
+            ->select(['id', 'text', 'status', 'translation', 'romanization'])
+            ->leftJoin('words', 'Ti2WoID', '=', 'id')
             ->where('Ti2TxID', '=', $textId)
             ->orderBy('Ti2Order', 'ASC')
             ->orderBy('Ti2WordCount', 'DESC')
@@ -297,8 +297,8 @@ class TextReadingService
                 echo '<span id="ID-' . $cnt++ . '-1"></span>';
             }
             if ($showAll) {
-                $hide = isset($record['WoID'])
-                && array_key_exists((int) $record['WoID'], $hidden_items);
+                $hide = isset($record['id'])
+                && array_key_exists((int) $record['id'], $hidden_items);
             } else {
                 $hide = $record['Ti2Order'] <= $last;
             }
@@ -314,10 +314,10 @@ class TextReadingService
             );
             if ($showAll) {
                 if (
-                    isset($record['WoID'])
-                    && !array_key_exists((int) $record['WoID'], $hidden_items)
+                    isset($record['id'])
+                    && !array_key_exists((int) $record['id'], $hidden_items)
                 ) {
-                    $hidden_items[(int) $record['WoID']] = (int) $record['Ti2Order']
+                    $hidden_items[(int) $record['id']] = (int) $record['Ti2Order']
                     + ((int)$record['Code'] - 1) * 2;
                 }
                 // Clean the already finished items

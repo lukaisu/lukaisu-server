@@ -6,7 +6,7 @@
  * `WordListService` and `WordFamilyService` keep raw-SQL paths that
  * back the `terms/bulk-action`, `terms/family/apply`, and related
  * vocabulary mutation endpoints. Each path takes a list of WoIDs from
- * the request, so without an explicit `WHERE WoUsID = ?` clause an
+ * the request, so without an explicit `WHERE user_id = ?` clause an
  * intruder can pass another user's WoIDs and wipe / overwrite their
  * vocabulary. This test reads each method's source via reflection and
  * asserts `UserScopedQuery::forTablePrepared('words', ...)` is invoked
@@ -53,7 +53,7 @@ class BulkActionUserScopeTest extends TestCase
 
     /**
      * Methods that run a raw `UPDATE words` / `DELETE FROM words` against
-     * a caller-supplied WoID list. They must scope by `WoUsID`.
+     * a caller-supplied id list. They must scope by `user_id`.
      *
      * @return array<string, array{class-string, string}>
      */
@@ -101,7 +101,7 @@ class BulkActionUserScopeTest extends TestCase
         $this->assertStringContainsString(
             'filterOwnedWordIds',
             $source,
-            'deleteByIdList must restrict the WoID list to the caller\'s'
+            'deleteByIdList must restrict the id list to the caller\'s'
             . ' rows before issuing the word_occurrences and words DELETEs.'
             . ' word_occurrences has no UsID column, so without this gate'
             . ' an intruder can wipe another user\'s multi-word occurrences.'
@@ -111,7 +111,7 @@ class BulkActionUserScopeTest extends TestCase
         $this->assertStringContainsString(
             "UserScopedQuery::forTablePrepared('words'",
             $helperSource,
-            'filterOwnedWordIds must scope its SELECT by WoUsID.'
+            'filterOwnedWordIds must scope its SELECT by user_id.'
         );
     }
 }

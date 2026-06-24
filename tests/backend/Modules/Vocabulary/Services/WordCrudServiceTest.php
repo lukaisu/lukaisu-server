@@ -76,7 +76,7 @@ class WordCrudServiceTest extends TestCase
         }
 
         // Clean up test words
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE language_id = " . self::$testLangId);
         // Clean up test language
         Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . self::$testLangId);
     }
@@ -93,7 +93,7 @@ class WordCrudServiceTest extends TestCase
         }
 
         // Clean up test words after each test
-        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE WoText LIKE 'test%'");
+        Connection::query("DELETE FROM " . Globals::table('words') . " WHERE text LIKE 'test%'");
     }
 
     // ===== create() tests =====
@@ -105,12 +105,12 @@ class WordCrudServiceTest extends TestCase
         }
 
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testword',
-            'WoStatus' => 1,
-            'WoTranslation' => 'test translation',
-            'WoSentence' => 'This is a {testword} sentence.',
-            'WoRomanization' => 'testwɜːd',
+            'language_id' => self::$testLangId,
+            'text' => 'testword',
+            'status' => 1,
+            'translation' => 'test translation',
+            'sentence' => 'This is a {testword} sentence.',
+            'romanization' => 'testwɜːd',
         ];
 
         $result = $this->service->create($data);
@@ -128,10 +128,10 @@ class WordCrudServiceTest extends TestCase
         }
 
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testempty',
-            'WoStatus' => 1,
-            'WoTranslation' => '',
+            'language_id' => self::$testLangId,
+            'text' => 'testempty',
+            'status' => 1,
+            'translation' => '',
         ];
 
         $result = $this->service->create($data);
@@ -140,7 +140,7 @@ class WordCrudServiceTest extends TestCase
 
         // Verify the translation was saved as '*'
         $word = $this->service->findById($result['id']);
-        $this->assertEquals('*', $word['WoTranslation']);
+        $this->assertEquals('*', $word['translation']);
     }
 
     public function testCreateWordConvertsToLowercase(): void
@@ -150,10 +150,10 @@ class WordCrudServiceTest extends TestCase
         }
 
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'TestMixedCase',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'TestMixedCase',
+            'status' => 1,
+            'translation' => 'translation',
         ];
 
         $result = $this->service->create($data);
@@ -169,10 +169,10 @@ class WordCrudServiceTest extends TestCase
         }
 
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testduplicate',
-            'WoStatus' => 1,
-            'WoTranslation' => 'first',
+            'language_id' => self::$testLangId,
+            'text' => 'testduplicate',
+            'status' => 1,
+            'translation' => 'first',
         ];
 
         // Create first word
@@ -180,7 +180,7 @@ class WordCrudServiceTest extends TestCase
         $this->assertTrue($result1['success']);
 
         // Try to create duplicate
-        $data['WoTranslation'] = 'second';
+        $data['translation'] = 'second';
         $result2 = $this->service->create($data);
 
         $this->assertFalse($result2['success']);
@@ -197,22 +197,22 @@ class WordCrudServiceTest extends TestCase
 
         // Create a word first
         $createData = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testupdate',
-            'WoStatus' => 1,
-            'WoTranslation' => 'original',
+            'language_id' => self::$testLangId,
+            'text' => 'testupdate',
+            'status' => 1,
+            'translation' => 'original',
         ];
         $createResult = $this->service->create($createData);
         $wordId = $createResult['id'];
 
         // Update the word
         $updateData = [
-            'WoText' => 'testupdate',
-            'WoStatus' => 3,
+            'text' => 'testupdate',
+            'status' => 3,
             'WoOldStatus' => 1,
-            'WoTranslation' => 'updated translation',
-            'WoSentence' => 'New sentence.',
-            'WoRomanization' => 'new roman',
+            'translation' => 'updated translation',
+            'sentence' => 'New sentence.',
+            'romanization' => 'new roman',
         ];
 
         $result = $this->service->update($wordId, $updateData);
@@ -223,8 +223,8 @@ class WordCrudServiceTest extends TestCase
 
         // Verify the update
         $word = $this->service->findById($wordId);
-        $this->assertEquals('updated translation', $word['WoTranslation']);
-        $this->assertEquals('3', $word['WoStatus']);
+        $this->assertEquals('updated translation', $word['translation']);
+        $this->assertEquals('3', $word['status']);
     }
 
     public function testUpdateWordStatusChange(): void
@@ -235,10 +235,10 @@ class WordCrudServiceTest extends TestCase
 
         // Create a word
         $createData = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'teststatus',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'teststatus',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->service->create($createData);
         $wordId = $createResult['id'];
@@ -248,16 +248,16 @@ class WordCrudServiceTest extends TestCase
 
         // Update with status change
         $updateData = [
-            'WoText' => 'teststatus',
-            'WoStatus' => 5,
+            'text' => 'teststatus',
+            'status' => 5,
             'WoOldStatus' => 1,
-            'WoTranslation' => 'translation',
+            'translation' => 'translation',
         ];
         $this->service->update($wordId, $updateData);
 
         // Verify status was changed
         $updatedWord = $this->service->findById($wordId);
-        $this->assertEquals('5', $updatedWord['WoStatus']);
+        $this->assertEquals('5', $updatedWord['status']);
     }
 
     // ===== findById() tests =====
@@ -270,10 +270,10 @@ class WordCrudServiceTest extends TestCase
 
         // Create a word
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testfind',
-            'WoStatus' => 2,
-            'WoTranslation' => 'find me',
+            'language_id' => self::$testLangId,
+            'text' => 'testfind',
+            'status' => 2,
+            'translation' => 'find me',
         ];
         $createResult = $this->service->create($data);
 
@@ -281,9 +281,9 @@ class WordCrudServiceTest extends TestCase
         $word = $this->service->findById($createResult['id']);
 
         $this->assertIsArray($word);
-        $this->assertEquals('testfind', $word['WoText']);
-        $this->assertEquals('find me', $word['WoTranslation']);
-        $this->assertEquals('2', $word['WoStatus']);
+        $this->assertEquals('testfind', $word['text']);
+        $this->assertEquals('find me', $word['translation']);
+        $this->assertEquals('2', $word['status']);
     }
 
     public function testFindByIdReturnsNullForNonExistent(): void
@@ -306,10 +306,10 @@ class WordCrudServiceTest extends TestCase
 
         // Create a word
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testfindtext',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testfindtext',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->service->create($data);
 
@@ -337,10 +337,10 @@ class WordCrudServiceTest extends TestCase
 
         // Create a lowercase word
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testcase',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testcase',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $this->service->create($data);
 
@@ -348,7 +348,7 @@ class WordCrudServiceTest extends TestCase
         $result = $this->service->findByText('testcase', self::$testLangId);
         $this->assertNotNull($result);
 
-        // Search with uppercase should not find it (WoTextLC stores lowercase)
+        // Search with uppercase should not find it (text_lc stores lowercase)
         $result = $this->service->findByText('TESTCASE', self::$testLangId);
         $this->assertNull($result);
     }
@@ -363,10 +363,10 @@ class WordCrudServiceTest extends TestCase
 
         // Create a word
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testdelete',
-            'WoStatus' => 1,
-            'WoTranslation' => 'to be deleted',
+            'language_id' => self::$testLangId,
+            'text' => 'testdelete',
+            'status' => 1,
+            'translation' => 'to be deleted',
         ];
         $createResult = $this->service->create($data);
         $wordId = $createResult['id'];
@@ -391,13 +391,13 @@ class WordCrudServiceTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        // Create a word (note: WoWordCount is typically set during text parsing,
+        // Create a word (note: word_count is typically set during text parsing,
         // not during direct word creation, so it defaults to 0 or NULL)
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testsingle',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testsingle',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->service->create($data);
 
@@ -418,11 +418,11 @@ class WordCrudServiceTest extends TestCase
 
         // Create a word
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testgetdata',
-            'WoStatus' => 1,
-            'WoTranslation' => 'my translation',
-            'WoRomanization' => 'my romanization',
+            'language_id' => self::$testLangId,
+            'text' => 'testgetdata',
+            'status' => 1,
+            'translation' => 'my translation',
+            'romanization' => 'my romanization',
         ];
         $createResult = $this->service->create($data);
         $wordId = $createResult['id'];
@@ -455,10 +455,10 @@ class WordCrudServiceTest extends TestCase
         }
 
         $data = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testgettext',
-            'WoStatus' => 1,
-            'WoTranslation' => 'translation',
+            'language_id' => self::$testLangId,
+            'text' => 'testgettext',
+            'status' => 1,
+            'translation' => 'translation',
         ];
         $createResult = $this->service->create($data);
 
@@ -486,34 +486,34 @@ class WordCrudServiceTest extends TestCase
 
         // Create
         $createData = [
-            'WoLgID' => self::$testLangId,
-            'WoText' => 'testroundtrip',
-            'WoStatus' => 1,
-            'WoTranslation' => 'original',
-            'WoRomanization' => 'roman1',
+            'language_id' => self::$testLangId,
+            'text' => 'testroundtrip',
+            'status' => 1,
+            'translation' => 'original',
+            'romanization' => 'roman1',
         ];
         $createResult = $this->service->create($createData);
         $wordId = $createResult['id'];
 
         // Verify create
         $word = $this->service->findById($wordId);
-        $this->assertEquals('original', $word['WoTranslation']);
+        $this->assertEquals('original', $word['translation']);
 
         // Update
         $updateData = [
-            'WoText' => 'testroundtrip',
-            'WoStatus' => 4,
+            'text' => 'testroundtrip',
+            'status' => 4,
             'WoOldStatus' => 1,
-            'WoTranslation' => 'modified',
-            'WoRomanization' => 'roman2',
+            'translation' => 'modified',
+            'romanization' => 'roman2',
         ];
         $this->service->update($wordId, $updateData);
 
         // Verify update
         $updatedWord = $this->service->findById($wordId);
-        $this->assertEquals('modified', $updatedWord['WoTranslation']);
-        $this->assertEquals('4', $updatedWord['WoStatus']);
-        $this->assertEquals('roman2', $updatedWord['WoRomanization']);
+        $this->assertEquals('modified', $updatedWord['translation']);
+        $this->assertEquals('4', $updatedWord['status']);
+        $this->assertEquals('roman2', $updatedWord['romanization']);
 
         // Find by text
         $foundId = $this->service->findByText('testroundtrip', self::$testLangId);

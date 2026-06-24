@@ -71,21 +71,21 @@ class GetTermById
         }
 
         return [
-            'WoID' => $term->id()->toInt(),
-            'WoLgID' => $term->languageId()->toInt(),
-            'WoText' => $term->text(),
-            'WoTextLC' => $term->textLowercase(),
-            'WoStatus' => $term->status()->toInt(),
-            'WoTranslation' => $term->translation(),
-            'WoSentence' => $term->sentence(),
-            'WoNotes' => $term->notes(),
-            'WoRomanization' => $term->romanization(),
-            'WoWordCount' => $term->wordCount(),
-            'WoCreated' => $term->createdAt()->format('Y-m-d H:i:s'),
-            'WoStatusChanged' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
-            'WoTodayScore' => $term->todayScore(),
-            'WoTomorrowScore' => $term->tomorrowScore(),
-            'WoRandom' => $term->random(),
+            'id' => $term->id()->toInt(),
+            'language_id' => $term->languageId()->toInt(),
+            'text' => $term->text(),
+            'text_lc' => $term->textLowercase(),
+            'status' => $term->status()->toInt(),
+            'translation' => $term->translation(),
+            'sentence' => $term->sentence(),
+            'notes' => $term->notes(),
+            'romanization' => $term->romanization(),
+            'word_count' => $term->wordCount(),
+            'created_at' => $term->createdAt()->format('Y-m-d H:i:s'),
+            'status_changed_at' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
+            'today_score' => $term->todayScore(),
+            'tomorrow_score' => $term->tomorrowScore(),
+            'random' => $term->random(),
         ];
     }
 }

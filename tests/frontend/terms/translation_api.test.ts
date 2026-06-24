@@ -50,7 +50,7 @@ describe('translation_api.ts', () => {
       // Create a mock frame document
       const mockFrameDoc = document.implementation.createHTMLDocument('frame');
       const input = mockFrameDoc.createElement('input');
-      input.name = 'WoTranslation';
+      input.name = 'translation';
       input.value = 'existing translation';
       mockFrameDoc.body.appendChild(input);
 
@@ -77,7 +77,7 @@ describe('translation_api.ts', () => {
     it('does nothing when translation field is empty', () => {
       const mockFrameDoc = document.implementation.createHTMLDocument('frame');
       const input = mockFrameDoc.createElement('input');
-      input.name = 'WoTranslation';
+      input.name = 'translation';
       input.value = '   '; // whitespace only
       mockFrameDoc.body.appendChild(input);
 
@@ -104,7 +104,7 @@ describe('translation_api.ts', () => {
     it('uses window.opener as fallback', () => {
       const mockFrameDoc = document.implementation.createHTMLDocument('frame');
       const input = mockFrameDoc.createElement('input');
-      input.name = 'WoTranslation';
+      input.name = 'translation';
       input.value = 'translation';
       mockFrameDoc.body.appendChild(input);
 
@@ -159,11 +159,11 @@ describe('translation_api.ts', () => {
     });
 
     it('sets translation when field is empty', () => {
-      // The function accesses frame.document.forms[0].WoTranslation
-      // We need to create a proper mock where forms[0].WoTranslation is accessible
-      const mockInput = { value: '', name: 'WoTranslation' };
+      // The function accesses frame.document.forms[0].translation
+      // We need to create a proper mock where forms[0].translation is accessible
+      const mockInput = { value: '', name: 'translation' };
       const mockForm = {
-        WoTranslation: mockInput,
+        translation: mockInput,
       };
       const makeDirtySpy = vi.fn();
       const mockFrame = {
@@ -186,8 +186,8 @@ describe('translation_api.ts', () => {
     });
 
     it('appends translation with separator when field has value', () => {
-      const mockInput = { value: 'existing', name: 'WoTranslation' };
-      const mockForm = { WoTranslation: mockInput };
+      const mockInput = { value: 'existing', name: 'translation' };
+      const mockForm = { translation: mockInput };
       const makeDirtySpy = vi.fn();
       const mockFrame = {
         document: { forms: [mockForm] },
@@ -206,8 +206,8 @@ describe('translation_api.ts', () => {
     });
 
     it('prompts for confirmation when translation already exists', () => {
-      const mockInput = { value: 'duplicate', name: 'WoTranslation' };
-      const mockForm = { WoTranslation: mockInput };
+      const mockInput = { value: 'duplicate', name: 'translation' };
+      const mockForm = { translation: mockInput };
       const makeDirtySpy = vi.fn();
       const mockFrame = {
         document: { forms: [mockForm] },
@@ -229,8 +229,8 @@ describe('translation_api.ts', () => {
     });
 
     it('does not add when user declines duplicate', () => {
-      const mockInput = { value: 'duplicate', name: 'WoTranslation' };
-      const mockForm = { WoTranslation: mockInput };
+      const mockInput = { value: 'duplicate', name: 'translation' };
+      const mockForm = { translation: mockInput };
       const makeDirtySpy = vi.fn();
       const mockFrame = {
         document: { forms: [mockForm] },
@@ -253,8 +253,8 @@ describe('translation_api.ts', () => {
       expect(makeDirtySpy).not.toHaveBeenCalled();
     });
 
-    it('alerts when form WoTranslation is not an object', () => {
-      // WoTranslation is undefined/not an object
+    it('alerts when form translation is not an object', () => {
+      // translation is undefined/not an object
       const mockForm = {};
       const mockFrame = {
         document: { forms: [mockForm] },

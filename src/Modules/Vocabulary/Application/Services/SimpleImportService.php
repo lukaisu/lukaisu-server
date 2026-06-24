@@ -123,11 +123,11 @@ class SimpleImportService
             FIELDS TERMINATED BY '$delimiter' ENCLOSED BY '\"' LINES TERMINATED BY '\\n' " .
             ($ignoreFirst ? "IGNORE 1 LINES " : "") .
             "$columnsClause
-            SET WoLgID = ?, " .
+            SET language_id = ?, " .
             ($removeSpaces ?
-                'WoTextLC = LOWER(REPLACE(@wotext," ","")), WoText = REPLACE(@wotext, " ", "")' :
-                'WoTextLC = LOWER(WoText)') . ",
-            WoStatus = ?, WoStatusChanged = NOW(), " .
+                'text_lc = LOWER(REPLACE(@wotext," ","")), text = REPLACE(@wotext, " ", "")' :
+                'text_lc = LOWER(text)') . ",
+            status = ?, status_changed_at = NOW(), " .
             TermStatusService::makeScoreRandomInsertUpdate('u');
 
         $stmt = Connection::prepare($sql);
@@ -192,7 +192,7 @@ class SimpleImportService
 
             /** @var list<int|string> $row */
             $row = [];
-            // Fill WoText and WoTextLC
+            // Fill text and text_lc
             if ($removeSpaces) {
                 $row[] = str_replace(" ", "", $wotext);
                 $row[] = mb_strtolower(str_replace(" ", "", $wotext));
@@ -252,7 +252,7 @@ class SimpleImportService
         $userId = UserScopedQuery::getUserIdForInsert('words');
 
         // Build placeholder string for one row
-        $rowPlaceholders = '(?, ?';  // WoText, WoTextLC
+        $rowPlaceholders = '(?, ?';  // text, text_lc
         if ($fields["tr"] != 0) {
             $rowPlaceholders .= ', ?';
         }
@@ -262,7 +262,7 @@ class SimpleImportService
         if ($fields["se"] != 0) {
             $rowPlaceholders .= ', ?';
         }
-        $rowPlaceholders .= ', ?, ?, NOW(), ' .  // WoLgID, WoStatus, WoStatusChanged
+        $rowPlaceholders .= ', ?, ?, NOW(), ' .  // language_id, status, status_changed_at
             TermStatusService::SCORE_FORMULA_TODAY . ', ' .
             TermStatusService::SCORE_FORMULA_TOMORROW . ', RAND()';
 
@@ -284,12 +284,12 @@ class SimpleImportService
         }
 
         $sql = "INSERT IGNORE INTO words(
-                WoText, WoTextLC, " .
-                ($fields["tr"] != 0 ? 'WoTranslation, ' : '') .
-                ($fields["ro"] != 0 ? 'WoRomanization, ' : '') .
-                ($fields["se"] != 0 ? 'WoSentence, ' : '') .
-                "WoLgID, WoStatus, WoStatusChanged,
-                WoTodayScore, WoTomorrowScore, WoRandom"
+                text, text_lc, " .
+                ($fields["tr"] != 0 ? 'translation, ' : '') .
+                ($fields["ro"] != 0 ? 'romanization, ' : '') .
+                ($fields["se"] != 0 ? 'sentence, ' : '') .
+                "language_id, status, status_changed_at,
+                today_score, tomorrow_score, random"
                 . UserScopedQuery::insertColumn('words')
             . ")
             VALUES " . implode(',', $placeholders);

@@ -67,20 +67,20 @@ final class ReviewWord
     public static function fromRecord(array $record): self
     {
         /** @var mixed $romanization */
-        $romanization = $record['WoRomanization'] ?? null;
+        $romanization = $record['romanization'] ?? null;
         /** @var mixed $sentence */
-        $sentence = $record['WoSentence'] ?? null;
+        $sentence = $record['sentence'] ?? null;
 
         return new self(
-            (int) $record['WoID'],
-            (string) $record['WoText'],
-            (string) $record['WoTextLC'],
-            (string) $record['WoTranslation'],
+            (int) $record['id'],
+            (string) $record['text'],
+            (string) $record['text_lc'],
+            (string) $record['translation'],
             is_string($romanization) ? $romanization : null,
             is_string($sentence) ? $sentence : null,
-            (int) $record['WoLgID'],
-            (int) $record['WoStatus'],
-            (int) ($record['Score'] ?? $record['WoTodayScore'] ?? 0),
+            (int) $record['language_id'],
+            (int) $record['status'],
+            (int) ($record['Score'] ?? $record['today_score'] ?? 0),
             (int) ($record['Days'] ?? 0)
         );
     }

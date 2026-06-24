@@ -219,12 +219,12 @@ class Globals
      * ```php
      * // SELECT query
      * $words = Globals::query('words')
-     *     ->where('WoLgID', '=', 1)
+     *     ->where('language_id', '=', 1)
      *     ->get();
      *
      * // INSERT query
      * Globals::query('words')
-     *     ->insert(['WoText' => 'hello', 'WoLgID' => 1]);
+     *     ->insert(['text' => 'hello', 'language_id' => 1]);
      * ```
      *
      * @param string $tableName The base table name (e.g., 'words')

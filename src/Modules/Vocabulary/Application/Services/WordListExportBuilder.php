@@ -56,17 +56,17 @@ class WordListExportBuilder
         string $whTag,
         array $filterParams = []
     ): array {
-        $ankiSelect = 'select distinct WoID, LgRightToLeft,
-            LgRegexpWordCharacters, LgName, WoText, WoTranslation,
-            WoRomanization, WoSentence,
+        $ankiSelect = 'select distinct id, LgRightToLeft,
+            LgRegexpWordCharacters, LgName, text, translation,
+            romanization, sentence,
             ifnull(group_concat(distinct TgText order by TgText separator \' \'),\'\') as taglist';
-        $ankiFrom = 'from ((words left JOIN word_tag_map ON WoID = WtWoID)
+        $ankiFrom = 'from ((words left JOIN word_tag_map ON id = WtWoID)
             left join tags on TgID = WtTgID), languages';
-        $ankiWhere = 'WoLgID = LgID AND WoTranslation != \'*\'
-            AND WoTranslation != \'\' AND WoTranslation IS NOT NULL
-            AND WoSentence IS NOT NULL AND WoSentence != \'\'
-            AND (WoSentence LIKE CONCAT(\'%{\',WoText,\'}%\')
-                 OR (WoSentence LIKE CONCAT(\'%\',WoText,\'%\') AND CHAR_LENGTH(WoSentence) > CHAR_LENGTH(WoText)))';
+        $ankiWhere = 'language_id = LgID AND translation != \'*\'
+            AND translation != \'\' AND translation IS NOT NULL
+            AND sentence IS NOT NULL AND sentence != \'\'
+            AND (sentence LIKE CONCAT(\'%{\',text,\'}%\')
+                 OR (sentence LIKE CONCAT(\'%\',text,\'%\') AND CHAR_LENGTH(sentence) > CHAR_LENGTH(text)))';
 
         if (!empty($ids)) {
             $params = [];
@@ -74,8 +74,8 @@ class WordListExportBuilder
 
             return [
                 'sql' => "$ankiSelect $ankiFrom
-                    where $ankiWhere AND WoTranslation != ''
-                    and WoID in $inClause group by WoID",
+                    where $ankiWhere AND translation != ''
+                    and id in $inClause group by id",
                 'params' => $params,
             ];
         }
@@ -84,7 +84,7 @@ class WordListExportBuilder
             return [
                 'sql' => "$ankiSelect $ankiFrom
                     where $ankiWhere $whLang $whStat $whQuery
-                    group by WoID $whTag",
+                    group by id $whTag",
                 'params' => $filterParams,
             ];
         }
@@ -96,9 +96,9 @@ class WordListExportBuilder
 
         return [
             'sql' => "$ankiSelect $ankiFrom, word_occurrences
-                where Ti2LgID = WoLgID and Ti2WoID = WoID
+                where Ti2LgID = language_id and Ti2WoID = id
                 and Ti2TxID in $inClause and $ankiWhere
-                $whLang $whStat $whQuery group by WoID $whTag",
+                $whLang $whStat $whQuery group by id $whTag",
             'params' => $params,
         ];
     }
@@ -125,10 +125,10 @@ class WordListExportBuilder
         string $whTag,
         array $filterParams = []
     ): array {
-        $tsvSelect = 'select distinct WoID, LgName, WoText, WoTranslation,
-            WoRomanization, WoSentence, WoStatus,
+        $tsvSelect = 'select distinct id, LgName, text, translation,
+            romanization, sentence, status,
             ifnull(group_concat(distinct TgText order by TgText separator \' \'),\'\') as taglist';
-        $tsvFrom = 'from ((words left JOIN word_tag_map ON WoID = WtWoID)
+        $tsvFrom = 'from ((words left JOIN word_tag_map ON id = WtWoID)
             left join tags on TgID = WtTgID), languages';
 
         if (!empty($ids)) {
@@ -137,7 +137,7 @@ class WordListExportBuilder
 
             return [
                 'sql' => "$tsvSelect $tsvFrom
-                    where WoLgID = LgID and WoID in $inClause group by WoID",
+                    where language_id = LgID and id in $inClause group by id",
                 'params' => $params,
             ];
         }
@@ -145,8 +145,8 @@ class WordListExportBuilder
         if ($textId == '') {
             return [
                 'sql' => "$tsvSelect $tsvFrom
-                    where WoLgID = LgID $whLang $whStat $whQuery
-                    group by WoID $whTag",
+                    where language_id = LgID $whLang $whStat $whQuery
+                    group by id $whTag",
                 'params' => $filterParams,
             ];
         }
@@ -158,9 +158,9 @@ class WordListExportBuilder
 
         return [
             'sql' => "$tsvSelect $tsvFrom, word_occurrences
-                where Ti2LgID = WoLgID and Ti2WoID = WoID
-                and Ti2TxID in $inClause and WoLgID = LgID
-                $whLang $whStat $whQuery group by WoID $whTag",
+                where Ti2LgID = language_id and Ti2WoID = id
+                and Ti2TxID in $inClause and language_id = LgID
+                $whLang $whStat $whQuery group by id $whTag",
             'params' => $params,
         ];
     }
@@ -187,10 +187,10 @@ class WordListExportBuilder
         string $whTag,
         array $filterParams = []
     ): array {
-        $flexSelect = 'select distinct WoID, LgName, LgExportTemplate, LgRightToLeft,
-            WoText, WoTextLC, WoTranslation, WoRomanization, WoSentence, WoStatus,
+        $flexSelect = 'select distinct id, LgName, LgExportTemplate, LgRightToLeft,
+            text, text_lc, translation, romanization, sentence, status,
             ifnull(group_concat(distinct TgText order by TgText separator \' \'),\'\') as taglist';
-        $flexFrom = 'from ((words left JOIN word_tag_map ON WoID = WtWoID)
+        $flexFrom = 'from ((words left JOIN word_tag_map ON id = WtWoID)
             left join tags on TgID = WtTgID), languages';
 
         if (!empty($ids)) {
@@ -199,7 +199,7 @@ class WordListExportBuilder
 
             return [
                 'sql' => "$flexSelect $flexFrom
-                    where WoLgID = LgID and WoID in $inClause group by WoID",
+                    where language_id = LgID and id in $inClause group by id",
                 'params' => $params,
             ];
         }
@@ -207,8 +207,8 @@ class WordListExportBuilder
         if ($textId == '') {
             return [
                 'sql' => "$flexSelect $flexFrom
-                    where WoLgID = LgID $whLang $whStat $whQuery
-                    group by WoID $whTag",
+                    where language_id = LgID $whLang $whStat $whQuery
+                    group by id $whTag",
                 'params' => $filterParams,
             ];
         }
@@ -220,9 +220,9 @@ class WordListExportBuilder
 
         return [
             'sql' => "$flexSelect $flexFrom, word_occurrences
-                where Ti2LgID = WoLgID and Ti2WoID = WoID
-                and Ti2TxID in $inClause and WoLgID = LgID
-                $whLang $whStat $whQuery group by WoID $whTag",
+                where Ti2LgID = language_id and Ti2WoID = id
+                and Ti2TxID in $inClause and language_id = LgID
+                $whLang $whStat $whQuery group by id $whTag",
             'params' => $params,
         ];
     }
@@ -249,10 +249,10 @@ class WordListExportBuilder
     ): array {
         if ($textId == '') {
             return [
-                'sql' => 'select distinct WoID
-                    from (words left JOIN word_tag_map ON WoID = WtWoID)
+                'sql' => 'select distinct id
+                    from (words left JOIN word_tag_map ON id = WtWoID)
                     where (1=1) ' . $whLang . $whStat . $whQuery .
-                    ' group by WoID ' . $whTag,
+                    ' group by id ' . $whTag,
                 'params' => $filterParams,
             ];
         }
@@ -263,13 +263,13 @@ class WordListExportBuilder
         $params = array_values(array_merge($params, $filterParams));
 
         return [
-            'sql' => 'select distinct WoID
-                from (words left JOIN word_tag_map ON WoID = WtWoID),
+            'sql' => 'select distinct id
+                from (words left JOIN word_tag_map ON id = WtWoID),
                 word_occurrences
-                where Ti2LgID = WoLgID and Ti2WoID = WoID
+                where Ti2LgID = language_id and Ti2WoID = id
                 and Ti2TxID in ' . $inClause .
                 $whLang . $whStat . $whQuery .
-                ' group by WoID ' . $whTag,
+                ' group by id ' . $whTag,
             'params' => $params,
         ];
     }

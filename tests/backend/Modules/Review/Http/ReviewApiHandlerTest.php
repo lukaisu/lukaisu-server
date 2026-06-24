@@ -77,11 +77,11 @@ class ReviewApiHandlerTest extends TestCase
     public function testGetWordReviewDataReturnsWordDataInWordMode(): void
     {
         $wordRecord = [
-            'WoID' => 123,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'prueba',
-            'WoRomanization' => ''
+            'id' => 123,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'prueba',
+            'romanization' => ''
         ];
 
         $this->reviewFacade->method('getNextWord')
@@ -105,10 +105,10 @@ class ReviewApiHandlerTest extends TestCase
     public function testGetWordReviewDataCallsGetSentenceForWordInSentenceMode(): void
     {
         $wordRecord = [
-            'WoID' => 123,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'prueba'
+            'id' => 123,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'prueba'
         ];
 
         $this->reviewFacade->method('getNextWord')
@@ -134,10 +134,10 @@ class ReviewApiHandlerTest extends TestCase
     public function testGetWordReviewDataCallsGetSentenceWithAnnotationsWhenEnabled(): void
     {
         $wordRecord = [
-            'WoID' => 123,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'prueba'
+            'id' => 123,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'prueba'
         ];
 
         $this->reviewFacade->method('getNextWord')
@@ -248,7 +248,7 @@ class ReviewApiHandlerTest extends TestCase
     public function testTomorrowTestCountReturnsFacadeCount(): void
     {
         $this->reviewFacade->method('getReviewSql')
-            ->willReturn(['sql' => ' words WHERE WoLgID = ? ', 'params' => [1]]);
+            ->willReturn(['sql' => ' words WHERE language_id = ? ', 'params' => [1]]);
         $this->reviewFacade->method('getTomorrowReviewCount')
             ->willReturn(42);
 
@@ -471,7 +471,7 @@ class ReviewApiHandlerTest extends TestCase
         $this->reviewFacade->method('getReviewIdentifier')
             ->willReturn(['lang', 1]);
         $this->reviewFacade->method('getReviewSql')
-            ->willReturn(['sql' => ' words WHERE WoLgID = ? ', 'params' => [1]]);
+            ->willReturn(['sql' => ' words WHERE language_id = ? ', 'params' => [1]]);
         $this->reviewFacade->method('clampReviewType')
             ->willReturn(1);
         $this->reviewFacade->method('isWordMode')
@@ -524,7 +524,7 @@ class ReviewApiHandlerTest extends TestCase
     public function testFormatTableWordsReturnsErrorWhenValidationFails(): void
     {
         $this->reviewFacade->method('getReviewSql')
-            ->willReturn(['sql' => ' words WHERE WoLgID = ? ', 'params' => [1]]);
+            ->willReturn(['sql' => ' words WHERE language_id = ? ', 'params' => [1]]);
         $this->reviewFacade->method('validateReviewSelection')
             ->willReturn(['valid' => false, 'error' => 'Multiple languages selected']);
 
@@ -540,7 +540,7 @@ class ReviewApiHandlerTest extends TestCase
     public function testFormatTableWordsReturnsEmptyWhenNoLanguage(): void
     {
         $this->reviewFacade->method('getReviewSql')
-            ->willReturn(['sql' => ' words WHERE WoLgID = ? ', 'params' => [1]]);
+            ->willReturn(['sql' => ' words WHERE language_id = ? ', 'params' => [1]]);
         $this->reviewFacade->method('validateReviewSelection')
             ->willReturn(['valid' => true]);
         $this->reviewFacade->method('getLanguageIdFromReviewSql')

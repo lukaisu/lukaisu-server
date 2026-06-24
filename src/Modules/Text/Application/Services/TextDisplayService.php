@@ -139,12 +139,12 @@ class TextDisplayService
     public function getWordRomanization(int $wordId): string
     {
         $record = QueryBuilder::table('words')
-            ->select(['WoRomanization'])
-            ->where('WoID', '=', $wordId)
+            ->select(['romanization'])
+            ->where('id', '=', $wordId)
             ->firstPrepared();
 
-        return $record !== null && $record['WoRomanization'] !== null
-            ? (string) $record['WoRomanization']
+        return $record !== null && $record['romanization'] !== null
+            ? (string) $record['romanization']
             : '';
     }
 

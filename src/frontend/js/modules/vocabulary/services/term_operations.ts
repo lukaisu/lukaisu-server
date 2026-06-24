@@ -64,12 +64,12 @@ export interface TransData {
  */
 export function setTransRoman(tra: string, rom: string): void {
   let form_changed = false;
-  const translationEl = document.querySelector<HTMLTextAreaElement>('textarea[name="WoTranslation"]');
+  const translationEl = document.querySelector<HTMLTextAreaElement>('textarea[name="translation"]');
   if (translationEl) {
     translationEl.value = tra;
     form_changed = true;
   }
-  const romanizationEl = document.querySelector<HTMLInputElement>('input[name="WoRomanization"]');
+  const romanizationEl = document.querySelector<HTMLInputElement>('input[name="romanization"]');
   if (romanizationEl) {
     romanizationEl.value = rom;
     form_changed = true;

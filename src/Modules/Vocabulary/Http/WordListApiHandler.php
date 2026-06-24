@@ -155,15 +155,15 @@ class WordListApiHandler
      */
     private function formatWordRecord(array $record, int $sort): array
     {
-        $status = (int) $record['WoStatus'];
+        $status = (int) $record['status'];
         $days = (int) ($record['Days'] ?? 0);
 
         $word = [
-            'id' => (int) $record['WoID'],
-            'text' => (string) $record['WoText'],
-            'translation' => (string) ($record['WoTranslation'] ?? ''),
-            'romanization' => (string) ($record['WoRomanization'] ?? ''),
-            'sentence' => (string) ($record['WoSentence'] ?? ''),
+            'id' => (int) $record['id'],
+            'text' => (string) $record['text'],
+            'translation' => (string) ($record['translation'] ?? ''),
+            'romanization' => (string) ($record['romanization'] ?? ''),
+            'sentence' => (string) ($record['sentence'] ?? ''),
             'sentenceOk' => (bool) ($record['SentOK'] ?? false),
             'status' => $status,
             'statusAbbr' => StatusHelper::getAbbr($status),
@@ -356,7 +356,7 @@ class WordListApiHandler
 
         // Check term exists
         $exists = QueryBuilder::table('words')
-            ->where('WoID', '=', $termId)
+            ->where('id', '=', $termId)
             ->countPrepared();
 
         if ($exists === 0) {
@@ -373,16 +373,16 @@ class WordListApiHandler
                 $displayValue = '*';
             }
             QueryBuilder::table('words')
-                ->where('WoID', '=', $termId)
-                ->updatePrepared(['WoTranslation' => $value]);
+                ->where('id', '=', $termId)
+                ->updatePrepared(['translation' => $value]);
         } else {
             // romanization
             if ($value === '') {
                 $displayValue = '*';
             }
             QueryBuilder::table('words')
-                ->where('WoID', '=', $termId)
-                ->updatePrepared(['WoRomanization' => $value]);
+                ->where('id', '=', $termId)
+                ->updatePrepared(['romanization' => $value]);
         }
 
         return ['success' => true, 'value' => $displayValue];
@@ -515,19 +515,19 @@ class WordListApiHandler
     {
         return QueryBuilder::table('words')
             ->select([
-                'words.WoID',
-                'words.WoText',
-                'words.WoTranslation',
-                'words.WoRomanization',
-                'words.WoSentence',
-                "IFNULL(words.WoSentence, '') LIKE CONCAT('%{', words.WoText, '}%') AS SentOK",
-                'words.WoStatus',
+                'words.id',
+                'words.text',
+                'words.translation',
+                'words.romanization',
+                'words.sentence',
+                "IFNULL(words.sentence, '') LIKE CONCAT('%{', words.text, '}%') AS SentOK",
+                'words.status',
                 "IFNULL(group_concat(DISTINCT tags.TgText ORDER BY tags.TgText separator ','), '') AS taglist"
             ])
-            ->leftJoin('word_tag_map', 'words.WoID', '=', 'word_tag_map.WtWoID')
+            ->leftJoin('word_tag_map', 'words.id', '=', 'word_tag_map.WtWoID')
             ->leftJoin('tags', 'tags.TgID', '=', 'word_tag_map.WtTgID')
-            ->where('words.WoStatusChanged', '>', $lastUpdate)
-            ->groupBy('words.WoID')
+            ->where('words.status_changed_at', '>', $lastUpdate)
+            ->groupBy('words.id')
             ->limit($maxTerms)
             ->offset($offset)
             ->getPrepared();

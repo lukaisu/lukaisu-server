@@ -243,11 +243,11 @@ class ReviewControllerTest extends TestCase
         $this->sessionManager->method('hasCriteria')->willReturn(true);
         $this->sessionManager->expects($this->once())
             ->method('getSelectionString')
-            ->willReturn('WoStatus = 1');
+            ->willReturn('status = 1');
 
         $this->reviewFacade->expects($this->once())
             ->method('getReviewDataFromParams')
-            ->with(3, 'WoStatus = 1', null, null)
+            ->with(3, 'status = 1', null, null)
             ->willReturn([
                 'counts' => ['due' => 8, 'total' => 30],
                 'title' => 'Selection Review',
@@ -326,7 +326,7 @@ class ReviewControllerTest extends TestCase
         $this->reviewFacade->method('getReviewIdentifier')
             ->willReturn(['lang', 5]);
         $this->reviewFacade->method('getReviewSql')
-            ->willReturn(['sql' => ' words WHERE WoLgID = ? ', 'params' => [5]]);
+            ->willReturn(['sql' => ' words WHERE language_id = ? ', 'params' => [5]]);
         $this->reviewFacade->method('validateReviewSelection')
             ->willReturn(['valid' => false, 'error' => 'Multiple languages']);
 
@@ -345,11 +345,11 @@ class ReviewControllerTest extends TestCase
         $this->sessionManager->method('hasCriteria')->willReturn(true);
         $this->sessionManager->expects($this->once())
             ->method('getSelectionString')
-            ->willReturn('WoStatus IN (1,2)');
+            ->willReturn('status IN (1,2)');
 
         $this->reviewFacade->expects($this->once())
             ->method('getReviewIdentifier')
-            ->with(2, 'WoStatus IN (1,2)', null, null)
+            ->with(2, 'status IN (1,2)', null, null)
             ->willReturn(['', null]);
 
         $this->expectException(\Lukaisu\Shared\Infrastructure\Exception\ValidationException::class);
@@ -436,7 +436,7 @@ class ReviewControllerTest extends TestCase
         $this->reviewFacade->method('getReviewIdentifier')
             ->willReturn(['lang', 5]);
         $this->reviewFacade->method('getReviewSql')
-            ->willReturn(['sql' => ' words WHERE WoLgID = ? ', 'params' => [5]]);
+            ->willReturn(['sql' => ' words WHERE language_id = ? ', 'params' => [5]]);
 
         // In table mode, testType is set to 1
         $this->reviewFacade->expects($this->once())
@@ -473,7 +473,7 @@ class ReviewControllerTest extends TestCase
         $this->reviewFacade->method('getReviewIdentifier')
             ->willReturn(['lang', 5]);
         $this->reviewFacade->method('getReviewSql')
-            ->willReturn(['sql' => ' words WHERE WoLgID = ? ', 'params' => [5]]);
+            ->willReturn(['sql' => ' words WHERE language_id = ? ', 'params' => [5]]);
 
         $this->reviewFacade->expects($this->once())
             ->method('clampReviewType')

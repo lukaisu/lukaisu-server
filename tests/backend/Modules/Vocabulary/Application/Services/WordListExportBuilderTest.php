@@ -35,8 +35,8 @@ class WordListExportBuilderTest extends TestCase
         $result = $this->builder->getAnkiExportSql(
             [],
             '',
-            ' and WoLgID = ?',
-            ' and WoStatus = 2',
+            ' and language_id = ?',
+            ' and status = 2',
             '',
             '',
             [1]
@@ -44,8 +44,8 @@ class WordListExportBuilderTest extends TestCase
         $this->assertIsArray($result);
         $this->assertArrayHasKey('sql', $result);
         $this->assertArrayHasKey('params', $result);
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
-        $this->assertStringContainsString('WoStatus = 2', $result['sql']);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
+        $this->assertStringContainsString('status = 2', $result['sql']);
         $this->assertSame([1], $result['params']);
     }
 
@@ -53,10 +53,10 @@ class WordListExportBuilderTest extends TestCase
     public function getAnkiExportSqlWithIds(): void
     {
         $result = $this->builder->getAnkiExportSql([10, 20, 30], '', '', '', '', '');
-        $this->assertStringContainsString('WoID in', $result['sql']);
+        $this->assertStringContainsString('id in', $result['sql']);
         $this->assertStringContainsString('?', $result['sql']);
         $this->assertSame([10, 20, 30], $result['params']);
-        $this->assertStringContainsString('WoTranslation', $result['sql']);
+        $this->assertStringContainsString('translation', $result['sql']);
     }
 
     #[Test]
@@ -71,14 +71,14 @@ class WordListExportBuilderTest extends TestCase
     #[Test]
     public function getAnkiExportSqlWithTextIdAndFilters(): void
     {
-        $result = $this->builder->getAnkiExportSql([], '5', ' and WoLgID = ?', '', '', '', [3]);
+        $result = $this->builder->getAnkiExportSql([], '5', ' and language_id = ?', '', '', '', [3]);
         $this->assertSame([5, 3], $result['params']);
     }
 
     #[Test]
     public function getAnkiExportSqlIdsIgnoreFilters(): void
     {
-        $result = $this->builder->getAnkiExportSql([1], '99', ' and WoLgID = ?', '', '', '', [5]);
+        $result = $this->builder->getAnkiExportSql([1], '99', ' and language_id = ?', '', '', '', [5]);
         $this->assertSame([1], $result['params']);
         $this->assertStringNotContainsString('word_occurrences', $result['sql']);
     }
@@ -87,10 +87,10 @@ class WordListExportBuilderTest extends TestCase
     public function getAnkiExportSqlSelectsRequiredColumns(): void
     {
         $result = $this->builder->getAnkiExportSql([], '', '', '', '', '');
-        $this->assertStringContainsString('WoText', $result['sql']);
-        $this->assertStringContainsString('WoTranslation', $result['sql']);
-        $this->assertStringContainsString('WoRomanization', $result['sql']);
-        $this->assertStringContainsString('WoSentence', $result['sql']);
+        $this->assertStringContainsString('text', $result['sql']);
+        $this->assertStringContainsString('translation', $result['sql']);
+        $this->assertStringContainsString('romanization', $result['sql']);
+        $this->assertStringContainsString('sentence', $result['sql']);
         $this->assertStringContainsString('taglist', $result['sql']);
     }
 
@@ -120,16 +120,16 @@ class WordListExportBuilderTest extends TestCase
     public function getTsvExportSqlWithIds(): void
     {
         $result = $this->builder->getTsvExportSql([1, 2], '', '', '', '', '');
-        $this->assertStringContainsString('WoID in', $result['sql']);
+        $this->assertStringContainsString('id in', $result['sql']);
         $this->assertSame([1, 2], $result['params']);
-        $this->assertStringContainsString('WoStatus', $result['sql']);
+        $this->assertStringContainsString('status', $result['sql']);
     }
 
     #[Test]
     public function getTsvExportSqlNoTextId(): void
     {
-        $result = $this->builder->getTsvExportSql([], '', ' and WoLgID = ?', '', '', '', [2]);
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
+        $result = $this->builder->getTsvExportSql([], '', ' and language_id = ?', '', '', '', [2]);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertStringNotContainsString('word_occurrences', $result['sql']);
         $this->assertSame([2], $result['params']);
     }
@@ -138,8 +138,8 @@ class WordListExportBuilderTest extends TestCase
     public function getTsvExportSqlSelectsRequiredColumns(): void
     {
         $result = $this->builder->getTsvExportSql([], '', '', '', '', '');
-        $this->assertStringContainsString('WoText', $result['sql']);
-        $this->assertStringContainsString('WoStatus', $result['sql']);
+        $this->assertStringContainsString('text', $result['sql']);
+        $this->assertStringContainsString('status', $result['sql']);
         $this->assertStringContainsString('LgName', $result['sql']);
         $this->assertStringContainsString('taglist', $result['sql']);
     }
@@ -159,10 +159,10 @@ class WordListExportBuilderTest extends TestCase
     #[Test]
     public function getFlexibleExportSqlNoTextIdReturnsArray(): void
     {
-        $result = $this->builder->getFlexibleExportSql([], '', ' and WoLgID = ?', '', '', '', [3]);
+        $result = $this->builder->getFlexibleExportSql([], '', ' and language_id = ?', '', '', '', [3]);
         $this->assertIsArray($result);
         $this->assertStringContainsString('LgExportTemplate', $result['sql']);
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertStringNotContainsString('word_occurrences', $result['sql']);
         $this->assertSame([3], $result['params']);
     }
@@ -171,7 +171,7 @@ class WordListExportBuilderTest extends TestCase
     public function getFlexibleExportSqlWithIds(): void
     {
         $result = $this->builder->getFlexibleExportSql([5, 6], '', '', '', '', '');
-        $this->assertStringContainsString('WoID in', $result['sql']);
+        $this->assertStringContainsString('id in', $result['sql']);
         $this->assertSame([5, 6], $result['params']);
         $this->assertStringContainsString('LgExportTemplate', $result['sql']);
     }
@@ -190,13 +190,13 @@ class WordListExportBuilderTest extends TestCase
         $result = $this->builder->getFlexibleExportSql([], '', '', '', '', '');
         $this->assertStringContainsString('LgExportTemplate', $result['sql']);
         $this->assertStringContainsString('LgRightToLeft', $result['sql']);
-        $this->assertStringContainsString('WoTextLC', $result['sql']);
+        $this->assertStringContainsString('text_lc', $result['sql']);
     }
 
     #[Test]
     public function getFlexibleExportSqlIdsIgnoreFilters(): void
     {
-        $result = $this->builder->getFlexibleExportSql([1], '99', ' and WoLgID = ?', '', '', '', [5]);
+        $result = $this->builder->getFlexibleExportSql([1], '99', ' and language_id = ?', '', '', '', [5]);
         $this->assertSame([1], $result['params']);
     }
 
@@ -207,12 +207,12 @@ class WordListExportBuilderTest extends TestCase
     #[Test]
     public function getTestWordIdsSqlNoTextIdReturnsArray(): void
     {
-        $result = $this->builder->getTestWordIdsSql('', ' and WoLgID = ?', '', '', '', [1]);
+        $result = $this->builder->getTestWordIdsSql('', ' and language_id = ?', '', '', '', [1]);
         $this->assertIsArray($result);
         $this->assertArrayHasKey('sql', $result);
         $this->assertArrayHasKey('params', $result);
-        $this->assertStringContainsString('select distinct WoID', $result['sql']);
-        $this->assertStringContainsString('WoLgID = ?', $result['sql']);
+        $this->assertStringContainsString('select distinct id', $result['sql']);
+        $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertStringNotContainsString('word_occurrences', $result['sql']);
         $this->assertSame([1], $result['params']);
     }
@@ -240,9 +240,9 @@ class WordListExportBuilderTest extends TestCase
     {
         $result = $this->builder->getTestWordIdsSql(
             '5',
-            ' and WoLgID = ?',
-            ' and WoStatus = 2',
-            ' and (WoText like ?)',
+            ' and language_id = ?',
+            ' and status = 2',
+            ' and (text like ?)',
             '',
             [7, 'test%']
         );

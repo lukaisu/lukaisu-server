@@ -180,7 +180,19 @@ and each step is already atomic.
   schema + the new migration) renames in place with data and FKs preserved.
 - **`baseline.sql` is the cumulative schema** for fresh installs and the test DB, so
   it is updated alongside each migration; `tests/setup_test_db.php` (which hard-codes
-  FK/column SQL) and `db/seeds/*.sql` are updated in the same step.
+  FK/column SQL) and `tests/sql/*.sql` fixtures (applied to the already-migrated test
+  DB) are swept in the same step.
+- **`db/seeds/demo.sql` is a pre-migration backup — do NOT sweep it.** It carries the
+  *old* table and column names on purpose; `Restore::restoreFile` loads it and then
+  runs `checkAndUpdate`, so the migration chain (including these rename migrations)
+  upgrades it. Sweeping its columns to new names breaks historical migrations that
+  reference old names (e.g. `lwt_fork` rebuilds the words unique key as
+  `WoTextLCLgID (WoTextLC, WoLgID)`, and `add_lemma` adds `WoLemma AFTER WoTextLC`).
+- **Watch JOINs that select same-named columns from two tables.** Renaming both sides
+  to `id`/`text` collides in the result row (psalm's duplicate-key docblock error
+  catches it; fix by aliasing or dropping the redundant key). Also watch code that
+  *builds* column names from a table prefix (e.g. `"{$prefix}Title"`) — the token
+  sweep can't see those; rewrite them to explicit names.
 
 ## Verification
 

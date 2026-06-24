@@ -1257,14 +1257,14 @@ class ReviewUseCaseTest extends TestCase
     public function testReviewWordFromRecord(): void
     {
         $record = [
-            'WoID' => 10,
-            'WoText' => 'casa',
-            'WoTextLC' => 'casa',
-            'WoTranslation' => 'house',
-            'WoRomanization' => null,
-            'WoSentence' => 'La {casa} es grande',
-            'WoLgID' => 2,
-            'WoStatus' => 4,
+            'id' => 10,
+            'text' => 'casa',
+            'text_lc' => 'casa',
+            'translation' => 'house',
+            'romanization' => null,
+            'sentence' => 'La {casa} es grande',
+            'language_id' => 2,
+            'status' => 4,
             'Score' => 85,
             'Days' => 7
         ];

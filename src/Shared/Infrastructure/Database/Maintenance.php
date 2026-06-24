@@ -64,7 +64,7 @@ class Maintenance
         self::adjustAutoIncrement('languages', 'LgID');
         self::adjustAutoIncrement('sentences', 'SeID');
         self::adjustAutoIncrement('texts', 'TxID');
-        self::adjustAutoIncrement('words', 'WoID');
+        self::adjustAutoIncrement('words', 'id');
         self::adjustAutoIncrement('tags', 'TgID');
         self::adjustAutoIncrement('text_tags', 'T2ID');
         self::adjustAutoIncrement('news_feeds', 'id');
@@ -92,9 +92,9 @@ class Maintenance
     public static function updateJapaneseWordCount(int $japid): void
     {
         $rows = QueryBuilder::table('words')
-            ->select(['WoID', 'WoTextLC'])
-            ->where('WoLgID', '=', $japid)
-            ->where('WoWordCount', '=', 0)
+            ->select(['id', 'text_lc'])
+            ->where('language_id', '=', $japid)
+            ->where('word_count', '=', 0)
             ->getPrepared();
         if (empty($rows)) {
             return;
@@ -115,7 +115,7 @@ class Maintenance
                 return;
             }
             foreach ($rows as $record) {
-                fwrite($fp, (string) $record['WoID'] . "\t" . (string) $record['WoTextLC'] . "\n");
+                fwrite($fp, (string) $record['id'] . "\t" . (string) $record['text_lc'] . "\n");
             }
             fclose($fp);
 
@@ -170,8 +170,8 @@ class Maintenance
             // UPDATE with JOIN - use raw SQL with fixed table names
             Connection::query(
                 "UPDATE words
-                JOIN mecab ON MID = WoID
-                SET WoWordCount = MWordCount"
+                JOIN mecab ON MID = id
+                SET word_count = MWordCount"
             );
             Connection::execute("DROP TABLE mecab");
         } finally {
@@ -204,19 +204,19 @@ class Maintenance
             self::updateJapaneseWordCount((int)$japid);
         }
         $rows = QueryBuilder::table('words')
-            ->select(['WoID', 'WoTextLC', 'LgRegexpWordCharacters', 'LgSplitEachChar'])
-            ->join('languages', 'words.WoLgID', '=', 'languages.LgID')
-            ->where('WoWordCount', '=', 0)
-            ->orderBy('WoID')
+            ->select(['id', 'text_lc', 'LgRegexpWordCharacters', 'LgSplitEachChar'])
+            ->join('languages', 'words.language_id', '=', 'languages.LgID')
+            ->where('word_count', '=', 0)
+            ->orderBy('id')
             ->getPrepared();
 
-        // Collect all (WoID, wordCount) pairs
+        // Collect all (id, wordCount) pairs
         $data = [];
         foreach ($rows as $rec) {
             $splitEachChar = (int) $rec['LgSplitEachChar'];
-            $woTextLC = (string) $rec['WoTextLC'];
+            $woTextLC = (string) $rec['text_lc'];
             $regexpWordChars = (string) $rec['LgRegexpWordCharacters'];
-            $woID = (int) $rec['WoID'];
+            $woID = (int) $rec['id'];
 
             if ($splitEachChar === 1) {
                 $textlc = preg_replace('/([^\s])/u', "$1 ", $woTextLC);
@@ -255,8 +255,8 @@ class Maintenance
 
         Connection::query(
             "UPDATE words
-            JOIN temp_word_counts ON WcID = WoID
-            SET WoWordCount = WcCount"
+            JOIN temp_word_counts ON WcID = id
+            SET word_count = WcCount"
         );
         Connection::execute("DROP TABLE IF EXISTS temp_word_counts");
     }

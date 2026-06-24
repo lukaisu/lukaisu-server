@@ -47,29 +47,29 @@ class MySqlTermRepository implements TermRepositoryInterface
     /**
      * @var string Primary key column
      */
-    protected string $primaryKey = 'WoID';
+    protected string $primaryKey = 'id';
 
     /**
      * @var array<string, string> Property to column mapping
      */
     protected array $columnMap = [
-        'id' => 'WoID',
-        'languageId' => 'WoLgID',
-        'text' => 'WoText',
-        'textLowercase' => 'WoTextLC',
-        'lemma' => 'WoLemma',
-        'lemmaLc' => 'WoLemmaLC',
-        'status' => 'WoStatus',
-        'translation' => 'WoTranslation',
-        'sentence' => 'WoSentence',
-        'notes' => 'WoNotes',
-        'romanization' => 'WoRomanization',
-        'wordCount' => 'WoWordCount',
-        'createdAt' => 'WoCreated',
-        'statusChangedAt' => 'WoStatusChanged',
-        'todayScore' => 'WoTodayScore',
-        'tomorrowScore' => 'WoTomorrowScore',
-        'random' => 'WoRandom',
+        'id' => 'id',
+        'languageId' => 'language_id',
+        'text' => 'text',
+        'textLowercase' => 'text_lc',
+        'lemma' => 'lemma',
+        'lemmaLc' => 'lemma_lc',
+        'status' => 'status',
+        'translation' => 'translation',
+        'sentence' => 'sentence',
+        'notes' => 'notes',
+        'romanization' => 'romanization',
+        'wordCount' => 'word_count',
+        'createdAt' => 'created_at',
+        'statusChangedAt' => 'status_changed_at',
+        'todayScore' => 'today_score',
+        'tomorrowScore' => 'tomorrow_score',
+        'random' => 'random',
     ];
 
     /**
@@ -92,23 +92,23 @@ class MySqlTermRepository implements TermRepositoryInterface
     protected function mapToEntity(array $row): Term
     {
         return Term::reconstitute(
-            (int) $row['WoID'],
-            (int) $row['WoLgID'],
-            (string) $row['WoText'],
-            (string) $row['WoTextLC'],
-            isset($row['WoLemma']) && $row['WoLemma'] !== '' ? (string) $row['WoLemma'] : null,
-            isset($row['WoLemmaLC']) && $row['WoLemmaLC'] !== '' ? (string) $row['WoLemmaLC'] : null,
-            (int) $row['WoStatus'],
-            (string) ($row['WoTranslation'] ?? ''),
-            (string) ($row['WoSentence'] ?? ''),
-            (string) ($row['WoNotes'] ?? ''),
-            (string) ($row['WoRomanization'] ?? ''),
-            (int) ($row['WoWordCount'] ?? 1),
-            $this->parseDateTime(isset($row['WoCreated']) ? (string)$row['WoCreated'] : null),
-            $this->parseDateTime(isset($row['WoStatusChanged']) ? (string)$row['WoStatusChanged'] : null),
-            (float) ($row['WoTodayScore'] ?? 0.0),
-            (float) ($row['WoTomorrowScore'] ?? 0.0),
-            (float) ($row['WoRandom'] ?? 0.0)
+            (int) $row['id'],
+            (int) $row['language_id'],
+            (string) $row['text'],
+            (string) $row['text_lc'],
+            isset($row['lemma']) && $row['lemma'] !== '' ? (string) $row['lemma'] : null,
+            isset($row['lemma_lc']) && $row['lemma_lc'] !== '' ? (string) $row['lemma_lc'] : null,
+            (int) $row['status'],
+            (string) ($row['translation'] ?? ''),
+            (string) ($row['sentence'] ?? ''),
+            (string) ($row['notes'] ?? ''),
+            (string) ($row['romanization'] ?? ''),
+            (int) ($row['word_count'] ?? 1),
+            $this->parseDateTime(isset($row['created_at']) ? (string)$row['created_at'] : null),
+            $this->parseDateTime(isset($row['status_changed_at']) ? (string)$row['status_changed_at'] : null),
+            (float) ($row['today_score'] ?? 0.0),
+            (float) ($row['tomorrow_score'] ?? 0.0),
+            (float) ($row['random'] ?? 0.0)
         );
     }
 
@@ -122,23 +122,23 @@ class MySqlTermRepository implements TermRepositoryInterface
     protected function mapToRow(Term $term): array
     {
         return [
-            'WoID' => $term->id()->toInt(),
-            'WoLgID' => $term->languageId()->toInt(),
-            'WoText' => $term->text(),
-            'WoTextLC' => $term->textLowercase(),
-            'WoLemma' => $term->lemma(),
-            'WoLemmaLC' => $term->lemmaLc(),
-            'WoStatus' => $term->status()->toInt(),
-            'WoTranslation' => $term->translation(),
-            'WoSentence' => $term->sentence(),
-            'WoNotes' => $term->notes(),
-            'WoRomanization' => $term->romanization(),
-            'WoWordCount' => $term->wordCount(),
-            'WoCreated' => $term->createdAt()->format('Y-m-d H:i:s'),
-            'WoStatusChanged' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
-            'WoTodayScore' => $term->todayScore(),
-            'WoTomorrowScore' => $term->tomorrowScore(),
-            'WoRandom' => $term->random(),
+            'id' => $term->id()->toInt(),
+            'language_id' => $term->languageId()->toInt(),
+            'text' => $term->text(),
+            'text_lc' => $term->textLowercase(),
+            'lemma' => $term->lemma(),
+            'lemma_lc' => $term->lemmaLc(),
+            'status' => $term->status()->toInt(),
+            'translation' => $term->translation(),
+            'sentence' => $term->sentence(),
+            'notes' => $term->notes(),
+            'romanization' => $term->romanization(),
+            'word_count' => $term->wordCount(),
+            'created_at' => $term->createdAt()->format('Y-m-d H:i:s'),
+            'status_changed_at' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
+            'today_score' => $term->todayScore(),
+            'tomorrow_score' => $term->tomorrowScore(),
+            'random' => $term->random(),
         ];
     }
 
@@ -194,7 +194,7 @@ class MySqlTermRepository implements TermRepositoryInterface
         if ($term->id()->isNew()) {
             // Insert new term
             $data = $this->mapToRow($term);
-            unset($data['WoID']); // Remove ID for insert
+            unset($data['id']); // Remove ID for insert
 
             $id = (int) $this->query()->insertPrepared($data);
             $term->setId(TermId::fromInt($id));
@@ -202,10 +202,10 @@ class MySqlTermRepository implements TermRepositoryInterface
         } else {
             // Update existing term
             $data = $this->mapToRow($term);
-            unset($data['WoID']);
+            unset($data['id']);
 
             $this->query()
-                ->where('WoID', '=', $term->id()->toInt())
+                ->where('id', '=', $term->id()->toInt())
                 ->updatePrepared($data);
             return $term->id()->toInt();
         }
@@ -217,7 +217,7 @@ class MySqlTermRepository implements TermRepositoryInterface
     public function delete(int $id): bool
     {
         $affected = $this->query()
-            ->where('WoID', '=', $id)
+            ->where('id', '=', $id)
             ->deletePrepared();
 
         return $affected > 0;
@@ -229,7 +229,7 @@ class MySqlTermRepository implements TermRepositoryInterface
     public function exists(int $id): bool
     {
         return $this->query()
-            ->where('WoID', '=', $id)
+            ->where('id', '=', $id)
             ->existsPrepared();
     }
 
@@ -267,12 +267,12 @@ class MySqlTermRepository implements TermRepositoryInterface
      */
     public function findByLanguage(
         int $languageId,
-        ?string $orderBy = 'WoText',
+        ?string $orderBy = 'text',
         string $direction = 'ASC'
     ): array {
         $rows = $this->query()
-            ->where('WoLgID', '=', $languageId)
-            ->orderBy($orderBy ?? 'WoText', $direction)
+            ->where('language_id', '=', $languageId)
+            ->orderBy($orderBy ?? 'text', $direction)
             ->getPrepared();
 
         return array_map(
@@ -287,8 +287,8 @@ class MySqlTermRepository implements TermRepositoryInterface
     public function findByTextLc(int $languageId, string $textLc): ?Term
     {
         $row = $this->query()
-            ->where('WoLgID', '=', $languageId)
-            ->where('WoTextLC', '=', $textLc)
+            ->where('language_id', '=', $languageId)
+            ->where('text_lc', '=', $textLc)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -300,11 +300,11 @@ class MySqlTermRepository implements TermRepositoryInterface
     public function termExists(int $languageId, string $textLc, ?int $excludeId = null): bool
     {
         $query = $this->query()
-            ->where('WoLgID', '=', $languageId)
-            ->where('WoTextLC', '=', $textLc);
+            ->where('language_id', '=', $languageId)
+            ->where('text_lc', '=', $textLc);
 
         if ($excludeId !== null) {
-            $query->where('WoID', '!=', $excludeId);
+            $query->where('id', '!=', $excludeId);
         }
 
         return $query->existsPrepared();
@@ -316,7 +316,7 @@ class MySqlTermRepository implements TermRepositoryInterface
     public function countByLanguage(int $languageId): int
     {
         return $this->query()
-            ->where('WoLgID', '=', $languageId)
+            ->where('language_id', '=', $languageId)
             ->countPrepared();
     }
 }

@@ -465,9 +465,9 @@ describe('word_dom_updates.ts', () => {
       `;
 
       const term: BulkWordUpdateParams = {
-        WoID: 555,
-        WoTextLC: 'hello',
-        WoStatus: 3,
+        id: 555,
+        text_lc: 'hello',
+        status: 3,
         translation: 'bonjour',
         hex: '48454c4c4f'
       };
@@ -488,9 +488,9 @@ describe('word_dom_updates.ts', () => {
       `;
 
       const term: BulkWordUpdateParams = {
-        WoID: 555,
-        WoTextLC: 'hello',
-        WoStatus: 3,
+        id: 555,
+        text_lc: 'hello',
+        status: 3,
         translation: 'bonjour',
         hex: '48454c4c4f'
       };

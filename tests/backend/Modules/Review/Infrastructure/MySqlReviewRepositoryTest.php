@@ -123,7 +123,7 @@ class MySqlReviewRepositoryTest extends TestCase
         $sql = $config->toSqlProjectionPrepared($params);
 
         $this->assertStringContainsString('words', $sql);
-        $this->assertStringContainsString('WoLgID = ?', $sql);
+        $this->assertStringContainsString('language_id = ?', $sql);
         $this->assertEquals([5], $params);
     }
 
@@ -145,7 +145,7 @@ class MySqlReviewRepositoryTest extends TestCase
         $params = [];
         $sql = $config->toSqlProjectionPrepared($params);
 
-        $this->assertStringContainsString('WoID IN (?,?,?)', $sql);
+        $this->assertStringContainsString('id IN (?,?,?)', $sql);
         $this->assertEquals([1, 2, 3], $params);
     }
 
@@ -163,12 +163,12 @@ class MySqlReviewRepositoryTest extends TestCase
     {
         $config = new ReviewConfiguration(
             ReviewConfiguration::KEY_RAW_SQL,
-            'words WHERE WoStatus = 1'
+            'words WHERE status = 1'
         );
         $params = [];
         $sql = $config->toSqlProjectionPrepared($params);
 
-        $this->assertSame('words WHERE WoStatus = 1', $sql);
+        $this->assertSame('words WHERE status = 1', $sql);
         $this->assertEmpty($params);
     }
 
@@ -273,14 +273,14 @@ class MySqlReviewRepositoryTest extends TestCase
     public function testReviewWordFromRecord(): void
     {
         $record = [
-            'WoID' => 1,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'testing',
-            'WoRomanization' => null,
-            'WoSentence' => 'This is a {test}.',
-            'WoLgID' => 1,
-            'WoStatus' => 3,
+            'id' => 1,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'testing',
+            'romanization' => null,
+            'sentence' => 'This is a {test}.',
+            'language_id' => 1,
+            'status' => 3,
             'Score' => 50,
             'Days' => 5
         ];
@@ -298,14 +298,14 @@ class MySqlReviewRepositoryTest extends TestCase
     public function testReviewWordFromRecordWithRomanization(): void
     {
         $record = [
-            'WoID' => 1,
-            'WoText' => 'テスト',
-            'WoTextLC' => 'テスト',
-            'WoTranslation' => 'test',
-            'WoRomanization' => 'tesuto',
-            'WoSentence' => null,
-            'WoLgID' => 2,
-            'WoStatus' => 1,
+            'id' => 1,
+            'text' => 'テスト',
+            'text_lc' => 'テスト',
+            'translation' => 'test',
+            'romanization' => 'tesuto',
+            'sentence' => null,
+            'language_id' => 2,
+            'status' => 1,
             'Score' => 0,
             'Days' => 0
         ];
@@ -660,15 +660,15 @@ class MySqlReviewRepositoryTest extends TestCase
     public function testReviewWordFromRecordWithTodayScore(): void
     {
         $record = [
-            'WoID' => 1,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'trans',
-            'WoRomanization' => null,
-            'WoSentence' => null,
-            'WoLgID' => 1,
-            'WoStatus' => 1,
-            'WoTodayScore' => 75, // Alternative score field
+            'id' => 1,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'trans',
+            'romanization' => null,
+            'sentence' => null,
+            'language_id' => 1,
+            'status' => 1,
+            'today_score' => 75, // Alternative score field
             'Days' => 0
         ];
 
@@ -680,13 +680,13 @@ class MySqlReviewRepositoryTest extends TestCase
     public function testReviewWordFromRecordWithMissingOptionalFields(): void
     {
         $record = [
-            'WoID' => 1,
-            'WoText' => 'test',
-            'WoTextLC' => 'test',
-            'WoTranslation' => 'trans',
-            // Missing WoRomanization, WoSentence, Score, Days
-            'WoLgID' => 1,
-            'WoStatus' => 1,
+            'id' => 1,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'trans',
+            // Missing romanization, sentence, Score, Days
+            'language_id' => 1,
+            'status' => 1,
         ];
 
         $word = ReviewWord::fromRecord($record);

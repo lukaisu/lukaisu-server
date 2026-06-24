@@ -262,7 +262,7 @@ class DifficultyEstimationService
     {
         $bindings = [$languageId];
         $sql = "SELECT COUNT(*) FROM words
-                WHERE WoLgID = ? AND WoStatus IN (5, 98, 99)"
+                WHERE language_id = ? AND status IN (5, 98, 99)"
             . UserScopedQuery::forTablePrepared('words', $bindings);
 
         /** @var int|string|false $count */
@@ -448,13 +448,13 @@ class DifficultyEstimationService
             $params = array_merge([$languageId], $batch);
             $userScope = UserScopedQuery::forTablePrepared('words', $params);
 
-            $sql = "SELECT WoTextLC FROM words
-                    WHERE WoLgID = ? AND WoTextLC IN ($placeholders)"
+            $sql = "SELECT text_lc FROM words
+                    WHERE language_id = ? AND text_lc IN ($placeholders)"
                 . $userScope;
 
             $rows = Connection::preparedFetchAll($sql, $params);
             foreach ($rows as $row) {
-                $known[] = (string) $row['WoTextLC'];
+                $known[] = (string) $row['text_lc'];
             }
         }
 

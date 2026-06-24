@@ -99,8 +99,8 @@ class ReviewServiceTest extends TestCase
         // Create test words
         for ($i = 1; $i <= 5; $i++) {
             Connection::query(
-                "INSERT INTO words (WoLgID, WoText, WoTextLC, WoStatus, WoTranslation, " .
-                "WoStatusChanged, WoTodayScore, WoTomorrowScore) " .
+                "INSERT INTO words (language_id, text, text_lc, status, translation, " .
+                "status_changed_at, today_score, tomorrow_score) " .
                 "VALUES (" . self::$testLangId . ", 'testword{$i}', 'testword{$i}', {$i}, 'translation{$i}', " .
                 "NOW(), -1.0, -0.5)"
             );
@@ -129,7 +129,7 @@ class ReviewServiceTest extends TestCase
         // Clean up test data
         Connection::query("DELETE FROM word_occurrences WHERE Ti2TxID = " . self::$testTextId);
         Connection::query("DELETE FROM sentences WHERE SeTxID = " . self::$testTextId);
-        Connection::query("DELETE FROM words WHERE WoLgID = " . self::$testLangId);
+        Connection::query("DELETE FROM words WHERE language_id = " . self::$testLangId);
         Connection::query("DELETE FROM texts WHERE TxID = " . self::$testTextId);
         // Clean up test language
         Connection::query("DELETE FROM languages WHERE LgID = " . self::$testLangId);
@@ -191,7 +191,7 @@ class ReviewServiceTest extends TestCase
         $this->assertArrayHasKey('sql', $result);
         $this->assertArrayHasKey('params', $result);
         $this->assertStringContainsString('words', $result['sql']);
-        $this->assertStringContainsString('WoLgID', $result['sql']);
+        $this->assertStringContainsString('language_id', $result['sql']);
     }
 
     public function testGetTestSqlWithText(): void
@@ -301,10 +301,10 @@ class ReviewServiceTest extends TestCase
 
         // May be null if no words are due
         if ($word !== null) {
-            $this->assertArrayHasKey('WoID', $word);
-            $this->assertArrayHasKey('WoText', $word);
-            $this->assertArrayHasKey('WoTranslation', $word);
-            $this->assertArrayHasKey('WoStatus', $word);
+            $this->assertArrayHasKey('id', $word);
+            $this->assertArrayHasKey('text', $word);
+            $this->assertArrayHasKey('translation', $word);
+            $this->assertArrayHasKey('status', $word);
         }
     }
 
@@ -579,8 +579,8 @@ class ReviewServiceTest extends TestCase
         }
 
         $wordData = [
-            'WoID' => 1,
-            'WoTranslation' => 'test translation'
+            'id' => 1,
+            'translation' => 'test translation'
         ];
 
         $solution = $this->service->getTestSolution(1, $wordData, false, 'word');
@@ -596,8 +596,8 @@ class ReviewServiceTest extends TestCase
         }
 
         $wordData = [
-            'WoID' => 1,
-            'WoTranslation' => 'test translation'
+            'id' => 1,
+            'translation' => 'test translation'
         ];
 
         $solution = $this->service->getTestSolution(4, $wordData, true, 'word');
@@ -610,8 +610,8 @@ class ReviewServiceTest extends TestCase
     public function testGetTestSolutionType2ReturnsWordText(): void
     {
         $wordData = [
-            'WoID' => 1,
-            'WoTranslation' => 'translation'
+            'id' => 1,
+            'translation' => 'translation'
         ];
 
         $solution = $this->service->getTestSolution(2, $wordData, false, 'theword');

@@ -141,7 +141,7 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                     . 'SELECT TxID FROM texts WHERE TxUsID = ' . $userId . ')';
             case 'word_tag_map':
                 return 'SELECT * FROM word_tag_map WHERE WtWoID IN ('
-                    . 'SELECT WoID FROM words WHERE WoUsID = ' . $userId . ')';
+                    . 'SELECT id FROM words WHERE user_id = ' . $userId . ')';
             case 'feed_links':
                 return 'SELECT * FROM feed_links WHERE feed_id IN ('
                     . 'SELECT id FROM news_feeds WHERE user_id = ' . $userId . ')';
@@ -171,9 +171,9 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 );
             } elseif ($table == 'words') {
                 $result = Connection::querySelect(
-                    'SELECT WoID, WoLgID, WoText, WoTextLC, WoStatus, WoTranslation,
-                    WoRomanization, WoSentence, WoCreated, WoStatusChanged, WoTodayScore,
-                    WoTomorrowScore, WoRandom FROM ' . $table . $scope['words']
+                    'SELECT id, language_id, text, text_lc, status, translation,
+                    romanization, sentence, created_at, status_changed_at, today_score,
+                    tomorrow_score, random FROM ' . $table . $scope['words']
                 );
             } elseif ($table == 'languages') {
                 $result = Connection::querySelect(
@@ -243,11 +243,11 @@ class MySqlBackupRepository implements BackupRepositoryInterface
         $scope = $empty;
         $scope['languages']    = ' AND LgUsID = ' . $userId;
         $scope['texts']        = ' WHERE TxUsID = ' . $userId;
-        $scope['words']        = ' WHERE WoUsID = ' . $userId;
+        $scope['words']        = ' WHERE user_id = ' . $userId;
         $scope['tags']         = ' WHERE TgUsID = ' . $userId;
         $scope['text_tags']    = ' WHERE T2UsID = ' . $userId;
         $scope['text_tag_map'] = ' WHERE TtTxID IN (SELECT TxID FROM texts WHERE TxUsID = ' . $userId . ')';
-        $scope['word_tag_map'] = ' WHERE WtWoID IN (SELECT WoID FROM words WHERE WoUsID = ' . $userId . ')';
+        $scope['word_tag_map'] = ' WHERE WtWoID IN (SELECT id FROM words WHERE user_id = ' . $userId . ')';
         return $scope;
     }
 
@@ -373,30 +373,30 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 KEY `TtT2ID` (`TtT2ID`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'words' => "CREATE TABLE `words` (
-                `WoID` int(11) unsigned NOT NULL AUTO_INCREMENT,
-                `WoLgID` int(11) unsigned NOT NULL,
-                `WoText` varchar(250) NOT NULL,
-                `WoTextLC` varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-                `WoStatus` tinyint(4) NOT NULL,
-                `WoTranslation` varchar(500) NOT NULL DEFAULT '*',
-                `WoRomanization` varchar(100) DEFAULT NULL,
-                `WoSentence` varchar(1000) DEFAULT NULL,
-                `WoCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                `WoStatusChanged` timestamp NOT NULL DEFAULT '1970-01-01 01:00:01',
-                `WoTodayScore` double NOT NULL DEFAULT '0',
-                `WoTomorrowScore` double NOT NULL DEFAULT '0',
-                `WoRandom` double NOT NULL DEFAULT '0',
-                PRIMARY KEY (`WoID`),
-                UNIQUE KEY `WoLgIDTextLC` (`WoLgID`,`WoTextLC`),
-                KEY `WoLgID` (`WoLgID`),
-                KEY `WoStatus` (`WoStatus`),
-                KEY `WoTextLC` (`WoTextLC`),
-                KEY `WoTranslation` (`WoTranslation`(333)),
-                KEY `WoCreated` (`WoCreated`),
-                KEY `WoStatusChanged` (`WoStatusChanged`),
-                KEY `WoTodayScore` (`WoTodayScore`),
-                KEY `WoTomorrowScore` (`WoTomorrowScore`),
-                KEY `WoRandom` (`WoRandom`)
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `language_id` int(11) unsigned NOT NULL,
+                `text` varchar(250) NOT NULL,
+                `text_lc` varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+                `status` tinyint(4) NOT NULL,
+                `translation` varchar(500) NOT NULL DEFAULT '*',
+                `romanization` varchar(100) DEFAULT NULL,
+                `sentence` varchar(1000) DEFAULT NULL,
+                `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `status_changed_at` timestamp NOT NULL DEFAULT '1970-01-01 01:00:01',
+                `today_score` double NOT NULL DEFAULT '0',
+                `tomorrow_score` double NOT NULL DEFAULT '0',
+                `random` double NOT NULL DEFAULT '0',
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `WoLgIDTextLC` (`language_id`,`text_lc`),
+                KEY `language_id` (`language_id`),
+                KEY `status` (`status`),
+                KEY `text_lc` (`text_lc`),
+                KEY `translation` (`translation`(333)),
+                KEY `created_at` (`created_at`),
+                KEY `status_changed_at` (`status_changed_at`),
+                KEY `today_score` (`today_score`),
+                KEY `tomorrow_score` (`tomorrow_score`),
+                KEY `random` (`random`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'word_tag_map' => "CREATE TABLE `word_tag_map` (
                 `WtWoID` int(11) unsigned NOT NULL,

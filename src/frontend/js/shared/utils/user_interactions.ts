@@ -87,7 +87,7 @@ export function quickMenuRedirection(value: string): void {
  *
  * @param text         An array of words forming the expression
  * @param attrs        A group of attributes to add
- * @param length       Number of words, should correspond to WoWordCount
+ * @param length       Number of words, should correspond to word_count
  * @param hex          Lowercase formatted version of the text.
  * @param showallwords true: multi-word is a superscript, show mw index + words
  *                     false: only show the multiword, hide the words

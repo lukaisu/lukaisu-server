@@ -124,7 +124,7 @@ class MySqlBackupRepositoryTest extends TestCase
         $cases = [
             'languages' => 'LgUsID',
             'texts'     => 'TxUsID',
-            'words'     => 'WoUsID',
+            'words'     => 'user_id',
             'tags'      => 'TgUsID',
             'text_tags' => 'T2UsID',
             'news_feeds' => 'user_id',
@@ -166,7 +166,7 @@ class MySqlBackupRepositoryTest extends TestCase
 
         $sql = $this->callBuildScopedSelectAll('word_tag_map');
         $this->assertSame(
-            'SELECT * FROM word_tag_map WHERE WtWoID IN (SELECT WoID FROM words WHERE WoUsID = 11)',
+            'SELECT * FROM word_tag_map WHERE WtWoID IN (SELECT id FROM words WHERE user_id = 11)',
             $sql
         );
     }
@@ -201,7 +201,7 @@ class MySqlBackupRepositoryTest extends TestCase
         // WHERE.
         $this->assertSame(' AND LgUsID = 42', $scope['languages']);
         $this->assertSame(' WHERE TxUsID = 42', $scope['texts']);
-        $this->assertSame(' WHERE WoUsID = 42', $scope['words']);
+        $this->assertSame(' WHERE user_id = 42', $scope['words']);
         $this->assertSame(' WHERE TgUsID = 42', $scope['tags']);
         $this->assertSame(' WHERE T2UsID = 42', $scope['text_tags']);
         $this->assertSame(
@@ -209,7 +209,7 @@ class MySqlBackupRepositoryTest extends TestCase
             $scope['text_tag_map']
         );
         $this->assertSame(
-            ' WHERE WtWoID IN (SELECT WoID FROM words WHERE WoUsID = 42)',
+            ' WHERE WtWoID IN (SELECT id FROM words WHERE user_id = 42)',
             $scope['word_tag_map']
         );
     }

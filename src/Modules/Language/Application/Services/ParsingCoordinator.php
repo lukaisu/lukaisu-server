@@ -248,9 +248,9 @@ class ParsingCoordinator
         // This is a simplified version - the full implementation is in TextParsing
         $bindings = [$lid, $lid];
         $result = Connection::preparedFetchAll(
-            "SELECT WoWordCount FROM words WHERE WoWordCount > 1 AND WoLgID = ?"
+            "SELECT word_count FROM words WHERE word_count > 1 AND language_id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings, '')
-            . " GROUP BY WoWordCount",
+            . " GROUP BY word_count",
             $bindings
         );
 
@@ -298,21 +298,21 @@ class ParsingCoordinator
             $bindings = [$lid, $tid];
             $sql = "INSERT INTO word_occurrences (
                 Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text
-            ) SELECT WoID, ?, ?, sent, TiOrder - (2*(n-1)) TiOrder,
+            ) SELECT id, ?, ?, sent, TiOrder - (2*(n-1)) TiOrder,
             n TiWordCount, word
             FROM tempexprs
             JOIN words
-            ON WoTextLC = lword AND WoWordCount = n"
+            ON text_lc = lword AND word_count = n"
                 . UserScopedQuery::forTablePrepared('words', $bindings, '')
-                . " WHERE lword IS NOT NULL AND WoLgID = ?";
+                . " WHERE lword IS NOT NULL AND language_id = ?";
             $bindings[] = $lid;
             $bindings[] = $lid;
             $bindings[] = $tid;
             $sql .= " UNION ALL
-            SELECT WoID, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
+            SELECT id, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
             FROM temp_word_occurrences
             LEFT JOIN words
-            ON LOWER(TiText) = WoTextLC AND TiWordCount=1 AND WoLgID = ?";
+            ON LOWER(TiText) = text_lc AND TiWordCount=1 AND language_id = ?";
             $bindings[] = $lid;
             $sql .= UserScopedQuery::forTablePrepared('words', $bindings, '')
                 . " ORDER BY TiOrder, TiWordCount";
@@ -325,10 +325,10 @@ class ParsingCoordinator
             Connection::preparedExecute(
                 "INSERT INTO word_occurrences (
                     Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text
-                ) SELECT WoID, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
+                ) SELECT id, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
                 FROM temp_word_occurrences
                 LEFT JOIN words
-                ON LOWER(TiText) = WoTextLC AND TiWordCount=1 AND WoLgID = ?"
+                ON LOWER(TiText) = text_lc AND TiWordCount=1 AND language_id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings, '')
                 . " ORDER BY TiSeID, TiOrder, TiWordCount",
                 $bindings

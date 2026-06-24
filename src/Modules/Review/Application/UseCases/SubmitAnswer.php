@@ -82,7 +82,7 @@ class SubmitAnswer
         }
 
         // Confirm the caller owns this word before updating. getWordStatus()
-        // applies user scope, so a foreign WoID returns null and we bail
+        // applies user scope, so a foreign id returns null and we bail
         // out before incrementing the activity counter or signalling success.
         if ($this->repository->getWordStatus($wordId) === null) {
             return [

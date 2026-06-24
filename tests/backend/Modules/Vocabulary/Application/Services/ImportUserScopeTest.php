@@ -7,7 +7,7 @@
  * write to user-scoped tables. Pre-fix none of them stamped UsID, so
  * in multi-user mode imported rows landed with a NULL owner and were
  * invisible to every user (the per-user composite uniques on
- * `tags`/`text_tags` and the auto-injected `WoUsID = ?` filter on the
+ * `tags`/`text_tags` and the auto-injected `user_id = ?` filter on the
  * vocab list both excluded them). The overwrite-modes-3/5 UPDATE was
  * additionally broken: it built a parameterised user-scope clause but
  * called `Connection::execute` with no bindings, so the `?` was
@@ -62,8 +62,8 @@ class ImportUserScopeTest extends TestCase
         $this->assertStringContainsString(
             "UserScopedQuery::insertColumn('words')",
             $source,
-            'executeMainImportQuery must add WoUsID to the INSERT column'
-            . ' list. Without it imported rows land with WoUsID NULL and'
+            'executeMainImportQuery must add user_id to the INSERT column'
+            . ' list. Without it imported rows land with user_id NULL and'
             . ' never appear in the user\'s vocab list.'
         );
         $this->assertStringContainsString(
@@ -82,7 +82,7 @@ class ImportUserScopeTest extends TestCase
         $this->assertStringContainsString(
             "UserScopedQuery::forTablePrepared('words', \$bindings, 'a')",
             $source,
-            'The overwrite-modes-3/5 UPDATE must scope by WoUsID via the'
+            'The overwrite-modes-3/5 UPDATE must scope by user_id via the'
             . ' aliased forTablePrepared helper.'
         );
         $this->assertStringContainsString(
