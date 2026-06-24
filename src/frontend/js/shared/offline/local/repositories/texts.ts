@@ -164,6 +164,22 @@ export async function getTextWords(
   };
 }
 
+/** Audio config for the reader's player (mirrors `GET /texts/{id}/audio`). */
+export async function getAudioInfo(textId: number): Promise<{
+  uri: string;
+  position: number;
+  playerSettings: { repeatMode: boolean; skipSeconds: number; playbackRate: number };
+}> {
+  const text = await localDb.texts.get(textId);
+  // The player only reveals itself when `uri` is non-empty, so a pasted text
+  // with no audio resolves to a hidden player rather than a failed request.
+  return {
+    uri: text?.audioUri ?? '',
+    position: text?.audioPosition ?? 0,
+    playerSettings: { repeatMode: false, skipSeconds: 5, playbackRate: 1 },
+  };
+}
+
 /** Per-text word-status statistics (the library list's `TextStats` shape). */
 export interface LibraryTextStats {
   total: number;

@@ -63,12 +63,15 @@ describe('offline milestone — bundled app, no server', () => {
     cy.get('#review-config', { timeout: 20000 }).should('exist');
     cy.screenshot('03-review-surface', { capture: 'viewport' });
 
-    // 6. The whole flow above ran with every /api/v1 request destroyed. Record how
-    //    many the app even attempted (0 = it never reached for a server).
+    // 6. The whole flow ran without reaching for a server at all: every bundled
+    //    surface (incl. navbar streak + reader audio/book-context chrome) is
+    //    served on-device. Asserted to 0 so any new server dependency regresses
+    //    here instead of silently degrading the offline experience.
     cy.then(() => {
-      cy.log(`/api/v1 calls attempted during the flow (all force-failed): ${apiAttempts}`);
+      cy.log(`/api/v1 calls attempted during the flow: ${apiAttempts}`);
       const summary = [`attempts: ${apiAttempts}`, ...attemptedUrls].join('\n');
       cy.writeFile('cypress/app-e2e/.last-run-api-attempts.txt', summary);
+      expect(apiAttempts, 'no /api/v1 calls — the bundled app is fully on-device').to.equal(0);
     });
   });
 

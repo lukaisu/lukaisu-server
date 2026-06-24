@@ -10,6 +10,7 @@ import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { localDb } from '@shared/offline/local/schema';
 import { setLocalFirst } from '@shared/offline/local/router';
 import { getAllTextTags } from '@shared/offline/local/repositories/tags';
+import { apiGet } from '@shared/api/client';
 import { LanguagesApi } from '@modules/language/api/languages_api';
 import { TextsApi } from '@modules/text/api/texts_api';
 
@@ -69,5 +70,35 @@ describe('offline create flow (API client → local router)', () => {
     });
     const after = (await LanguagesApi.list()).data?.languages ?? [];
     expect(after.map((l) => l.name)).toContain('French');
+  });
+
+  it('serves the reader chrome (audio, book-context) on-device', async () => {
+    const lang = await LanguagesApi.create({
+      name: 'English',
+      sourceLang: 'en',
+      regexpSplitSentences: '.!?:;',
+      exceptionsSplitSentences: '',
+      regexpWordCharacters: 'a-zA-Z',
+    });
+    const text = await TextsApi.create({
+      langId: lang.data!.id as number,
+      title: 'Pasted',
+      text: 'Hello there.',
+    });
+    const textId = text.data?.id as number;
+
+    // A pasted text has no audio: the player stays hidden (empty uri), not a
+    // failed request.
+    const audio = await apiGet<{ uri: string; playerSettings: unknown }>(
+      `/texts/${textId}/audio`
+    );
+    expect(audio.error).toBeUndefined();
+    expect(audio.data?.uri).toBe('');
+    expect(audio.data?.playerSettings).toBeTruthy();
+
+    // It is standalone, so there is no book context.
+    const book = await apiGet<{ book: unknown }>(`/texts/${textId}/book-context`);
+    expect(book.error).toBeUndefined();
+    expect(book.data?.book).toBeNull();
   });
 });

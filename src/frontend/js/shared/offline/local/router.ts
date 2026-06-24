@@ -27,6 +27,7 @@ import {
 } from './repositories/languages';
 import {
   getTextWords,
+  getAudioInfo,
   createText,
   getStatistics,
   getTextsByLanguage,
@@ -161,6 +162,14 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   m = path.match(/^\/texts\/(\d+)\/words$/);
   if (m) {
     return wrap(await getTextWords(num(m[1])));
+  }
+  m = path.match(/^\/texts\/(\d+)\/audio$/);
+  if (m) {
+    return wrap(await getAudioInfo(num(m[1])));
+  }
+  if (/^\/texts\/\d+\/book-context$/.test(path)) {
+    // Offline texts are standalone — there is no on-device book model.
+    return { handled: true, data: { book: null } };
   }
   m = path.match(/^\/texts\/by-language\/(\d+)$/);
   if (m) {
