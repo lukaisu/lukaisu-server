@@ -36,7 +36,7 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
      */
     public function incrementTermsCreated(int $count = 1): void
     {
-        $this->incrementColumn('AlTermsCreated', $count);
+        $this->incrementColumn('terms_created', $count);
     }
 
     /**
@@ -44,7 +44,7 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
      */
     public function incrementTermsReviewed(int $count = 1): void
     {
-        $this->incrementColumn('AlTermsReviewed', $count);
+        $this->incrementColumn('terms_reviewed', $count);
     }
 
     /**
@@ -52,7 +52,7 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
      */
     public function incrementTextsRead(int $count = 1): void
     {
-        $this->incrementColumn('AlTextsRead', $count);
+        $this->incrementColumn('texts_read', $count);
     }
 
     /**
@@ -65,20 +65,20 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
 
         $tableName = Globals::table('activity_log');
         $rows = Connection::preparedFetchAll(
-            "SELECT AlDate, AlTermsCreated, AlTermsReviewed, AlTextsRead
+            "SELECT date, terms_created, terms_reviewed, texts_read
              FROM {$tableName}
-             WHERE AlDate BETWEEN ? AND ?{$userScope}
-             ORDER BY AlDate",
+             WHERE date BETWEEN ? AND ?{$userScope}
+             ORDER BY date",
             $bindings
         );
 
         $result = [];
         foreach ($rows as $row) {
             $result[] = [
-                'date' => (string) $row['AlDate'],
-                'terms_created' => (int) $row['AlTermsCreated'],
-                'terms_reviewed' => (int) $row['AlTermsReviewed'],
-                'texts_read' => (int) $row['AlTextsRead'],
+                'date' => (string) $row['date'],
+                'terms_created' => (int) $row['terms_created'],
+                'terms_reviewed' => (int) $row['terms_reviewed'],
+                'texts_read' => (int) $row['texts_read'],
             ];
         }
 
@@ -95,17 +95,17 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
 
         $tableName = Globals::table('activity_log');
         $rows = Connection::preparedFetchAll(
-            "SELECT AlDate
+            "SELECT date
              FROM {$tableName}
-             WHERE (AlTermsCreated > 0 OR AlTermsReviewed > 0 OR AlTextsRead > 0)
+             WHERE (terms_created > 0 OR terms_reviewed > 0 OR texts_read > 0)
              {$userScope}
-             ORDER BY AlDate DESC",
+             ORDER BY date DESC",
             $bindings
         );
 
         $dates = [];
         foreach ($rows as $row) {
-            $dates[] = (string) $row['AlDate'];
+            $dates[] = (string) $row['date'];
         }
 
         return $dates;
@@ -121,9 +121,9 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
 
         $tableName = Globals::table('activity_log');
         $row = Connection::preparedFetchOne(
-            "SELECT AlTermsCreated, AlTermsReviewed, AlTextsRead
+            "SELECT terms_created, terms_reviewed, texts_read
              FROM {$tableName}
-             WHERE AlDate = CURDATE(){$userScope}",
+             WHERE date = CURDATE(){$userScope}",
             $bindings
         );
 
@@ -132,9 +132,9 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
         }
 
         return [
-            'terms_created' => (int) $row['AlTermsCreated'],
-            'terms_reviewed' => (int) $row['AlTermsReviewed'],
-            'texts_read' => (int) $row['AlTextsRead'],
+            'terms_created' => (int) $row['terms_created'],
+            'terms_reviewed' => (int) $row['terms_reviewed'],
+            'texts_read' => (int) $row['texts_read'],
         ];
     }
 
@@ -156,7 +156,7 @@ class MySqlActivityRepository implements ActivityRepositoryInterface
         $bindings = [$userId, $count, $count];
         Connection::preparedExecute(
             "INSERT INTO {$tableName}
-                (AlUsID, AlDate, {$column})
+                (user_id, date, {$column})
              VALUES (?, CURDATE(), ?)
              ON DUPLICATE KEY UPDATE {$column} = {$column} + ?",
             $bindings

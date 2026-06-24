@@ -267,6 +267,19 @@ CREATE TABLE IF NOT EXISTS whisper_jobs (
         REFERENCES users(UsID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Daily learning-activity counters (one row per user per calendar date).
+CREATE TABLE IF NOT EXISTS activity_log (
+    id int(10) unsigned NOT NULL AUTO_INCREMENT,
+    user_id int(10) unsigned DEFAULT NULL COMMENT 'User ID (NULL in single-user mode)',
+    date date NOT NULL COMMENT 'Activity date',
+    terms_created int(10) unsigned NOT NULL DEFAULT 0,
+    terms_reviewed int(10) unsigned NOT NULL DEFAULT 0,
+    texts_read int(10) unsigned NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_activity_user_date (user_id, date),
+    KEY idx_activity_date (date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Prefix migration tracking table for multi-user conversion
 CREATE TABLE IF NOT EXISTS _prefix_migration_log (
     prefix VARCHAR(40) NOT NULL,
