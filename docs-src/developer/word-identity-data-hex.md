@@ -5,12 +5,14 @@ description: Replace the reading-view TERM<hex> CSS class-as-index with a data_h
 
 # Proposal: `data_hex` Word Identity
 
-**Status:** Proposed — deferred until after the next release (a major feature lands
-first; this is a broad cross-cutting refactor we don't want to collide with it).
-Tracked in [issue #237](https://github.com/lukaisu/lukaisu-server/issues/237).
+**Status:** Implemented (2026-06). Tracked in
+[issue #237](https://github.com/lukaisu/lukaisu-server/issues/237).
 
-A design proposal, not shipped work. It records the agreed approach so it isn't lost
-between releases.
+`data_hex` is now the single word identity: `StringUtils::toClassName()` returns
+`substr(hash('sha256', $s), 0, 16)`, the `TERM<hex>` class is gone from every
+emitted span, and PHP, the bundled TS reader, and the offline mirror all key on
+`[data_hex="…"]`. The offline `toClassName` uses a synchronous SHA-256 that is
+byte-for-byte identical to PHP. This section is kept as the design rationale.
 
 ## Problem
 

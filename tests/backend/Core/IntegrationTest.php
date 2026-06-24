@@ -227,16 +227,16 @@ class IntegrationTest extends TestCase
 
     public function testStrToClassName(): void
     {
-        $this->assertEquals('hello', StringUtils::toClassName('hello'));
-        $this->assertEquals('test123', StringUtils::toClassName('test123'));
+        // The identity token is the first 16 hex chars of the text's SHA-256:
+        // deterministic, opaque, and pure [0-9a-f] (issue #237).
+        $this->assertEquals('2cf24dba5fb0a30e', StringUtils::toClassName('hello'));
+        $this->assertEquals('ecd71870d1963316', StringUtils::toClassName('test123'));
+        $this->assertEquals('b94d27b9934d3e08', StringUtils::toClassName('hello world'));
 
-        // Space (ASCII 32) is outside allowed range, converted to ¤20
-        $this->assertEquals('hello¤20world', StringUtils::toClassName('hello world'));
-
-        // Non-ASCII should be converted to hex with ¤ prefix
+        // Token shape: always 16 lowercase hex chars, including for UTF-8 input.
         $result = StringUtils::toClassName('hello 世界');
-        $this->assertStringStartsWith('hello', $result);
-        $this->assertStringContainsString('¤', $result);
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{16}$/', $result);
+        $this->assertEquals('2e2625f7c51b4a2c', $result);
     }
 
     public function testReplTabNl(): void

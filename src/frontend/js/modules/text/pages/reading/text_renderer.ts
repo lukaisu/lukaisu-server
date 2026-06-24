@@ -111,8 +111,8 @@ function buildWordClasses(word: WordData, showAll: boolean): string {
   // Status class
   classes.push(`status${word.status}`);
 
-  // TERM class for hex lookup
-  classes.push(`TERM${word.hex}`);
+  // The term-identity token lives in the data_hex attribute (see
+  // buildWordDataAttributes), not in a class — selectors use [data_hex="…"].
 
   return classes.join(' ');
 }
@@ -429,7 +429,7 @@ export function updateWordStatusInDOM(
   newWordId: number | null = null,
   container: Element = document.body
 ): void {
-  const selector = `.TERM${hex}`;
+  const selector = `[data_hex="${hex}"]`;
   const elements = container.querySelectorAll<HTMLElement>(selector);
 
   elements.forEach(el => {
@@ -462,7 +462,7 @@ export function updateWordTranslationInDOM(
   romanization: string,
   container: Element = document.body
 ): void {
-  const selector = `.TERM${hex}`;
+  const selector = `[data_hex="${hex}"]`;
   const elements = container.querySelectorAll<HTMLElement>(selector);
 
   elements.forEach(el => {

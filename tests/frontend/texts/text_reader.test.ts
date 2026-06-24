@@ -615,7 +615,7 @@ describe('text_reader.ts', () => {
     it('selects word when clicking .word element', () => {
       document.body.innerHTML = `
         <div id="thetext">
-          <span class="word TERMABC123" data_hex="ABC123" data_order="5">hello</span>
+          <span class="word" data_hex="ABC123" data_order="5">hello</span>
         </div>
       `;
 
@@ -632,7 +632,7 @@ describe('text_reader.ts', () => {
     it('selects word when clicking .mword element', () => {
       document.body.innerHTML = `
         <div id="thetext">
-          <span class="mword TERMDEF456" data_hex="DEF456" data_pos="10">multi word</span>
+          <span class="mword" data_hex="DEF456" data_pos="10">multi word</span>
         </div>
       `;
 
@@ -646,7 +646,9 @@ describe('text_reader.ts', () => {
       expect(mockWordStore.selectWord).toHaveBeenCalledWith('DEF456', 10, wordEl);
     });
 
-    it('extracts hex from class name when data_hex missing', () => {
+    it('ignores a legacy TERM class — data_hex is the only identity', () => {
+      // The TERM<hex> class was dropped (issue #237); a span with no data_hex is
+      // not actionable even if it still carries an old TERM class.
       document.body.innerHTML = `
         <div id="thetext">
           <span class="word TERM999AAA" data_order="1">test</span>
@@ -660,7 +662,7 @@ describe('text_reader.ts', () => {
 
       component.handleWordClick(event);
 
-      expect(mockWordStore.selectWord).toHaveBeenCalledWith('999AAA', 1, wordEl);
+      expect(mockWordStore.selectWord).not.toHaveBeenCalled();
     });
 
     it('does nothing when hex cannot be determined', () => {
@@ -683,7 +685,7 @@ describe('text_reader.ts', () => {
     it('prevents default and stops propagation', () => {
       document.body.innerHTML = `
         <div id="thetext">
-          <span class="word TERMABC" data_hex="ABC" data_order="1">hello</span>
+          <span class="word" data_hex="ABC" data_order="1">hello</span>
         </div>
       `;
 
@@ -703,7 +705,7 @@ describe('text_reader.ts', () => {
     it('handles click on child element of word', () => {
       document.body.innerHTML = `
         <div id="thetext">
-          <span class="word TERMABC" data_hex="ABC" data_order="1">
+          <span class="word" data_hex="ABC" data_order="1">
             <ruby>hello<rt>annotation</rt></ruby>
           </span>
         </div>

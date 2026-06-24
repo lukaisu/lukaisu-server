@@ -10,6 +10,7 @@ import {
   toLocalOccurrences,
   assembleTextWords,
 } from '@shared/offline/local/text-assembly';
+import { toClassName } from '@shared/offline/local/class-name';
 import type { LocalWord } from '@shared/offline/local/schema';
 
 const EN: ParserConfig = {
@@ -89,7 +90,9 @@ describe('assembleTextWords', () => {
     expect(cat?.wordId).toBe(7);
     expect(cat?.status).toBe(3);
     expect(cat?.translation).toBe('feline');
-    expect(cat?.hex).toBe('cat');
+    // hex is the opaque identity token (SHA-256-based), not the surface text.
+    expect(cat?.hex).toBe(toClassName('cat'));
+    expect(cat?.hex).toMatch(/^[0-9a-f]{16}$/);
     expect(cat?.sentenceId).toBe(100);
 
     // Unknown word renders as status 0 with no id.

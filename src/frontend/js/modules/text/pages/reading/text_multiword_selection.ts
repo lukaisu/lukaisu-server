@@ -75,12 +75,10 @@ function getSelectedWords(container: HTMLElement): HTMLElement[] {
  * Get the surface text of a single word span, ignoring any inline annotation
  * children (e.g. <span class="word-ann"> that renders the translation hint).
  *
- * Prefers data_hex (canonical surface form set server-side); falls back to
- * the first text-node child when missing.
+ * Reads the span's own text node — NOT data_hex, which is an opaque identity
+ * hash, not the word text (see issue #237).
  */
 function getWordSurface(el: HTMLElement): string {
-  const hex = el.getAttribute('data_hex');
-  if (hex !== null && hex !== '') return hex;
   for (const node of Array.from(el.childNodes)) {
     if (node.nodeType === Node.TEXT_NODE) {
       const t = node.textContent;
