@@ -573,6 +573,26 @@ class ReviewFacade
         return $this->submitAnswer->executeWithChange($wordId, $change);
     }
 
+    /**
+     * Persist a graded review (issue #238, Phase 2). The client computed the
+     * FSRS card; this validates ownership and stores the card + a review_log
+     * row. Review progress is tracked client-side, so nothing else is needed.
+     *
+     * @param int                  $wordId Word ID
+     * @param int                  $status Client-derived display status (1-5)
+     * @param array<string, mixed> $card   FSRS card fields (epoch-ms timestamps)
+     * @param array<string, mixed> $log    Review-log fields (incl. grade)
+     *
+     * @return array{status?: int, due?: int, error?: string}
+     */
+    public function gradeAnswer(int $wordId, int $status, array $card, array $log): array
+    {
+        if ($this->repository->getWordStatus($wordId) === null) {
+            return ['error' => 'Word not found'];
+        }
+        return $this->repository->gradeWord($wordId, $status, $card, $log);
+    }
+
     // ==========================================
     // UTILITY METHODS
     // ==========================================

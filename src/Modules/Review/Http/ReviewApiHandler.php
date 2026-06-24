@@ -497,6 +497,38 @@ class ReviewApiHandler implements ApiRoutableInterface
     }
 
     /**
+     * Format response for a graded review (issue #238, Phase 2). The 4-grade
+     * FSRS answer: the client sends the grade, the derived display status, and
+     * the already-computed FSRS card + log; the server only stores them.
+     *
+     * @param array<string, mixed> $params Request parameters
+     *
+     * @return array{status?: int, due?: int, error?: string}
+     */
+    public function formatGradeAnswer(array $params): array
+    {
+        $termId = (int)($params['term_id'] ?? 0);
+        if ($termId === 0) {
+            return ['error' => 'term_id is required'];
+        }
+        $grade = (int)($params['grade'] ?? 0);
+        if ($grade < 1 || $grade > 4) {
+            return ['error' => 'Invalid grade'];
+        }
+        $status = (int)($params['status'] ?? 0);
+        if (!TermStatus::isValid($status)) {
+            return ['error' => 'Invalid status value'];
+        }
+        /** @var array<string, mixed> $card */
+        $card = is_array($params['card'] ?? null) ? $params['card'] : [];
+        /** @var array<string, mixed> $log */
+        $log = is_array($params['log'] ?? null) ? $params['log'] : [];
+        $log['grade'] = $grade;
+
+        return $this->reviewFacade->gradeAnswer($termId, $status, $card, $log);
+    }
+
+    /**
      * Get full test configuration for Alpine.js initialization.
      *
      * @param array<string, mixed> $params Request parameters
@@ -740,6 +772,9 @@ class ReviewApiHandler implements ApiRoutableInterface
         if ($frag1 === 'status') {
             return Response::success($this->formatUpdateStatus($params));
         }
-        return Response::error('Expected "status"', 404);
+        if ($frag1 === 'grade') {
+            return Response::success($this->formatGradeAnswer($params));
+        }
+        return Response::error('Expected "status" or "grade"', 404);
     }
 }

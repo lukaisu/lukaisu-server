@@ -169,6 +169,13 @@ CREATE TABLE IF NOT EXISTS words (
     today_score double NOT NULL DEFAULT '0',
     tomorrow_score double NOT NULL DEFAULT '0',
     random double NOT NULL DEFAULT '0',
+    stability double NOT NULL DEFAULT 0,
+    difficulty double NOT NULL DEFAULT 0,
+    due_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_reviewed_at datetime DEFAULT NULL,
+    reps smallint(5) unsigned NOT NULL DEFAULT 0,
+    lapses smallint(5) unsigned NOT NULL DEFAULT 0,
+    fsrs_state tinyint(3) unsigned NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
     KEY user_id (user_id),
     UNIQUE KEY WoTextLCLgID (text_lc,language_id),
@@ -181,10 +188,33 @@ CREATE TABLE IF NOT EXISTS words (
     KEY today_score (today_score),
     KEY tomorrow_score (tomorrow_score),
     KEY random (random),
+    KEY due_at (due_at),
     KEY idx_words_lemma (lemma_lc, language_id),
     CONSTRAINT fk_words_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- FSRS review log (issue #238): one row per graded answer, for stats and a
+-- future per-user parameter optimiser. The scheduler itself runs client-side.
+CREATE TABLE IF NOT EXISTS review_log (
+    id int(10) unsigned NOT NULL AUTO_INCREMENT,
+    word_id mediumint(8) unsigned NOT NULL,
+    user_id int(10) unsigned DEFAULT NULL,
+    grade tinyint(3) unsigned NOT NULL,
+    fsrs_state tinyint(3) unsigned NOT NULL,
+    stability double NOT NULL,
+    difficulty double NOT NULL,
+    elapsed_days double NOT NULL DEFAULT 0,
+    scheduled_days double NOT NULL DEFAULT 0,
+    reviewed_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY word_id (word_id),
+    KEY user_id (user_id),
+    KEY reviewed_at (reviewed_at),
+    CONSTRAINT fk_review_log_word FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE,
+    CONSTRAINT fk_review_log_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS tags (
     id smallint(5) unsigned NOT NULL AUTO_INCREMENT,

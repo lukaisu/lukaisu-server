@@ -21,7 +21,6 @@ namespace Lukaisu\Shared\Infrastructure\Database;
 use Lukaisu\Shared\Infrastructure\ApplicationInfo;
 use Lukaisu\Shared\Infrastructure\Globals;
 use Lukaisu\Shared\Infrastructure\Utilities\ErrorHandler;
-use Lukaisu\Modules\Vocabulary\Application\Services\TermStatusService;
 
 /**
  * Database migrations and initialization utilities.
@@ -485,16 +484,12 @@ class Migrations
         }
 
 
-        // Do Scoring once per day, clean Word/Texttags, and optimize db
+        // Daily housekeeping: clean orphaned tag maps and optimize the database.
+        // FSRS scheduling (issue #238) needs no daily recompute — `due_at` is an
+        // absolute date, not a decaying cache like the retired Leitner scores.
         $lastscorecalc = Settings::get('lastscorecalc');
         $today = date('Y-m-d');
         if ($lastscorecalc != $today) {
-            // Update word scores - complex SQL expression, use raw query
-            Connection::execute(
-                "UPDATE words
-                SET " . TermStatusService::makeScoreRandomInsertUpdate('u') . "
-                WHERE today_score>=-100 AND status<98"
-            );
             // Clean up orphaned word_tag_map (tags deleted)
             Connection::execute(
                 "DELETE word_tag_map

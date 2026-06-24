@@ -61,32 +61,23 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
      */
     public function findNextWordForReview(ReviewConfiguration $config): ?ReviewWord
     {
-        $pass = 0;
+        // FSRS (issue #238): the next word is the most overdue learning term.
+        $params = [];
+        $reviewsql = $config->toSqlProjectionPrepared($params);
+        $sql = "SELECT DISTINCT id, text, text_lc, translation,
+            romanization, sentence, language_id,
+            (IFNULL(sentence, '') NOT LIKE CONCAT('%{', text, '}%')) AS notvalid,
+            status,
+            DATEDIFF(NOW(), status_changed_at) AS Days, stability AS Score
+            FROM $reviewsql AND status BETWEEN 1 AND 5
+            AND translation != '' AND translation != '*' AND due_at <= NOW()
+            ORDER BY due_at, RAND()
+            LIMIT 1";
 
-        while ($pass < 2) {
-            $pass++;
-            $params = [];
-            $reviewsql = $config->toSqlProjectionPrepared($params);
-            $sql = "SELECT DISTINCT id, text, text_lc, translation,
-                romanization, sentence, language_id,
-                (IFNULL(sentence, '') NOT LIKE CONCAT('%{', text, '}%')) AS notvalid,
-                status,
-                DATEDIFF(NOW(), status_changed_at) AS Days, today_score AS Score
-                FROM $reviewsql AND status BETWEEN 1 AND 5
-                AND translation != '' AND translation != '*' AND today_score < 0 " .
-                ($pass == 1 ? 'AND random > RAND()' : '') . '
-                ORDER BY today_score, random
-                LIMIT 1';
+        $rows = Connection::preparedFetchAll($sql, $params);
+        $record = $rows[0] ?? null;
 
-            $rows = Connection::preparedFetchAll($sql, $params);
-            $record = $rows[0] ?? null;
-
-            if ($record !== null) {
-                return ReviewWord::fromRecord($record);
-            }
-        }
-
-        return null;
+        return $record !== null ? ReviewWord::fromRecord($record) : null;
     }
 
     /**
@@ -139,7 +130,7 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
         $due = (int) Connection::preparedFetchValue(
             "SELECT COUNT(DISTINCT id) AS cnt
             FROM $dueReviewsql AND status BETWEEN 1 AND 5
-            AND translation != '' AND translation != '*' AND today_score < 0",
+            AND translation != '' AND translation != '*' AND due_at <= NOW()",
             $dueParams,
             'cnt'
         );
@@ -169,7 +160,8 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
         return (int) Connection::preparedFetchValue(
             "SELECT COUNT(DISTINCT id) AS cnt
             FROM $reviewsql AND status BETWEEN 1 AND 5
-            AND translation != '' AND translation != '*' AND tomorrow_score < 0",
+            AND translation != '' AND translation != '*'
+            AND due_at <= NOW() + INTERVAL 1 DAY",
             $params,
             'cnt'
         );
@@ -184,11 +176,11 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
         $reviewsql = $config->toSqlProjectionPrepared($params);
 
         $sql = "SELECT DISTINCT id, text, text_lc, translation, romanization,
-            sentence, language_id, status, today_score AS Score,
+            sentence, language_id, status, stability AS Score,
             DATEDIFF(NOW(), status_changed_at) AS Days
             FROM $reviewsql AND status BETWEEN 1 AND 5
             AND translation != '' AND translation != '*'
-            ORDER BY today_score, random * RAND()";
+            ORDER BY due_at, RAND()";
 
         $rows = Connection::preparedFetchAll($sql, $params);
         $words = [];
@@ -236,6 +228,68 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
             'oldScore' => $oldScore,
             'newScore' => $newScore
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param array<string, mixed> $card The client-computed FSRS card
+     * @param array<string, mixed> $log  The review-log entry to record
+     *
+     * @return array{status: int, due: int}
+     */
+    public function gradeWord(int $wordId, int $status, array $card, array $log): array
+    {
+        // FSRS runs client-side; the server only stores the resulting card and
+        // logs the review. Epoch-ms timestamps are converted with FROM_UNIXTIME
+        // so they share the MySQL session timezone used by NOW().
+        $dueSeconds = (float) ($card['due'] ?? 0) / 1000;
+        $lastReviewSeconds = isset($card['lastReview']) && $card['lastReview'] !== null
+            ? (float) $card['lastReview'] / 1000
+            : null;
+
+        $bindings = [
+            $status,
+            (float) ($card['stability'] ?? 0),
+            (float) ($card['difficulty'] ?? 0),
+            $dueSeconds,
+            $lastReviewSeconds,
+            (int) ($card['reps'] ?? 0),
+            (int) ($card['lapses'] ?? 0),
+            (int) ($card['state'] ?? 0),
+            $wordId,
+        ];
+        $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
+        Connection::preparedExecute(
+            "UPDATE words
+            SET status = ?, stability = ?, difficulty = ?,
+                due_at = FROM_UNIXTIME(?), last_reviewed_at = FROM_UNIXTIME(?),
+                reps = ?, lapses = ?, fsrs_state = ?
+            WHERE id = ?" . $userScope,
+            $bindings
+        );
+
+        Connection::preparedExecute(
+            "INSERT INTO review_log
+                (word_id, user_id, grade, fsrs_state, stability, difficulty,
+                 elapsed_days, scheduled_days, reviewed_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?))",
+            [
+                $wordId,
+                UserScopedQuery::getUserIdForInsert('words'),
+                (int) ($log['grade'] ?? 0),
+                (int) ($log['state'] ?? 0),
+                (float) ($log['stability'] ?? 0),
+                (float) ($log['difficulty'] ?? 0),
+                (float) ($log['elapsedDays'] ?? 0),
+                (float) ($log['scheduledDays'] ?? 0),
+                (float) ($log['reviewedAt'] ?? 0) / 1000,
+            ]
+        );
+
+        $this->activityRepository->incrementTermsReviewed();
+
+        return ['status' => $status, 'due' => (int) ($card['due'] ?? 0)];
     }
 
     /**

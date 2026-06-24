@@ -88,6 +88,21 @@ interface ReviewRepositoryInterface
     public function updateWordStatus(int $wordId, int $newStatus): array;
 
     /**
+     * Persist a graded review (issue #238). The client computes the FSRS card;
+     * this stores it and appends a review_log row.
+     *
+     * @param int                  $wordId The word being graded
+     * @param int                  $status The client-derived display status (1-5)
+     * @param array<string, mixed> $card   FSRS card: stability/difficulty/due/
+     *                                      lastReview/reps/lapses/state (epoch ms)
+     * @param array<string, mixed> $log    Log: grade/state/stability/difficulty/
+     *                                      elapsedDays/scheduledDays/reviewedAt
+     *
+     * @return array{status: int, due: int}
+     */
+    public function gradeWord(int $wordId, int $status, array $card, array $log): array;
+
+    /**
      * Get current word status.
      *
      * @param int $wordId Word ID

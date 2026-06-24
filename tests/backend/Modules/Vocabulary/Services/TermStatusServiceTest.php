@@ -97,28 +97,29 @@ class TermStatusServiceTest extends TestCase
     #[Test]
     public function makeScoreRandomInsertUpdateIvReturnsColumnNames(): void
     {
+        // Issue #238: now seeds the FSRS scheduling columns, not the Leitner scores.
         $result = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $this->assertStringContainsString('today_score', $result);
-        $this->assertStringContainsString('tomorrow_score', $result);
-        $this->assertStringContainsString('random', $result);
+        $this->assertStringContainsString('stability', $result);
+        $this->assertStringContainsString('due_at', $result);
+        $this->assertStringContainsString('fsrs_state', $result);
     }
 
     #[Test]
-    public function makeScoreRandomInsertUpdateIdReturnsSqlFormulas(): void
+    public function makeScoreRandomInsertUpdateIdReturnsSeedExpressions(): void
     {
         $result = TermStatusService::makeScoreRandomInsertUpdate('id');
-        $this->assertStringContainsString('GREATEST', $result);
         $this->assertStringContainsString('CASE', $result);
-        $this->assertStringContainsString('RAND()', $result);
+        $this->assertStringContainsString('status_changed_at', $result);
+        $this->assertStringContainsString('INTERVAL', $result);
     }
 
     #[Test]
     public function makeScoreRandomInsertUpdateUReturnsSetClauses(): void
     {
         $result = TermStatusService::makeScoreRandomInsertUpdate('u');
-        $this->assertStringContainsString('today_score =', $result);
-        $this->assertStringContainsString('tomorrow_score =', $result);
-        $this->assertStringContainsString('random = RAND()', $result);
+        $this->assertStringContainsString('stability =', $result);
+        $this->assertStringContainsString('due_at =', $result);
+        $this->assertStringContainsString('fsrs_state =', $result);
     }
 
     #[Test]
