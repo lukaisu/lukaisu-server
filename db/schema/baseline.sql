@@ -258,12 +258,12 @@ CREATE TABLE IF NOT EXISTS feed_links (
 -- caller). Without this, /api/v1/whisper/status|result|cancel would
 -- accept any client-supplied job_id with no per-user check.
 CREATE TABLE IF NOT EXISTS whisper_jobs (
-    WjJobID varchar(64) NOT NULL,
-    WjUsID int(10) unsigned DEFAULT NULL,
-    WjCreatedAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (WjJobID),
-    KEY idx_whisper_jobs_user (WjUsID),
-    CONSTRAINT fk_whisper_jobs_user FOREIGN KEY (WjUsID)
+    job_id varchar(64) NOT NULL,
+    user_id int(10) unsigned DEFAULT NULL,
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (job_id),
+    KEY idx_whisper_jobs_user (user_id),
+    CONSTRAINT fk_whisper_jobs_user FOREIGN KEY (user_id)
         REFERENCES users(UsID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

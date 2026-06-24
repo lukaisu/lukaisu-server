@@ -35,7 +35,7 @@ class WhisperJobRepository
     /**
      * Record that the current user owns the given job ID.
      *
-     * In single-user mode the WjUsID column is NULL — there is exactly
+     * In single-user mode the user_id column is NULL — there is exactly
      * one user, so binding is meaningless, but we still write the row
      * so isOwnedByCurrentUser can short-circuit on existence.
      *
@@ -45,7 +45,7 @@ class WhisperJobRepository
     {
         $userId = Globals::isMultiUserEnabled() ? Globals::getCurrentUserId() : null;
         Connection::preparedExecute(
-            'INSERT IGNORE INTO whisper_jobs (WjJobID, WjUsID) VALUES (?, ?)',
+            'INSERT IGNORE INTO whisper_jobs (job_id, user_id) VALUES (?, ?)',
             [$jobId, $userId]
         );
     }
@@ -68,7 +68,7 @@ class WhisperJobRepository
         }
         /** @var int|string|null $count */
         $count = Connection::preparedFetchValue(
-            'SELECT COUNT(*) AS cnt FROM whisper_jobs WHERE WjJobID = ? AND WjUsID = ?',
+            'SELECT COUNT(*) AS cnt FROM whisper_jobs WHERE job_id = ? AND user_id = ?',
             [$jobId, $userId],
             'cnt'
         );
@@ -82,7 +82,7 @@ class WhisperJobRepository
     public function forget(string $jobId): void
     {
         Connection::preparedExecute(
-            'DELETE FROM whisper_jobs WHERE WjJobID = ?',
+            'DELETE FROM whisper_jobs WHERE job_id = ?',
             [$jobId]
         );
     }
@@ -91,7 +91,7 @@ class WhisperJobRepository
     {
         /** @var int|string|null $count */
         $count = Connection::preparedFetchValue(
-            'SELECT COUNT(*) AS cnt FROM whisper_jobs WHERE WjJobID = ?',
+            'SELECT COUNT(*) AS cnt FROM whisper_jobs WHERE job_id = ?',
             [$jobId],
             'cnt'
         );
