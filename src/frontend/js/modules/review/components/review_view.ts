@@ -235,35 +235,23 @@ function buildWordReviewArea(): string {
           </button>
         </div>
 
-        <!-- After answer revealed -->
+        <!-- After answer revealed: FSRS grade buttons (1=Again … 4=Easy) -->
         <div x-show="store.answerRevealed" class="mb-5">
           <div class="buttons is-centered">
-            <button class="button is-danger" @click="decrementStatus" title="Arrow Down">
-              ${escapeHtml(t('review.card.wrong'))}
-            </button>
-            <button class="button is-success" @click="incrementStatus" title="Arrow Up">
-              ${escapeHtml(t('review.card.correct'))}
-            </button>
-            <button class="button" @click="skipWord" title="Escape">
-              ${escapeHtml(t('review.card.skip'))}
-            </button>
+            <button class="button is-danger" @click="gradeAnswer(1)" title="Press 1">Again</button>
+            <button class="button is-warning" @click="gradeAnswer(2)" title="Press 2">Hard</button>
+            <button class="button is-success" @click="gradeAnswer(3)" title="Press 3">Good</button>
+            <button class="button is-info" @click="gradeAnswer(4)" title="Press 4">Easy</button>
           </div>
-        </div>
-
-        <!-- Status buttons -->
-        <div x-show="store.answerRevealed" class="mb-5">
-          <p class="is-size-7 has-text-grey mb-2">${escapeHtml(t('review.card.set_status_directly'))}</p>
-          <div class="buttons is-centered are-small">
-            ${[1, 2, 3, 4, 5].map(s => `
-              <button class="button status-btn"
-                      :class="{ 'status-${s}': getCurrentWordStatus() === ${s} }"
-                      @click="setStatus(${s})">${s}</button>
-            `).join('')}
+          <div class="buttons is-centered are-small mt-2">
             <button class="button" @click="setStatus(98)" title="Press I">
               ${escapeHtml(t('review.card.ignore'))}
             </button>
             <button class="button" @click="setStatus(99)" title="Press W">
               ${escapeHtml(t('review.card.well_known'))}
+            </button>
+            <button class="button" @click="skipWord" title="Escape">
+              ${escapeHtml(t('review.card.skip'))}
             </button>
           </div>
         </div>
@@ -663,12 +651,8 @@ function registerReviewAppComponent(config: ReviewConfig): void {
       }
     },
 
-    async incrementStatus() {
-      await this.store.incrementStatus();
-    },
-
-    async decrementStatus() {
-      await this.store.decrementStatus();
+    async gradeAnswer(grade: number) {
+      await this.store.gradeAnswer(grade);
     },
 
     async setStatus(status: number) {
@@ -720,14 +704,6 @@ function registerReviewAppComponent(config: ReviewConfig): void {
           e.preventDefault();
           if (this.store.currentWord) this.skipWord();
           break;
-        case 'ArrowUp':
-          e.preventDefault();
-          if (this.store.answerRevealed) this.incrementStatus();
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          if (this.store.answerRevealed) this.decrementStatus();
-          break;
         case 'i': case 'I':
           e.preventDefault();
           if (this.store.currentWord) this.setStatus(98);
@@ -740,9 +716,9 @@ function registerReviewAppComponent(config: ReviewConfig): void {
           e.preventDefault();
           if (this.store.currentWord) this.store.openModal();
           break;
-        case '1': case '2': case '3': case '4': case '5':
+        case '1': case '2': case '3': case '4':
           e.preventDefault();
-          if (this.store.answerRevealed) this.setStatus(parseInt(e.key, 10));
+          if (this.store.answerRevealed) this.gradeAnswer(parseInt(e.key, 10));
           break;
       }
     },

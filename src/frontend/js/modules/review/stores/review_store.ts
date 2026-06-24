@@ -9,7 +9,9 @@
  */
 
 import Alpine from 'alpinejs';
-import { ReviewApi } from '@modules/review/api/review_api';
+import { ReviewApi, type ReviewCard } from '@modules/review/api/review_api';
+import { reviewFsrsState, newFsrsState, type ReviewGrade } from '@shared/offline/local/fsrs';
+import { statusFromStability } from '@shared/stores/statuses';
 
 /**
  * Language settings for the review.
@@ -36,6 +38,8 @@ export interface ReviewWord {
   sentence: string;
   solution: string;
   group: string;
+  /** Current FSRS card, used to compute the next schedule when graded. */
+  fsrs: ReviewCard | null;
 }
 
 /**
@@ -121,9 +125,10 @@ export interface ReviewStoreState {
   configure(config: ReviewConfig): void;
   nextWord(): Promise<void>;
   revealAnswer(): void;
-  updateStatus(status: number, isCorrect?: boolean): Promise<void>;
-  incrementStatus(): Promise<void>;
-  decrementStatus(): Promise<void>;
+  /** Grade the current word: 1=Again, 2=Hard, 3=Good, 4=Easy (FSRS). */
+  gradeAnswer(grade: number): Promise<void>;
+  /** Set a manual status flag (98 ignored / 99 well-known). */
+  updateStatus(status: number): Promise<void>;
   skipWord(): Promise<void>;
   startTimer(): void;
   stopTimer(): void;
@@ -135,19 +140,6 @@ export interface ReviewStoreState {
   closeModal(): void;
   playSound(correct: boolean): void;
   setReadAloud(enabled: boolean): void;
-}
-
-/**
- * Calculate new status based on current status and change direction.
- */
-function calculateNewStatus(currentStatus: number, change: number): number {
-  let newStatus = currentStatus + change;
-
-  // Clamp to valid range (1-5)
-  if (newStatus < 1) newStatus = 1;
-  if (newStatus > 5) newStatus = 5;
-
-  return newStatus;
 }
 
 /**
@@ -295,7 +287,8 @@ function createReviewStore(initialValues?: ReviewStoreInitialValues): ReviewStor
             status: 1,
             sentence: '',
             solution: data.solution || '',
-            group: data.group
+            group: data.group,
+            fsrs: data.fsrs ?? null
           };
         }
       } catch (err) {
@@ -315,21 +308,39 @@ function createReviewStore(initialValues?: ReviewStoreInitialValues): ReviewStor
     },
 
     /**
-     * Update the status of the current word.
+     * Grade the current word with an FSRS rating (1=Again … 4=Easy). The card
+     * is computed client-side and persisted via the grade API (locally when
+     * offline, on the server otherwise). Again counts as "wrong", the rest as
+     * "correct" for the progress bar.
      *
-     * @param status    New status value (1-5)
-     * @param isCorrect Whether the user answered correctly (true=knew it, false=didn't know)
+     * @param grade FSRS grade 1-4
      */
-    async updateStatus(status: number, isCorrect: boolean = true): Promise<void> {
+    async gradeAnswer(grade: number): Promise<void> {
       if (!this.currentWord || this.isLoading) return;
+      if (grade < 1 || grade > 4) return;
 
       this.isLoading = true;
 
       try {
-        const response = await ReviewApi.updateStatus(
-          this.currentWord.wordId,
-          status
-        );
+        const now = Date.now();
+        const prev = this.currentWord.fsrs ?? newFsrsState(now);
+        const { state: card, log } = reviewFsrsState(prev, grade as ReviewGrade, now);
+        const status = statusFromStability(card.stability);
+
+        const response = await ReviewApi.grade({
+          termId: this.currentWord.wordId,
+          grade,
+          status,
+          card,
+          log: {
+            state: log.state,
+            stability: log.stability,
+            difficulty: log.difficulty,
+            elapsedDays: log.elapsedDays,
+            scheduledDays: log.scheduledDays,
+            reviewedAt: log.reviewedAt
+          }
+        });
 
         if (response.error) {
           this.error = response.error;
@@ -337,22 +348,49 @@ function createReviewStore(initialValues?: ReviewStoreInitialValues): ReviewStor
           return;
         }
 
-        // Update progress
+        const correct = grade > 1;
         this.progress.remaining--;
-        if (isCorrect) {
+        if (correct) {
           this.progress.correct++;
         } else {
           this.progress.wrong++;
         }
+        this.playSound(correct);
 
-        // Play feedback sound
-        this.playSound(isCorrect);
-
-        // Reset loading state before fetching next word
-        // (nextWord() checks isLoading and returns early if true)
         this.isLoading = false;
+        await this.nextWord();
+      } catch (err) {
+        console.error('Error grading word:', err);
+        this.error = 'Failed to grade word';
+        this.isLoading = false;
+      }
+    },
 
-        // Fetch next word
+    /**
+     * Set a manual status flag on the current word (98 ignored / 99 well-known)
+     * and advance. These take the word out of scheduling.
+     *
+     * @param status 98 or 99
+     */
+    async updateStatus(status: number): Promise<void> {
+      if (!this.currentWord || this.isLoading) return;
+
+      this.isLoading = true;
+
+      try {
+        const response = await ReviewApi.updateStatus(this.currentWord.wordId, status);
+
+        if (response.error) {
+          this.error = response.error;
+          this.isLoading = false;
+          return;
+        }
+
+        this.progress.remaining--;
+        this.progress.correct++;
+        this.playSound(true);
+
+        this.isLoading = false;
         await this.nextWord();
       } catch (err) {
         console.error('Error updating status:', err);
@@ -362,33 +400,13 @@ function createReviewStore(initialValues?: ReviewStoreInitialValues): ReviewStor
     },
 
     /**
-     * Increment the current word's status.
-     */
-    async incrementStatus(): Promise<void> {
-      if (!this.currentWord || !this.answerRevealed) return;
-
-      const newStatus = calculateNewStatus(this.currentWord.status, 1);
-      await this.updateStatus(newStatus, true);
-    },
-
-    /**
-     * Decrement the current word's status.
-     */
-    async decrementStatus(): Promise<void> {
-      if (!this.currentWord || !this.answerRevealed) return;
-
-      const newStatus = calculateNewStatus(this.currentWord.status, -1);
-      await this.updateStatus(newStatus, false);
-    },
-
-    /**
-     * Skip the current word without changing its status.
+     * Skip the current word without grading it (it stays due) and move on.
      */
     async skipWord(): Promise<void> {
       if (!this.currentWord || this.isLoading) return;
 
-      // Update with same status (no change)
-      await this.updateStatus(this.currentWord.status);
+      this.progress.remaining--;
+      await this.nextWord();
     },
 
     /**

@@ -8,6 +8,7 @@ const { mockReviewApi } = vi.hoisted(() => ({
   mockReviewApi: {
     getNextWord: vi.fn(),
     updateStatus: vi.fn(),
+    grade: vi.fn(),
     getTomorrowCount: vi.fn()
   }
 }));
@@ -408,9 +409,8 @@ describe('review/stores/review_store.ts', () => {
   // updateStatus Tests
   // ===========================================================================
 
-  describe('updateStatus', () => {
+  describe('updateStatus (manual flags 98/99)', () => {
     beforeEach(() => {
-      // Mock audio elements
       vi.spyOn(document, 'getElementById').mockReturnValue(null);
     });
 
@@ -418,7 +418,7 @@ describe('review/stores/review_store.ts', () => {
       const store = getReviewStore();
       store.currentWord = null;
 
-      await store.updateStatus(3);
+      await store.updateStatus(99);
 
       expect(mockReviewApi.updateStatus).not.toHaveBeenCalled();
     });
@@ -428,76 +428,28 @@ describe('review/stores/review_store.ts', () => {
       store.currentWord = { wordId: 1 } as never;
       store.isLoading = true;
 
-      await store.updateStatus(3);
+      await store.updateStatus(99);
 
       expect(mockReviewApi.updateStatus).not.toHaveBeenCalled();
     });
 
-    it('calls API with correct parameters', async () => {
+    it('sets the flag, advances and counts it correct', async () => {
       const store = getReviewStore();
       store.currentWord = { wordId: 123 } as never;
       store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
 
-      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
+      mockReviewApi.updateStatus.mockResolvedValue({ data: { status: 99 }, error: undefined });
       mockReviewApi.getNextWord.mockResolvedValue({
         data: { term_id: 456, term_text: 'next', solution: '', group: '' },
         error: undefined
       });
 
-      await store.updateStatus(3, true);
+      await store.updateStatus(99);
 
-      expect(mockReviewApi.updateStatus).toHaveBeenCalledWith(123, 3);
-    });
-
-    it('updates progress on correct answer', async () => {
-      const store = getReviewStore();
-      store.currentWord = { wordId: 1 } as never;
-      store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
-
-      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
-      mockReviewApi.getNextWord.mockResolvedValue({
-        data: { term_id: 2, term_text: 'next', solution: '', group: '' },
-        error: undefined
-      });
-
-      await store.updateStatus(3, true);
-
+      expect(mockReviewApi.updateStatus).toHaveBeenCalledWith(123, 99);
       expect(store.progress.remaining).toBe(4);
       expect(store.progress.correct).toBe(1);
       expect(store.progress.wrong).toBe(0);
-    });
-
-    it('updates progress on wrong answer', async () => {
-      const store = getReviewStore();
-      store.currentWord = { wordId: 1 } as never;
-      store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
-
-      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
-      mockReviewApi.getNextWord.mockResolvedValue({
-        data: { term_id: 2, term_text: 'next', solution: '', group: '' },
-        error: undefined
-      });
-
-      await store.updateStatus(2, false);
-
-      expect(store.progress.remaining).toBe(4);
-      expect(store.progress.wrong).toBe(1);
-      expect(store.progress.correct).toBe(0);
-    });
-
-    it('fetches next word after update', async () => {
-      const store = getReviewStore();
-      store.currentWord = { wordId: 1 } as never;
-      store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
-
-      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
-      mockReviewApi.getNextWord.mockResolvedValue({
-        data: { term_id: 2, term_text: 'next', solution: '', group: '' },
-        error: undefined
-      });
-
-      await store.updateStatus(3);
-
       expect(mockReviewApi.getNextWord).toHaveBeenCalled();
     });
 
@@ -506,12 +458,9 @@ describe('review/stores/review_store.ts', () => {
       store.currentWord = { wordId: 1 } as never;
       store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
 
-      mockReviewApi.updateStatus.mockResolvedValue({
-        data: null,
-        error: 'Failed to update'
-      });
+      mockReviewApi.updateStatus.mockResolvedValue({ data: null, error: 'Failed to update' });
 
-      await store.updateStatus(3);
+      await store.updateStatus(98);
 
       expect(store.error).toBe('Failed to update');
     });
@@ -524,7 +473,7 @@ describe('review/stores/review_store.ts', () => {
 
       mockReviewApi.updateStatus.mockRejectedValue(new Error('fail'));
 
-      await store.updateStatus(3);
+      await store.updateStatus(98);
 
       expect(store.error).toBe('Failed to update status');
       expect(consoleSpy).toHaveBeenCalled();
@@ -532,105 +481,85 @@ describe('review/stores/review_store.ts', () => {
   });
 
   // ===========================================================================
-  // incrementStatus / decrementStatus Tests
+  // gradeAnswer Tests (FSRS 4-grade)
   // ===========================================================================
 
-  describe('incrementStatus', () => {
+  describe('gradeAnswer', () => {
+    const card = { stability: 0, difficulty: 0, due: 0, lastReview: null, reps: 0, lapses: 0, state: 0 };
+
     beforeEach(() => {
       vi.spyOn(document, 'getElementById').mockReturnValue(null);
     });
 
-    it('does nothing without current word', async () => {
+    it('does nothing without a current word', async () => {
       const store = getReviewStore();
       store.currentWord = null;
 
-      await store.incrementStatus();
+      await store.gradeAnswer(3);
 
-      expect(mockReviewApi.updateStatus).not.toHaveBeenCalled();
+      expect(mockReviewApi.grade).not.toHaveBeenCalled();
     });
 
-    it('does nothing if answer not revealed', async () => {
+    it('ignores out-of-range grades', async () => {
       const store = getReviewStore();
-      store.currentWord = { wordId: 1, status: 2 } as never;
-      store.answerRevealed = false;
+      store.currentWord = { wordId: 1, fsrs: card } as never;
 
-      await store.incrementStatus();
+      await store.gradeAnswer(0);
+      await store.gradeAnswer(5);
 
-      expect(mockReviewApi.updateStatus).not.toHaveBeenCalled();
+      expect(mockReviewApi.grade).not.toHaveBeenCalled();
     });
 
-    it('increments status by 1', async () => {
+    it('grades the word, advances, and counts Good as correct', async () => {
       const store = getReviewStore();
-      store.currentWord = { wordId: 1, status: 2 } as never;
-      store.answerRevealed = true;
+      store.currentWord = { wordId: 123, fsrs: card } as never;
       store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
 
-      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
+      mockReviewApi.grade.mockResolvedValue({ data: { status: 2 }, error: undefined });
+      mockReviewApi.getNextWord.mockResolvedValue({
+        data: { term_id: 456, term_text: 'next', solution: '', group: '' },
+        error: undefined
+      });
+
+      await store.gradeAnswer(3);
+
+      expect(mockReviewApi.grade).toHaveBeenCalledTimes(1);
+      const arg = mockReviewApi.grade.mock.calls[0][0];
+      expect(arg.termId).toBe(123);
+      expect(arg.grade).toBe(3);
+      expect(store.progress.remaining).toBe(4);
+      expect(store.progress.correct).toBe(1);
+      expect(store.progress.wrong).toBe(0);
+      expect(mockReviewApi.getNextWord).toHaveBeenCalled();
+    });
+
+    it('counts Again as wrong', async () => {
+      const store = getReviewStore();
+      store.currentWord = { wordId: 1, fsrs: card } as never;
+      store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
+
+      mockReviewApi.grade.mockResolvedValue({ data: { status: 1 }, error: undefined });
       mockReviewApi.getNextWord.mockResolvedValue({
         data: { term_id: 2, term_text: 'next', solution: '', group: '' },
         error: undefined
       });
 
-      await store.incrementStatus();
+      await store.gradeAnswer(1);
 
-      expect(mockReviewApi.updateStatus).toHaveBeenCalledWith(1, 3);
+      expect(store.progress.wrong).toBe(1);
+      expect(store.progress.correct).toBe(0);
     });
 
-    it('caps status at 5', async () => {
+    it('sets error on API error', async () => {
       const store = getReviewStore();
-      store.currentWord = { wordId: 1, status: 5 } as never;
-      store.answerRevealed = true;
+      store.currentWord = { wordId: 1, fsrs: card } as never;
       store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
 
-      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
-      mockReviewApi.getNextWord.mockResolvedValue({
-        data: { term_id: 2, term_text: 'next', solution: '', group: '' },
-        error: undefined
-      });
+      mockReviewApi.grade.mockResolvedValue({ data: null, error: 'Failed to grade' });
 
-      await store.incrementStatus();
+      await store.gradeAnswer(3);
 
-      expect(mockReviewApi.updateStatus).toHaveBeenCalledWith(1, 5);
-    });
-  });
-
-  describe('decrementStatus', () => {
-    beforeEach(() => {
-      vi.spyOn(document, 'getElementById').mockReturnValue(null);
-    });
-
-    it('decrements status by 1', async () => {
-      const store = getReviewStore();
-      store.currentWord = { wordId: 1, status: 3 } as never;
-      store.answerRevealed = true;
-      store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
-
-      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
-      mockReviewApi.getNextWord.mockResolvedValue({
-        data: { term_id: 2, term_text: 'next', solution: '', group: '' },
-        error: undefined
-      });
-
-      await store.decrementStatus();
-
-      expect(mockReviewApi.updateStatus).toHaveBeenCalledWith(1, 2);
-    });
-
-    it('floors status at 1', async () => {
-      const store = getReviewStore();
-      store.currentWord = { wordId: 1, status: 1 } as never;
-      store.answerRevealed = true;
-      store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
-
-      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
-      mockReviewApi.getNextWord.mockResolvedValue({
-        data: { term_id: 2, term_text: 'next', solution: '', group: '' },
-        error: undefined
-      });
-
-      await store.decrementStatus();
-
-      expect(mockReviewApi.updateStatus).toHaveBeenCalledWith(1, 1);
+      expect(store.error).toBe('Failed to grade');
     });
   });
 
@@ -643,12 +572,11 @@ describe('review/stores/review_store.ts', () => {
       vi.spyOn(document, 'getElementById').mockReturnValue(null);
     });
 
-    it('updates with same status', async () => {
+    it('advances without grading', async () => {
       const store = getReviewStore();
-      store.currentWord = { wordId: 1, status: 3 } as never;
+      store.currentWord = { wordId: 1 } as never;
       store.progress = { total: 10, remaining: 5, wrong: 0, correct: 0 };
 
-      mockReviewApi.updateStatus.mockResolvedValue({ data: {}, error: undefined });
       mockReviewApi.getNextWord.mockResolvedValue({
         data: { term_id: 2, term_text: 'next', solution: '', group: '' },
         error: undefined
@@ -656,17 +584,20 @@ describe('review/stores/review_store.ts', () => {
 
       await store.skipWord();
 
-      expect(mockReviewApi.updateStatus).toHaveBeenCalledWith(1, 3);
+      expect(mockReviewApi.grade).not.toHaveBeenCalled();
+      expect(mockReviewApi.updateStatus).not.toHaveBeenCalled();
+      expect(store.progress.remaining).toBe(4);
+      expect(mockReviewApi.getNextWord).toHaveBeenCalled();
     });
 
     it('does nothing if loading', async () => {
       const store = getReviewStore();
-      store.currentWord = { wordId: 1, status: 3 } as never;
+      store.currentWord = { wordId: 1 } as never;
       store.isLoading = true;
 
       await store.skipWord();
 
-      expect(mockReviewApi.updateStatus).not.toHaveBeenCalled();
+      expect(mockReviewApi.getNextWord).not.toHaveBeenCalled();
     });
   });
 

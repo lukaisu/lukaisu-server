@@ -34,8 +34,7 @@ const mockReviewStore = {
   configure: vi.fn(),
   nextWord: vi.fn(),
   revealAnswer: vi.fn(),
-  incrementStatus: vi.fn(),
-  decrementStatus: vi.fn(),
+  gradeAnswer: vi.fn(),
   updateStatus: vi.fn(),
   skipWord: vi.fn(),
   setReadAloud: vi.fn(),
@@ -85,8 +84,7 @@ describe('review_view.ts', () => {
     mockReviewStore.configure.mockClear();
     mockReviewStore.nextWord.mockClear();
     mockReviewStore.revealAnswer.mockClear();
-    mockReviewStore.incrementStatus.mockClear();
-    mockReviewStore.decrementStatus.mockClear();
+    mockReviewStore.gradeAnswer.mockClear();
     mockReviewStore.updateStatus.mockClear();
     mockReviewStore.skipWord.mockClear();
     mockReviewStore.setReadAloud.mockClear();
@@ -149,14 +147,16 @@ describe('review_view.ts', () => {
       expect(container.innerHTML).toContain('Show Answer (Space)');
     });
 
-    it('includes status buttons', () => {
+    it('includes grade and flag buttons', () => {
       const container = document.createElement('div');
 
       renderReviewApp(container);
 
-      // Check for status buttons 1-5
-      expect(container.innerHTML).toContain('setStatus(1)');
-      expect(container.innerHTML).toContain('setStatus(5)');
+      // FSRS 4-grade buttons + the manual ignore/well-known flags
+      expect(container.innerHTML).toContain('gradeAnswer(1)');
+      expect(container.innerHTML).toContain('gradeAnswer(4)');
+      expect(container.innerHTML).toContain('Again');
+      expect(container.innerHTML).toContain('Easy');
       expect(container.innerHTML).toContain('Ignore');
       expect(container.innerHTML).toContain('Well Known');
     });
@@ -346,28 +346,16 @@ describe('review_view.ts', () => {
       expect(mockReviewStore.revealAnswer).toHaveBeenCalled();
     });
 
-    it('incrementStatus calls store.incrementStatus', async () => {
+    it('gradeAnswer calls store.gradeAnswer', async () => {
       const componentFactory = getReviewAppComponent();
       const component = componentFactory() as {
         store: ReturnType<typeof getReviewStore>;
-        incrementStatus: () => Promise<void>;
+        gradeAnswer: (g: number) => Promise<void>;
       };
 
-      await component.incrementStatus();
+      await component.gradeAnswer(3);
 
-      expect(mockReviewStore.incrementStatus).toHaveBeenCalled();
-    });
-
-    it('decrementStatus calls store.decrementStatus', async () => {
-      const componentFactory = getReviewAppComponent();
-      const component = componentFactory() as {
-        store: ReturnType<typeof getReviewStore>;
-        decrementStatus: () => Promise<void>;
-      };
-
-      await component.decrementStatus();
-
-      expect(mockReviewStore.decrementStatus).toHaveBeenCalled();
+      expect(mockReviewStore.gradeAnswer).toHaveBeenCalledWith(3);
     });
 
     it('setStatus calls store.updateStatus', async () => {
@@ -377,9 +365,9 @@ describe('review_view.ts', () => {
         setStatus: (s: number) => Promise<void>;
       };
 
-      await component.setStatus(3);
+      await component.setStatus(98);
 
-      expect(mockReviewStore.updateStatus).toHaveBeenCalledWith(3);
+      expect(mockReviewStore.updateStatus).toHaveBeenCalledWith(98);
     });
 
     it('skipWord calls store.skipWord', async () => {
@@ -923,37 +911,33 @@ describe('review_view.ts', () => {
       mockReviewStore.currentWord = null;
     });
 
-    it('ArrowUp increments status when answer revealed', () => {
+    it('key 1 grades Again when answer revealed', () => {
       const componentFactory = getReviewAppComponent();
       const component = componentFactory() as {
         store: ReturnType<typeof getReviewStore>;
         handleKeydown: (e: KeyboardEvent) => void;
-        incrementStatus: () => Promise<void>;
+        gradeAnswer: (g: number) => Promise<void>;
       };
       mockReviewStore.answerRevealed = true;
 
-      const event = new KeyboardEvent('keydown', { key: 'ArrowUp', cancelable: true });
+      component.handleKeydown(new KeyboardEvent('keydown', { key: '1', cancelable: true }));
 
-      component.handleKeydown(event);
-
-      expect(mockReviewStore.incrementStatus).toHaveBeenCalled();
+      expect(mockReviewStore.gradeAnswer).toHaveBeenCalledWith(1);
       mockReviewStore.answerRevealed = false;
     });
 
-    it('ArrowDown decrements status when answer revealed', () => {
+    it('key 4 grades Easy when answer revealed', () => {
       const componentFactory = getReviewAppComponent();
       const component = componentFactory() as {
         store: ReturnType<typeof getReviewStore>;
         handleKeydown: (e: KeyboardEvent) => void;
-        decrementStatus: () => Promise<void>;
+        gradeAnswer: (g: number) => Promise<void>;
       };
       mockReviewStore.answerRevealed = true;
 
-      const event = new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true });
+      component.handleKeydown(new KeyboardEvent('keydown', { key: '4', cancelable: true }));
 
-      component.handleKeydown(event);
-
-      expect(mockReviewStore.decrementStatus).toHaveBeenCalled();
+      expect(mockReviewStore.gradeAnswer).toHaveBeenCalledWith(4);
       mockReviewStore.answerRevealed = false;
     });
 
@@ -1007,12 +991,12 @@ describe('review_view.ts', () => {
       mockReviewStore.currentWord = null;
     });
 
-    it('Number keys set status when answer revealed', () => {
+    it('key 3 grades Good when answer revealed', () => {
       const componentFactory = getReviewAppComponent();
       const component = componentFactory() as {
         store: ReturnType<typeof getReviewStore>;
         handleKeydown: (e: KeyboardEvent) => void;
-        setStatus: (s: number) => Promise<void>;
+        gradeAnswer: (g: number) => Promise<void>;
       };
       mockReviewStore.answerRevealed = true;
 
@@ -1020,7 +1004,7 @@ describe('review_view.ts', () => {
 
       component.handleKeydown(event);
 
-      expect(mockReviewStore.updateStatus).toHaveBeenCalledWith(3);
+      expect(mockReviewStore.gradeAnswer).toHaveBeenCalledWith(3);
       mockReviewStore.answerRevealed = false;
     });
   });
