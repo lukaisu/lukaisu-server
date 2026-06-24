@@ -969,10 +969,10 @@ class FeedFacade
 
                 foreach ($textItem as $txId) {
                     $textItemsDeleted += \Lukaisu\Shared\Infrastructure\Database\QueryBuilder::table('word_occurrences')
-                        ->where('Ti2TxID', '=', $txId)
+                        ->where('text_id', '=', $txId)
                         ->delete();
                     $sentencesDeleted += \Lukaisu\Shared\Infrastructure\Database\QueryBuilder::table('sentences')
-                        ->where('SeTxID', '=', $txId)
+                        ->where('text_id', '=', $txId)
                         ->delete();
 
                     // Archive the text (soft delete - set TxArchivedAt)
@@ -986,7 +986,7 @@ class FeedFacade
 
                     $textsArchived = $archiveCount;
 
-                    \Lukaisu\Shared\Infrastructure\Database\Maintenance::adjustAutoIncrement('sentences', 'SeID');
+                    \Lukaisu\Shared\Infrastructure\Database\Maintenance::adjustAutoIncrement('sentences', 'id');
                 }
             }
         }

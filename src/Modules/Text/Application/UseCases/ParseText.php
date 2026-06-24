@@ -128,23 +128,23 @@ class ParseText
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
         // Get words from texts
-        $sql = "SELECT DISTINCT Ti2WoID, Ti2SeID
+        $sql = "SELECT DISTINCT word_occurrences.word_id, word_occurrences.sentence_id
             FROM word_occurrences, sentences, texts
-            WHERE Ti2TxID IN ({$placeholders})
-            AND Ti2SeID = SeID
-            AND Ti2TxID = TxID
-            AND Ti2WoID > 0"
+            WHERE word_occurrences.text_id IN ({$placeholders})
+            AND word_occurrences.sentence_id = sentences.id
+            AND word_occurrences.text_id = TxID
+            AND word_occurrences.word_id > 0"
             . UserScopedQuery::forTablePrepared('texts', $ids);
 
         if ($activeOnly) {
-            $sql = "SELECT DISTINCT Ti2WoID, Ti2SeID
+            $sql = "SELECT DISTINCT word_occurrences.word_id, word_occurrences.sentence_id
                 FROM word_occurrences, sentences, texts, words
-                WHERE Ti2TxID IN ({$placeholders})
-                AND Ti2SeID = SeID
-                AND Ti2TxID = TxID
-                AND Ti2WoID = id
-                AND status < 98
-                AND Ti2WoID > 0"
+                WHERE word_occurrences.text_id IN ({$placeholders})
+                AND word_occurrences.sentence_id = sentences.id
+                AND word_occurrences.text_id = TxID
+                AND word_occurrences.word_id = words.id
+                AND words.status < 98
+                AND word_occurrences.word_id > 0"
                 . UserScopedQuery::forTablePrepared('texts', $ids)
                 . UserScopedQuery::forTablePrepared('words', $ids);
         }
@@ -153,7 +153,7 @@ class ParseText
         $count = 0;
 
         foreach ($rows as $row) {
-            $bindings = [(int) $row['Ti2SeID'], (int) $row['Ti2WoID']];
+            $bindings = [(int) $row['sentence_id'], (int) $row['word_id']];
             Connection::preparedExecute(
                 "UPDATE words SET sentence = ? WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings),

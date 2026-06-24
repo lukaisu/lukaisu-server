@@ -264,13 +264,13 @@ class UpdateText
     {
         // Delete old parsed data
         QueryBuilder::table('word_occurrences')
-            ->where('Ti2TxID', '=', $textId)
+            ->where('text_id', '=', $textId)
             ->delete();
         QueryBuilder::table('sentences')
-            ->where('SeTxID', '=', $textId)
+            ->where('text_id', '=', $textId)
             ->delete();
 
-        Maintenance::adjustAutoIncrement('sentences', 'SeID');
+        Maintenance::adjustAutoIncrement('sentences', 'id');
 
         // Clear annotation
         $bindings = [$textId];

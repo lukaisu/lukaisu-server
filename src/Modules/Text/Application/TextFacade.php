@@ -774,20 +774,20 @@ class TextFacade
 
         $wordScope = UserScopedQuery::forTablePrepared('words', $ids);
         $occScope = UserScopedQuery::forTablePrepared('word_occurrences', $ids, '', 'texts');
-        $sql = "SELECT id, text_lc, MIN(Ti2SeID) AS SeID
+        $sql = "SELECT id, text_lc, MIN(sentence_id) AS id
             FROM words, word_occurrences
-            WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID IN ({$placeholders})
+            WHERE language_id = language_id AND word_id = id AND text_id IN ({$placeholders})
             {$statusFilter}
             AND IFNULL(sentence,'') NOT LIKE CONCAT('%{',text,'}%'){$wordScope}{$occScope}
             GROUP BY id
-            ORDER BY id, MIN(Ti2SeID)";
+            ORDER BY id, MIN(sentence_id)";
 
         $records = Connection::preparedFetchAll($sql, $ids);
         $sentenceCount = (int) Settings::getWithDefault('set-term-sentence-count');
 
         foreach ($records as $record) {
             $sent = $this->sentenceService->formatSentence(
-                (int)$record['SeID'],
+                (int)$record['id'],
                 (string)$record['text_lc'],
                 $sentenceCount
             );
@@ -866,12 +866,12 @@ class TextFacade
         TagsFacade::saveTextTagsFromForm($textId);
 
         $sentencesDeleted = QueryBuilder::table('sentences')
-            ->where('SeTxID', '=', $textId)
+            ->where('text_id', '=', $textId)
             ->delete();
         $textitemsDeleted = QueryBuilder::table('word_occurrences')
-            ->where('Ti2TxID', '=', $textId)
+            ->where('text_id', '=', $textId)
             ->delete();
-        Maintenance::adjustAutoIncrement('sentences', 'SeID');
+        Maintenance::adjustAutoIncrement('sentences', 'id');
 
         $bindings2 = [$textId];
         TextParsing::parseAndSave(
@@ -887,14 +887,14 @@ class TextFacade
 
         $bindings3 = [$textId];
         $sentenceCount = (int)Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS cnt FROM sentences WHERE SeTxID = ?"
+            "SELECT COUNT(*) AS cnt FROM sentences WHERE text_id = ?"
             . UserScopedQuery::forTablePrepared('sentences', $bindings3, '', 'texts'),
             $bindings3,
             'cnt'
         );
         $bindings4 = [$textId];
         $itemCount = (int)Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE Ti2TxID = ?"
+            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE text_id = ?"
             . UserScopedQuery::forTablePrepared('word_occurrences', $bindings4, '', 'texts'),
             $bindings4,
             'cnt'

@@ -79,16 +79,16 @@ CREATE TABLE IF NOT EXISTS languages (
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS sentences (
-    SeID mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
-    SeLgID tinyint(3) unsigned NOT NULL,
-    SeTxID smallint(5) unsigned NOT NULL,
-    SeOrder smallint(5) unsigned NOT NULL,
-    SeText text,
-    SeFirstPos smallint(5) unsigned NOT NULL,
-    PRIMARY KEY (SeID),
-    KEY SeLgID (SeLgID),
-    KEY SeTxID (SeTxID),
-    KEY SeOrder (SeOrder)
+    id mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+    language_id tinyint(3) unsigned NOT NULL,
+    text_id smallint(5) unsigned NOT NULL,
+    position smallint(5) unsigned NOT NULL,
+    text text,
+    first_pos smallint(5) unsigned NOT NULL,
+    PRIMARY KEY (id),
+    KEY language_id (language_id),
+    KEY text_id (text_id),
+    KEY position (position)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -101,23 +101,23 @@ CREATE TABLE IF NOT EXISTS settings (
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS word_occurrences (
-    Ti2WoID mediumint(8) unsigned DEFAULT NULL,
-    Ti2LgID tinyint(3) unsigned NOT NULL,
-    Ti2TxID smallint(5) unsigned NOT NULL,
-    Ti2SeID mediumint(8) unsigned NOT NULL,
-    Ti2Order smallint(5) unsigned NOT NULL,
-    Ti2WordCount tinyint(3) unsigned NOT NULL,
-    Ti2Text varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-    PRIMARY KEY (Ti2TxID,Ti2Order,Ti2WordCount), KEY Ti2WoID (Ti2WoID)
+    word_id mediumint(8) unsigned DEFAULT NULL,
+    language_id tinyint(3) unsigned NOT NULL,
+    text_id smallint(5) unsigned NOT NULL,
+    sentence_id mediumint(8) unsigned NOT NULL,
+    position smallint(5) unsigned NOT NULL,
+    word_count tinyint(3) unsigned NOT NULL,
+    text varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+    PRIMARY KEY (text_id,position,word_count), KEY word_id (word_id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS temp_word_occurrences (
-    TiCount smallint(5) unsigned NOT NULL,
-    TiSeID mediumint(8) unsigned NOT NULL,
-    TiOrder smallint(5) unsigned NOT NULL,
-    TiWordCount tinyint(3) unsigned NOT NULL,
-    TiText varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL
+    char_position smallint(5) unsigned NOT NULL,
+    sentence_id mediumint(8) unsigned NOT NULL,
+    position smallint(5) unsigned NOT NULL,
+    word_count tinyint(3) unsigned NOT NULL,
+    text varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS temp_words (

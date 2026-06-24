@@ -89,7 +89,7 @@ class ReviewServiceTest extends TestCase
 
         // Create test sentence (required for FK constraint on word_occurrences)
         Connection::query(
-            "INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeFirstPos, SeText) " .
+            "INSERT INTO sentences (language_id, text_id, position, first_pos, text) " .
             "VALUES (" . self::$testLangId . ", " . self::$testTextId . ", 1, 1, 'This is a test.')"
         );
         self::$testSentenceId = (int)Connection::fetchValue(
@@ -112,8 +112,8 @@ class ReviewServiceTest extends TestCase
         // Create text items linking words to text
         foreach (self::$testWordIds as $index => $wordId) {
             Connection::query(
-                "INSERT INTO word_occurrences (Ti2TxID, Ti2LgID, Ti2WoID, Ti2SeID, Ti2Order, " .
-                "Ti2WordCount, Ti2Text) " .
+                "INSERT INTO word_occurrences (text_id, language_id, word_id, sentence_id, position, " .
+                "word_count, text) " .
                 "VALUES (" . self::$testTextId . ", " . self::$testLangId . ", {$wordId}, " .
                 self::$testSentenceId . ", {$index}, 1, 'testword" . ($index + 1) . "')"
             );
@@ -127,8 +127,8 @@ class ReviewServiceTest extends TestCase
         }
 
         // Clean up test data
-        Connection::query("DELETE FROM word_occurrences WHERE Ti2TxID = " . self::$testTextId);
-        Connection::query("DELETE FROM sentences WHERE SeTxID = " . self::$testTextId);
+        Connection::query("DELETE FROM word_occurrences WHERE text_id = " . self::$testTextId);
+        Connection::query("DELETE FROM sentences WHERE text_id = " . self::$testTextId);
         Connection::query("DELETE FROM words WHERE language_id = " . self::$testLangId);
         Connection::query("DELETE FROM texts WHERE TxID = " . self::$testTextId);
         // Clean up test language

@@ -114,7 +114,7 @@ class Migrations
         // Use raw DELETE FROM to delete all records
         Connection::execute("DELETE FROM word_occurrences");
         Connection::execute("DELETE FROM sentences");
-        Maintenance::adjustAutoIncrement('sentences', 'SeID');
+        Maintenance::adjustAutoIncrement('sentences', 'id');
         Maintenance::initWordCount();
         // Only reparse texts that have a valid language reference
         $rows = QueryBuilder::table('texts')
@@ -460,19 +460,19 @@ class Migrations
                 // Complex migration query - use raw SQL
                 Connection::execute(
                     "INSERT INTO word_occurrences (
-                        Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount,
-                        Ti2Text
+                        word_id, language_id, text_id, sentence_id, position, word_count,
+                        text
                     )
-                    SELECT IFNULL(id,0), TiLgID, TiTxID, TiSeID, TiOrder,
-                    CASE WHEN TiIsNotWord = 1 THEN 0 ELSE TiWordCount END as WordCount,
+                    SELECT IFNULL(id,0), TiLgID, TiTxID, sentence_id, position,
+                    CASE WHEN TiIsNotWord = 1 THEN 0 ELSE word_count END as WordCount,
                     CASE
-                        WHEN STRCMP(TiText COLLATE utf8_bin,TiTextLC)!=0 OR TiWordCount=1
-                        THEN TiText
+                        WHEN STRCMP(text COLLATE utf8_bin,TiTextLC)!=0 OR word_count=1
+                        THEN text
                         ELSE ''
                     END AS Text
                     FROM textitems
                     LEFT JOIN words ON TiTextLC=text_lc AND TiLgID=language_id
-                    WHERE TiWordCount<2 OR id IS NOT NULL"
+                    WHERE word_count<2 OR id IS NOT NULL"
                 );
                 QueryBuilder::table('textitems')->truncate();
             }

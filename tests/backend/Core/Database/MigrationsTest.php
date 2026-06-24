@@ -212,10 +212,10 @@ class MigrationsTest extends TestCase
 
         // Clean up any texts that reference non-existent languages
         // to avoid "Language data not found" errors
-        Connection::query("DELETE FROM word_occurrences WHERE Ti2TxID IN (
+        Connection::query("DELETE FROM word_occurrences WHERE text_id IN (
             SELECT TxID FROM texts WHERE TxLgID NOT IN (SELECT LgID FROM languages)
         )");
-        Connection::query("DELETE FROM sentences WHERE SeTxID IN (
+        Connection::query("DELETE FROM sentences WHERE text_id IN (
             SELECT TxID FROM texts WHERE TxLgID NOT IN (SELECT LgID FROM languages)
         )");
         Connection::query("DELETE FROM texts WHERE TxLgID NOT IN (SELECT LgID FROM languages)");

@@ -101,7 +101,7 @@ class LemmaStatisticsService
     public function getUnmatchedStatistics(int $languageId): array
     {
         // word_occurrences has no UsID column — inherit user scope by joining
-        // through `texts` (via Ti2TxID) and filtering on TxUsID. Without this,
+        // through `texts` (via text_id) and filtering on TxUsID. Without this,
         // aggregations across word_occurrences silently combine every user's
         // data sharing the language.
         $bindings = [$languageId];
@@ -109,8 +109,8 @@ class LemmaStatisticsService
         // Count unmatched items
         $unmatchedCount = (int) Connection::preparedFetchValue(
             "SELECT COUNT(*) as cnt FROM word_occurrences
-             JOIN texts ON Ti2TxID = TxID
-             WHERE Ti2LgID = ? AND Ti2WoID IS NULL AND Ti2WordCount = 1"
+             JOIN texts ON text_id = TxID
+             WHERE language_id = ? AND word_id IS NULL AND word_count = 1"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings,
             'cnt'
@@ -119,9 +119,9 @@ class LemmaStatisticsService
         // Count unique unmatched words
         $bindings = [$languageId];
         $uniqueWords = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT LOWER(Ti2Text)) as cnt FROM word_occurrences
-             JOIN texts ON Ti2TxID = TxID
-             WHERE Ti2LgID = ? AND Ti2WoID IS NULL AND Ti2WordCount = 1"
+            "SELECT COUNT(DISTINCT LOWER(text)) as cnt FROM word_occurrences
+             JOIN texts ON text_id = TxID
+             WHERE language_id = ? AND word_id IS NULL AND word_count = 1"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings,
             'cnt'
@@ -130,13 +130,13 @@ class LemmaStatisticsService
         // Count how many unique unmatched words have a potential lemma match
         $bindings = [$languageId, $languageId];
         $matchableByLemma = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT LOWER(ti.Ti2Text)) as cnt
+            "SELECT COUNT(DISTINCT LOWER(ti.text)) as cnt
              FROM word_occurrences ti
-             JOIN texts ON ti.Ti2TxID = TxID
-             JOIN words w ON w.language_id = ? AND LOWER(ti.Ti2Text) = w.lemma_lc
-             WHERE ti.Ti2LgID = ?
-               AND ti.Ti2WoID IS NULL
-               AND ti.Ti2WordCount = 1
+             JOIN texts ON ti.text_id = TxID
+             JOIN words w ON w.language_id = ? AND LOWER(ti.text) = w.lemma_lc
+             WHERE ti.language_id = ?
+               AND ti.word_id IS NULL
+               AND ti.word_count = 1
                AND w.word_count = 1"
             . UserScopedQuery::forTablePrepared('texts', $bindings)
             . UserScopedQuery::forTablePrepared('words', $bindings, 'w'),

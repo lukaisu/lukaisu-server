@@ -56,10 +56,10 @@ class SentenceService
     /**
      * Build a parent-row user-scope clause for queries that touch the
      * `sentences` table. The `sentences` table has no UsID column of its
-     * own — ownership is derived from the parent `texts` row via SeTxID.
+     * own — ownership is derived from the parent `texts` row via text_id.
      *
      * Returns an SQL fragment like
-     * ` AND SeTxID IN (SELECT TxID FROM texts WHERE TxUsID = ?)` and
+     * ` AND text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)` and
      * pushes the current user ID onto $bindings, or an empty string
      * when multi-user mode is off / no user is authenticated. Without
      * this gate, raw `FROM sentences …` queries leak rows from every
@@ -79,7 +79,7 @@ class SentenceService
             return '';
         }
         $bindings[] = $userId;
-        return ' AND SeTxID IN (SELECT TxID FROM texts WHERE TxUsID = ?)';
+        return ' AND sentences.text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)';
     }
 
     /**
@@ -87,7 +87,7 @@ class SentenceService
      * current user. In single-user mode this is always true. Used as
      * a guard before {@see formatSentence} runs its content-fetching
      * SQL — that SQL joins `word_occurrences` and `languages` with no
-     * UsID column to filter on, so an arbitrary SeID would otherwise
+     * UsID column to filter on, so an arbitrary id would otherwise
      * return another user's sentence text.
      */
     private function ownsSentence(int $seid): bool
@@ -103,7 +103,7 @@ class SentenceService
         $hit = Connection::preparedFetchValue(
             "SELECT 1 AS owned
              FROM sentences, texts
-             WHERE SeID = ? AND SeTxID = TxID AND TxUsID = ?
+             WHERE id = ? AND text_id = TxID AND TxUsID = ?
              LIMIT 1",
             [$seid, $userId],
             'owned'
@@ -162,17 +162,17 @@ class SentenceService
                 pclose($handle);
             }
             unlink($mecab_file);
-            $sql = "SELECT SeID, SeText,
+            $sql = "SELECT sentences.id, sentences.text,
                 concat(
                     '\\t',
-                    group_concat(Ti2Text ORDER BY Ti2Order asc SEPARATOR '\\t'),
+                    group_concat(word_occurrences.text ORDER BY word_occurrences.position asc SEPARATOR '\\t'),
                     '\\t'
                 ) val
                 FROM sentences, word_occurrences
-                WHERE lower(SeText) LIKE ?
-                AND SeID = Ti2SeID AND SeLgID = ? AND Ti2WordCount<2
-                GROUP BY SeID HAVING val LIKE ?
-                ORDER BY CHAR_LENGTH(SeText), SeText";
+                WHERE lower(sentences.text) LIKE ?
+                AND sentences.id = word_occurrences.sentence_id AND sentences.language_id = ? AND word_occurrences.word_count<2
+                GROUP BY sentences.id HAVING val LIKE ?
+                ORDER BY CHAR_LENGTH(sentences.text), sentences.text";
             $params = ["%$wordlc%", $lid, "%$mecab_str%"];
         } else {
             if ($removeSpaces == 1) {
@@ -182,10 +182,10 @@ class SentenceService
                      . StringUtils::removeSpaces($wordlc, (bool)$removeSpaces)
                      . '([^' . $regexpWordChars . ']|$)';
             }
-            $sql = "SELECT DISTINCT SeID, SeText
+            $sql = "SELECT DISTINCT id, text
                 FROM sentences
-                WHERE SeText RLIKE ? AND SeLgID = ?
-                ORDER BY CHAR_LENGTH(SeText), SeText";
+                WHERE text RLIKE ? AND language_id = ?
+                ORDER BY CHAR_LENGTH(text), text";
             $params = [$pattern, $lid];
         }
         if ($limit > 0) {
@@ -216,21 +216,21 @@ class SentenceService
         if ($wid === null) {
             $params = [$wordlc, $lid];
             $userScope = $this->parentTextUserScope($params);
-            $sql = "SELECT DISTINCT SeID, SeText
+            $sql = "SELECT DISTINCT sentences.id, sentences.text
                 FROM sentences, word_occurrences
-                WHERE LOWER(Ti2Text) = ?
-                AND Ti2WoID IS NULL AND SeID = Ti2SeID AND SeLgID = ?{$userScope}
-                ORDER BY CHAR_LENGTH(SeText), SeText";
+                WHERE LOWER(word_occurrences.text) = ?
+                AND word_occurrences.word_id IS NULL AND sentences.id = word_occurrences.sentence_id AND sentences.language_id = ?{$userScope}
+                ORDER BY CHAR_LENGTH(sentences.text), sentences.text";
         } elseif ($wid == -1) {
             // For complex search, build the query dynamically
             return $this->executeSentencesContainingWordQuery($wordlc, $lid, $limit);
         } else {
             $params = [$wid, $lid];
             $userScope = $this->parentTextUserScope($params);
-            $sql = "SELECT DISTINCT SeID, SeText
+            $sql = "SELECT DISTINCT sentences.id, sentences.text
                 FROM sentences, word_occurrences
-                WHERE Ti2WoID = ? AND SeID = Ti2SeID AND SeLgID = ?{$userScope}
-                ORDER BY CHAR_LENGTH(SeText), SeText";
+                WHERE word_occurrences.word_id = ? AND sentences.id = word_occurrences.sentence_id AND sentences.language_id = ?{$userScope}
+                ORDER BY CHAR_LENGTH(sentences.text), sentences.text";
         }
         if ($limit > 0) {
             $sql .= " LIMIT ?";
@@ -258,7 +258,7 @@ class SentenceService
         // Verify the caller owns the parent text before pulling sentence
         // content. The main query below joins word_occurrences and
         // languages without a UsID column on either, so without this
-        // gate a foreign SeID returns the foreign user's sentence text
+        // gate a foreign id returns the foreign user's sentence text
         // verbatim. Defense in depth — find* paths now scope the SeIDs
         // they return, but formatSentence is also reachable directly.
         if (!$this->ownsSentence($seid)) {
@@ -268,12 +268,12 @@ class SentenceService
         $record = Connection::preparedFetchOne(
             "SELECT
             CONCAT(
-                '​', group_concat(Ti2Text ORDER BY Ti2Order asc SEPARATOR '​'), '​'
-            ) AS SeText, Ti2TxID AS SeTxID, LgRegexpWordCharacters,
+                '​', group_concat(text ORDER BY position asc SEPARATOR '​'), '​'
+            ) AS text, text_id AS text_id, LgRegexpWordCharacters,
             LgRemoveSpaces, LgSplitEachChar
             FROM word_occurrences, languages
-            WHERE Ti2LgID = LgID AND Ti2WordCount < 2 AND Ti2SeID = ?
-            AND Ti2Text != '¶'",
+            WHERE language_id = LgID AND word_count < 2 AND sentence_id = ?
+            AND text != '¶'",
             [$seid]
         );
         if ($record === null) {
@@ -281,9 +281,9 @@ class SentenceService
         }
         $removeSpaces = (int)$record["LgRemoveSpaces"] == 1;
         $splitEachChar = (int)$record['LgSplitEachChar'] != 0;
-        $txtid = (int)$record["SeTxID"];
+        $txtid = (int)$record["text_id"];
         $termchar = (string) $record["LgRegexpWordCharacters"];
-        $seText = (string)($record["SeText"] ?? '');
+        $seText = (string)($record["text"] ?? '');
 
         if (
             ($removeSpaces && !$splitEachChar)
@@ -316,15 +316,15 @@ class SentenceService
             $prevseSentRaw = Connection::preparedFetchValue(
                 "SELECT concat(
                     '​',
-                    group_concat(Ti2Text order by Ti2Order asc SEPARATOR '​'),
+                    group_concat(text order by position asc SEPARATOR '​'),
                     '​'
                 ) AS sentence_text
                 from sentences, word_occurrences
-                where Ti2SeID = SeID and SeID < ? and SeTxID = ?
-                and trim(SeText) not in ('¶', '')
-                and Ti2Text != '¶'
-                group by SeID
-                order by SeID desc",
+                where sentence_id = id and id < ? and text_id = ?
+                and trim(text) not in ('¶', '')
+                and text != '¶'
+                group by id
+                order by id desc",
                 [$seid, $txtid],
                 'sentence_text'
             );
@@ -346,15 +346,15 @@ class SentenceService
             $nextSentRaw = Connection::preparedFetchValue(
                 "SELECT concat(
                     '​',
-                    group_concat(Ti2Text order by Ti2Order asc SEPARATOR '​'),
+                    group_concat(text order by position asc SEPARATOR '​'),
                     '​'
                 ) as value
                 from sentences, word_occurrences
-                where Ti2SeID = SeID and SeID > ?
-                and SeTxID = ? and trim(SeText) not in ('¶','')
-                and Ti2Text != '¶'
-                group by SeID
-                order by SeID asc",
+                where sentence_id = id and id > ?
+                and text_id = ? and trim(text) not in ('¶','')
+                and text != '¶'
+                group by id
+                order by id asc",
                 [$seid, $txtid]
             );
             if (isset($nextSentRaw)) {
@@ -417,7 +417,7 @@ class SentenceService
      * Get the formatted text of a sentence by its ID.
      *
      * Reconstructs the sentence from word_occurrences table with proper spacing.
-     * Use this instead of reading SeText directly from sentences table.
+     * Use this instead of reading text directly from sentences table.
      *
      * @param int $seid Sentence ID
      *
@@ -428,20 +428,20 @@ class SentenceService
         $record = Connection::preparedFetchOne(
             "SELECT
                 CONCAT(
-                    '​', GROUP_CONCAT(Ti2Text ORDER BY Ti2Order ASC SEPARATOR '​'), '​'
-                ) AS SeText,
+                    '​', GROUP_CONCAT(text ORDER BY position ASC SEPARATOR '​'), '​'
+                ) AS text,
                 LgRegexpWordCharacters,
                 LgRemoveSpaces,
                 LgSplitEachChar
             FROM word_occurrences
-            JOIN languages ON Ti2LgID = LgID
-            WHERE Ti2WordCount < 2
-              AND Ti2SeID = ?
-              AND Ti2Text != '¶'",
+            JOIN languages ON language_id = LgID
+            WHERE word_count < 2
+              AND sentence_id = ?
+              AND text != '¶'",
             [$seid]
         );
 
-        if ($record === null || $record['SeText'] === null) {
+        if ($record === null || $record['text'] === null) {
             return null;
         }
 
@@ -451,7 +451,7 @@ class SentenceService
 
         // For languages that don't remove spaces and don't split each char
         // (like most Western languages), apply spacing conversion
-        $seText = (string)$record['SeText'];
+        $seText = (string)$record['text'];
         if (!$removeSpaces && !$splitEachChar && strtoupper(trim($termchar)) !== 'MECAB') {
             $text = $this->convertZwsToSpacing($seText, $termchar);
         } else {
@@ -470,7 +470,7 @@ class SentenceService
      * by finding sentence boundaries (punctuation) around the target position.
      *
      * @param int $textId   Text ID
-     * @param int $position Word position (Ti2Order)
+     * @param int $position Word position (position)
      *
      * @return string|null The sentence containing the word, or null if not found
      */
@@ -481,9 +481,9 @@ class SentenceService
  * @var int|null $seidRaw
 */
         $seidRaw = Connection::preparedFetchValue(
-            "SELECT Ti2SeID FROM word_occurrences WHERE Ti2TxID = ? AND Ti2Order = ?",
+            "SELECT sentence_id FROM word_occurrences WHERE text_id = ? AND position = ?",
             [$textId, $position],
-            'Ti2SeID'
+            'sentence_id'
         );
 
         if ($seidRaw === null) {
@@ -496,8 +496,8 @@ class SentenceService
             "SELECT LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar,
                     LgRegexpSplitSentences
              FROM word_occurrences
-             JOIN languages ON Ti2LgID = LgID
-             WHERE Ti2TxID = ? LIMIT 1",
+             JOIN languages ON language_id = LgID
+             WHERE text_id = ? LIMIT 1",
             [$textId]
         );
 
@@ -517,12 +517,12 @@ class SentenceService
         $maxOrder = $position + $contextRange;
 
         $tokens = Connection::preparedFetchAll(
-            "SELECT Ti2Order, Ti2Text, Ti2WordCount
+            "SELECT position, text, word_count
              FROM word_occurrences
-             WHERE Ti2TxID = ? AND Ti2SeID = ?
-               AND Ti2Order >= ? AND Ti2Order <= ?
-               AND Ti2Text != '¶'
-             ORDER BY Ti2Order ASC",
+             WHERE text_id = ? AND sentence_id = ?
+               AND position >= ? AND position <= ?
+               AND text != '¶'
+             ORDER BY position ASC",
             [$textId, $seid, $minOrder, $maxOrder]
         );
 
@@ -536,8 +536,8 @@ class SentenceService
         $currentPos = 1; // Start after initial ZWS
 
         foreach ($tokens as $token) {
-            $order = (int) $token['Ti2Order'];
-            $tokenText = (string) $token['Ti2Text'];
+            $order = (int) $token['position'];
+            $tokenText = (string) $token['text'];
 
             $positionMap[$order] = $currentPos;
             $textWithZws .= $tokenText . '​';
@@ -554,8 +554,8 @@ class SentenceService
         // Get the target word text to locate it in the formatted string
         $targetWord = null;
         foreach ($tokens as $token) {
-            if ((int) $token['Ti2Order'] === $position) {
-                $targetWord = (string) $token['Ti2Text'];
+            if ((int) $token['position'] === $position) {
+                $targetWord = (string) $token['text'];
                 break;
             }
         }
@@ -697,9 +697,9 @@ class SentenceService
             $mode = (int) Settings::getWithDefault('set-term-sentence-count');
         }
         foreach ($res as $record) {
-            $seText = (string)$record['SeText'];
+            $seText = (string)$record['text'];
             if ($last != $seText) {
-                $sent = $this->formatSentence((int)$record['SeID'], $wordlc, $mode);
+                $sent = $this->formatSentence((int)$record['id'], $wordlc, $mode);
                 if (mb_strstr($sent[1], '}', false, 'UTF-8') !== false) {
                     $r[] = $sent;
                 }

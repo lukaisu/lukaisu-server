@@ -53,7 +53,7 @@ class ExpressionService
      * @param string     $text Text to insert
      * @param string|int $lid  Language ID
      *
-     * @return array<int, array{SeID: int, TxID: int, position: int, term: string}>
+     * @return array<int, array{id: int, TxID: int, position: int, term: string}>
      */
     public function findMecabExpression(string $text, string|int $lid): array
     {
@@ -68,9 +68,9 @@ class ExpressionService
             $mecab = $this->textParsingService->getMecabPath($mecab_args);
             $likeText = "%$text%";
             $rows = QueryBuilder::table('sentences')
-                ->select(['SeID', 'SeTxID', 'SeFirstPos', 'SeText'])
-                ->where('SeLgID', '=', $lid)
-                ->where('SeText', 'LIKE', $likeText)
+                ->select(['id', 'text_id', 'first_pos', 'text'])
+                ->where('language_id', '=', $lid)
+                ->where('text', 'LIKE', $likeText)
                 ->getPrepared();
 
             $parsed_text = '';
@@ -103,7 +103,7 @@ class ExpressionService
             $occurrences = [];
             // For each sentence in database containing $text
             foreach ($rows as $record) {
-                $sent = trim((string) $record['SeText']);
+                $sent = trim((string) $record['text']);
                 $fp = fopen($db_to_mecab, 'w');
                 if ($fp === false) {
                     continue;
@@ -139,10 +139,10 @@ class ExpressionService
                     // pos = Number of words * 2 + initial position
                     $matchCount = preg_match_all('/ /', mb_substr($parsed_sentence, 0, $seek));
                     $pos = ($matchCount !== false ? $matchCount : 0) * 2 +
-                    (int) $record['SeFirstPos'];
+                    (int) $record['first_pos'];
                     $occurrences[] = [
-                        "SeID" => (int) $record['SeID'],
-                        "TxID" => (int) $record['SeTxID'],
+                        "id" => (int) $record['id'],
+                        "TxID" => (int) $record['text_id'],
                         "position" => $pos,
                         "term" => $text
                     ];
@@ -165,7 +165,7 @@ class ExpressionService
      * @param string     $textlc Text to insert in lower case
      * @param string|int $lid    Language ID
      *
-     * @return array<int, array{SeID: int, SeTxID: int, position: int, term: ?string, term_display: ?string}>
+     * @return array<int, array{id: int, text_id: int, position: int, term: ?string, term_display: ?string}>
      */
     public function findStandardExpression(string $textlc, string|int $lid): array
     {
@@ -186,20 +186,20 @@ class ExpressionService
             // Complex JOIN query - use raw SQL with UserScopedQuery
             $bindings = [$lid, $likeTextlc];
             $sql = "SELECT
-            GROUP_CONCAT(Ti2Text ORDER BY Ti2Order SEPARATOR ' ') AS SeText, SeID,
-            SeTxID, SeFirstPos, SeTxID
+            GROUP_CONCAT(text ORDER BY position SEPARATOR ' ') AS text, id,
+            text_id, first_pos, text_id
             FROM word_occurrences
             JOIN sentences
-            ON SeID=Ti2SeID AND SeLgID = Ti2LgID
-            WHERE Ti2LgID = ?
-            AND SeText LIKE ?
-            AND Ti2WordCount < 2
-            GROUP BY SeID";
+            ON id=sentence_id AND language_id = language_id
+            WHERE language_id = ?
+            AND text LIKE ?
+            AND word_count < 2
+            GROUP BY id";
             $rows = Connection::preparedFetchAll($sql, $bindings);
         } else {
             $rows = QueryBuilder::table('sentences')
-                ->where('SeLgID', '=', $lid)
-                ->where('SeText', 'LIKE', $likeTextlc)
+                ->where('language_id', '=', $lid)
+                ->where('text', 'LIKE', $likeTextlc)
                 ->getPrepared();
         }
 
@@ -212,7 +212,7 @@ class ExpressionService
         $matches = null;
         $rSflag = false; // Flag to prevent repeat space-removal processing
         foreach ($rows as $record) {
-            $string = ' ' . (string)$record['SeText'] . ' ';
+            $string = ' ' . (string)$record['text'] . ' ';
             if ($splitEachChar) {
                 $replaced = preg_replace('/([^\s])/u', "$1 ", $string);
                 $string = $replaced ?? $string;
@@ -244,7 +244,7 @@ class ExpressionService
                         mb_substr($string, 0, $last_pos, 'UTF-8'),
                         $_
                     );
-                    $pos = 2 * ($cnt !== false ? $cnt : 0) + (int) $record['SeFirstPos'];
+                    $pos = 2 * ($cnt !== false ? $cnt : 0) + (int) $record['first_pos'];
                     $txt = '';
                     $matchedTerm = $matches[1] ?? $textlc;
                     if ($matchedTerm != $textlc) {
@@ -256,8 +256,8 @@ class ExpressionService
                         $display = $matchedTerm;
                     }
                     $occurrences[] = [
-                        "SeID" => (int) $record['SeID'],
-                        "SeTxID" => (int) $record['SeTxID'],
+                        "id" => (int) $record['id'],
+                        "text_id" => (int) $record['text_id'],
                         "position" => $pos,
                         "term" => $txt,
                         "term_display" => $display
@@ -304,7 +304,7 @@ class ExpressionService
             /** @var array<int, array<int, string>> $appendtext */
             $appendtext = [];
             foreach ($occurrences as $occ) {
-                $txId = $occ['SeTxID'] ?? $occ['TxID'] ?? 0;
+                $txId = $occ['text_id'] ?? $occ['TxID'] ?? 0;
                 $appendtext[$txId] = [];
                 if (Settings::getZeroOrOne('showallwords', 1)) {
                     $appendtext[$txId][$occ['position']] = "&nbsp;$len&nbsp";
@@ -323,12 +323,12 @@ class ExpressionService
             $placeholders = [];
             $params = [];
             foreach ($occurrences as $occ) {
-                $txId = $occ["SeTxID"] ?? $occ["TxID"] ?? 0;
+                $txId = $occ["text_id"] ?? $occ["TxID"] ?? 0;
                 $placeholders[] = "(?, ?, ?, ?, ?, ?, ?)";
                 $params[] = $wid;
                 $params[] = $lid;
                 $params[] = $txId;
-                $params[] = $occ["SeID"];
+                $params[] = $occ["id"];
                 $params[] = $occ["position"];
                 $params[] = $len;
                 $params[] = $occ["term"];
@@ -340,7 +340,7 @@ class ExpressionService
             }
 
             $sql = "INSERT INTO word_occurrences
-                 (Ti2WoID,Ti2LgID,Ti2TxID,Ti2SeID,Ti2Order,Ti2WordCount,Ti2Text)
+                 (word_id,language_id,text_id,sentence_id,position,word_count,text)
                  VALUES " . implode(',', $placeholders);
             Connection::preparedExecute($sql, $params);
         }

@@ -143,7 +143,7 @@ class ReviewServiceTest extends TestCase
     {
         $result = $this->service->getReviewSql('texts', [5]);
         $this->assertStringContainsString('word_occurrences', $result['sql']);
-        $this->assertStringContainsString('Ti2TxID IN (?)', $result['sql']);
+        $this->assertStringContainsString('text_id IN (?)', $result['sql']);
         $this->assertSame([5], $result['params']);
     }
 
@@ -159,7 +159,7 @@ class ReviewServiceTest extends TestCase
     public function getReviewSqlTextReturnsSingleParam(): void
     {
         $result = $this->service->getReviewSql('text', 42);
-        $this->assertStringContainsString('Ti2TxID = ?', $result['sql']);
+        $this->assertStringContainsString('text_id = ?', $result['sql']);
         $this->assertSame([42], $result['params']);
     }
 
@@ -538,7 +538,7 @@ class ReviewServiceTest extends TestCase
     public function getReviewSqlTextsMultipleIds(): void
     {
         $result = $this->service->getReviewSql('texts', [10, 20, 30]);
-        $this->assertStringContainsString('Ti2TxID IN (?,?,?)', $result['sql']);
+        $this->assertStringContainsString('text_id IN (?,?,?)', $result['sql']);
         $this->assertSame([10, 20, 30], $result['params']);
     }
 

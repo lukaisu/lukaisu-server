@@ -306,7 +306,7 @@ class WordFamilyService
     private function getWordOccurrenceCount(int $wordId): int
     {
         return (int) Connection::preparedFetchValue(
-            "SELECT COUNT(*) as cnt FROM word_occurrences WHERE Ti2WoID = ?",
+            "SELECT COUNT(*) as cnt FROM word_occurrences WHERE word_id = ?",
             [$wordId],
             'cnt'
         );

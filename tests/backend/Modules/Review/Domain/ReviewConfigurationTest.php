@@ -268,7 +268,7 @@ class ReviewConfigurationTest extends TestCase
 
         $this->assertStringContainsString('words', $sql);
         $this->assertStringContainsString('word_occurrences', $sql);
-        $this->assertStringContainsString('Ti2TxID = ?', $sql);
+        $this->assertStringContainsString('text_id = ?', $sql);
         $this->assertEquals([123], $params);
     }
 
@@ -291,7 +291,7 @@ class ReviewConfigurationTest extends TestCase
 
         $this->assertStringContainsString('words', $sql);
         $this->assertStringContainsString('word_occurrences', $sql);
-        $this->assertStringContainsString('Ti2TxID IN (?,?)', $sql);
+        $this->assertStringContainsString('text_id IN (?,?)', $sql);
         $this->assertEquals([100, 200], $params);
     }
 

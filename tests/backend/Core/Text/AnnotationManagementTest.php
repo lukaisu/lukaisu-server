@@ -23,7 +23,7 @@ final class AnnotationManagementTest extends TestCase
     /**
      * Test annotation to JSON conversion
      *
-     * @since 2.9.0 Annotation keys now match Ti2Order directly (no offset)
+     * @since 2.9.0 Annotation keys now match position directly (no offset)
      */
     public function testAnnotationToJson(): void
     {

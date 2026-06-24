@@ -727,9 +727,10 @@ class ReviewControllerTest extends TestCase
 
         $service = new ReviewService();
 
-        // The method expects a subquery format like "(SELECT id FROM words) AS t"
-        // Use proper subquery syntax
-        $subquery = "(SELECT id, language_id FROM " . Globals::table('words') . " WHERE language_id = 1 LIMIT 1) AS subq";
+        // The method expects a fragment exposing a `words`-qualified language_id
+        // (production reviewsql fragments select from the real `words` table). A
+        // derived table aliased `words` satisfies that contract for this unit test.
+        $subquery = "(SELECT id, language_id FROM " . Globals::table('words') . " WHERE language_id = 1 LIMIT 1) AS words";
 
         $result = $service->validateReviewSelection($subquery);
 

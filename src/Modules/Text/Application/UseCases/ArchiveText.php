@@ -47,10 +47,10 @@ class ArchiveText
     {
         // Delete parsed data
         $count3 = QueryBuilder::table('word_occurrences')
-            ->where('Ti2TxID', '=', $textId)
+            ->where('text_id', '=', $textId)
             ->delete();
         $count2 = QueryBuilder::table('sentences')
-            ->where('SeTxID', '=', $textId)
+            ->where('text_id', '=', $textId)
             ->delete();
 
         // Mark as archived
@@ -62,7 +62,7 @@ class ArchiveText
             $bindings
         );
 
-        Maintenance::adjustAutoIncrement('sentences', 'SeID');
+        Maintenance::adjustAutoIncrement('sentences', 'id');
 
         return ['sentences' => $count2, 'textItems' => $count3, 'archived' => $archived];
     }
@@ -88,10 +88,10 @@ class ArchiveText
             foreach ($ids as $textId) {
                 // Delete parsed data
                 QueryBuilder::table('word_occurrences')
-                    ->where('Ti2TxID', '=', $textId)
+                    ->where('text_id', '=', $textId)
                     ->delete();
                 QueryBuilder::table('sentences')
-                    ->where('SeTxID', '=', $textId)
+                    ->where('text_id', '=', $textId)
                     ->delete();
 
                 // Mark as archived
@@ -104,7 +104,7 @@ class ArchiveText
                 );
             }
 
-            Maintenance::adjustAutoIncrement('sentences', 'SeID');
+            Maintenance::adjustAutoIncrement('sentences', 'id');
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollback();
@@ -160,14 +160,14 @@ class ArchiveText
         // Get statistics
         $bindings3 = [$textId];
         $sentenceCount = (int)Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS cnt FROM sentences WHERE SeTxID = ?"
+            "SELECT COUNT(*) AS cnt FROM sentences WHERE text_id = ?"
             . UserScopedQuery::forTablePrepared('sentences', $bindings3, '', 'texts'),
             $bindings3,
             'cnt'
         );
         $bindings4 = [$textId];
         $itemCount = (int)Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE Ti2TxID = ?"
+            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE text_id = ?"
             . UserScopedQuery::forTablePrepared('word_occurrences', $bindings4, '', 'texts'),
             $bindings4,
             'cnt'

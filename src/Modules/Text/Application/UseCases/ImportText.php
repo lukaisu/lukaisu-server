@@ -91,14 +91,14 @@ class ImportText
 
         $bindings = [$textId];
         $sentenceCount = (int)Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS cnt FROM sentences WHERE SeTxID = ?"
+            "SELECT COUNT(*) AS cnt FROM sentences WHERE text_id = ?"
             . UserScopedQuery::forTablePrepared('sentences', $bindings, '', 'texts'),
             $bindings,
             'cnt'
         );
         $bindings = [$textId];
         $itemCount = (int)Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE Ti2TxID = ?"
+            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE text_id = ?"
             . UserScopedQuery::forTablePrepared('word_occurrences', $bindings, '', 'texts'),
             $bindings,
             'cnt'

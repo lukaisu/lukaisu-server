@@ -254,16 +254,16 @@ class TextPrintService
     {
         $bindings = [$textId];
         $sql = "SELECT
-                    CASE WHEN Ti2WordCount>0 THEN Ti2WordCount ELSE 1 END AS Code,
-                    CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE text END AS TiText,
-                    Ti2Order,
-                    CASE WHEN Ti2WordCount > 0 THEN 0 ELSE 1 END as TiIsNotWord,
-                    id, translation, romanization, status
+                    CASE WHEN word_occurrences.word_count>0 THEN word_occurrences.word_count ELSE 1 END AS Code,
+                    CASE WHEN CHAR_LENGTH(word_occurrences.text)>0 THEN word_occurrences.text ELSE words.text END AS text,
+                    word_occurrences.position,
+                    CASE WHEN word_occurrences.word_count > 0 THEN 0 ELSE 1 END as TiIsNotWord,
+                    words.id, words.translation, words.romanization, words.status
                 FROM word_occurrences
-                LEFT JOIN words ON (Ti2WoID = id) AND (Ti2LgID = language_id)
-                WHERE Ti2TxID = ?"
+                LEFT JOIN words ON (word_occurrences.word_id = words.id) AND (word_occurrences.language_id = words.language_id)
+                WHERE word_occurrences.text_id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings, 'words') . "
-                ORDER BY Ti2Order asc, Ti2WordCount desc";
+                ORDER BY word_occurrences.position asc, word_occurrences.word_count desc";
         return Connection::preparedFetchAll($sql, $bindings);
     }
 
@@ -374,17 +374,17 @@ class TextPrintService
     {
         $bindings = [$textId];
         $sql = "SELECT
-                    CASE WHEN Ti2WordCount>0 THEN Ti2WordCount ELSE 1 END AS wordCount,
-                    CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE text END AS text,
-                    Ti2Order AS position,
-                    CASE WHEN Ti2WordCount > 0 THEN 0 ELSE 1 END as isNotWord,
-                    id AS wordId, translation AS translation,
-                    romanization AS romanization, status AS status
+                    CASE WHEN word_occurrences.word_count>0 THEN word_occurrences.word_count ELSE 1 END AS wordCount,
+                    CASE WHEN CHAR_LENGTH(word_occurrences.text)>0 THEN word_occurrences.text ELSE words.text END AS text,
+                    word_occurrences.position AS position,
+                    CASE WHEN word_occurrences.word_count > 0 THEN 0 ELSE 1 END as isNotWord,
+                    words.id AS wordId, words.translation AS translation,
+                    words.romanization AS romanization, words.status AS status
                 FROM word_occurrences
-                LEFT JOIN words ON (Ti2WoID = id) AND (Ti2LgID = language_id)
-                WHERE Ti2TxID = ?"
+                LEFT JOIN words ON (word_occurrences.word_id = words.id) AND (word_occurrences.language_id = words.language_id)
+                WHERE word_occurrences.text_id = ?"
             . UserScopedQuery::forTablePrepared('words', $bindings, 'words') . "
-                ORDER BY Ti2Order asc, Ti2WordCount desc";
+                ORDER BY word_occurrences.position asc, word_occurrences.word_count desc";
         $results = Connection::preparedFetchAll($sql, $bindings);
 
         $items = [];

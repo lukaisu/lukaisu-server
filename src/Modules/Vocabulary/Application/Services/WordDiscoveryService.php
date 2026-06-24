@@ -57,11 +57,11 @@ class WordDiscoveryService
      *
      * @param int $textId Text ID
      *
-     * @return array<int, array<string, mixed>> Array of rows with Ti2Text and Ti2TextLC columns
+     * @return array<int, array<string, mixed>> Array of rows with text and Ti2TextLC columns
      */
     public function getUnknownWordsInText(int $textId): array
     {
-        // word_occurrences inherits user context via Ti2TxID -> texts FK.
+        // word_occurrences inherits user context via text_id -> texts FK.
         // words is LEFT JOINed; the user-scope must live in the JOIN ON
         // clause, otherwise WHERE id IS NULL would still match other
         // users' words (and a flat AND in WHERE would block the IS-NULL).
@@ -69,11 +69,11 @@ class WordDiscoveryService
         $joinScope = UserScopedQuery::forTablePrepared('words', $joinScopeBindings, 'words');
         $bindings = array_merge($joinScopeBindings, [$textId]);
         return Connection::preparedFetchAll(
-            "SELECT DISTINCT Ti2Text, LOWER(Ti2Text) AS Ti2TextLC
+            "SELECT DISTINCT text, LOWER(text) AS Ti2TextLC
              FROM (word_occurrences LEFT JOIN words
-                   ON LOWER(Ti2Text) = text_lc AND Ti2LgID = language_id{$joinScope})
-             WHERE id IS NULL AND Ti2WordCount = 1 AND Ti2TxID = ?
-             ORDER BY Ti2Order",
+                   ON LOWER(text) = text_lc AND language_id = language_id{$joinScope})
+             WHERE id IS NULL AND word_count = 1 AND text_id = ?
+             ORDER BY position",
             $bindings
         );
     }
@@ -83,20 +83,20 @@ class WordDiscoveryService
      *
      * @param int $textId Text ID
      *
-     * @return array<int, array<string, mixed>> Array of rows with Ti2Text and Ti2TextLC columns
+     * @return array<int, array<string, mixed>> Array of rows with text and Ti2TextLC columns
      */
     public function getAllUnknownWordsInText(int $textId): array
     {
-        // Use Ti2WoID IS NULL to match how the reading interface identifies
-        // unknown words (joined via Ti2WoID = id). This avoids disagreement
+        // Use word_id IS NULL to match how the reading interface identifies
+        // unknown words (joined via word_id = id). This avoids disagreement
         // with the text-based join when a word was learned in another text
-        // but Ti2WoID was not yet updated in this text.
+        // but word_id was not yet updated in this text.
         $bindings = [$textId];
         return Connection::preparedFetchAll(
-            "SELECT DISTINCT Ti2Text, LOWER(Ti2Text) AS Ti2TextLC
+            "SELECT DISTINCT text, LOWER(text) AS Ti2TextLC
              FROM word_occurrences
-             WHERE Ti2WoID IS NULL AND Ti2WordCount = 1 AND Ti2TxID = ?
-             ORDER BY Ti2Order",
+             WHERE word_id IS NULL AND word_count = 1 AND text_id = ?
+             ORDER BY position",
             $bindings
         );
     }
@@ -108,19 +108,19 @@ class WordDiscoveryService
      * @param int $offset Starting position
      * @param int $limit  Number of words to return
      *
-     * @return array<int, array<string, mixed>> Array of rows with word, Ti2LgID, pos columns
+     * @return array<int, array<string, mixed>> Array of rows with word, language_id, pos columns
      */
     public function getUnknownWordsForBulkTranslate(
         int $textId,
         int $offset,
         int $limit
     ): array {
-        // word_occurrences inherits user context via Ti2TxID -> texts FK
+        // word_occurrences inherits user context via text_id -> texts FK
         return Connection::preparedFetchAll(
-            "SELECT Ti2Text AS word, Ti2LgID, MIN(Ti2Order) AS pos
+            "SELECT text AS word, language_id, MIN(position) AS pos
              FROM word_occurrences
-             WHERE Ti2WoID IS NULL AND Ti2TxID = ? AND Ti2WordCount = 1
-             GROUP BY LOWER(Ti2Text)
+             WHERE word_id IS NULL AND text_id = ? AND word_count = 1
+             GROUP BY LOWER(text)
              ORDER BY pos
              LIMIT ?, ?",
             [$textId, $offset, $limit]
@@ -390,7 +390,7 @@ class WordDiscoveryService
         foreach ($records as $record) {
             list($modified_rows, $wordData) = $this->processWordForWellKnown(
                 $status,
-                (string) $record['Ti2Text'],
+                (string) $record['text'],
                 (string) $record['Ti2TextLC'],
                 $langId
             );

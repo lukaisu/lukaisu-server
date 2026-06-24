@@ -95,11 +95,11 @@ class JapaneseTextParser
 
             Connection::execute(
                 "CREATE TEMPORARY TABLE IF NOT EXISTS tempword_occurrences (
-                    TiCount smallint(5) unsigned NOT NULL,
-                    TiSeID mediumint(8) unsigned NOT NULL,
-                    TiOrder smallint(5) unsigned NOT NULL,
-                    TiWordCount tinyint(3) unsigned NOT NULL,
-                    TiText varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
+                    char_position smallint(5) unsigned NOT NULL,
+                    sentence_id mediumint(8) unsigned NOT NULL,
+                    position smallint(5) unsigned NOT NULL,
+                    word_count tinyint(3) unsigned NOT NULL,
+                    text varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
                 ) DEFAULT CHARSET=utf8"
             );
             $handle = fopen($file_name, 'r');
@@ -117,7 +117,7 @@ class JapaneseTextParser
             $sid = 1;
             if ($useMaxSeID) {
                 $sid = (int)Connection::fetchValue(
-                    "SELECT IFNULL(MAX(`SeID`)+1,1) as value FROM sentences"
+                    "SELECT IFNULL(MAX(`id`)+1,1) as value FROM sentences"
                     . UserScopedQuery::forTable('sentences')
                 );
             }
@@ -140,8 +140,8 @@ class JapaneseTextParser
                 if ($term_type == 2 || $term == 'EOP' && $third == '7') {
                     $sid += 1;
                 }
-                $row[0] = $sid; // TiSeID
-                $row[1] = $count + 1; // TiCount
+                $row[0] = $sid; // sentence_id
+                $row[1] = $count + 1; // char_position
                 $count += mb_strlen($term);
                 $last_term_type = $term_type;
                 if ($third == '7') {
@@ -160,9 +160,9 @@ class JapaneseTextParser
                 // Twice if current or the previous were not of unmanaged type
                 $order += (int)($term_type == 0 && $last_term_type == 0) +
                 (int)($term_type != 1 || $last_term_type != 1);
-                $row[2] = $order; // TiOrder
-                $row[3] = $term; // TiText (no escaping needed for prepared statement)
-                $row[4] = $term_type == 0 ? 1 : 0; // TiWordCount
+                $row[2] = $order; // position
+                $row[3] = $term; // text (no escaping needed for prepared statement)
+                $row[4] = $term_type == 0 ? 1 : 0; // word_count
                 $values[] = $row;
                 // Special case for kazu (numbers)
                 if ($last_node_type == 8 && $node_type == 8) {
@@ -186,34 +186,34 @@ class JapaneseTextParser
             foreach ($values as $row) {
                 $placeholders[] = "(?, ?, ?, ?, ?)";
                 // Flatten the row values into a single array for binding
-                $flatParams[] = $row[0]; // TiSeID
-                $flatParams[] = $row[1]; // TiCount
-                $flatParams[] = $row[2]; // TiOrder
-                $flatParams[] = $row[3]; // TiText
-                $flatParams[] = $row[4]; // TiWordCount
+                $flatParams[] = $row[0]; // sentence_id
+                $flatParams[] = $row[1]; // char_position
+                $flatParams[] = $row[2]; // position
+                $flatParams[] = $row[3]; // text
+                $flatParams[] = $row[4]; // word_count
             }
 
             if (!empty($placeholders)) {
                 Connection::preparedExecute(
                     "INSERT INTO tempword_occurrences (
-                        TiSeID, TiCount, TiOrder, TiText, TiWordCount
+                        sentence_id, char_position, position, text, word_count
                     ) VALUES " . implode(',', $placeholders),
                     $flatParams
                 );
             }
-            // Delete elements TiOrder=@order
+            // Delete elements position=@order
             Connection::preparedExecute(
-                "DELETE FROM tempword_occurrences WHERE TiOrder=?",
+                "DELETE FROM tempword_occurrences WHERE position=?",
                 [$order]
             );
             Connection::query(
                 "INSERT INTO temp_word_occurrences (
-                    TiCount, TiSeID, TiOrder, TiWordCount, TiText
+                    char_position, sentence_id, position, word_count, text
                 )
-                SELECT MIN(TiCount) s, TiSeID, TiOrder, TiWordCount,
-                group_concat(TiText ORDER BY TiCount SEPARATOR '')
+                SELECT MIN(char_position) s, sentence_id, position, word_count,
+                group_concat(text ORDER BY char_position SEPARATOR '')
                 FROM tempword_occurrences
-                GROUP BY TiOrder"
+                GROUP BY position"
             );
             Connection::execute("DROP TABLE tempword_occurrences");
         } finally {

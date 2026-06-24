@@ -220,7 +220,7 @@ class ExpressionServiceTest extends TestCase
     public function testStandardExpressionReturnsExpectedStructure(): void
     {
         // Document expected return structure for findStandardExpression
-        $expectedKeys = ['SeID', 'SeTxID', 'position', 'term', 'term_display'];
+        $expectedKeys = ['id', 'text_id', 'position', 'term', 'term_display'];
 
         // This is a documentation test - actual array structure validation
         // would require database integration testing
@@ -230,7 +230,7 @@ class ExpressionServiceTest extends TestCase
     public function testMecabExpressionReturnsExpectedStructure(): void
     {
         // Document expected return structure for findMecabExpression
-        $expectedKeys = ['SeID', 'TxID', 'position', 'term'];
+        $expectedKeys = ['id', 'TxID', 'position', 'term'];
 
         // This is a documentation test - actual array structure validation
         // would require MeCab and database integration testing
@@ -388,13 +388,13 @@ class ExpressionServiceTest extends TestCase
         // Document expected placeholder format for word_occurrences insert
         $expectedPlaceholder = '(?, ?, ?, ?, ?, ?, ?)';
         $expectedColumns = [
-            'Ti2WoID',
-            'Ti2LgID',
-            'Ti2TxID',
-            'Ti2SeID',
-            'Ti2Order',
-            'Ti2WordCount',
-            'Ti2Text',
+            'word_id',
+            'language_id',
+            'text_id',
+            'sentence_id',
+            'position',
+            'word_count',
+            'text',
         ];
 
         $this->assertSame(7, substr_count($expectedPlaceholder, '?'));

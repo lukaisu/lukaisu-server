@@ -70,7 +70,7 @@ class TextStatisticsService
         }
 
         // word_occurrences has no user column; it inherits scope from its
-        // Ti2TxID -> texts FK only when joined. Without this filter a
+        // text_id -> texts FK only when joined. Without this filter a
         // caller passing arbitrary TxIDs (or mixing owned + unowned) gets
         // back word counts and status breakdowns for texts they do not
         // own. Drop unowned IDs silently — mirrors WordListService.
@@ -80,14 +80,14 @@ class TextStatisticsService
         }
 
         // Raw SQL needed for complex aggregation with DISTINCT LOWER()
-        // word_occurrences inherits user context via Ti2TxID -> texts FK
+        // word_occurrences inherits user context via text_id -> texts FK
         $bindings = [];
         $inClause = Connection::buildPreparedInClause($textIds, $bindings);
-        $sql = "SELECT Ti2TxID AS text, COUNT(DISTINCT LOWER(Ti2Text)) AS unique_cnt,
-            COUNT(LOWER(Ti2Text)) AS total
+        $sql = "SELECT text_id AS text, COUNT(DISTINCT LOWER(text)) AS unique_cnt,
+            COUNT(LOWER(text)) AS total
             FROM word_occurrences
-            WHERE Ti2WordCount = 1 AND Ti2TxID IN {$inClause}
-            GROUP BY Ti2TxID";
+            WHERE word_count = 1 AND text_id IN {$inClause}
+            GROUP BY text_id";
         $rows = Connection::preparedFetchAll($sql, $bindings);
         foreach ($rows as $record) {
             $textId = (int) $record['text'];
@@ -96,14 +96,14 @@ class TextStatisticsService
         }
 
         // Raw SQL needed for complex aggregation with DISTINCT
-        // word_occurrences inherits user context via Ti2TxID -> texts FK
+        // word_occurrences inherits user context via text_id -> texts FK
         $bindings = [];
         $inClause = Connection::buildPreparedInClause($textIds, $bindings);
-        $sql = "SELECT Ti2TxID AS text, COUNT(DISTINCT Ti2WoID) AS unique_cnt,
-            COUNT(Ti2WoID) AS total
+        $sql = "SELECT text_id AS text, COUNT(DISTINCT word_id) AS unique_cnt,
+            COUNT(word_id) AS total
             FROM word_occurrences
-            WHERE Ti2WordCount > 1 AND Ti2TxID IN {$inClause}
-            GROUP BY Ti2TxID";
+            WHERE word_count > 1 AND text_id IN {$inClause}
+            GROUP BY text_id";
         $rows = Connection::preparedFetchAll($sql, $bindings);
         foreach ($rows as $record) {
             $textId = (int) $record['text'];
@@ -112,16 +112,16 @@ class TextStatisticsService
         }
 
         // Raw SQL needed for complex aggregation with DISTINCT and implicit JOIN
-        // word_occurrences inherits user context via Ti2TxID -> texts FK
+        // word_occurrences inherits user context via text_id -> texts FK
         // words has user scope (user_id), need to apply user filtering
         $bindings = [];
         $inClause = Connection::buildPreparedInClause($textIds, $bindings);
-        $sql = "SELECT Ti2TxID AS text, COUNT(DISTINCT Ti2WoID) AS unique_cnt,
-            COUNT(Ti2WoID) AS total, status AS status
+        $sql = "SELECT text_id AS text, COUNT(DISTINCT word_id) AS unique_cnt,
+            COUNT(word_id) AS total, status AS status
             FROM word_occurrences, words
-            WHERE Ti2WoID != 0 AND Ti2TxID IN {$inClause} AND Ti2WoID = id"
+            WHERE word_id != 0 AND text_id IN {$inClause} AND word_id = id"
             . UserScopedQuery::forTablePrepared('words', $bindings, 'words') .
-            " GROUP BY Ti2TxID, status";
+            " GROUP BY text_id, status";
         $rows = Connection::preparedFetchAll($sql, $bindings);
         foreach ($rows as $record) {
             $textId = (int) $record['text'];
@@ -149,12 +149,12 @@ class TextStatisticsService
             return 0;
         }
         // Raw SQL needed for COUNT(DISTINCT LOWER())
-        // word_occurrences inherits user context via Ti2TxID -> texts FK
+        // word_occurrences inherits user context via text_id -> texts FK
         /** @var int|string|null $count */
         $count = Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT LOWER(Ti2Text)) AS cnt
+            "SELECT COUNT(DISTINCT LOWER(text)) AS cnt
             FROM word_occurrences
-            WHERE Ti2WordCount=1 AND Ti2WoID IS NULL AND Ti2TxID=?",
+            WHERE word_count=1 AND word_id IS NULL AND text_id=?",
             [$textId],
             'cnt'
         );

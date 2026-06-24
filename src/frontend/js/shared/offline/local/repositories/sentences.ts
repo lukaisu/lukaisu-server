@@ -62,7 +62,7 @@ function formatSentence(
 /**
  * Sentences in the language's texts that contain a term. When `wordId` is a
  * saved term it matches that term's occurrences; otherwise it matches the
- * lower-cased surface form (mirrors the server's `Ti2WoID = wid` vs surface
+ * lower-cased surface form (mirrors the server's `word_id = wid` vs surface
  * lookup).
  */
 export async function getSentencesWithTerm(
@@ -87,7 +87,7 @@ export async function getSentencesWithTerm(
   const sentenceIds = [...new Set(occurrences.map((o) => o.sentenceId))];
   const sentences = (await localDb.sentences.bulkGet(sentenceIds))
     .filter((s): s is LocalSentence => s != null)
-    // Shortest sentences first, like the server's `ORDER BY CHAR_LENGTH(SeText)`.
+    // Shortest sentences first, like the server's `ORDER BY CHAR_LENGTH(text)`.
     .sort((a, b) => a.text.length - b.text.length);
 
   const wordChars = lang.regexpWordCharacters || 'a-zA-Z';

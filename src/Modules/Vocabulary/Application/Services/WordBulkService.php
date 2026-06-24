@@ -52,12 +52,12 @@ class WordBulkService
 
         // Delete multi-word text items first (before word deletion triggers FK SET NULL)
         QueryBuilder::table('word_occurrences')
-            ->where('Ti2WordCount', '>', 1)
-            ->whereIn('Ti2WoID', $ids)
+            ->where('word_count', '>', 1)
+            ->whereIn('word_id', $ids)
             ->deletePrepared();
 
         // Delete words - FK constraints handle:
-        // - Single-word word_occurrences.Ti2WoID set to NULL (ON DELETE SET NULL)
+        // - Single-word word_occurrences.word_id set to NULL (ON DELETE SET NULL)
         // - word_tag_map deleted (ON DELETE CASCADE)
         $count = QueryBuilder::table('words')
             ->whereIn('id', $ids)

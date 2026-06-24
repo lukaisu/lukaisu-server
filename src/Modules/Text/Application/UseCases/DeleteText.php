@@ -43,17 +43,17 @@ class DeleteText
     public function execute(int $textId): array
     {
         $count3 = QueryBuilder::table('word_occurrences')
-            ->where('Ti2TxID', '=', $textId)
+            ->where('text_id', '=', $textId)
             ->delete();
         $count2 = QueryBuilder::table('sentences')
-            ->where('SeTxID', '=', $textId)
+            ->where('text_id', '=', $textId)
             ->delete();
         $count1 = QueryBuilder::table('texts')
             ->where('TxID', '=', $textId)
             ->delete();
 
         Maintenance::adjustAutoIncrement('texts', 'TxID');
-        Maintenance::adjustAutoIncrement('sentences', 'SeID');
+        Maintenance::adjustAutoIncrement('sentences', 'id');
         $this->cleanupTextTags();
 
         return ['texts' => $count1, 'sentences' => $count2, 'textItems' => $count3];
@@ -78,12 +78,12 @@ class DeleteText
         try {
             // Delete text items
             QueryBuilder::table('word_occurrences')
-                ->whereIn('Ti2TxID', $ids)
+                ->whereIn('text_id', $ids)
                 ->delete();
 
             // Delete sentences
             QueryBuilder::table('sentences')
-                ->whereIn('SeTxID', $ids)
+                ->whereIn('text_id', $ids)
                 ->delete();
 
             // Delete texts
@@ -92,7 +92,7 @@ class DeleteText
                 ->delete();
 
             Maintenance::adjustAutoIncrement('texts', 'TxID');
-            Maintenance::adjustAutoIncrement('sentences', 'SeID');
+            Maintenance::adjustAutoIncrement('sentences', 'id');
             $this->cleanupTextTags();
 
             DB::commit();

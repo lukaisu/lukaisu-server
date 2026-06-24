@@ -76,13 +76,13 @@ class TextTermApiHandler
         $records = QueryBuilder::table('word_occurrences')
             ->select(
                 [
-                'CASE WHEN `Ti2WordCount`>0 THEN Ti2WordCount ELSE 1 END AS Code',
-                'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE `text` END AS TiText',
-                'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN LOWER(Ti2Text) ELSE `text_lc` END AS TiTextLC',
-                'Ti2Order',
-                'Ti2SeID',
-                'CASE WHEN `Ti2WordCount`>0 THEN 0 ELSE 1 END AS TiIsNotWord',
-                'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN CHAR_LENGTH(Ti2Text) ' .
+                'CASE WHEN `word_count`>0 THEN word_count ELSE 1 END AS Code',
+                'CASE WHEN CHAR_LENGTH(text)>0 THEN text ELSE `text` END AS text',
+                'CASE WHEN CHAR_LENGTH(text)>0 THEN LOWER(text) ELSE `text_lc` END AS TiTextLC',
+                'position',
+                'sentence_id',
+                'CASE WHEN `word_count`>0 THEN 0 ELSE 1 END AS TiIsNotWord',
+                'CASE WHEN CHAR_LENGTH(text)>0 THEN CHAR_LENGTH(text) ' .
                     'ELSE CHAR_LENGTH(`text_lc`) END AS TiTextLength',
                 'id',
                 'text',
@@ -92,10 +92,10 @@ class TextTermApiHandler
                 'notes'
                 ]
             )
-            ->leftJoin('words', 'word_occurrences.Ti2WoID', '=', 'words.id')
-            ->where('word_occurrences.Ti2TxID', '=', $textId)
-            ->orderBy('Ti2Order', 'ASC')
-            ->orderBy('Ti2WordCount', 'DESC')
+            ->leftJoin('words', 'word_occurrences.word_id', '=', 'words.id')
+            ->where('word_occurrences.text_id', '=', $textId)
+            ->orderBy('position', 'ASC')
+            ->orderBy('word_count', 'DESC')
             ->getPrepared();
 
         $words = [];
@@ -104,14 +104,14 @@ class TextTermApiHandler
 
         foreach ($records as $record) {
             $code = (int)$record['Code'];
-            $order = (int)$record['Ti2Order'];
+            $order = (int)$record['position'];
             $isNotWord = (int)$record['TiIsNotWord'];
 
             if ($code > 1) {
-                if (empty($exprs) || $exprs[count($exprs) - 1]['text'] !== $record['TiText']) {
+                if (empty($exprs) || $exprs[count($exprs) - 1]['text'] !== $record['text']) {
                     $exprs[] = [
                         'code' => $code,
-                        'text' => $record['TiText'],
+                        'text' => $record['text'],
                         'remaining' => $code,
                         'startPos' => $order,
                         'wordId' => isset($record['id']) ? (int)$record['id'] : null,
@@ -126,8 +126,8 @@ class TextTermApiHandler
 
             $wordData = [
                 'position' => $order,
-                'sentenceId' => (int)$record['Ti2SeID'],
-                'text' => $record['TiText'] ?? '',
+                'sentenceId' => (int)$record['sentence_id'],
+                'text' => $record['text'] ?? '',
                 'textLc' => $record['TiTextLC'] ?? '',
                 'hex' => $hex,
                 'isNotWord' => $isNotWord === 1,

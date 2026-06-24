@@ -455,7 +455,7 @@ class WordListServiceTest extends TestCase
     {
         $result = $this->service->getTestWordIdsSql('42', '', '', '', '');
         $this->assertStringContainsString('word_occurrences', $result['sql']);
-        $this->assertStringContainsString('Ti2TxID in', $result['sql']);
+        $this->assertStringContainsString('text_id in', $result['sql']);
         $this->assertStringContainsString('?', $result['sql']);
         $this->assertSame([42], $result['params']);
     }
@@ -530,7 +530,7 @@ class WordListServiceTest extends TestCase
     {
         $result = $this->service->getAnkiExportSql([], '5,10', '', '', '', '');
         $this->assertStringContainsString('word_occurrences', $result['sql']);
-        $this->assertStringContainsString('Ti2TxID in', $result['sql']);
+        $this->assertStringContainsString('text_id in', $result['sql']);
         $this->assertSame([5, 10], $result['params']);
     }
 
@@ -555,7 +555,7 @@ class WordListServiceTest extends TestCase
     {
         $result = $this->service->getTsvExportSql([], '10', '', '', '', '');
         $this->assertIsArray($result);
-        $this->assertStringContainsString('Ti2TxID in', $result['sql']);
+        $this->assertStringContainsString('text_id in', $result['sql']);
         $this->assertStringContainsString('word_occurrences', $result['sql']);
         $this->assertSame([10], $result['params']);
     }

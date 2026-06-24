@@ -60,11 +60,11 @@ class TextParsingTest extends TestCase
         // Clean up any existing test language first
         $langName = 'Test TextParsing Language';
         Connection::query(
-            "DELETE FROM $word_occurrences WHERE Ti2LgID IN " .
+            "DELETE FROM $word_occurrences WHERE language_id IN " .
             "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
         );
         Connection::query(
-            "DELETE FROM $sentences WHERE SeLgID IN " .
+            "DELETE FROM $sentences WHERE language_id IN " .
             "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
         );
         Connection::query(
@@ -107,8 +107,8 @@ class TextParsingTest extends TestCase
             $languages = Globals::table('languages');
 
             // Clean up any test texts and associated data
-            Connection::query("DELETE FROM $word_occurrences WHERE Ti2LgID = " . self::$testLanguageId);
-            Connection::query("DELETE FROM $sentences WHERE SeLgID = " . self::$testLanguageId);
+            Connection::query("DELETE FROM $word_occurrences WHERE language_id = " . self::$testLanguageId);
+            Connection::query("DELETE FROM $sentences WHERE language_id = " . self::$testLanguageId);
             Connection::query("DELETE FROM $texts WHERE TxLgID = " . self::$testLanguageId);
             Connection::query("DELETE FROM $words WHERE language_id = " . self::$testLanguageId);
             Connection::query("DELETE FROM $languages WHERE LgID = " . self::$testLanguageId);
@@ -359,19 +359,19 @@ class TextParsingTest extends TestCase
 
         // Check that sentences were created
         $sentenceCount = Connection::fetchValue(
-            "SELECT COUNT(*) as value FROM $sentences WHERE SeTxID = $textId"
+            "SELECT COUNT(*) as value FROM $sentences WHERE text_id = $textId"
         );
         $this->assertGreaterThan(0, (int)$sentenceCount, 'Should create sentences');
 
         // Check that text items were created
         $itemCount = Connection::fetchValue(
-            "SELECT COUNT(*) as value FROM $word_occurrences WHERE Ti2TxID = $textId"
+            "SELECT COUNT(*) as value FROM $word_occurrences WHERE text_id = $textId"
         );
         $this->assertGreaterThan(0, (int)$itemCount, 'Should create text items');
 
         // Clean up
-        Connection::query("DELETE FROM $word_occurrences WHERE Ti2TxID = $textId");
-        Connection::query("DELETE FROM $sentences WHERE SeTxID = $textId");
+        Connection::query("DELETE FROM $word_occurrences WHERE text_id = $textId");
+        Connection::query("DELETE FROM $sentences WHERE text_id = $textId");
         Connection::query("DELETE FROM $texts WHERE TxID = $textId");
     }
 
@@ -464,22 +464,22 @@ class TextParsingTest extends TestCase
 
         // Query word_occurrences to check word recognition
         $resultNoPunct = Connection::fetchAll(
-            "SELECT Ti2Text, Ti2WordCount FROM $word_occurrences
-             WHERE Ti2TxID = $textIdNoPunct ORDER BY Ti2Order"
+            "SELECT text, word_count FROM $word_occurrences
+             WHERE text_id = $textIdNoPunct ORDER BY position"
         );
 
-        // Filter to only word items (Ti2WordCount > 0)
-        $wordsNoPunct = array_filter($resultNoPunct, fn($r) => (int)$r['Ti2WordCount'] > 0);
+        // Filter to only word items (word_count > 0)
+        $wordsNoPunct = array_filter($resultNoPunct, fn($r) => (int)$r['word_count'] > 0);
         $wordsNoPunct = array_values($wordsNoPunct); // Re-index
 
         // Both "Hello" and "world" should be recognized as words
         $this->assertCount(2, $wordsNoPunct, 'Should have 2 words without punctuation');
-        $this->assertEquals('Hello', $wordsNoPunct[0]['Ti2Text']);
-        $this->assertEquals(1, (int)$wordsNoPunct[0]['Ti2WordCount'], 'First word should have WordCount=1');
-        $this->assertEquals('world', $wordsNoPunct[1]['Ti2Text']);
+        $this->assertEquals('Hello', $wordsNoPunct[0]['text']);
+        $this->assertEquals(1, (int)$wordsNoPunct[0]['word_count'], 'First word should have WordCount=1');
+        $this->assertEquals('world', $wordsNoPunct[1]['text']);
         $this->assertEquals(
             1,
-            (int)$wordsNoPunct[1]['Ti2WordCount'],
+            (int)$wordsNoPunct[1]['word_count'],
             'Last word should have WordCount=1 even without trailing punctuation'
         );
 
@@ -492,30 +492,30 @@ class TextParsingTest extends TestCase
         TextParsing::parseAndSave("Hello world.", self::$testLanguageId, $textIdWithPunct);
 
         $resultWithPunct = Connection::fetchAll(
-            "SELECT Ti2Text, Ti2WordCount FROM $word_occurrences
-             WHERE Ti2TxID = $textIdWithPunct ORDER BY Ti2Order"
+            "SELECT text, word_count FROM $word_occurrences
+             WHERE text_id = $textIdWithPunct ORDER BY position"
         );
 
         // Filter to only word items
-        $wordsWithPunct = array_filter($resultWithPunct, fn($r) => (int)$r['Ti2WordCount'] > 0);
+        $wordsWithPunct = array_filter($resultWithPunct, fn($r) => (int)$r['word_count'] > 0);
         $wordsWithPunct = array_values($wordsWithPunct);
 
         // Both words should be recognized
         $this->assertCount(2, $wordsWithPunct, 'Should have 2 words with punctuation');
-        $this->assertEquals('Hello', $wordsWithPunct[0]['Ti2Text']);
-        $this->assertEquals(1, (int)$wordsWithPunct[0]['Ti2WordCount']);
-        $this->assertEquals('world', $wordsWithPunct[1]['Ti2Text']);
-        $this->assertEquals(1, (int)$wordsWithPunct[1]['Ti2WordCount']);
+        $this->assertEquals('Hello', $wordsWithPunct[0]['text']);
+        $this->assertEquals(1, (int)$wordsWithPunct[0]['word_count']);
+        $this->assertEquals('world', $wordsWithPunct[1]['text']);
+        $this->assertEquals(1, (int)$wordsWithPunct[1]['word_count']);
 
         // Check that punctuation is also stored (as non-word)
-        $punctuation = array_filter($resultWithPunct, fn($r) => $r['Ti2Text'] === '.');
+        $punctuation = array_filter($resultWithPunct, fn($r) => $r['text'] === '.');
         $this->assertNotEmpty($punctuation, 'Punctuation should be stored');
         $punctItem = array_values($punctuation)[0];
-        $this->assertEquals(0, (int)$punctItem['Ti2WordCount'], 'Punctuation should have WordCount=0');
+        $this->assertEquals(0, (int)$punctItem['word_count'], 'Punctuation should have WordCount=0');
 
         // Clean up
-        Connection::query("DELETE FROM $word_occurrences WHERE Ti2TxID IN ($textIdNoPunct, $textIdWithPunct)");
-        Connection::query("DELETE FROM $sentences WHERE SeTxID IN ($textIdNoPunct, $textIdWithPunct)");
+        Connection::query("DELETE FROM $word_occurrences WHERE text_id IN ($textIdNoPunct, $textIdWithPunct)");
+        Connection::query("DELETE FROM $sentences WHERE text_id IN ($textIdNoPunct, $textIdWithPunct)");
         Connection::query("DELETE FROM $texts WHERE TxID IN ($textIdNoPunct, $textIdWithPunct)");
     }
 
@@ -819,13 +819,13 @@ class TextParsingTest extends TestCase
 
         // Check that word occurrences were created
         $itemCount = Connection::fetchValue(
-            "SELECT COUNT(*) as value FROM $word_occurrences WHERE Ti2TxID = $textId"
+            "SELECT COUNT(*) as value FROM $word_occurrences WHERE text_id = $textId"
         );
         $this->assertGreaterThan(0, (int)$itemCount, 'Should have word occurrences');
 
         // Clean up
-        Connection::query("DELETE FROM $word_occurrences WHERE Ti2TxID = $textId");
-        Connection::query("DELETE FROM $sentences WHERE SeTxID = $textId");
+        Connection::query("DELETE FROM $word_occurrences WHERE text_id = $textId");
+        Connection::query("DELETE FROM $sentences WHERE text_id = $textId");
         Connection::query("DELETE FROM $texts WHERE TxID = $textId");
         Connection::query("DELETE FROM $words WHERE id = $wordId");
     }
@@ -921,13 +921,13 @@ class TextParsingTest extends TestCase
 
         // Check that at least 1 sentence was created
         $sentenceCount = Connection::fetchValue(
-            "SELECT COUNT(*) as value FROM $sentences WHERE SeTxID = $textId"
+            "SELECT COUNT(*) as value FROM $sentences WHERE text_id = $textId"
         );
         $this->assertGreaterThanOrEqual(1, (int)$sentenceCount, 'Should create at least 1 sentence');
 
         // Clean up
-        Connection::query("DELETE FROM $word_occurrences WHERE Ti2TxID = $textId");
-        Connection::query("DELETE FROM $sentences WHERE SeTxID = $textId");
+        Connection::query("DELETE FROM $word_occurrences WHERE text_id = $textId");
+        Connection::query("DELETE FROM $sentences WHERE text_id = $textId");
         Connection::query("DELETE FROM $texts WHERE TxID = $textId");
     }
 

@@ -162,7 +162,7 @@ class ListTexts
 
         $sql = "SELECT TxID, TxTitle, LgName, TxAudioURI, TxSourceURI,
             LENGTH(TxAnnotatedText) AS annotlen,
-            (SELECT COUNT(*) FROM sentences WHERE SeTxID = TxID) AS sentnum,
+            (SELECT COUNT(*) FROM sentences WHERE text_id = TxID) AS sentnum,
             IFNULL(GROUP_CONCAT(DISTINCT text ORDER BY text SEPARATOR ','), '') AS taglist
             FROM (
                 (texts

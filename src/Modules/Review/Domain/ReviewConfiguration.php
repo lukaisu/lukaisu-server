@@ -222,7 +222,7 @@ final readonly class ReviewConfiguration
             ? $this->selection
             : (int) (is_array($this->selection) ? ($this->selection[0] ?? 0) : $this->selection);
         $params[] = $textId;
-        return " words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID = ? "
+        return " words, word_occurrences WHERE language_id = language_id AND word_id = id AND text_id = ? "
             . self::appendUserScope($params) . " ";
     }
 
@@ -257,7 +257,7 @@ final readonly class ReviewConfiguration
         foreach ($ids as $id) {
             $params[] = (int) $id;
         }
-        return " words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID IN ($placeholders) "
+        return " words, word_occurrences WHERE language_id = language_id AND word_id = id AND text_id IN ($placeholders) "
             . self::appendUserScope($params) . " ";
     }
 

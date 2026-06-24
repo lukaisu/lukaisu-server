@@ -48,7 +48,7 @@ class TextParsingPersistence
         }
         Connection::query("SET @order=0, @sid=1, @count = 0;");
         if ($id > 0) {
-            // Get next auto-increment value for accurate TiSeID calculation
+            // Get next auto-increment value for accurate sentence_id calculation
             $dbname = Globals::getDatabaseName();
             $sentencesTable = Globals::table('sentences');
             $autoInc = (int)Connection::preparedFetchValue(
@@ -59,7 +59,7 @@ class TextParsingPersistence
             // Fall back to MAX+1 if AUTO_INCREMENT is not available
             if ($autoInc <= 0) {
                 $autoInc = (int)Connection::fetchValue(
-                    "SELECT IFNULL(MAX(`SeID`)+1,1) as value FROM sentences"
+                    "SELECT IFNULL(MAX(`id`)+1,1) as value FROM sentences"
                     . UserScopedQuery::forTable('sentences')
                 );
             }
@@ -76,9 +76,9 @@ class TextParsingPersistence
         INTO TABLE temp_word_occurrences
         FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' (@word_count, @term)
         SET
-            TiSeID = @sid,
-            TiCount = (@count:=@count+CHAR_LENGTH(@term))+1-CHAR_LENGTH(@term),
-            TiOrder = IF(
+            sentence_id = @sid,
+            char_position = (@count:=@count+CHAR_LENGTH(@term))+1-CHAR_LENGTH(@term),
+            position = IF(
                 @term LIKE '%\\r',
                 CASE
                     WHEN (@term:=REPLACE(@term,'\\r','')) IS NULL THEN NULL
@@ -88,8 +88,8 @@ class TextParsingPersistence
                 END,
                 @order := @order+1
             ),
-            TiText = @term,
-            TiWordCount = @word_count";
+            text = @term,
+            word_count = @word_count";
 
         // Try LOAD DATA LOCAL INFILE, fall back to INSERT if it fails
         try {
@@ -118,7 +118,7 @@ class TextParsingPersistence
         // Get starting sentence ID
         $sid = 1;
         if ($id > 0) {
-            // Get next auto-increment value for accurate TiSeID calculation
+            // Get next auto-increment value for accurate sentence_id calculation
             $dbname = Globals::getDatabaseName();
             $sentencesTable = Globals::table('sentences');
             $sid = (int)Connection::preparedFetchValue(
@@ -129,7 +129,7 @@ class TextParsingPersistence
             // Fall back to MAX+1 if AUTO_INCREMENT is not available
             if ($sid <= 0) {
                 $sid = (int)Connection::fetchValue(
-                    "SELECT IFNULL(MAX(`SeID`)+1,1) as value FROM sentences"
+                    "SELECT IFNULL(MAX(`id`)+1,1) as value FROM sentences"
                     . UserScopedQuery::forTable('sentences')
                 );
             }
@@ -168,7 +168,7 @@ class TextParsingPersistence
 
             Connection::preparedExecute(
                 "INSERT INTO temp_word_occurrences
-                (TiSeID, TiCount, TiOrder, TiText, TiWordCount)
+                (sentence_id, char_position, position, text, word_count)
                 VALUES (?, ?, ?, ?, ?)",
                 [$sid, $current_count, $order, $term, $word_count]
             );
@@ -186,8 +186,8 @@ class TextParsingPersistence
     {
         $wo = $nw = array();
         $sentences = Connection::fetchAll(
-            'SELECT GROUP_CONCAT(TiText order by TiOrder SEPARATOR "")
-            Sent FROM temp_word_occurrences group by TiSeID'
+            'SELECT GROUP_CONCAT(text order by position SEPARATOR "")
+            Sent FROM temp_word_occurrences group by sentence_id'
         );
         echo '<h4>Sentences</h4><ol>';
         foreach ($sentences as $record) {
@@ -196,12 +196,12 @@ class TextParsingPersistence
         echo '</ol>';
         $bindings = [$lid];
         $rows = Connection::preparedFetchAll(
-            "SELECT count(`TiOrder`) cnt, if(0=TiWordCount,0,1) as len,
-            LOWER(TiText) as word, translation
+            "SELECT count(temp_word_occurrences.position) cnt, if(0=temp_word_occurrences.word_count,0,1) as len,
+            LOWER(temp_word_occurrences.text) as word, words.translation
             FROM temp_word_occurrences
-            LEFT JOIN words ON lower(TiText)=text_lc AND language_id=?"
+            LEFT JOIN words ON lower(temp_word_occurrences.text)=words.text_lc AND words.language_id=?"
             . UserScopedQuery::forTablePrepared('words', $bindings, '')
-            . " GROUP BY lower(TiText)",
+            . " GROUP BY lower(temp_word_occurrences.text)",
             $bindings
         );
         foreach ($rows as $record) {
@@ -227,10 +227,10 @@ class TextParsingPersistence
     /**
      * Append sentences and text items in the database.
      *
-     * TiSeID in temp_word_occurrences is pre-computed to match future SeID values.
-     * When parseStandardToDatabase runs with useMaxSeID=true, it sets TiSeID
-     * to MAX(SeID)+1, MAX(SeID)+2, etc. When we insert sentences here, they
-     * get those exact SeID values via auto-increment, so TiSeID = SeID.
+     * sentence_id in temp_word_occurrences is pre-computed to match future id values.
+     * When parseStandardToDatabase runs with useMaxSeID=true, it sets sentence_id
+     * to MAX(id)+1, MAX(id)+2, etc. When we insert sentences here, they
+     * get those exact id values via auto-increment, so sentence_id = id.
      *
      * @param int  $tid          ID of text from which insert data
      * @param int  $lid          ID of the language of the text
@@ -244,39 +244,39 @@ class TextParsingPersistence
         Connection::query('SET @i=0;');
         Connection::preparedExecute(
             "INSERT INTO sentences (
-                SeLgID, SeTxID, SeOrder, SeFirstPos, SeText
+                language_id, text_id, position, first_pos, text
             ) SELECT
             ?,
             ?,
             @i:=@i+1,
-            MIN(IF(TiWordCount=0, TiOrder+1, TiOrder)),
-            GROUP_CONCAT(TiText ORDER BY TiOrder SEPARATOR \"\")
+            MIN(IF(word_count=0, position+1, position)),
+            GROUP_CONCAT(text ORDER BY position SEPARATOR \"\")
             FROM temp_word_occurrences
-            GROUP BY TiSeID
-            ORDER BY TiSeID",
+            GROUP BY sentence_id
+            ORDER BY sentence_id",
             [$lid, $tid]
         );
 
-        // STEP 1.5: Align TiSeID with actual SeID values.
-        // The pre-computed TiSeID may not match actual AUTO_INCREMENT values,
-        // so we update temp_word_occurrences to use the actual SeID from inserted sentences.
-        // ROW_NUMBER() maps TiSeID rank to SeOrder, which we JOIN to get SeID.
+        // STEP 1.5: Align sentence_id with actual id values.
+        // The pre-computed sentence_id may not match actual AUTO_INCREMENT values,
+        // so we update temp_word_occurrences to use the actual id from inserted sentences.
+        // ROW_NUMBER() maps sentence_id rank to position, which we JOIN to get id.
         Connection::preparedExecute(
             "UPDATE temp_word_occurrences t
             JOIN (
-                SELECT TiSeID AS old_seid,
-                       ROW_NUMBER() OVER (ORDER BY TiSeID) AS rn
+                SELECT sentence_id AS old_seid,
+                       ROW_NUMBER() OVER (ORDER BY sentence_id) AS rn
                 FROM temp_word_occurrences
-                GROUP BY TiSeID
-            ) mapping ON t.TiSeID = mapping.old_seid
-            JOIN sentences s ON s.SeOrder = mapping.rn AND s.SeTxID = ?
-            SET t.TiSeID = s.SeID",
+                GROUP BY sentence_id
+            ) mapping ON t.sentence_id = mapping.old_seid
+            JOIN sentences s ON s.position = mapping.rn AND s.text_id = ?
+            SET t.sentence_id = s.id",
             [$tid]
         );
 
         // STEP 1.6: Also update tempexprs.sent if multiword expressions exist.
         // tempexprs was populated before sentences were inserted, so its `sent`
-        // field also needs to be aligned with actual SeID values.
+        // field also needs to be aligned with actual id values.
         if ($hasmultiword) {
             Connection::preparedExecute(
                 "UPDATE tempexprs e
@@ -287,13 +287,13 @@ class TextParsingPersistence
                     WHERE sent IS NOT NULL
                     GROUP BY sent
                 ) mapping ON e.sent = mapping.old_sent
-                JOIN sentences s ON s.SeOrder = mapping.rn AND s.SeTxID = ?
-                SET e.sent = s.SeID",
+                JOIN sentences s ON s.position = mapping.rn AND s.text_id = ?
+                SET e.sent = s.id",
                 [$tid]
             );
         }
 
-        // STEP 2: Insert text items. TiSeID and tempexprs.sent now equal actual SeID.
+        // STEP 2: Insert text items. sentence_id and tempexprs.sent now equal actual id.
         if ($hasmultiword) {
             // Build SQL and bindings in lockstep. Each forTablePrepared() call
             // both appends " AND user_id = ?" to the SQL and pushes $userId
@@ -301,9 +301,9 @@ class TextParsingPersistence
             // order even with two user-scope injections inside the UNION.
             $bindings = [$lid, $tid];
             $sql = "INSERT INTO word_occurrences (
-                Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text
-            ) SELECT id, ?, ?, sent, TiOrder - (2*(n-1)) TiOrder,
-            n TiWordCount, word
+                word_id, language_id, text_id, sentence_id, position, word_count, text
+            ) SELECT id, ?, ?, sent, position - (2*(n-1)) position,
+            n word_count, word
             FROM tempexprs
             JOIN words
             ON text_lc = lword AND word_count = n"
@@ -313,13 +313,15 @@ class TextParsingPersistence
             $bindings[] = $lid;
             $bindings[] = $tid;
             $sql .= " UNION ALL
-            SELECT id, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
+            SELECT words.id, ?, ?, temp_word_occurrences.sentence_id, temp_word_occurrences.position, temp_word_occurrences.word_count, temp_word_occurrences.text
             FROM temp_word_occurrences
             LEFT JOIN words
-            ON LOWER(TiText) = text_lc AND TiWordCount=1 AND language_id = ?";
+            ON LOWER(temp_word_occurrences.text) = words.text_lc AND temp_word_occurrences.word_count=1 AND words.language_id = ?";
             $bindings[] = $lid;
             $sql .= UserScopedQuery::forTablePrepared('words', $bindings, '')
-                . " ORDER BY TiOrder, TiWordCount";
+                // ORDER BY in a UNION must reference the first SELECT's output
+                // column aliases (position, word_count), not table-qualified names.
+                . " ORDER BY position, word_count";
 
             $stmt = Connection::prepare($sql);
             $stmt->bindValues($bindings);
@@ -328,14 +330,14 @@ class TextParsingPersistence
             $bindings = [$lid, $tid, $lid];
             Connection::preparedExecute(
                 "INSERT INTO word_occurrences (
-                    Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text
+                    word_id, language_id, text_id, sentence_id, position, word_count, text
                 )
-                SELECT id, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
+                SELECT words.id, ?, ?, temp_word_occurrences.sentence_id, temp_word_occurrences.position, temp_word_occurrences.word_count, temp_word_occurrences.text
                 FROM temp_word_occurrences
                 LEFT JOIN words
-                ON LOWER(TiText) = text_lc AND TiWordCount=1 AND language_id = ?"
+                ON LOWER(temp_word_occurrences.text) = words.text_lc AND temp_word_occurrences.word_count=1 AND words.language_id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings, '')
-                . " ORDER BY TiOrder, TiWordCount",
+                . " ORDER BY temp_word_occurrences.position, temp_word_occurrences.word_count",
                 $bindings
             );
         }
@@ -456,47 +458,47 @@ class TextParsingPersistence
                 sent mediumint unsigned,
                 word varchar(250),
                 lword varchar(250),
-                TiOrder smallint unsigned,
+                position smallint unsigned,
                 n tinyint(3) unsigned NOT NULL
             )"
         );
         Connection::execute("TRUNCATE TABLE tempexprs");
         Connection::query(
             "INSERT IGNORE INTO tempexprs
-            (sent, word, lword, TiOrder, n)
+            (sent, word, lword, position, n)
             -- 2.10.0-fork: straight_join may be irrelevant as the query is less skewed
             SELECT straight_join
             IF(
-                @se_id=TiSeID and @ti_or=TiOrder,
-                IF((@ti_or:=TiOrder+@a0) is null,TiSeID,TiSeID),
+                @se_id=sentence_id and @ti_or=position,
+                IF((@ti_or:=position+@a0) is null,sentence_id,sentence_id),
                 IF(
-                    @se_id=TiSeID,
+                    @se_id=sentence_id,
                     IF(
-                        (@d=1) and (0<>TiWordCount),
+                        (@d=1) and (0<>word_count),
                         CASE $set_wo_sql_2
-                            WHEN (@a1:=TiCount+@a0) IS NULL THEN NULL
-                            WHEN (@se_id:=TiSeID+@a0) IS NULL THEN NULL
-                            WHEN (@ti_or:=TiOrder+@a0) IS NULL THEN NULL
-                            WHEN (@c:=concat(@c,TiText)) IS NULL THEN NULL
-                            WHEN (@d:=(0<>TiWordCount)+@a0) IS NULL THEN NULL
-                            ELSE TiSeID
+                            WHEN (@a1:=char_position+@a0) IS NULL THEN NULL
+                            WHEN (@se_id:=sentence_id+@a0) IS NULL THEN NULL
+                            WHEN (@ti_or:=position+@a0) IS NULL THEN NULL
+                            WHEN (@c:=concat(@c,text)) IS NULL THEN NULL
+                            WHEN (@d:=(0<>word_count)+@a0) IS NULL THEN NULL
+                            ELSE sentence_id
                         END,
                         CASE $set_wo_sql
-                            WHEN (@a1:=TiCount+@a0) IS NULL THEN NULL
-                            WHEN (@se_id:=TiSeID+@a0) IS NULL THEN NULL
-                            WHEN (@ti_or:=TiOrder+@a0) IS NULL THEN NULL
-                            WHEN (@c:=concat(@c,TiText)) IS NULL THEN NULL
-                            WHEN (@d:=(0<>TiWordCount)+@a0) IS NULL THEN NULL
-                            ELSE TiSeID
+                            WHEN (@a1:=char_position+@a0) IS NULL THEN NULL
+                            WHEN (@se_id:=sentence_id+@a0) IS NULL THEN NULL
+                            WHEN (@ti_or:=position+@a0) IS NULL THEN NULL
+                            WHEN (@c:=concat(@c,text)) IS NULL THEN NULL
+                            WHEN (@d:=(0<>word_count)+@a0) IS NULL THEN NULL
+                            ELSE sentence_id
                         END
                     ),
                     CASE $del_wo_sql
-                        WHEN (@a1:=TiCount+@a0) IS NULL THEN NULL
-                        WHEN (@se_id:=TiSeID+@a0) IS NULL THEN NULL
-                        WHEN (@ti_or:=TiOrder+@a0) IS NULL THEN NULL
-                        WHEN (@c:=concat(TiText,@f)) IS NULL THEN NULL
-                        WHEN (@d:=(0<>TiWordCount)+@a0) IS NULL THEN NULL
-                        ELSE TiSeID
+                        WHEN (@a1:=char_position+@a0) IS NULL THEN NULL
+                        WHEN (@se_id:=sentence_id+@a0) IS NULL THEN NULL
+                        WHEN (@ti_or:=position+@a0) IS NULL THEN NULL
+                        WHEN (@c:=concat(text,@f)) IS NULL THEN NULL
+                        WHEN (@d:=(0<>word_count)+@a0) IS NULL THEN NULL
+                        ELSE sentence_id
                     END
                 )
             ) sent,
@@ -510,7 +512,7 @@ class TextParsingPersistence
                 )
             ) word,
             if(@d=0 or ''=@z, NULL, lower(@z)) lword,
-            TiOrder,
+            position,
             n
             FROM numbers , temp_word_occurrences"
         );

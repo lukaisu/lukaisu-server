@@ -225,12 +225,12 @@ class ImportUtilities
         if ($mwords > 40) {
             // Bulk update: delete and recreate all text items
             QueryBuilder::table('sentences')
-                ->where('SeLgID', '=', $langId)
+                ->where('language_id', '=', $langId)
                 ->delete();
             QueryBuilder::table('word_occurrences')
-                ->where('Ti2LgID', '=', $langId)
+                ->where('language_id', '=', $langId)
                 ->delete();
-            \Lukaisu\Shared\Infrastructure\Database\Maintenance::adjustAutoIncrement('sentences', 'SeID');
+            \Lukaisu\Shared\Infrastructure\Database\Maintenance::adjustAutoIncrement('sentences', 'id');
 
             $rows = QueryBuilder::table('texts')
                 ->select(['TxID', 'TxText'])
@@ -265,7 +265,7 @@ class ImportUtilities
 
             if (!empty($allPlaceholders)) {
                 $sql = "INSERT INTO word_occurrences (
-                    Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text
+                    word_id, language_id, text_id, sentence_id, position, word_count, text
                 ) VALUES " . implode(',', $allPlaceholders);
                 Connection::preparedExecute($sql, $allParams);
             }
@@ -296,9 +296,9 @@ class ImportUtilities
         $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
         $sql = "UPDATE words
             JOIN word_occurrences
-            ON word_count=1 AND Ti2WoID IS NULL AND lower(Ti2Text)=text_lc AND Ti2LgID = language_id"
+            ON word_count=1 AND word_id IS NULL AND lower(text)=text_lc AND language_id = language_id"
             . $userScope
-            . " SET Ti2WoID=id";
+            . " SET word_id=id";
         Connection::preparedExecute($sql, $bindings);
     }
 

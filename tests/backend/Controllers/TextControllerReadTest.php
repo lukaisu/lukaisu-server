@@ -112,11 +112,11 @@ class TextControllerReadTest extends TestCase
         $textIds = self::$testTextId . ", " . self::$testText2Id;
         Connection::query(
             "DELETE FROM " . Globals::table('word_occurrences') .
-            " WHERE Ti2TxID IN (" . $textIds . ")"
+            " WHERE text_id IN (" . $textIds . ")"
         );
         Connection::query(
             "DELETE FROM " . Globals::table('sentences') .
-            " WHERE SeTxID IN (" . $textIds . ")"
+            " WHERE text_id IN (" . $textIds . ")"
         );
         Connection::query(
             "DELETE FROM " . Globals::table('texts') .

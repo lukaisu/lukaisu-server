@@ -154,10 +154,10 @@ class WordContextService
     {
         /** @var int|null $seid */
         $seid = Connection::preparedFetchValue(
-            "SELECT Ti2SeID FROM word_occurrences
-             WHERE Ti2TxID = ? AND Ti2WordCount = 1 AND Ti2Order = ?",
+            "SELECT sentence_id FROM word_occurrences
+             WHERE text_id = ? AND word_count = 1 AND position = ?",
             [$textId, $ord],
-            'Ti2SeID'
+            'sentence_id'
         );
 
         if ($seid === null) {
@@ -185,11 +185,11 @@ class WordContextService
     {
         /** @var int|null $seid */
         $seid = Connection::preparedFetchValue(
-            "SELECT Ti2SeID
+            "SELECT sentence_id
              FROM word_occurrences
-             WHERE Ti2TxID = ? AND Ti2Order = ?",
+             WHERE text_id = ? AND position = ?",
             [$textId, $ord],
-            'Ti2SeID'
+            'sentence_id'
         );
         return $seid;
     }

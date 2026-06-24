@@ -296,23 +296,23 @@ if (!in_array($fkMigration, $appliedMigrations)) {
         "ALTER TABLE words ADD CONSTRAINT fk_words_language " .
             "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
         "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_language " .
-            "FOREIGN KEY (SeLgID) REFERENCES languages(LgID) ON DELETE CASCADE",
+            "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
         "ALTER TABLE news_feeds ADD CONSTRAINT fk_news_feeds_language " .
             "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
         // Text references
         "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_text " .
-            "FOREIGN KEY (SeTxID) REFERENCES texts(TxID) ON DELETE CASCADE",
+            "FOREIGN KEY (text_id) REFERENCES texts(TxID) ON DELETE CASCADE",
         "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_text " .
-            "FOREIGN KEY (Ti2TxID) REFERENCES texts(TxID) ON DELETE CASCADE",
+            "FOREIGN KEY (text_id) REFERENCES texts(TxID) ON DELETE CASCADE",
         "ALTER TABLE text_tag_map ADD CONSTRAINT fk_text_tag_map_text " .
             "FOREIGN KEY (text_id) REFERENCES texts(TxID) ON DELETE CASCADE",
         // Sentence reference
         "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_sentence " .
-            "FOREIGN KEY (Ti2SeID) REFERENCES sentences(SeID) ON DELETE CASCADE",
+            "FOREIGN KEY (sentence_id) REFERENCES sentences(id) ON DELETE CASCADE",
         // Word reference (SET NULL for unknown words)
-        "ALTER TABLE word_occurrences MODIFY COLUMN Ti2WoID mediumint(8) unsigned DEFAULT NULL",
+        "ALTER TABLE word_occurrences MODIFY COLUMN word_id mediumint(8) unsigned DEFAULT NULL",
         "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_word " .
-            "FOREIGN KEY (Ti2WoID) REFERENCES words(id) ON DELETE SET NULL",
+            "FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE SET NULL",
         // Word tags
         "ALTER TABLE word_tag_map ADD CONSTRAINT fk_word_tag_map_word " .
             "FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE",

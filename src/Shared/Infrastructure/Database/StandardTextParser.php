@@ -246,7 +246,7 @@ class StandardTextParser
             $sid = 1;
             if ($useMaxSeID) {
                 // Get next auto-increment value from table status
-                // This is more reliable than MAX(SeID)+1 when there are gaps
+                // This is more reliable than MAX(id)+1 when there are gaps
                 $dbname = Globals::getDatabaseName();
                 $sentencesTable = Globals::table('sentences');
                 $sid = (int)Connection::preparedFetchValue(
@@ -257,7 +257,7 @@ class StandardTextParser
                 // Fall back to MAX+1 if AUTO_INCREMENT is not available
                 if ($sid <= 0) {
                     $sid = (int)Connection::fetchValue(
-                        "SELECT IFNULL(MAX(`SeID`)+1,1) as value FROM sentences"
+                        "SELECT IFNULL(MAX(`id`)+1,1) as value FROM sentences"
                         . UserScopedQuery::forTable('sentences')
                     );
                 }
@@ -269,16 +269,16 @@ class StandardTextParser
                     continue;
                 }
                 list($word_count, $term) = explode("\t", $line);
-                $tiSeID = $sid; // TiSeID
-                $tiCount = $count + 1; // TiCount
+                $tiSeID = $sid; // sentence_id
+                $tiCount = $count + 1; // char_position
                 $count += mb_strlen($term);
                 if (str_ends_with($term, "\r")) {
                     $term = str_replace("\r", '', $term);
                     $sid++;
                     $count = 0;
                 }
-                $tiOrder = ++$order; // TiOrder
-                $tiWordCount = (int)$word_count; // TiWordCount
+                $tiOrder = ++$order; // position
+                $tiWordCount = (int)$word_count; // word_count
                 $rows[] = array($tiSeID, $tiCount, $tiOrder, $term, $tiWordCount);
             }
 
@@ -293,7 +293,7 @@ class StandardTextParser
 
                 Connection::preparedExecute(
                     "INSERT INTO temp_word_occurrences (
-                        TiSeID, TiCount, TiOrder, TiText, TiWordCount
+                        sentence_id, char_position, position, text, word_count
                     ) VALUES " . implode(',', $placeholders),
                     $flatParams
                 );

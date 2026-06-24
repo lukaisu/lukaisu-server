@@ -1216,7 +1216,7 @@ class TermCrudApiHandlerTest extends TestCase
         $source = $this->getMethodSource('createTermFull');
 
         $this->assertStringContainsString('UPDATE word_occurrences', $source);
-        $this->assertStringContainsString('Ti2WoID = ?', $source);
+        $this->assertStringContainsString('word_id = ?', $source);
     }
 
     public function testCreateTermFullSavesTagsWhenProvided(): void

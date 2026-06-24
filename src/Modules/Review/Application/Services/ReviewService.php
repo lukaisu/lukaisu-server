@@ -138,8 +138,9 @@ class ReviewService
                 /** @var array<int, int> $params */
                 $params = array_values(array_map('intval', $ids));
                 return [
-                    'sql' => ' words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id'
-                        . " AND Ti2TxID IN ($placeholders) ",
+                    'sql' => ' words, word_occurrences WHERE words.language_id = word_occurrences.language_id'
+                        . ' AND word_occurrences.word_id = words.id'
+                        . " AND word_occurrences.text_id IN ($placeholders) ",
                     'params' => $params
                 ];
             case 'lang':
@@ -148,7 +149,8 @@ class ReviewService
             case 'text':
                 $textId = is_array($selection) ? ($selection[0] ?? 0) : $selection;
                 return [
-                    'sql' => " words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID = ? ",
+                    'sql' => " words, word_occurrences WHERE words.language_id = word_occurrences.language_id"
+                        . " AND word_occurrences.word_id = words.id AND word_occurrences.text_id = ? ",
                     'params' => [$textId]
                 ];
             default:
@@ -169,7 +171,7 @@ class ReviewService
     public function validateReviewSelection(string $reviewsql, array $params = []): array
     {
         $langCount = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT language_id) AS cnt FROM $reviewsql",
+            "SELECT COUNT(DISTINCT words.language_id) AS cnt FROM $reviewsql",
             $params,
             'cnt'
         );
@@ -235,7 +237,7 @@ class ReviewService
                     /** @var mixed $nameRawFromQuery */
                     $nameRawFromQuery = Connection::preparedFetchValue(
                         "SELECT LgName
-                        FROM languages, {$result['sql']} AND LgID = language_id"
+                        FROM languages, {$result['sql']} AND LgID = words.language_id"
                         . $userScope . "
                         LIMIT 1",
                         array_merge($result['params'], $bindings),
@@ -332,9 +334,9 @@ class ReviewService
         $pass = 0;
         while ($pass < 2) {
             $pass++;
-            $sql = "SELECT DISTINCT id, text, text_lc, translation,
-                romanization, sentence, language_id,
-                (IFNULL(sentence, '') NOT LIKE CONCAT('%{', text, '}%')) AS notvalid,
+            $sql = "SELECT DISTINCT words.id, words.text, text_lc, translation,
+                romanization, sentence, words.language_id,
+                (IFNULL(sentence, '') NOT LIKE CONCAT('%{', words.text, '}%')) AS notvalid,
                 status,
                 DATEDIFF(NOW(), status_changed_at) AS Days, today_score AS Score
                 FROM $reviewsql AND status BETWEEN 1 AND 5
@@ -365,23 +367,23 @@ class ReviewService
     {
         // Find sentence with at least 70% known words
         // This is a complex query with subqueries - using raw SQL
-        // word_occurrences inherits user context via Ti2TxID -> texts FK, so no user_id needed
-        $sql = "SELECT DISTINCT ti.Ti2SeID AS SeID,
+        // word_occurrences inherits user context via text_id -> texts FK, so no user_id needed
+        $sql = "SELECT DISTINCT ti.sentence_id AS id,
             1 - IFNULL(sUnknownCount.c, 0) / sWordCount.c AS KnownRatio
             FROM word_occurrences ti
             JOIN (
-                SELECT t.Ti2SeID, COUNT(*) AS c
+                SELECT t.sentence_id, COUNT(*) AS c
                 FROM word_occurrences t
-                WHERE t.Ti2WordCount = 1
-                GROUP BY t.Ti2SeID
-            ) AS sWordCount ON sWordCount.Ti2SeID = ti.Ti2SeID
+                WHERE t.word_count = 1
+                GROUP BY t.sentence_id
+            ) AS sWordCount ON sWordCount.sentence_id = ti.sentence_id
             LEFT JOIN (
-                SELECT t.Ti2SeID, COUNT(*) AS c
+                SELECT t.sentence_id, COUNT(*) AS c
                 FROM word_occurrences t
-                WHERE t.Ti2WordCount = 1 AND t.Ti2WoID IS NULL
-                GROUP BY t.Ti2SeID
-            ) AS sUnknownCount ON sUnknownCount.Ti2SeID = ti.Ti2SeID
-            WHERE ti.Ti2WoID = ?
+                WHERE t.word_count = 1 AND t.word_id IS NULL
+                GROUP BY t.sentence_id
+            ) AS sUnknownCount ON sUnknownCount.sentence_id = ti.sentence_id
+            WHERE ti.word_id = ?
             ORDER BY KnownRatio < 0.7, RAND()
             LIMIT 1";
 
@@ -392,7 +394,7 @@ class ReviewService
             return ['sentence' => null, 'found' => false];
         }
 
-        $seid = (int) $record['SeID'];
+        $seid = (int) $record['id'];
         $sentenceCount = (int) Settings::getWithDefault('set-test-sentence-count');
         list($_, $sentence) = $this->sentenceService->formatSentence($seid, $wordlc, $sentenceCount);
 
@@ -444,7 +446,7 @@ class ReviewService
     {
         /** @var mixed $langIdRaw */
         $langIdRaw = Connection::preparedFetchValue(
-            "SELECT language_id FROM $reviewsql LIMIT 1",
+            "SELECT words.language_id FROM $reviewsql LIMIT 1",
             $params,
             'language_id'
         );
@@ -603,7 +605,7 @@ class ReviewService
      */
     public function getTableReviewWords(string $reviewsql, array $params = []): array
     {
-        $sql = "SELECT DISTINCT id, text, translation, romanization,
+        $sql = "SELECT DISTINCT words.id, words.text, translation, romanization,
             sentence, status, today_score AS Score
             FROM $reviewsql AND status BETWEEN 1 AND 5
             AND translation != '' AND translation != '*'
@@ -664,7 +666,7 @@ class ReviewService
             /** @var mixed $langNameRaw */
             $langNameRaw = Connection::preparedFetchValue(
                 "SELECT LgName
-                FROM languages, {$reviewsql} AND LgID = language_id"
+                FROM languages, {$reviewsql} AND LgID = words.language_id"
                 . $userScope2 . "
                 LIMIT 1",
                 array_merge($reviewParams, $bindings2),
@@ -687,7 +689,8 @@ class ReviewService
             $title = "All Terms in " . $langName;
         } elseif ($textId !== null) {
             $property = "text=$textId";
-            $reviewsql = " words, word_occurrences WHERE Ti2LgID = language_id AND Ti2WoID = id AND Ti2TxID = ? ";
+            $reviewsql = " words, word_occurrences WHERE words.language_id = word_occurrences.language_id"
+                . " AND word_occurrences.word_id = words.id AND word_occurrences.text_id = ? ";
             $reviewParams = [$textId];
 
             /** @var mixed $titleRaw */

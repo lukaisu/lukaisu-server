@@ -108,14 +108,14 @@ class SentenceServiceUnitTest extends TestCase
     public function findSentencesFromWordNullWidUsesIsNullQuery(): void
     {
         $src = self::methodSource('findSentencesFromWord');
-        $this->assertStringContainsString('Ti2WoID IS NULL', $src);
+        $this->assertStringContainsString('word_id IS NULL', $src);
     }
 
     #[Test]
     public function findSentencesFromWordPositiveWidUsesEqualQuery(): void
     {
         $src = self::methodSource('findSentencesFromWord');
-        $this->assertStringContainsString('Ti2WoID = ?', $src);
+        $this->assertStringContainsString('word_id = ?', $src);
     }
 
     #[Test]
@@ -240,8 +240,8 @@ class SentenceServiceUnitTest extends TestCase
     {
         $src = self::methodSource('formatSentence');
         $this->assertStringContainsString('$mode > 1', $src);
-        $this->assertStringContainsString('SeID < ?', $src);
-        $this->assertStringContainsString('order by SeID desc', $src);
+        $this->assertStringContainsString('id < ?', $src);
+        $this->assertStringContainsString('order by id desc', $src);
     }
 
     #[Test]
@@ -249,8 +249,8 @@ class SentenceServiceUnitTest extends TestCase
     {
         $src = self::methodSource('formatSentence');
         $this->assertStringContainsString('$mode > 2', $src);
-        $this->assertStringContainsString('SeID > ?', $src);
-        $this->assertStringContainsString('order by SeID asc', $src);
+        $this->assertStringContainsString('id > ?', $src);
+        $this->assertStringContainsString('order by id asc', $src);
     }
 
     #[Test]
@@ -316,8 +316,8 @@ class SentenceServiceUnitTest extends TestCase
     public function getSentenceTextReturnsNullWhenSeTextNull(): void
     {
         $src = self::methodSource('getSentenceText');
-        // Checks both null record and null SeText
-        $this->assertStringContainsString("record['SeText'] === null", $src);
+        // Checks both null record and null text
+        $this->assertStringContainsString("record['text'] === null", $src);
     }
 
     #[Test]
@@ -362,7 +362,7 @@ class SentenceServiceUnitTest extends TestCase
     public function getSentenceAtPositionReturnsNullWhenNoSeid(): void
     {
         $src = self::methodSource('getSentenceAtPosition');
-        // First null check: no Ti2SeID found
+        // First null check: no sentence_id found
         $this->assertStringContainsString('$seidRaw === null', $src);
     }
 

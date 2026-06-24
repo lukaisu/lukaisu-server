@@ -72,7 +72,7 @@ class WordListQueryService
             $sql = 'select count(*) as value from (select id from (' .
                 'words left JOIN word_tag_map' .
                 ' ON words.id = word_id), word_occurrences' .
-                ' where Ti2LgID = language_id and Ti2WoID = words.id and Ti2TxID in ' .
+                ' where language_id = language_id and word_id = words.id and text_id in ' .
                 $inClause . $whLang . $whStat . $whQuery . $wordScope .
                 ' group by words.id ' . $whTag . ') as dummy';
         }
@@ -187,7 +187,7 @@ class WordListQueryService
                     left JOIN word_tag_map ON words.id = word_id)
                     left join tags on tags.id = tag_id),
                     languages, word_occurrences
-                    where Ti2LgID = language_id and Ti2WoID = words.id and Ti2TxID in ' .
+                    where language_id = language_id and word_id = words.id and text_id in ' .
                     $inClause . ' and language_id = LgID ' . $whLang . $whStat . $whQuery . $wordScope . $langScope . '
                     group by words.id ' . $whTag . '
                     order by ' . $sorts[$sort - 1] . ' LIMIT ?, ?';
@@ -236,8 +236,8 @@ class WordListQueryService
                     ON words.id = word_id)
                     left join tags on tags.id = tag_id),
                     languages, word_occurrences
-                    where Ti2LgID = language_id and Ti2WoID = words.id and language_id = LgID
-                    and Ti2TxID in ' . $inClause . ' ' .
+                    where language_id = language_id and word_id = words.id and language_id = LgID
+                    and text_id in ' . $inClause . ' ' .
                     $whLang . $whStat . $whQuery . $wordScope . $langScope .
                     ' group by words.id ' . $whTag .
                     ' order by ' . $sortExpr;
@@ -269,8 +269,8 @@ class WordListQueryService
                     ON words.id = word_id)
                     left join tags on tags.id = tag_id),
                     languages
-                    where language_id = LgID and words.id NOT IN (SELECT DISTINCT Ti2WoID
-                    from word_occurrences where Ti2LgID = LgID) ' .
+                    where language_id = LgID and words.id NOT IN (SELECT DISTINCT word_id
+                    from word_occurrences where language_id = LgID) ' .
                     $whLang . $whStat . $whQuery . $wordScope1 . $langScope1 . '
                     group by words.id ' . $whTag . '
                     UNION
@@ -286,7 +286,7 @@ class WordListQueryService
                     ON words.id = word_id)
                     left join tags on tags.id = tag_id),
                     languages, word_occurrences
-                    where Ti2LgID = language_id and Ti2WoID = words.id and language_id = LgID ' .
+                    where language_id = language_id and word_id = words.id and language_id = LgID ' .
                     $whLang . $whStat . $whQuery . $wordScope2 . $langScope2 .
                     ' group by words.id ' . $whTag .
                     ' order by ' . $sortExpr;
@@ -336,8 +336,8 @@ class WordListQueryService
                 words
                 left JOIN word_tag_map ON words.id = word_id
             ), word_occurrences
-            where Ti2LgID = language_id and Ti2WoID = words.id and
-            Ti2TxID in ' . $inClause . $whLang . $whStat . $whQuery . $wordScope .
+            where language_id = language_id and word_id = words.id and
+            text_id in ' . $inClause . $whLang . $whStat . $whQuery . $wordScope .
             ' group by words.id ' . $whTag;
         }
 

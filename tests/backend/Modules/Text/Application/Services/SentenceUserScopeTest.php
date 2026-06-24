@@ -8,12 +8,12 @@
  * `word_occurrences` raw — neither table carries a UsID column of its
  * own. Without an explicit parent-text scope, an authenticated user
  * could request sentences (or sentence content) belonging to another
- * user simply by passing that user's `language_id` / SeID.
+ * user simply by passing that user's `language_id` / id.
  *
  * The fix scopes via the parent `texts.TxUsID` column: `find*` rewrites
- * its WHERE to `AND SeTxID IN (SELECT TxID FROM texts WHERE TxUsID = ?)`,
+ * its WHERE to `AND text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)`,
  * and `formatSentence` short-circuits when `ownsSentence()` reports the
- * SeID's parent text isn't owned by the caller. This test reads each
+ * id's parent text isn't owned by the caller. This test reads each
  * method's source via reflection and asserts those gates are present.
  *
  * PHP version 8.1
@@ -75,10 +75,10 @@ class SentenceUserScopeTest extends TestCase
         $source = $this->getMethodSource(SentenceService::class, 'parentTextUserScope');
 
         $this->assertStringContainsString(
-            'SeTxID IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
+            'text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
             $source,
             'parentTextUserScope must scope sentences via the parent'
-            . ' texts row — SeTxID has no UsID of its own.'
+            . ' texts row — text_id has no UsID of its own.'
         );
     }
 

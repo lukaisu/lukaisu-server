@@ -166,7 +166,7 @@ class ParsingCoordinator
         if ($nextSeID <= 0) {
             $bindings = [];
             $nextSeID = (int) Connection::preparedFetchValue(
-                "SELECT IFNULL(MAX(`SeID`)+1,1) as value FROM sentences WHERE 1=1"
+                "SELECT IFNULL(MAX(`id`)+1,1) as value FROM sentences WHERE 1=1"
                 . UserScopedQuery::forTablePrepared('sentences', $bindings),
                 $bindings
             );
@@ -230,7 +230,7 @@ class ParsingCoordinator
 
         Connection::preparedExecute(
             "INSERT INTO temp_word_occurrences (
-                TiSeID, TiCount, TiOrder, TiText, TiWordCount
+                sentence_id, char_position, position, text, word_count
             ) VALUES " . implode(',', $placeholders),
             $flatParams
         );
@@ -275,16 +275,16 @@ class ParsingCoordinator
         Connection::query('SET @i=0;');
         Connection::preparedExecute(
             "INSERT INTO sentences (
-                SeLgID, SeTxID, SeOrder, SeFirstPos, SeText
+                language_id, text_id, position, first_pos, text
             ) SELECT
             ?,
             ?,
             @i:=@i+1,
-            MIN(IF(TiWordCount=0, TiOrder+1, TiOrder)),
-            GROUP_CONCAT(TiText ORDER BY TiOrder SEPARATOR \"\")
+            MIN(IF(word_count=0, position+1, position)),
+            GROUP_CONCAT(text ORDER BY position SEPARATOR \"\")
             FROM temp_word_occurrences
-            GROUP BY TiSeID
-            ORDER BY TiSeID",
+            GROUP BY sentence_id
+            ORDER BY sentence_id",
             [$lid, $tid]
         );
 
@@ -294,12 +294,12 @@ class ParsingCoordinator
             // injections inside the UNION land in left-to-right placeholder
             // order. Pre-bundling all six values up-front and appending the
             // two $userIds at the end mismatches positions 3-7 and swaps
-            // Ti2LgID/Ti2TxID, triggering an FK violation on word_occurrences.
+            // language_id/text_id, triggering an FK violation on word_occurrences.
             $bindings = [$lid, $tid];
             $sql = "INSERT INTO word_occurrences (
-                Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text
-            ) SELECT id, ?, ?, sent, TiOrder - (2*(n-1)) TiOrder,
-            n TiWordCount, word
+                word_id, language_id, text_id, sentence_id, position, word_count, text
+            ) SELECT id, ?, ?, sent, position - (2*(n-1)) position,
+            n word_count, word
             FROM tempexprs
             JOIN words
             ON text_lc = lword AND word_count = n"
@@ -309,13 +309,15 @@ class ParsingCoordinator
             $bindings[] = $lid;
             $bindings[] = $tid;
             $sql .= " UNION ALL
-            SELECT id, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
+            SELECT words.id, ?, ?, temp_word_occurrences.sentence_id, temp_word_occurrences.position, temp_word_occurrences.word_count, temp_word_occurrences.text
             FROM temp_word_occurrences
             LEFT JOIN words
-            ON LOWER(TiText) = text_lc AND TiWordCount=1 AND language_id = ?";
+            ON LOWER(temp_word_occurrences.text) = words.text_lc AND temp_word_occurrences.word_count=1 AND words.language_id = ?";
             $bindings[] = $lid;
             $sql .= UserScopedQuery::forTablePrepared('words', $bindings, '')
-                . " ORDER BY TiOrder, TiWordCount";
+                // ORDER BY in a UNION must reference the first SELECT's output
+                // column aliases (position, word_count), not table-qualified names.
+                . " ORDER BY position, word_count";
 
             $stmt = Connection::prepare($sql);
             $stmt->bindValues($bindings);
@@ -324,13 +326,13 @@ class ParsingCoordinator
             $bindings = [$lid, $tid, $lid];
             Connection::preparedExecute(
                 "INSERT INTO word_occurrences (
-                    Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text
-                ) SELECT id, ?, ?, TiSeID, TiOrder, TiWordCount, TiText
+                    word_id, language_id, text_id, sentence_id, position, word_count, text
+                ) SELECT words.id, ?, ?, temp_word_occurrences.sentence_id, temp_word_occurrences.position, temp_word_occurrences.word_count, temp_word_occurrences.text
                 FROM temp_word_occurrences
                 LEFT JOIN words
-                ON LOWER(TiText) = text_lc AND TiWordCount=1 AND language_id = ?"
+                ON LOWER(temp_word_occurrences.text) = words.text_lc AND temp_word_occurrences.word_count=1 AND words.language_id = ?"
                 . UserScopedQuery::forTablePrepared('words', $bindings, '')
-                . " ORDER BY TiSeID, TiOrder, TiWordCount",
+                . " ORDER BY temp_word_occurrences.sentence_id, temp_word_occurrences.position, temp_word_occurrences.word_count",
                 $bindings
             );
         }

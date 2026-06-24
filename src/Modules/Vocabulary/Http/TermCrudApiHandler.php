@@ -701,11 +701,11 @@ class TermCrudApiHandler
         $wordId = $stmt->insertId();
 
         // Update text items to link to this word
-        // word_occurrences inherits user context via Ti2TxID -> texts FK
+        // word_occurrences inherits user context via text_id -> texts FK
         Connection::preparedExecute(
             "UPDATE word_occurrences
-             SET Ti2WoID = ?
-             WHERE Ti2LgID = ? AND LOWER(Ti2Text) = ?",
+             SET word_id = ?
+             WHERE language_id = ? AND LOWER(text) = ?",
             [$wordId, $langId, $textLc]
         );
 

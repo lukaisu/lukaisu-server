@@ -146,7 +146,7 @@ class MaintenanceTest extends TestCase
         }
 
         // Test with sentences table
-        Maintenance::adjustAutoIncrement('sentences', 'SeID');
+        Maintenance::adjustAutoIncrement('sentences', 'id');
         $this->assertTrue(true, 'adjustAutoIncrement should complete without error for sentences');
     }
 

@@ -120,7 +120,7 @@ class AnnotationService
      *
      * @return string Annotations for the text
      *
-     * @since 2.9.0 Annotations "position" change, they are now equal to Ti2Order
+     * @since 2.9.0 Annotations "position" change, they are now equal to position
      *              it was shifted by one index before.
      */
     public function createAnnotation(int $textId): string
@@ -128,26 +128,26 @@ class AnnotationService
         $ann = '';
         $bindings = [$textId];
         $sql = "SELECT
-            CASE WHEN Ti2WordCount>0 THEN Ti2WordCount ELSE 1 END AS Code,
-            CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE text END AS TiText,
-            Ti2Order,
-            CASE WHEN Ti2WordCount > 0 THEN 0 ELSE 1 END AS TiIsNotWord,
-            id, translation
+            CASE WHEN word_occurrences.word_count>0 THEN word_occurrences.word_count ELSE 1 END AS Code,
+            CASE WHEN CHAR_LENGTH(word_occurrences.text)>0 THEN word_occurrences.text ELSE words.text END AS text,
+            word_occurrences.position,
+            CASE WHEN word_occurrences.word_count > 0 THEN 0 ELSE 1 END AS TiIsNotWord,
+            words.id, words.translation
             FROM (
                 word_occurrences
                 LEFT JOIN words
-                ON Ti2WoID = id AND Ti2LgID = language_id
+                ON word_occurrences.word_id = words.id AND word_occurrences.language_id = words.language_id
             )
-            WHERE Ti2TxID = ?"
+            WHERE word_occurrences.text_id = ?"
             . UserScopedQuery::forTablePrepared('word_occurrences', $bindings) . "
-            ORDER BY Ti2Order ASC, Ti2WordCount DESC";
+            ORDER BY word_occurrences.position ASC, word_occurrences.word_count DESC";
 
         $until = 0;
         $results = Connection::preparedFetchAll($sql, $bindings);
         // For each term (includes blanks)
         foreach ($results as $record) {
             $actcode = (int)$record['Code'];
-            $order = (int)$record['Ti2Order'];
+            $order = (int)$record['position'];
             if ($order <= $until) {
                 continue;
             }
@@ -157,10 +157,10 @@ class AnnotationService
             $savewordid = '';
             $until = $order;
             if ($record['TiIsNotWord'] != 0) {
-                $savenonterm = (string)$record['TiText'];
+                $savenonterm = (string)$record['text'];
             } else {
                 $until = $order + 2 * ($actcode - 1);
-                $saveterm = (string)$record['TiText'];
+                $saveterm = (string)$record['text'];
                 if (isset($record['id'])) {
                     $savetrans = (string)$record['translation'];
                     $savewordid = (string)$record['id'];

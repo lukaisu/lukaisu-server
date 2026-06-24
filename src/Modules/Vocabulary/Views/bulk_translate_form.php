@@ -9,7 +9,7 @@
  * - $tl: string|null - Target language code
  * - $pos: int - Current offset position
  * - $dictionaries: array - Dictionary URIs with keys: dict1, dict2, translate
- * - $terms: array - Array of terms to translate with keys: word, Ti2LgID
+ * - $terms: array - Array of terms to translate with keys: word, language_id
  * - $nextOffset: int|null - Next offset if more terms exist, null if last page
  *
  * PHP version 8.1
@@ -33,7 +33,7 @@ assert(is_int($tid));
 assert($sl === null || is_string($sl));
 assert($tl === null || is_string($tl));
 assert(is_array($dictionaries));
-/** @var list<array{word: string, Ti2LgID: int|string}> $terms */
+/** @var list<array{word: string, language_id: int|string}> $terms */
 assert(is_array($terms));
 assert($nextOffset === null || is_int($nextOffset));
 
@@ -175,7 +175,7 @@ $lblChangeStatus = htmlspecialchars(__('vocabulary.bulk.change_status'), ENT_QUO
                         <input type="hidden"
                                name="term[<?php echo $cnt ?>][lg]"
                                value="<?php
-                                   echo \htmlspecialchars((string)($record['Ti2LgID'] ?? ''), ENT_QUOTES, 'UTF-8');
+                                   echo \htmlspecialchars((string)($record['language_id'] ?? ''), ENT_QUOTES, 'UTF-8');
                                 ?>" />
                     </td>
                 </tr>

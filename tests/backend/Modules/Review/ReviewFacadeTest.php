@@ -153,7 +153,7 @@ class ReviewFacadeTest extends TestCase
 
         $this->assertStringContainsString('words', $sql);
         $this->assertStringContainsString('word_occurrences', $sql);
-        $this->assertStringContainsString('Ti2TxID = ?', $sql);
+        $this->assertStringContainsString('text_id = ?', $sql);
         $this->assertEquals([10], $params);
     }
 
@@ -314,7 +314,7 @@ class ReviewFacadeTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertStringContainsString('word_occurrences', $result['sql']);
-        $this->assertStringContainsString('Ti2TxID = ?', $result['sql']);
+        $this->assertStringContainsString('text_id = ?', $result['sql']);
         $this->assertSame([42], $result['params']);
     }
 
@@ -538,7 +538,7 @@ class ReviewFacadeTest extends TestCase
         // Type 3 = texts
         $result = $this->facade->buildSelectionReviewSql(3, '10,20');
         $this->assertIsArray($result);
-        $this->assertStringContainsString('Ti2TxID IN', $result['sql']);
+        $this->assertStringContainsString('text_id IN', $result['sql']);
         $this->assertSame([10, 20], $result['params']);
 
         // Type 1 = unknown selection type (returns null)

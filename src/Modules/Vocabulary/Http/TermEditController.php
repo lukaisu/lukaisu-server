@@ -246,8 +246,8 @@ class TermEditController extends VocabularyBaseController
             if ($termData === null) {
                 throw new \RuntimeException("Cannot access term and language: term not found in text");
             }
-            $term = (string) $termData['Ti2Text'];
-            $lang = (int) $termData['Ti2LgID'];
+            $term = (string) $termData['text'];
+            $lang = (int) $termData['language_id'];
             $termlc = mb_strtolower($term, 'UTF-8');
 
             // Check if word already exists

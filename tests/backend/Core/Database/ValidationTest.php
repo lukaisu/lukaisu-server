@@ -60,11 +60,11 @@ class ValidationTest extends TestCase
             "(SELECT TxID FROM texts WHERE TxTitle = 'Test Validation Text')"
         );
         Connection::query(
-            "DELETE FROM word_occurrences WHERE Ti2TxID IN " .
+            "DELETE FROM word_occurrences WHERE text_id IN " .
             "(SELECT TxID FROM texts WHERE TxTitle = 'Test Validation Text')"
         );
         Connection::query(
-            "DELETE FROM sentences WHERE SeTxID IN " .
+            "DELETE FROM sentences WHERE text_id IN " .
             "(SELECT TxID FROM texts WHERE TxTitle = 'Test Validation Text')"
         );
         Connection::query("DELETE FROM texts WHERE TxTitle = 'Test Validation Text'");

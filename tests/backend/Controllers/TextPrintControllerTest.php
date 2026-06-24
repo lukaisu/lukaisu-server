@@ -115,10 +115,10 @@ class TextPrintControllerTest extends TestCase
         $languagesTable = Globals::table('languages');
 
         Connection::query(
-            "DELETE FROM " . $occurrencesTable . " WHERE Ti2TxID = " . self::$testTextId
+            "DELETE FROM " . $occurrencesTable . " WHERE text_id = " . self::$testTextId
         );
         Connection::query(
-            "DELETE FROM " . $sentencesTable . " WHERE SeTxID = " . self::$testTextId
+            "DELETE FROM " . $sentencesTable . " WHERE text_id = " . self::$testTextId
         );
         Connection::query(
             "DELETE FROM " . $textsTable . " WHERE TxTitle = 'PrintControllerTestText'"

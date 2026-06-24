@@ -379,7 +379,7 @@ class Restore
             [$userId]
         );
         Connection::preparedExecute(
-            'DELETE FROM word_occurrences WHERE Ti2TxID IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
+            'DELETE FROM word_occurrences WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
             [$userId]
         );
         Connection::preparedExecute(
@@ -387,7 +387,7 @@ class Restore
             [$userId]
         );
         Connection::preparedExecute(
-            'DELETE FROM sentences WHERE SeTxID IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
+            'DELETE FROM sentences WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
             [$userId]
         );
 

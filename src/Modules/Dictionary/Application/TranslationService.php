@@ -138,11 +138,11 @@ class TranslationService
     public function getTranslatorUrl(int $textId, int $order): array
     {
         $result = QueryBuilder::table('word_occurrences')
-            ->select(['sentences.SeText', 'languages.LgGoogleTranslateURI'])
-            ->join('sentences', 'word_occurrences.Ti2SeID', '=', 'sentences.SeID')
-            ->join('languages', 'word_occurrences.Ti2LgID', '=', 'languages.LgID')
-            ->where('word_occurrences.Ti2TxID', '=', $textId)
-            ->where('word_occurrences.Ti2Order', '=', $order)
+            ->select(['sentences.text', 'languages.LgGoogleTranslateURI'])
+            ->join('sentences', 'word_occurrences.sentence_id', '=', 'sentences.id')
+            ->join('languages', 'word_occurrences.language_id', '=', 'languages.LgID')
+            ->where('word_occurrences.text_id', '=', $textId)
+            ->where('word_occurrences.position', '=', $order)
             ->getPrepared();
 
         $record = $result[0] ?? null;
@@ -155,7 +155,7 @@ class TranslationService
             ];
         }
 
-        $sentence = isset($record['SeText']) ? (string) $record['SeText'] : '';
+        $sentence = isset($record['text']) ? (string) $record['text'] : '';
         $trans = isset($record['LgGoogleTranslateURI']) ?
             (string) $record['LgGoogleTranslateURI'] : "";
 

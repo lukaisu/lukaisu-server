@@ -95,22 +95,22 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
     public function getSentenceForWord(int $wordId, string $wordLc): array
     {
         // Find sentence with at least 70% known words
-        $sql = "SELECT DISTINCT ti.Ti2SeID AS SeID,
+        $sql = "SELECT DISTINCT ti.sentence_id AS id,
             1 - IFNULL(sUnknownCount.c, 0) / sWordCount.c AS KnownRatio
             FROM word_occurrences ti
             JOIN (
-                SELECT t.Ti2SeID, COUNT(*) AS c
+                SELECT t.sentence_id, COUNT(*) AS c
                 FROM word_occurrences t
-                WHERE t.Ti2WordCount = 1
-                GROUP BY t.Ti2SeID
-            ) AS sWordCount ON sWordCount.Ti2SeID = ti.Ti2SeID
+                WHERE t.word_count = 1
+                GROUP BY t.sentence_id
+            ) AS sWordCount ON sWordCount.sentence_id = ti.sentence_id
             LEFT JOIN (
-                SELECT t.Ti2SeID, COUNT(*) AS c
+                SELECT t.sentence_id, COUNT(*) AS c
                 FROM word_occurrences t
-                WHERE t.Ti2WordCount = 1 AND t.Ti2WoID IS NULL
-                GROUP BY t.Ti2SeID
-            ) AS sUnknownCount ON sUnknownCount.Ti2SeID = ti.Ti2SeID
-            WHERE ti.Ti2WoID = ?
+                WHERE t.word_count = 1 AND t.word_id IS NULL
+                GROUP BY t.sentence_id
+            ) AS sUnknownCount ON sUnknownCount.sentence_id = ti.sentence_id
+            WHERE ti.word_id = ?
             ORDER BY KnownRatio < 0.7, RAND()
             LIMIT 1";
 
@@ -121,7 +121,7 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
             return ['sentence' => null, 'found' => false];
         }
 
-        $seid = (int) $record['SeID'];
+        $seid = (int) $record['id'];
         $sentenceCount = (int) Settings::getWithDefault('set-test-sentence-count');
         list($_, $sentence) = $this->sentenceService->formatSentence($seid, $wordLc, $sentenceCount);
 
@@ -445,22 +445,22 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
     public function getSentenceWithAnnotations(int $wordId, string $wordLc): array
     {
         // First, find the best sentence (same logic as getSentenceForWord)
-        $sql = "SELECT DISTINCT ti.Ti2SeID AS SeID, ti.Ti2TxID AS TxID,
+        $sql = "SELECT DISTINCT ti.sentence_id AS id, ti.text_id AS TxID,
             1 - IFNULL(sUnknownCount.c, 0) / sWordCount.c AS KnownRatio
             FROM word_occurrences ti
             JOIN (
-                SELECT t.Ti2SeID, COUNT(*) AS c
+                SELECT t.sentence_id, COUNT(*) AS c
                 FROM word_occurrences t
-                WHERE t.Ti2WordCount = 1
-                GROUP BY t.Ti2SeID
-            ) AS sWordCount ON sWordCount.Ti2SeID = ti.Ti2SeID
+                WHERE t.word_count = 1
+                GROUP BY t.sentence_id
+            ) AS sWordCount ON sWordCount.sentence_id = ti.sentence_id
             LEFT JOIN (
-                SELECT t.Ti2SeID, COUNT(*) AS c
+                SELECT t.sentence_id, COUNT(*) AS c
                 FROM word_occurrences t
-                WHERE t.Ti2WordCount = 1 AND t.Ti2WoID IS NULL
-                GROUP BY t.Ti2SeID
-            ) AS sUnknownCount ON sUnknownCount.Ti2SeID = ti.Ti2SeID
-            WHERE ti.Ti2WoID = ?
+                WHERE t.word_count = 1 AND t.word_id IS NULL
+                GROUP BY t.sentence_id
+            ) AS sUnknownCount ON sUnknownCount.sentence_id = ti.sentence_id
+            WHERE ti.word_id = ?
             ORDER BY KnownRatio < 0.7, RAND()
             LIMIT 1";
 
@@ -471,7 +471,7 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
             return ['sentence' => null, 'sentenceId' => null, 'found' => false, 'annotations' => []];
         }
 
-        $seid = (int) $record['SeID'];
+        $seid = (int) $record['id'];
         $txid = (int) $record['TxID'];
         $sentenceCount = (int) Settings::getWithDefault('set-test-sentence-count');
 
@@ -514,12 +514,12 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
             // Get previous sentence
             /** @var mixed $prevSeid */
             $prevSeid = Connection::preparedFetchValue(
-                "SELECT SeID FROM sentences
-                WHERE SeID < ? AND SeTxID = ?
-                AND TRIM(SeText) NOT IN ('¶', '')
-                ORDER BY SeID DESC LIMIT 1",
+                "SELECT id FROM sentences
+                WHERE id < ? AND text_id = ?
+                AND TRIM(text) NOT IN ('¶', '')
+                ORDER BY id DESC LIMIT 1",
                 [$seid, $txid],
-                'SeID'
+                'id'
             );
             if ($prevSeid !== null) {
                 array_unshift($sentenceIds, (int) $prevSeid);
@@ -530,12 +530,12 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
             // Get next sentence
             /** @var mixed $nextSeid */
             $nextSeid = Connection::preparedFetchValue(
-                "SELECT SeID FROM sentences
-                WHERE SeID > ? AND SeTxID = ?
-                AND TRIM(SeText) NOT IN ('¶', '')
-                ORDER BY SeID ASC LIMIT 1",
+                "SELECT id FROM sentences
+                WHERE id > ? AND text_id = ?
+                AND TRIM(text) NOT IN ('¶', '')
+                ORDER BY id ASC LIMIT 1",
                 [$seid, $txid],
-                'SeID'
+                'id'
             );
             if ($nextSeid !== null) {
                 $sentenceIds[] = (int) $nextSeid;
@@ -549,22 +549,22 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
         $placeholders = implode(',', array_fill(0, count($sentenceIds), '?'));
 
         // Fetch all text items with their word data
-        $sql = "SELECT ti.Ti2Order, ti.Ti2Text, ti.Ti2WordCount, ti.Ti2WoID,
+        $sql = "SELECT ti.position, ti.text, ti.word_count, ti.word_id,
                 w.text_lc, w.romanization, w.translation
             FROM word_occurrences ti
-            LEFT JOIN words w ON ti.Ti2WoID = w.id
-            WHERE ti.Ti2SeID IN ($placeholders) AND ti.Ti2WordCount < 2
-            AND ti.Ti2Text != '¶'
-            ORDER BY ti.Ti2Order";
+            LEFT JOIN words w ON ti.word_id = w.id
+            WHERE ti.sentence_id IN ($placeholders) AND ti.word_count < 2
+            AND ti.text != '¶'
+            ORDER BY ti.position";
 
         $rows = Connection::preparedFetchAll($sql, $sentenceIds);
 
         $annotations = [];
         foreach ($rows as $row) {
-            $order = (int) $row['Ti2Order'];
-            $text = (string) $row['Ti2Text'];
+            $order = (int) $row['position'];
+            $text = (string) $row['text'];
             /** @var mixed $woId */
-            $woId = $row['Ti2WoID'];
+            $woId = $row['word_id'];
             $isTarget = mb_strtolower($text, 'UTF-8') === $targetWordLc;
 
             // Only include annotation data if the word is known (has a id)

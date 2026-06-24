@@ -131,12 +131,12 @@ class TextCreationAdapter implements TextCreationInterface
             foreach ($textsToArchive as $textId) {
                 // Delete textitems
                 $stats['textitems'] += QueryBuilder::table('word_occurrences')
-                    ->where('Ti2TxID', '=', $textId)
+                    ->where('text_id', '=', $textId)
                     ->delete();
 
                 // Delete sentences
                 $stats['sentences'] += QueryBuilder::table('sentences')
-                    ->where('SeTxID', '=', $textId)
+                    ->where('text_id', '=', $textId)
                     ->delete();
 
                 // Archive the text (soft delete - set TxArchivedAt)
@@ -151,7 +151,7 @@ class TextCreationAdapter implements TextCreationInterface
                 }
             }
 
-            Maintenance::adjustAutoIncrement('sentences', 'SeID');
+            Maintenance::adjustAutoIncrement('sentences', 'id');
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollback();

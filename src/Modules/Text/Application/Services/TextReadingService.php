@@ -65,7 +65,7 @@ class TextReadingService
         $actcode = (int)$record['Code'];
         if ($actcode > 1) {
             // A multiword, $actcode is the number of words composing it
-            $tiText = (string)($record['TiText'] ?? '');
+            $tiText = (string)($record['text'] ?? '');
             $lastExpr = !empty($exprs) ? $exprs[sizeof($exprs) - 1] : null;
             if ($lastExpr === null || $lastExpr[1] != $tiText) {
                 $exprs[] = array($actcode, $tiText, $actcode);
@@ -74,7 +74,7 @@ class TextReadingService
             if (isset($record['id'])) {
                 $woId = (int)$record['id'];
                 $woStatus = (int)$record['status'];
-                $ti2Order = (int)$record['Ti2Order'];
+                $ti2Order = (int)$record['position'];
                 $tiTextLC = (string)($record['TiTextLC'] ?? '');
                 $attributes = array(
                     'id' => $spanid,
@@ -116,9 +116,9 @@ class TextReadingService
             }
         } else {
             // Single word
-            $tiText = (string)($record['TiText'] ?? '');
+            $tiText = (string)($record['text'] ?? '');
             $tiTextLC = (string)($record['TiTextLC'] ?? '');
-            $ti2Order = (int)$record['Ti2Order'];
+            $ti2Order = (int)$record['position'];
             if (isset($record['id'])) {
                 // Word found status 1-5|98|99
                 $woId = (int)$record['id'];
@@ -229,7 +229,7 @@ class TextReadingService
         array &$exprs = array()
     ): void {
         $actcode = (int)$record['Code'];
-        $order = (int)$record['Ti2Order'];
+        $order = (int)$record['position'];
         $spanid = 'ID-' . $order . '-' . $actcode;
 
         // Check if item should be hidden
@@ -237,7 +237,7 @@ class TextReadingService
 
         if ($record['TiIsNotWord'] != 0) {
             // The current item is not a term (likely punctuation)
-            $text = (string)($record['TiText'] ?? '');
+            $text = (string)($record['text'] ?? '');
             // Add 'punc' class for punctuation (non-whitespace non-words)
             $puncClass = (trim($text) !== '' && !ctype_space($text)) ? 'punc' : '';
             $classes = trim($hidetag . ' ' . $puncClass);
@@ -268,20 +268,20 @@ class TextReadingService
     public function mainWordLoop(int $textId, int $showAll): void
     {
         $res = QueryBuilder::table('word_occurrences')
-            ->selectRaw('CASE WHEN `Ti2WordCount`>0 THEN Ti2WordCount ELSE 1 END AS Code')
-            ->selectRaw('CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN Ti2Text ELSE `text` END AS TiText')
-            ->selectRaw('CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN LOWER(Ti2Text) ELSE `text_lc` END AS TiTextLC')
-            ->select(['Ti2Order', 'Ti2SeID'])
-            ->selectRaw('CASE WHEN `Ti2WordCount`>0 THEN 0 ELSE 1 END AS TiIsNotWord')
+            ->selectRaw('CASE WHEN `word_count`>0 THEN word_count ELSE 1 END AS Code')
+            ->selectRaw('CASE WHEN CHAR_LENGTH(text)>0 THEN text ELSE `text` END AS text')
+            ->selectRaw('CASE WHEN CHAR_LENGTH(text)>0 THEN LOWER(text) ELSE `text_lc` END AS TiTextLC')
+            ->select(['position', 'sentence_id'])
+            ->selectRaw('CASE WHEN `word_count`>0 THEN 0 ELSE 1 END AS TiIsNotWord')
             ->selectRaw(
-                'CASE WHEN CHAR_LENGTH(Ti2Text)>0 THEN CHAR_LENGTH(Ti2Text) ' .
+                'CASE WHEN CHAR_LENGTH(text)>0 THEN CHAR_LENGTH(text) ' .
                 'ELSE CHAR_LENGTH(`text_lc`) END AS TiTextLength'
             )
             ->select(['id', 'text', 'status', 'translation', 'romanization'])
-            ->leftJoin('words', 'Ti2WoID', '=', 'id')
-            ->where('Ti2TxID', '=', $textId)
-            ->orderBy('Ti2Order', 'ASC')
-            ->orderBy('Ti2WordCount', 'DESC')
+            ->leftJoin('words', 'word_id', '=', 'id')
+            ->where('text_id', '=', $textId)
+            ->orderBy('position', 'ASC')
+            ->orderBy('word_count', 'DESC')
             ->getPrepared();
         $currcharcount = 0;
         $hidden_items = array();
@@ -292,15 +292,15 @@ class TextReadingService
 
         // Loop over words and punctuation
         foreach ($res as $record) {
-            $sid = $this->parseSentence($sid, (int) $record['Ti2SeID']);
-            if ($cnt < $record['Ti2Order']) {
+            $sid = $this->parseSentence($sid, (int) $record['sentence_id']);
+            if ($cnt < $record['position']) {
                 echo '<span id="ID-' . $cnt++ . '-1"></span>';
             }
             if ($showAll) {
                 $hide = isset($record['id'])
                 && array_key_exists((int) $record['id'], $hidden_items);
             } else {
-                $hide = $record['Ti2Order'] <= $last;
+                $hide = $record['position'] <= $last;
             }
 
             $this->parseItem($record, $showAll, $currcharcount, $hide, $exprs);
@@ -310,20 +310,20 @@ class TextReadingService
             }
             $last = max(
                 $last,
-                (int) $record['Ti2Order'] + ((int)$record['Code'] - 1) * 2
+                (int) $record['position'] + ((int)$record['Code'] - 1) * 2
             );
             if ($showAll) {
                 if (
                     isset($record['id'])
                     && !array_key_exists((int) $record['id'], $hidden_items)
                 ) {
-                    $hidden_items[(int) $record['id']] = (int) $record['Ti2Order']
+                    $hidden_items[(int) $record['id']] = (int) $record['position']
                     + ((int)$record['Code'] - 1) * 2;
                 }
                 // Clean the already finished items
                 $hidden_items = array_filter(
                     $hidden_items,
-                    fn ($val) => $val >= $record['Ti2Order'],
+                    fn ($val) => $val >= $record['position'],
                 );
             }
         }

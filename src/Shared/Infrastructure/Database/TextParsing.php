@@ -123,7 +123,7 @@ class TextParsing
             throw DatabaseException::recordNotFound('languages', 'LgID', $lid);
         }
 
-        // Parse text into temp_word_occurrences (id>0 uses MAX(SeID)+1 for sentence IDs)
+        // Parse text into temp_word_occurrences (id>0 uses MAX(id)+1 for sentence IDs)
         self::prepare($text, $textId, $lid);
 
         // Get multi-word expressions
@@ -170,8 +170,8 @@ class TextParsing
 
         // Get sentence count
         $sentences = Connection::fetchAll(
-            'SELECT GROUP_CONCAT(TiText ORDER BY TiOrder SEPARATOR "")
-            AS Sent FROM temp_word_occurrences GROUP BY TiSeID'
+            'SELECT GROUP_CONCAT(text ORDER BY position SEPARATOR "")
+            AS Sent FROM temp_word_occurrences GROUP BY sentence_id'
         );
         $sentenceCount = count($sentences);
 
@@ -191,12 +191,12 @@ class TextParsing
         // Get word statistics
         $bindings = [$lid];
         $rows = Connection::preparedFetchAll(
-            "SELECT COUNT(`TiOrder`) AS cnt, IF(0=TiWordCount,0,1) AS len,
-            LOWER(TiText) AS word, translation
+            "SELECT COUNT(temp_word_occurrences.position) AS cnt, IF(0=temp_word_occurrences.word_count,0,1) AS len,
+            LOWER(temp_word_occurrences.text) AS word, words.translation
             FROM temp_word_occurrences
-            LEFT JOIN words ON LOWER(TiText)=text_lc AND language_id=?"
+            LEFT JOIN words ON LOWER(temp_word_occurrences.text)=words.text_lc AND words.language_id=?"
             . UserScopedQuery::forTablePrepared('words', $bindings, '')
-            . " GROUP BY LOWER(TiText)",
+            . " GROUP BY LOWER(temp_word_occurrences.text)",
             $bindings
         );
 

@@ -64,7 +64,7 @@ class WordListExportBuilderTest extends TestCase
     {
         $result = $this->builder->getAnkiExportSql([], '5,10', '', '', '', '');
         $this->assertStringContainsString('word_occurrences', $result['sql']);
-        $this->assertStringContainsString('Ti2TxID in', $result['sql']);
+        $this->assertStringContainsString('text_id in', $result['sql']);
         $this->assertSame([5, 10], $result['params']);
     }
 
@@ -111,7 +111,7 @@ class WordListExportBuilderTest extends TestCase
     {
         $result = $this->builder->getTsvExportSql([], '10', '', '', '', '');
         $this->assertIsArray($result);
-        $this->assertStringContainsString('Ti2TxID in', $result['sql']);
+        $this->assertStringContainsString('text_id in', $result['sql']);
         $this->assertStringContainsString('word_occurrences', $result['sql']);
         $this->assertSame([10], $result['params']);
     }
@@ -222,7 +222,7 @@ class WordListExportBuilderTest extends TestCase
     {
         $result = $this->builder->getTestWordIdsSql('42', '', '', '', '');
         $this->assertStringContainsString('word_occurrences', $result['sql']);
-        $this->assertStringContainsString('Ti2TxID in', $result['sql']);
+        $this->assertStringContainsString('text_id in', $result['sql']);
         $this->assertStringContainsString('?', $result['sql']);
         $this->assertSame([42], $result['params']);
     }

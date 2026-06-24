@@ -332,12 +332,12 @@ class WordListService
             $inClause = Connection::buildPreparedInClause($ownedIds, $bindings);
             Connection::preparedExecute(
                 'DELETE FROM word_occurrences
-                WHERE Ti2WordCount > 1 AND Ti2WoID in ' . $inClause,
+                WHERE word_count > 1 AND word_id in ' . $inClause,
                 $bindings
             );
 
             // Delete words - FK constraints handle:
-            // - Single-word word_occurrences.Ti2WoID set to NULL (ON DELETE SET NULL)
+            // - Single-word word_occurrences.word_id set to NULL (ON DELETE SET NULL)
             // - word_tag_map deleted (ON DELETE CASCADE)
             $bindings2 = [];
             $inClause2 = Connection::buildPreparedInClause($ownedIds, $bindings2);
@@ -550,12 +550,12 @@ class WordListService
     {
         // Delete multi-word text items first (before word deletion triggers FK SET NULL)
         Connection::preparedExecute(
-            'DELETE FROM word_occurrences WHERE Ti2WordCount > 1 AND Ti2WoID = ?',
+            'DELETE FROM word_occurrences WHERE word_count > 1 AND word_id = ?',
             [$wordId]
         );
 
         // Delete word - FK constraints handle:
-        // - Single-word word_occurrences.Ti2WoID set to NULL (ON DELETE SET NULL)
+        // - Single-word word_occurrences.word_id set to NULL (ON DELETE SET NULL)
         // - word_tag_map deleted (ON DELETE CASCADE)
         $bindings = [$wordId];
         Connection::preparedExecute(
@@ -691,8 +691,8 @@ class WordListService
         } else {
             Connection::preparedExecute(
                 'UPDATE word_occurrences
-                SET Ti2WoID = ?
-                WHERE Ti2LgID = ? AND LOWER(Ti2Text) = ?',
+                SET word_id = ?
+                WHERE language_id = ? AND LOWER(text) = ?',
                 [$wid, (int)$data["language_id"], $textLc]
             );
         }

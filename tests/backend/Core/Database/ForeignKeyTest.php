@@ -16,9 +16,9 @@ use PHPUnit\Framework\TestCase;
  * Tests for inter-table foreign key constraints.
  *
  * These tests verify that:
- * 1. Ti2WoID is nullable (can store NULL for unknown words)
+ * 1. word_id is nullable (can store NULL for unknown words)
  * 2. CASCADE delete works correctly for all FK relationships
- * 3. SET NULL works for word_occurrences.Ti2WoID when words are deleted
+ * 3. SET NULL works for word_occurrences.word_id when words are deleted
  * 4. FK constraints prevent orphaned references
  */
 #[Group('integration')]
@@ -107,8 +107,8 @@ class ForeignKeyTest extends TestCase
         }
 
         // Clean up test data after each test
-        Connection::query("DELETE FROM word_occurrences WHERE Ti2Text LIKE 'fktest_%'");
-        Connection::query("DELETE FROM sentences WHERE SeText LIKE 'FK Test%'");
+        Connection::query("DELETE FROM word_occurrences WHERE text LIKE 'fktest_%'");
+        Connection::query("DELETE FROM sentences WHERE text LIKE 'FK Test%'");
         Connection::query("DELETE FROM texts WHERE TxTitle LIKE 'FK_Test_%'");
         Connection::query("DELETE FROM words WHERE text LIKE 'fktest_%'");
         Connection::query("DELETE FROM word_tag_map WHERE word_id NOT IN (SELECT id FROM words)");
@@ -117,10 +117,10 @@ class ForeignKeyTest extends TestCase
         Connection::query("DELETE FROM news_feeds WHERE name LIKE 'FK_Test_%'");
     }
 
-    // ===== Ti2WoID Nullable Tests =====
+    // ===== word_id Nullable Tests =====
 
     /**
-     * Test that Ti2WoID can be NULL (for unknown words).
+     * Test that word_id can be NULL (for unknown words).
      */
     public function testTi2WoIDCanBeNull(): void
     {
@@ -128,23 +128,23 @@ class ForeignKeyTest extends TestCase
         $textId = $this->createTestText('FK_Test_Nullable');
         $sentenceId = $this->createTestSentence($textId, 'FK Test sentence');
 
-        // Insert text item with NULL Ti2WoID
+        // Insert text item with NULL word_id
         Connection::query(
-            "INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text)
+            "INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text)
              VALUES (NULL, " . self::$testLangId . ", $textId, $sentenceId, 1, 1, 'fktest_unknown')"
         );
 
         // Verify it was inserted with NULL
         $result = Connection::fetchValue(
-            "SELECT Ti2WoID FROM word_occurrences WHERE Ti2Text = 'fktest_unknown'",
-            'Ti2WoID'
+            "SELECT word_id FROM word_occurrences WHERE text = 'fktest_unknown'",
+            'word_id'
         );
 
-        $this->assertNull($result, 'Ti2WoID should be NULL for unknown words');
+        $this->assertNull($result, 'word_id should be NULL for unknown words');
     }
 
     /**
-     * Test that Ti2WoID can reference a valid word.
+     * Test that word_id can reference a valid word.
      */
     public function testTi2WoIDCanReferenceWord(): void
     {
@@ -153,16 +153,16 @@ class ForeignKeyTest extends TestCase
         $wordId = $this->createTestWord('fktest_known');
 
         Connection::query(
-            "INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text)
+            "INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text)
              VALUES ($wordId, " . self::$testLangId . ", $textId, $sentenceId, 1, 1, 'fktest_known')"
         );
 
         $result = Connection::fetchValue(
-            "SELECT Ti2WoID FROM word_occurrences WHERE Ti2Text = 'fktest_known'",
-            'Ti2WoID'
+            "SELECT word_id FROM word_occurrences WHERE text = 'fktest_known'",
+            'word_id'
         );
 
-        $this->assertEquals($wordId, (int) $result, 'Ti2WoID should reference the word');
+        $this->assertEquals($wordId, (int) $result, 'word_id should reference the word');
     }
 
     // ===== CASCADE Delete Tests =====
@@ -178,7 +178,7 @@ class ForeignKeyTest extends TestCase
 
         // Verify sentence exists
         $beforeCount = (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM sentences WHERE SeID = $sentenceId",
+            "SELECT COUNT(*) AS cnt FROM sentences WHERE id = $sentenceId",
             'cnt'
         );
         $this->assertEquals(1, $beforeCount, 'Sentence should exist before delete');
@@ -188,7 +188,7 @@ class ForeignKeyTest extends TestCase
 
         // Verify sentence was cascaded
         $afterCount = (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM sentences WHERE SeID = $sentenceId",
+            "SELECT COUNT(*) AS cnt FROM sentences WHERE id = $sentenceId",
             'cnt'
         );
         $this->assertEquals(0, $afterCount, 'Sentence should be deleted via CASCADE');
@@ -204,13 +204,13 @@ class ForeignKeyTest extends TestCase
         $sentenceId = $this->createTestSentence($textId, 'FK Test sentence');
 
         Connection::query(
-            "INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text)
+            "INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text)
              VALUES (NULL, " . self::$testLangId . ", $textId, $sentenceId, 1, 1, 'fktest_cascade')"
         );
 
         // Verify text item exists
         $beforeCount = (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE Ti2TxID = $textId",
+            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE text_id = $textId",
             'cnt'
         );
         $this->assertEquals(1, $beforeCount, 'TextItem should exist before delete');
@@ -220,14 +220,14 @@ class ForeignKeyTest extends TestCase
 
         // Verify text item was cascaded
         $afterCount = (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE Ti2TxID = $textId",
+            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE text_id = $textId",
             'cnt'
         );
         $this->assertEquals(0, $afterCount, 'TextItem should be deleted via CASCADE');
     }
 
     /**
-     * Test that deleting a word sets Ti2WoID to NULL (not cascade delete).
+     * Test that deleting a word sets word_id to NULL (not cascade delete).
      */
     public function testWordDeleteSetsTextItemToNull(): void
     {
@@ -237,32 +237,32 @@ class ForeignKeyTest extends TestCase
         $wordId = $this->createTestWord('fktest_setnull');
 
         Connection::query(
-            "INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text)
+            "INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text)
              VALUES ($wordId, " . self::$testLangId . ", $textId, $sentenceId, 1, 1, 'fktest_setnull')"
         );
 
-        // Verify Ti2WoID is set
+        // Verify word_id is set
         $beforeWoId = Connection::fetchValue(
-            "SELECT Ti2WoID FROM word_occurrences WHERE Ti2Text = 'fktest_setnull'",
-            'Ti2WoID'
+            "SELECT word_id FROM word_occurrences WHERE text = 'fktest_setnull'",
+            'word_id'
         );
-        $this->assertEquals($wordId, (int) $beforeWoId, 'Ti2WoID should be set before word delete');
+        $this->assertEquals($wordId, (int) $beforeWoId, 'word_id should be set before word delete');
 
         // Delete word
         Connection::query("DELETE FROM words WHERE id = $wordId");
 
-        // Verify Ti2WoID is now NULL but text item still exists
+        // Verify word_id is now NULL but text item still exists
         $count = (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE Ti2Text = 'fktest_setnull'",
+            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE text = 'fktest_setnull'",
             'cnt'
         );
         $this->assertEquals(1, $count, 'TextItem should still exist after word deletion');
 
         $afterWoId = Connection::fetchValue(
-            "SELECT Ti2WoID FROM word_occurrences WHERE Ti2Text = 'fktest_setnull'",
-            'Ti2WoID'
+            "SELECT word_id FROM word_occurrences WHERE text = 'fktest_setnull'",
+            'word_id'
         );
-        $this->assertNull($afterWoId, 'Ti2WoID should be NULL after word deletion');
+        $this->assertNull($afterWoId, 'word_id should be NULL after word deletion');
     }
 
     /**
@@ -400,16 +400,16 @@ class ForeignKeyTest extends TestCase
         );
 
         Connection::query(
-            "INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeText, SeFirstPos)
+            "INSERT INTO sentences (language_id, text_id, position, text, first_pos)
              VALUES ($langId, $textId, 1, 'FK Test full cascade', 1)"
         );
         $sentenceId = (int) Connection::fetchValue(
-            "SELECT SeID FROM sentences WHERE SeTxID = $textId",
-            'SeID'
+            "SELECT id FROM sentences WHERE text_id = $textId",
+            'id'
         );
 
         Connection::query(
-            "INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text)
+            "INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text)
              VALUES (NULL, $langId, $textId, $sentenceId, 1, 1, 'fktest_fullcascade')"
         );
 
@@ -419,11 +419,11 @@ class ForeignKeyTest extends TestCase
             'cnt'
         ));
         $this->assertEquals(1, (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM sentences WHERE SeID = $sentenceId",
+            "SELECT COUNT(*) AS cnt FROM sentences WHERE id = $sentenceId",
             'cnt'
         ));
         $this->assertEquals(1, (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE Ti2TxID = $textId",
+            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE text_id = $textId",
             'cnt'
         ));
 
@@ -436,11 +436,11 @@ class ForeignKeyTest extends TestCase
             'cnt'
         ), 'Text should be deleted via CASCADE');
         $this->assertEquals(0, (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM sentences WHERE SeID = $sentenceId",
+            "SELECT COUNT(*) AS cnt FROM sentences WHERE id = $sentenceId",
             'cnt'
         ), 'Sentence should be deleted via CASCADE');
         $this->assertEquals(0, (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE Ti2TxID = $textId",
+            "SELECT COUNT(*) AS cnt FROM word_occurrences WHERE text_id = $textId",
             'cnt'
         ), 'TextItem should be deleted via CASCADE');
     }
@@ -560,7 +560,7 @@ class ForeignKeyTest extends TestCase
         $this->expectExceptionMessageMatches('/foreign key constraint fails/i');
 
         Connection::query(
-            "INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeText, SeFirstPos)
+            "INSERT INTO sentences (language_id, text_id, position, text, first_pos)
              VALUES (" . self::$testLangId . ", 65535, 1, 'Invalid', 1)"
         );
     }
@@ -578,7 +578,7 @@ class ForeignKeyTest extends TestCase
         $sentenceId = $this->createTestSentence($textId, 'FK Test sentence');
 
         Connection::query(
-            "INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text)
+            "INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text)
              VALUES (16777215, " . self::$testLangId . ", $textId, $sentenceId, 1, 1, 'fktest_invalid')"
         );
     }
@@ -606,12 +606,12 @@ class ForeignKeyTest extends TestCase
     private function createTestSentence(int $textId, string $text): int
     {
         Connection::query(
-            "INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeText, SeFirstPos)
+            "INSERT INTO sentences (language_id, text_id, position, text, first_pos)
              VALUES (" . self::$testLangId . ", $textId, 1, '$text', 1)"
         );
         return (int) Connection::fetchValue(
-            "SELECT SeID FROM sentences WHERE SeTxID = $textId AND SeText = '$text'",
-            'SeID'
+            "SELECT id FROM sentences WHERE text_id = $textId AND text = '$text'",
+            'id'
         );
     }
 

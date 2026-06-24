@@ -12,8 +12,8 @@
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- Clean up any previous test data
-DELETE FROM word_occurrences WHERE Ti2TxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM sentences WHERE SeTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
+DELETE FROM word_occurrences WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
+DELETE FROM sentences WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
 DELETE FROM word_tag_map WHERE word_id IN (SELECT id FROM words WHERE text LIKE 'fktest_%');
@@ -28,10 +28,10 @@ DELETE FROM languages WHERE LgName LIKE 'FK_TEST_%';
 SELECT '=== Starting Foreign Key Tests ===' AS status;
 
 -- ============================================================================
--- Test 1: Verify Ti2WoID is nullable (can store NULL for unknown words)
+-- Test 1: Verify word_id is nullable (can store NULL for unknown words)
 -- ============================================================================
 
-SELECT '--- Test 1: Ti2WoID nullable check ---' AS test;
+SELECT '--- Test 1: word_id nullable check ---' AS test;
 
 -- Create test language
 INSERT INTO languages (LgName, LgDict1URI, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters)
@@ -46,17 +46,17 @@ VALUES (@test_lang_id, 'FK_TEST_Text1', 'Test text content', '');
 SET @test_text_id = LAST_INSERT_ID();
 
 -- Create test sentence
-INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeText, SeFirstPos)
+INSERT INTO sentences (language_id, text_id, position, text, first_pos)
 VALUES (@test_lang_id, @test_text_id, 1, 'Test sentence', 1);
 
 SET @test_sentence_id = LAST_INSERT_ID();
 
--- Insert text item with NULL Ti2WoID (unknown word)
-INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text, Ti2Translation)
+-- Insert text item with NULL word_id (unknown word)
+INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text, Ti2Translation)
 VALUES (NULL, @test_lang_id, @test_text_id, @test_sentence_id, 1, 1, 'unknownword', '');
 
-SELECT IF(COUNT(*) = 1, 'PASS: Ti2WoID can be NULL', 'FAIL: Ti2WoID NULL insert failed') AS result
-FROM word_occurrences WHERE Ti2WoID IS NULL AND Ti2Text = 'unknownword';
+SELECT IF(COUNT(*) = 1, 'PASS: word_id can be NULL', 'FAIL: word_id NULL insert failed') AS result
+FROM word_occurrences WHERE word_id IS NULL AND text = 'unknownword';
 
 -- ============================================================================
 -- Test 2: FK texts -> languages (ON DELETE CASCADE)
@@ -98,21 +98,21 @@ VALUES (@test_lang_id, 'FK_TEST_Sentence_Cascade', 'Test', '');
 
 SET @sent_test_text_id = LAST_INSERT_ID();
 
-INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeText, SeFirstPos)
+INSERT INTO sentences (language_id, text_id, position, text, first_pos)
 VALUES (@test_lang_id, @sent_test_text_id, 1, 'Sentence to cascade', 1);
 
 SET @sent_test_sentence_id = LAST_INSERT_ID();
 
 -- Verify sentence exists
 SELECT IF(COUNT(*) = 1, 'SETUP: Sentence created', 'SETUP FAIL') AS result
-FROM sentences WHERE SeID = @sent_test_sentence_id;
+FROM sentences WHERE id = @sent_test_sentence_id;
 
 -- Delete text - should cascade to sentences
 DELETE FROM texts WHERE TxID = @sent_test_text_id;
 
 -- Verify sentence was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Sentence deleted via CASCADE', 'FAIL: Sentence not deleted') AS result
-FROM sentences WHERE SeID = @sent_test_sentence_id;
+FROM sentences WHERE id = @sent_test_sentence_id;
 
 -- ============================================================================
 -- Test 4: FK word_occurrences -> texts (ON DELETE CASCADE)
@@ -125,24 +125,24 @@ VALUES (@test_lang_id, 'FK_TEST_TextItems_Cascade', 'Test', '');
 
 SET @ti_test_text_id = LAST_INSERT_ID();
 
-INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeText, SeFirstPos)
+INSERT INTO sentences (language_id, text_id, position, text, first_pos)
 VALUES (@test_lang_id, @ti_test_text_id, 1, 'Sentence', 1);
 
 SET @ti_test_sentence_id = LAST_INSERT_ID();
 
-INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text, Ti2Translation)
+INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text, Ti2Translation)
 VALUES (NULL, @test_lang_id, @ti_test_text_id, @ti_test_sentence_id, 1, 1, 'testword', '');
 
 -- Verify text item exists
 SELECT IF(COUNT(*) = 1, 'SETUP: TextItem created', 'SETUP FAIL') AS result
-FROM word_occurrences WHERE Ti2TxID = @ti_test_text_id;
+FROM word_occurrences WHERE text_id = @ti_test_text_id;
 
 -- Delete text - should cascade to word_occurrences (via sentences cascade)
 DELETE FROM texts WHERE TxID = @ti_test_text_id;
 
 -- Verify text item was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: TextItem deleted via CASCADE', 'FAIL: TextItem not deleted') AS result
-FROM word_occurrences WHERE Ti2TxID = @ti_test_text_id;
+FROM word_occurrences WHERE text_id = @ti_test_text_id;
 
 -- ============================================================================
 -- Test 5: FK word_occurrences -> words (ON DELETE SET NULL)
@@ -155,7 +155,7 @@ VALUES (@test_lang_id, 'FK_TEST_SetNull', 'Test', '');
 
 SET @sn_test_text_id = LAST_INSERT_ID();
 
-INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeText, SeFirstPos)
+INSERT INTO sentences (language_id, text_id, position, text, first_pos)
 VALUES (@test_lang_id, @sn_test_text_id, 1, 'Sentence', 1);
 
 SET @sn_test_sentence_id = LAST_INSERT_ID();
@@ -167,23 +167,23 @@ VALUES (@test_lang_id, 'fktest_word', 'fktest_word', 1, 'test translation', 1);
 SET @sn_test_word_id = LAST_INSERT_ID();
 
 -- Create text item linked to word
-INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text, Ti2Translation)
+INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text, Ti2Translation)
 VALUES (@sn_test_word_id, @test_lang_id, @sn_test_text_id, @sn_test_sentence_id, 1, 1, 'fktest_word', '');
 
 -- Verify link exists
-SELECT IF(Ti2WoID = @sn_test_word_id, 'SETUP: TextItem linked to word', 'SETUP FAIL') AS result
-FROM word_occurrences WHERE Ti2TxID = @sn_test_text_id AND Ti2Order = 1;
+SELECT IF(word_id = @sn_test_word_id, 'SETUP: TextItem linked to word', 'SETUP FAIL') AS result
+FROM word_occurrences WHERE text_id = @sn_test_text_id AND position = 1;
 
--- Delete word - Ti2WoID should become NULL
+-- Delete word - word_id should become NULL
 DELETE FROM words WHERE id = @sn_test_word_id;
 
--- Verify Ti2WoID is now NULL (not deleted, just unlinked)
-SELECT IF(Ti2WoID IS NULL, 'PASS: Ti2WoID set to NULL', 'FAIL: Ti2WoID not NULL') AS result
-FROM word_occurrences WHERE Ti2TxID = @sn_test_text_id AND Ti2Order = 1;
+-- Verify word_id is now NULL (not deleted, just unlinked)
+SELECT IF(word_id IS NULL, 'PASS: word_id set to NULL', 'FAIL: word_id not NULL') AS result
+FROM word_occurrences WHERE text_id = @sn_test_text_id AND position = 1;
 
 -- Verify text item still exists
 SELECT IF(COUNT(*) = 1, 'PASS: TextItem preserved after word deletion', 'FAIL: TextItem deleted') AS result
-FROM word_occurrences WHERE Ti2TxID = @sn_test_text_id AND Ti2Order = 1;
+FROM word_occurrences WHERE text_id = @sn_test_text_id AND position = 1;
 
 -- ============================================================================
 -- Test 6: FK word_tag_map -> words (ON DELETE CASCADE)
@@ -425,19 +425,19 @@ VALUES (@fc_lang_id, 'FK_TEST_FullCascade_Text', 'Test', '');
 
 SET @fc_text_id = LAST_INSERT_ID();
 
-INSERT INTO sentences (SeLgID, SeTxID, SeOrder, SeText, SeFirstPos)
+INSERT INTO sentences (language_id, text_id, position, text, first_pos)
 VALUES (@fc_lang_id, @fc_text_id, 1, 'Full cascade sentence', 1);
 
 SET @fc_sentence_id = LAST_INSERT_ID();
 
-INSERT INTO word_occurrences (Ti2WoID, Ti2LgID, Ti2TxID, Ti2SeID, Ti2Order, Ti2WordCount, Ti2Text, Ti2Translation)
+INSERT INTO word_occurrences (word_id, language_id, text_id, sentence_id, position, word_count, text, Ti2Translation)
 VALUES (NULL, @fc_lang_id, @fc_text_id, @fc_sentence_id, 1, 1, 'cascadeword', '');
 
 -- Verify all exist
 SELECT IF(
     (SELECT COUNT(*) FROM texts WHERE TxID = @fc_text_id) = 1 AND
-    (SELECT COUNT(*) FROM sentences WHERE SeID = @fc_sentence_id) = 1 AND
-    (SELECT COUNT(*) FROM word_occurrences WHERE Ti2TxID = @fc_text_id) = 1,
+    (SELECT COUNT(*) FROM sentences WHERE id = @fc_sentence_id) = 1 AND
+    (SELECT COUNT(*) FROM word_occurrences WHERE text_id = @fc_text_id) = 1,
     'SETUP: Full chain created', 'SETUP FAIL'
 ) AS result;
 
@@ -447,8 +447,8 @@ DELETE FROM languages WHERE LgID = @fc_lang_id;
 -- Verify all were deleted
 SELECT IF(
     (SELECT COUNT(*) FROM texts WHERE TxID = @fc_text_id) = 0 AND
-    (SELECT COUNT(*) FROM sentences WHERE SeID = @fc_sentence_id) = 0 AND
-    (SELECT COUNT(*) FROM word_occurrences WHERE Ti2TxID = @fc_text_id) = 0,
+    (SELECT COUNT(*) FROM sentences WHERE id = @fc_sentence_id) = 0 AND
+    (SELECT COUNT(*) FROM word_occurrences WHERE text_id = @fc_text_id) = 0,
     'PASS: Full chain deleted via CASCADE', 'FAIL: Some records remain'
 ) AS result;
 
@@ -459,8 +459,8 @@ SELECT IF(
 SELECT '--- Cleanup ---' AS status;
 
 -- Clean up remaining test data
-DELETE FROM word_occurrences WHERE Ti2TxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM sentences WHERE SeTxID IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
+DELETE FROM word_occurrences WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
+DELETE FROM sentences WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
 DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
 DELETE FROM word_tag_map WHERE word_id IN (SELECT id FROM words WHERE text LIKE 'fktest_%');

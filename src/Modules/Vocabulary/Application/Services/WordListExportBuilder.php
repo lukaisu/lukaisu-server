@@ -96,8 +96,8 @@ class WordListExportBuilder
 
         return [
             'sql' => "$ankiSelect $ankiFrom, word_occurrences
-                where Ti2LgID = language_id and Ti2WoID = id
-                and Ti2TxID in $inClause and $ankiWhere
+                where language_id = language_id and word_id = id
+                and text_id in $inClause and $ankiWhere
                 $whLang $whStat $whQuery group by id $whTag",
             'params' => $params,
         ];
@@ -158,8 +158,8 @@ class WordListExportBuilder
 
         return [
             'sql' => "$tsvSelect $tsvFrom, word_occurrences
-                where Ti2LgID = language_id and Ti2WoID = id
-                and Ti2TxID in $inClause and language_id = LgID
+                where language_id = language_id and word_id = id
+                and text_id in $inClause and language_id = LgID
                 $whLang $whStat $whQuery group by id $whTag",
             'params' => $params,
         ];
@@ -220,8 +220,8 @@ class WordListExportBuilder
 
         return [
             'sql' => "$flexSelect $flexFrom, word_occurrences
-                where Ti2LgID = language_id and Ti2WoID = id
-                and Ti2TxID in $inClause and language_id = LgID
+                where language_id = language_id and word_id = id
+                and text_id in $inClause and language_id = LgID
                 $whLang $whStat $whQuery group by id $whTag",
             'params' => $params,
         ];
@@ -266,8 +266,8 @@ class WordListExportBuilder
             'sql' => 'select distinct id
                 from (words left JOIN word_tag_map ON id = word_id),
                 word_occurrences
-                where Ti2LgID = language_id and Ti2WoID = id
-                and Ti2TxID in ' . $inClause .
+                where language_id = language_id and word_id = id
+                and text_id in ' . $inClause .
                 $whLang . $whStat . $whQuery .
                 ' group by id ' . $whTag,
             'params' => $params,
