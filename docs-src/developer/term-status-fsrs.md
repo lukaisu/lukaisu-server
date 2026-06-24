@@ -120,18 +120,24 @@ lost because there is none today; the `review_log` starts accumulating from roll
 
 ## Trade-offs & open questions
 
-- **Display status: derived vs. manual.** Deriving 1–5 from `S` is the principled
-  end state but changes how colours move (they now track scheduling). Alternative:
-  keep status fully manual and orthogonal to FSRS. *Recommended: derive, with manual
-  override.* — needs your call.
-- **4-grade UX.** A real behaviour change for users used to "I knew it / I didn't."
-  Could ship a 2-button mode that maps to Again/Good.
+- **Display status: derived vs. manual. — DECIDED (2026-06): derive from
+  stability, with a manual override.** Bucket `S` into the 1–5 tiers so reading
+  colours track real memory strength; a manual status set still pins/overrides
+  `S`/`D`. `98`/`99` stay manual flags.
+- **Review grading. — DECIDED (2026-06): ship the full 4-grade scale**
+  (Again / Hard / Good / Easy). No 2-button mode for now (it can be added later
+  if users ask).
 - **Per-user vs. global parameters.** FSRS ships sensible defaults; per-user
   optimisation needs enough `review_log` history and an optimiser job (defer).
-- **Scope.** Phase 2 touches schema, the Review module, the review UI, and stats.
-  Phase 1 is independent and should land first.
-- **Licensing.** Confirm the chosen FSRS implementation's licence is compatible
-  before vendoring.
+- **Offline mirror.** Scheduling runs on-device in the bundled app, so the
+  `Scheduler` must be ported to TS alongside the PHP one (like the parsers), with
+  the schema mirrored in the on-device DB. The FSRS update is pure arithmetic —
+  no server needed — so this fits the local-first seam.
+- **Scope.** Phase 2 touches schema, the Review module, the review UI, stats, and
+  the offline client. Phase 1 has landed; Phase 2 is worth its own dedicated PR.
+- **Licensing — still open.** Confirm the chosen FSRS implementation's licence
+  before vendoring vs. hand-porting `open-spaced-repetition` (the one remaining
+  pre-implementation question).
 
 ## Scope sketch (when picked up)
 
