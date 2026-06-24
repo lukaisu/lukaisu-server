@@ -67,7 +67,8 @@
     "bulma": "^1.0.4",
     "chart.js": "^4.5.1",
     "dexie": "^4.2.1",
-    "lucide": "^1.7.0"
+    "lucide": "^1.7.0",
+    "ts-fsrs": "^5.4.1"
   },
   "overrides": {
     "react": "18.3.1",

@@ -121,6 +121,26 @@ export function isIgnoredStatus(value: number): boolean {
 }
 
 /**
+ * Derive the display learning status (1-5) from FSRS stability (in days).
+ *
+ * Phase 2 (issue #238): the learning status is no longer set by hand — it is a
+ * read-only view of the FSRS memory strength. Buckets: `S<1⇒1, <7⇒2, <30⇒3,
+ * <90⇒4, ≥90⇒5`. A never-reviewed card (stability 0) maps to 1. Ignored (98)
+ * and well-known (99) are manual flags and are NOT derived from stability — do
+ * not pass them here.
+ *
+ * Keep the buckets in sync with `STATUS_SEED_STABILITY` in
+ * `shared/offline/local/fsrs.ts` and the SQL migration's seeding `CASE`.
+ */
+export function statusFromStability(stability: number): number {
+  if (stability < 1) return 1;
+  if (stability < 7) return 2;
+  if (stability < 30) return 3;
+  if (stability < 90) return 4;
+  return 5;
+}
+
+/**
  * The definitions for the given status values, in canonical order. With no
  * argument, returns the full table (including the display-only Unknown/0).
  */

@@ -10,6 +10,7 @@
 
 export * from './schema';
 export * from './parser';
+export * from './fsrs';
 export * from './review-scoring';
 export * from './text-assembly';
 export { toClassName, toHex } from './class-name';
