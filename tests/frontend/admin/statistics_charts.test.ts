@@ -156,12 +156,14 @@ describe('statistics_charts.ts', () => {
       const datasets = config.data?.datasets || [];
       const labels = datasets.map(d => d.label);
 
-      expect(labels).toContain('Unknown (1)');
+      // Labels now come from the single status store (issue #238), which fixes
+      // the old mislabel of status 1 as "Unknown (1)".
+      expect(labels).toContain('Learning (1)');
       expect(labels).toContain('Learning (2)');
       expect(labels).toContain('Learning (3)');
       expect(labels).toContain('Learning (4)');
       expect(labels).toContain('Learned (5)');
-      expect(labels).toContain('Well Known (99)');
+      expect(labels).toContain('Well Known');
     });
 
     it('handles data with zero values', async () => {

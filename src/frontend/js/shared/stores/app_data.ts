@@ -14,6 +14,7 @@
 import type { WordStatus } from '@/types/globals';
 import { t } from '@shared/i18n/translator';
 import { routeLocal } from '@shared/offline/local/router';
+import { isValidStatus, STORED_STATUSES } from '@shared/stores/statuses';
 
 /**
  * Word statuses — localized labels.
@@ -45,14 +46,14 @@ export const statuses: Record<number, WordStatus> = new Proxy({} as Record<numbe
     }
   },
   ownKeys(): string[] {
-    return ['1', '2', '3', '4', '5', '98', '99'];
+    // Valid stored statuses, ascending (1-5, 98, 99) — from the status store.
+    return [...STORED_STATUSES].sort((a, b) => a - b).map(String);
   },
   getOwnPropertyDescriptor(): PropertyDescriptor {
     return { enumerable: true, configurable: true };
   },
   has(_target, prop: string | symbol): boolean {
-    const key = Number(prop);
-    return [1, 2, 3, 4, 5, 98, 99].includes(key);
+    return isValidStatus(Number(prop));
   }
 });
 

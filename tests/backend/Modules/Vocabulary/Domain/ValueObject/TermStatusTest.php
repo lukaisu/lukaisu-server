@@ -404,4 +404,71 @@ class TermStatusTest extends TestCase
         $original->decrease();
         $this->assertEquals(3, $original->toInt());
     }
+
+    // ===== Display model (single source of truth, issue #238) =====
+
+    public function testIsValidMatchesStoredStatuses(): void
+    {
+        foreach ([1, 2, 3, 4, 5, 98, 99] as $valid) {
+            $this->assertTrue(TermStatus::isValid($valid), "status $valid should be valid");
+        }
+        $this->assertFalse(TermStatus::isValid(0));
+        $this->assertFalse(TermStatus::isValid(6));
+        $this->assertFalse(TermStatus::isValid(100));
+    }
+
+    public function testAllReturnsTheStoredStatuses(): void
+    {
+        $this->assertSame([1, 2, 3, 4, 5, 98, 99], TermStatus::all());
+    }
+
+    public function testDisplayAttributes(): void
+    {
+        $new = TermStatus::fromInt(1);
+        $this->assertSame('1', $new->abbreviation());
+        $this->assertSame('status1', $new->cssClass());
+        $this->assertSame('#f24e4e', $new->colourHex());
+        $this->assertSame(1, $new->order());
+
+        $wellKnown = TermStatus::fromInt(99);
+        $this->assertSame('Known', $wellKnown->abbreviation());
+        $this->assertSame('status99', $wellKnown->cssClass());
+        $this->assertSame(6, $wellKnown->order());
+    }
+
+    public function testDefinitionsCoverAllStatusesInOrder(): void
+    {
+        $defs = TermStatus::definitions();
+        $this->assertCount(8, $defs);
+        $this->assertSame(
+            [0, 1, 2, 3, 4, 5, 99, 98],
+            array_column($defs, 'value')
+        );
+        foreach ($defs as $d) {
+            $this->assertArrayHasKey('label', $d);
+            $this->assertArrayHasKey('abbr', $d);
+            $this->assertArrayHasKey('cssClass', $d);
+            $this->assertArrayHasKey('colourHex', $d);
+            $this->assertArrayHasKey('order', $d);
+            $this->assertMatchesRegularExpression('/^#[0-9a-f]{6}$/', $d['colourHex']);
+        }
+    }
+
+    public function testDefinitionsPartitionLearningKnownIgnored(): void
+    {
+        $byValue = [];
+        foreach (TermStatus::definitions() as $d) {
+            $byValue[$d['value']] = $d;
+        }
+        // Learning is 1-4; 5 and 99 are known; 98 is ignored; 0 is none.
+        $this->assertTrue($byValue[1]['isLearning']);
+        $this->assertTrue($byValue[4]['isLearning']);
+        $this->assertFalse($byValue[5]['isLearning']);
+        $this->assertTrue($byValue[5]['isKnown']);
+        $this->assertTrue($byValue[99]['isKnown']);
+        $this->assertTrue($byValue[98]['isIgnored']);
+        $this->assertFalse($byValue[0]['isKnown']);
+        $this->assertFalse($byValue[0]['isLearning']);
+        $this->assertFalse($byValue[0]['isIgnored']);
+    }
 }

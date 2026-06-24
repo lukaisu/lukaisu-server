@@ -21,6 +21,7 @@ namespace Lukaisu\Modules\Review\Http;
 
 use Lukaisu\Modules\Review\Application\ReviewFacade;
 use Lukaisu\Modules\Review\Domain\ReviewConfiguration;
+use Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermStatus;
 use Lukaisu\Modules\Review\Infrastructure\SessionStateManager;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Language\LanguagePresets;
@@ -447,7 +448,7 @@ class ReviewApiHandler implements ApiRoutableInterface
     {
         if ($status !== null) {
             // Explicit status - validate it
-            if (!in_array($status, [1, 2, 3, 4, 5, 98, 99])) {
+            if (!TermStatus::isValid($status)) {
                 return ['error' => 'Invalid status value'];
             }
             $result = $this->reviewFacade->submitAnswer($wordId, $status);

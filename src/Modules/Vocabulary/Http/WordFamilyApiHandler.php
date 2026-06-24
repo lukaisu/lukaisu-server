@@ -21,6 +21,7 @@ namespace Lukaisu\Modules\Vocabulary\Http;
 
 use Lukaisu\Api\V1\Response;
 use Lukaisu\Modules\Vocabulary\Application\Services\LemmaService;
+use Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermStatus;
 use Lukaisu\Shared\Http\ApiRoutableInterface;
 use Lukaisu\Shared\Http\ApiRoutableTrait;
 use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
@@ -179,7 +180,7 @@ class WordFamilyApiHandler implements ApiRoutableInterface
      */
     public function updateWordFamilyStatus(int $langId, string $lemmaLc, int $status): array
     {
-        if (!in_array($status, [1, 2, 3, 4, 5, 98, 99])) {
+        if (!TermStatus::isValid($status)) {
             return ['success' => false, 'error' => 'Invalid status'];
         }
 
@@ -211,7 +212,7 @@ class WordFamilyApiHandler implements ApiRoutableInterface
      */
     public function applyFamilyUpdate(array $termIds, int $status): array
     {
-        if (!in_array($status, [1, 2, 3, 4, 5, 98, 99])) {
+        if (!TermStatus::isValid($status)) {
             return ['success' => false, 'count' => 0];
         }
 

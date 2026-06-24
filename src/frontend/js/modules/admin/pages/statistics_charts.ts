@@ -12,9 +12,14 @@
 import Alpine from 'alpinejs';
 import type { Chart as ChartType } from 'chart.js';
 import { loadChartJs } from '@shared/utils/chart_loader';
+import { statusLabel } from '@shared/stores/statuses';
 
 /**
- * Status colors matching Lukaisu Server's existing status styles.
+ * Pastel palette for the admin statistics charts. Deliberately distinct from the
+ * saturated reading-view palette in the status store (issue #238) — these are
+ * full-page admin charts with a softer aesthetic. The frequency chart also
+ * borrows these as generic series colours (Created/Activity/Known), so they are
+ * kept local rather than sourced from the store's per-status colours.
  */
 const STATUS_COLORS = {
   s1: '#F5B8A9',   // Unknown (status 1) - red/pink
@@ -96,32 +101,32 @@ export async function initIntensityChart(
     labels,
     datasets: [
       {
-        label: 'Unknown (1)',
+        label: statusLabel(1),
         data: data.map(lang => lang.s1),
         backgroundColor: STATUS_COLORS.s1
       },
       {
-        label: 'Learning (2)',
+        label: statusLabel(2),
         data: data.map(lang => lang.s2),
         backgroundColor: STATUS_COLORS.s2
       },
       {
-        label: 'Learning (3)',
+        label: statusLabel(3),
         data: data.map(lang => lang.s3),
         backgroundColor: STATUS_COLORS.s3
       },
       {
-        label: 'Learning (4)',
+        label: statusLabel(4),
         data: data.map(lang => lang.s4),
         backgroundColor: STATUS_COLORS.s4
       },
       {
-        label: 'Learned (5)',
+        label: statusLabel(5),
         data: data.map(lang => lang.s5),
         backgroundColor: STATUS_COLORS.s5
       },
       {
-        label: 'Well Known (99)',
+        label: statusLabel(99),
         data: data.map(lang => lang.s99),
         backgroundColor: STATUS_COLORS.s99
       }

@@ -13,34 +13,18 @@
 import { onDomReady } from '@shared/utils/dom_ready';
 import type { Chart as ChartType } from 'chart.js';
 import { loadChartJs } from '@shared/utils/chart_loader';
+import { statusColour, statusLabel, STATUS_ORDER } from '@shared/stores/statuses';
 
 /**
- * Status colors matching Lukaisu Server's existing barchart CSS styles.
+ * Per-status colour and label maps, derived from the single status store
+ * (issue #238) so every chart and the reading view stay in agreement.
  */
-const STATUS_COLORS: Record<number, string> = {
-  0: '#8bdadc',   // Unknown - cyan
-  1: '#f24e4e',   // Learning 1 - red
-  2: '#ffac80',   // Learning 2 - orange
-  3: '#ffe199',   // Learning 3 - light orange
-  4: '#fffd77',   // Learning 4 - yellow
-  5: '#9f9',      // Learned 5 - green
-  98: '#aaa',     // Ignored - gray
-  99: '#999'      // Well Known - dark gray
-};
-
-/**
- * Status labels for tooltips.
- */
-const STATUS_LABELS: Record<number, string> = {
-  0: 'Unknown',
-  1: 'Learning (1)',
-  2: 'Learning (2)',
-  3: 'Learning (3)',
-  4: 'Learning (4)',
-  5: 'Learned (5)',
-  98: 'Ignored',
-  99: 'Well Known'
-};
+const STATUS_COLORS: Record<number, string> = Object.fromEntries(
+  STATUS_ORDER.map((v) => [v, statusColour(v)])
+);
+const STATUS_LABELS: Record<number, string> = Object.fromEntries(
+  STATUS_ORDER.map((v) => [v, statusLabel(v)])
+);
 
 /**
  * Status descriptions for tooltips.
@@ -55,11 +39,6 @@ const STATUS_DESCRIPTIONS: Record<number, string> = {
   98: 'Words marked as ignored (punctuation, names, etc.)',
   99: 'Words you already know well'
 };
-
-/**
- * Status order for chart segments.
- */
-const STATUS_ORDER = [0, 1, 2, 3, 4, 5, 99, 98];
 
 /**
  * Map of text ID to Chart instance for cleanup/updates.

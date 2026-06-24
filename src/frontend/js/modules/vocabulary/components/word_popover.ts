@@ -13,6 +13,7 @@ import type { WordStoreState, WordData } from '../stores/word_store';
 import { speechDispatcher } from '@shared/utils/user_interactions';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { announce } from '@shared/accessibility/aria_live';
+import { orderedStatuses } from '@shared/stores/statuses';
 
 /**
  * Status display information.
@@ -25,17 +26,15 @@ interface StatusInfo {
 }
 
 /**
- * Status definitions.
+ * Status buttons, derived from the single status store (issue #238). Order:
+ * learning 1-5, then well-known, then ignored.
  */
-const STATUSES: StatusInfo[] = [
-  { value: 1, label: 'Learning (1)', abbr: '1', class: 'is-danger' },
-  { value: 2, label: 'Learning (2)', abbr: '2', class: 'is-warning' },
-  { value: 3, label: 'Learning (3)', abbr: '3', class: 'is-info' },
-  { value: 4, label: 'Learning (4)', abbr: '4', class: 'is-primary' },
-  { value: 5, label: 'Learned', abbr: '5', class: 'is-success' },
-  { value: 99, label: 'Well Known', abbr: 'Known', class: 'is-success is-light' },
-  { value: 98, label: 'Ignored', abbr: 'Ignore', class: 'is-light' }
-];
+const STATUSES: StatusInfo[] = orderedStatuses([1, 2, 3, 4, 5, 99, 98]).map((d) => ({
+  value: d.value,
+  label: d.label,
+  abbr: d.abbr,
+  class: d.buttonClass
+}));
 
 /**
  * Popover position configuration.

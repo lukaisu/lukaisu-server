@@ -16,17 +16,13 @@ import {
   type TermUpdateFullRequest
 } from '@modules/vocabulary/api/terms_api';
 import { escapeHtml } from '@shared/utils/html_utils';
+import { orderedStatuses } from '@shared/stores/statuses';
 
-/** Status definitions for the form */
-const STATUSES = [
-  { value: 1, label: 'Learning (1)' },
-  { value: 2, label: 'Learning (2)' },
-  { value: 3, label: 'Learning (3)' },
-  { value: 4, label: 'Learning (4)' },
-  { value: 5, label: 'Learned' },
-  { value: 99, label: 'Well Known' },
-  { value: 98, label: 'Ignored' }
-];
+/** Status options for the form, from the single status store (issue #238). */
+const STATUSES = orderedStatuses([1, 2, 3, 4, 5, 99, 98]).map((d) => ({
+  value: d.value,
+  label: d.label
+}));
 
 /** Current form context */
 let currentContext: {

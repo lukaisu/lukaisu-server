@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace Lukaisu\Modules\Vocabulary\Http;
 
+use Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermStatus;
 use Lukaisu\Shared\Infrastructure\Utilities\StringUtils;
 use Lukaisu\Shared\Infrastructure\Database\Connection;
 use Lukaisu\Shared\Infrastructure\Database\QueryBuilder;
@@ -648,7 +649,7 @@ class TermCrudApiHandler
         $status = (int) ($data['status'] ?? 1);
 
         // Validate status
-        if (!in_array($status, [1, 2, 3, 4, 5, 98, 99])) {
+        if (!TermStatus::isValid($status)) {
             return ['error' => 'Status must be 1-5, 98, or 99'];
         }
 
@@ -767,7 +768,7 @@ class TermCrudApiHandler
         $status = (int) ($data['status'] ?? $existing['WoStatus']);
 
         // Validate status
-        if (!in_array($status, [1, 2, 3, 4, 5, 98, 99])) {
+        if (!TermStatus::isValid($status)) {
             return ['error' => 'Status must be 1-5, 98, or 99'];
         }
 

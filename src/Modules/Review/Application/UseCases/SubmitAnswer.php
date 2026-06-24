@@ -19,6 +19,7 @@ namespace Lukaisu\Modules\Review\Application\UseCases;
 
 use Lukaisu\Modules\Review\Domain\ReviewRepositoryInterface;
 use Lukaisu\Modules\Review\Domain\ReviewSession;
+use Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermStatus;
 use Lukaisu\Modules\Review\Infrastructure\SessionStateManager;
 
 /**
@@ -209,7 +210,7 @@ class SubmitAnswer
      */
     private function isValidStatus(int $status): bool
     {
-        return in_array($status, [1, 2, 3, 4, 5, 98, 99], true);
+        return TermStatus::isValid($status);
     }
 
     /**

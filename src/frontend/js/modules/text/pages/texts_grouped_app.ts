@@ -16,6 +16,7 @@ import { initIcons } from '@shared/icons/lucide_icons';
 import { apiGet, getCsrfToken } from '@shared/api/client';
 import { TextsApi } from '@modules/text/api/texts_api';
 import { confirmDelete } from '@shared/utils/ui_utilities';
+import { statusLabel, STATUS_ORDER } from '@shared/stores/statuses';
 
 /**
  * Text item from API.
@@ -393,12 +394,6 @@ export function textsGroupedData(): TextsGroupedData {
         return [];
       }
 
-      const STATUS_LABELS: Record<number, string> = {
-        0: 'Unknown', 1: 'Learning (1)', 2: 'Learning (2)',
-        3: 'Learning (3)', 4: 'Learning (4)', 5: 'Learned (5)',
-        98: 'Ignored', 99: 'Well Known'
-      };
-      const STATUS_ORDER = [0, 1, 2, 3, 4, 5, 99, 98];
       const { total, unknown, statusCounts } = stats;
 
       const segments: Array<{status: number, percent: string, label: string, count: number}> = [];
@@ -410,7 +405,7 @@ export function textsGroupedData(): TextsGroupedData {
           segments.push({
             status,
             percent: pct.toFixed(2) + '%',
-            label: `${STATUS_LABELS[status]}: ${count} (${pct.toFixed(1)}%)`,
+            label: `${statusLabel(status)}: ${count} (${pct.toFixed(1)}%)`,
             count
           });
         }

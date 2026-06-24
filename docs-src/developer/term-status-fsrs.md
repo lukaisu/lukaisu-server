@@ -5,11 +5,24 @@ description: Centralize the scattered word-status model into a single source of 
 
 # Proposal: Term Status Model + FSRS Scheduling
 
-**Status:** Proposed — deferred until after the next release. Larger than a cleanup;
-the FSRS part is an architectural change worth landing on its own.
+**Status:** Phase 1 implemented (2026-06); Phase 2 (FSRS) still proposed.
 Tracked in [issue #238](https://github.com/lukaisu/lukaisu-server/issues/238).
 
-A design proposal, not shipped work.
+**Phase 1 — done.** `TermStatus` is now the authoritative display model: it holds
+`abbreviation`/`cssClass`/`colourHex`/`order` plus the predicates, exposes the
+complete table via `TermStatus::definitions()` (served at `GET /api/v1/statuses`),
+and `TermStatus::isValid()`/`all()` replace the scattered `[1,2,3,4,5,98,99]`
+literals across the PHP handlers. On the frontend, `shared/stores/statuses.ts` is
+the single source the reading view, charts, popover and edit modal read from —
+the six duplicated per-file tables are gone (which also fixed the admin chart's
+mislabel of status 1 as "Unknown"). The store ships the table built-in so the
+bundled offline app needs no server. `TermStatusService`/`StatusHelper` stay as
+thin facades over the value object rather than being folded in wholesale (lower
+risk, same single-source result).
+
+**Phase 2 — FSRS scheduling — still proposed** (the architectural part below). It
+has open decisions that need a maintainer's call before implementation; see
+*Trade-offs & open questions*.
 
 ## Problem
 

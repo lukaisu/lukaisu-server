@@ -20,6 +20,7 @@ namespace Lukaisu\Modules\Vocabulary\Application\Helpers;
 
 use Lukaisu\Shared\UI\Helpers\IconHelper;
 use Lukaisu\Modules\Vocabulary\Application\Services\TermStatusService;
+use Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermStatus;
 
 /**
  * Helper class for word status-related display logic.
@@ -111,7 +112,7 @@ class StatusHelper
             return '';
         }
 
-        $allStatuses = [1, 2, 3, 4, 5, 98, 99];
+        $allStatuses = TermStatus::all();
         $includedStatuses = self::getIncludedStatuses($status);
 
         // Build :not() selectors for statuses NOT in the filter

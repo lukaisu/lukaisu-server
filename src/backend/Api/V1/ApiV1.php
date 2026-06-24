@@ -222,9 +222,12 @@ class ApiV1
                 ]);
 
             case 'statuses':
-                return Response::success(
-                    \Lukaisu\Modules\Vocabulary\Application\Services\TermStatusService::getStatuses()
-                );
+                // The complete status display model (value/label/abbr/cssClass/
+                // colourHex/order/predicates) — the single source of truth the
+                // frontend store mirrors. See TermStatus::definitions().
+                return Response::success([
+                    'statuses' => \Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermStatus::definitions(),
+                ]);
 
             case 'i18n':
                 return $this->handleI18nGet($fragments, $params);
