@@ -2,20 +2,22 @@ import { defineConfig, type PluginOption } from 'vite';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { cpSync, mkdirSync } from 'fs';
-// @ts-expect-error - plain .mjs build helper, no types
-import { prerenderPhpView } from './build/php-view-prerender.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 /**
- * Bundled-client ("Model B") build.
+ * Bundled-client build.
  *
  * Emits standalone HTML pages — connect, library, reader — that boot the
- * existing Lukaisu Server frontend bundle (`src/frontend/js/main.ts`) against a remote
- * `/api/v1` with no PHP server in the loop, for packaging into the Lukaisu
- * Capacitor/F-Droid app (../lukaisu). Each page's body is prerendered from the
- * real PHP view at build time (see build/php-view-prerender.mjs), so the Alpine
- * scaffolds never drift from the server templates.
+ * frontend bundle (`src/frontend/js/main.ts`) against an on-device DB (and,
+ * optionally, a remote `/api/v1`) with no PHP server in the loop, for packaging
+ * into the Lukaisu Capacitor/F-Droid app (../lukaisu).
+ *
+ * The page bodies under `src/frontend/app/` are **static HTML** — they were
+ * originally prerendered from the server's PHP views, but that build-time
+ * coupling has been severed (the prerendered output is now committed as the
+ * source). The pages no longer track the PHP templates; the app owns them. See
+ * git history / `lukaisu/BRIEFING.md` for the local-first migration plan.
  *
  * Output: dist-app/ (consumed by ../lukaisu as its Capacitor webDir).
  *
@@ -23,33 +25,8 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
  */
 
 /**
- * Replace `<!--LUKAISU_VIEW:relative/path/to/view.php-->` markers in the page
- * wrappers with the prerendered static HTML of that PHP view.
- */
-function injectPrerenderedViews(): PluginOption {
-  return {
-    name: 'lukaisu-inject-prerendered-views',
-    transformIndexHtml: {
-      order: 'pre' as const,
-      handler(html: string) {
-        return html.replace(
-          /<!--\s*LUKAISU_VIEW:([\w.\-/]+)\s*-->/g,
-          (_m, rel: string) => {
-            const abs = resolve(__dirname, rel);
-            return prerenderPhpView(abs, (msg: string) =>
-              // eslint-disable-next-line no-console
-              console.warn(`[prerender] ${rel}: ${msg}`)
-            );
-          }
-        );
-      }
-    }
-  };
-}
-
-/**
- * Copy the review feedback sounds into dist-app/sounds so the prerendered
- * `<audio>` sources (rewritten to ./sounds/*.mp3) resolve in the bundle.
+ * Copy the review feedback sounds into dist-app/sounds so the static
+ * `<audio>` sources (`./sounds/*.mp3`) resolve in the bundle.
  */
 function copyReviewSounds(): PluginOption {
   return {
@@ -84,7 +61,7 @@ export default defineConfig({
     }
   },
 
-  plugins: [injectPrerenderedViews(), copyReviewSounds()],
+  plugins: [copyReviewSounds()],
 
   build: {
     outDir: resolve(__dirname, 'dist-app'),
