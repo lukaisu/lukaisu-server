@@ -229,6 +229,99 @@ class TextParsing
     }
 
     /**
+     * Like {@see checkText()} but returns the *structured* parse preview the
+     * bundled "check a text" page needs: the reconstructed sentences, and the
+     * distinct word / non-word tokens with their occurrence counts (each word
+     * carrying its saved translation, or '' when unknown). Mirrors the local
+     * router's `checkText` (repositories/texts.ts) so the on-device and
+     * server-backed previews are identical — the gap that previously kept
+     * `text-check.html` working only offline.
+     *
+     * @param string $text The raw text to parse.
+     * @param int    $lid  The language id.
+     *
+     * @return array{
+     *   sentences: list<string>,
+     *   words: list<array{0: string, 1: int, 2: string}>,
+     *   nonWords: list<array{0: string, 1: int}>,
+     *   multiWords: list<array{0: string, 1: int, 2: string}>,
+     *   rtlScript: bool
+     * }
+     */
+    public static function checkTextDetailed(string $text, int $lid): array
+    {
+        $empty = [
+            'sentences' => [],
+            'words' => [],
+            'nonWords' => [],
+            'multiWords' => [],
+            'rtlScript' => false,
+        ];
+
+        $settings = StandardTextParser::getLanguageSettings($lid);
+        if ($settings === null) {
+            return $empty;
+        }
+
+        $rtlScript = false;
+        /** @var array{right_to_left?: mixed}|null $langRow */
+        $langRow = Connection::preparedFetchOne(
+            'SELECT right_to_left FROM languages WHERE id = ?',
+            [$lid]
+        );
+        if (is_array($langRow)) {
+            $rtlScript = (bool) ($langRow['right_to_left'] ?? false);
+        }
+
+        // Tokenize into the temp table (same as checkText()).
+        self::prepare($text, -1, $lid);
+
+        $sentences = [];
+        $sentenceRows = Connection::fetchAll(
+            'SELECT GROUP_CONCAT(text ORDER BY position SEPARATOR "")
+            AS Sent FROM temp_word_occurrences GROUP BY sentence_id'
+        );
+        foreach ($sentenceRows as $record) {
+            $sentences[] = (string) ($record['Sent'] ?? '');
+        }
+
+        $bindings = [$lid];
+        $rows = Connection::preparedFetchAll(
+            "SELECT COUNT(temp_word_occurrences.position) AS cnt, IF(0=temp_word_occurrences.word_count,0,1) AS len,
+            LOWER(temp_word_occurrences.text) AS word, words.translation
+            FROM temp_word_occurrences
+            LEFT JOIN words ON LOWER(temp_word_occurrences.text)=words.text_lc AND words.language_id=?"
+            . UserScopedQuery::forTablePrepared('words', $bindings, '')
+            . " GROUP BY LOWER(temp_word_occurrences.text)",
+            $bindings
+        );
+
+        $words = [];
+        $nonWords = [];
+        foreach ($rows as $record) {
+            $token = (string) ($record['word'] ?? '');
+            $count = (int) ($record['cnt'] ?? 0);
+            if ((int) ($record['len'] ?? 0) === 1) {
+                $words[] = [$token, $count, (string) ($record['translation'] ?? '')];
+            } else {
+                $nonWords[] = [$token, $count];
+            }
+        }
+
+        QueryBuilder::table('temp_word_occurrences')->truncate();
+
+        return [
+            'sentences' => $sentences,
+            'words' => $words,
+            'nonWords' => $nonWords,
+            // Multi-word expressions aren't matched in the preview (parity with
+            // the offline tokenizer, which never creates them on-device).
+            'multiWords' => [],
+            'rtlScript' => $rtlScript,
+        ];
+    }
+
+    /**
      * Pre-parse the input text before a definitive parsing by a specialized parser.
      *
      * @param string $text Text to parse

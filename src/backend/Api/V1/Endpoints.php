@@ -57,7 +57,11 @@ class Endpoints
         'settings' => ['POST'],
         'settings/theme-path' => ['GET'],
         'statuses' => ['GET'],
-        'tags' => ['GET'],
+        // PUT/DELETE on tags reach tags/term/{id} and tags/text/{id} (rename /
+        // delete) via the first-segment fallback; the handler rejects bare
+        // /tags writes. GET /tags/manage lists every tag with its usage count.
+        'tags' => ['GET', 'PUT', 'DELETE'],
+        'tags/manage' => ['GET'],
         'tags/term' => ['GET'],
         'tags/text' => ['GET'],
         'terms' => ['GET', 'POST', 'PUT', 'DELETE'],
@@ -78,6 +82,7 @@ class Endpoints
         'word-families' => ['GET'],
         'word-families/stats' => ['GET'],
         'texts' => ['GET', 'POST', 'PUT'],
+        'texts/check' => ['POST'],
         'texts/extract-url' => ['POST'],
         'texts/extract-epub-url' => ['POST'],
         'texts/gutenberg-suggestions' => ['GET'],

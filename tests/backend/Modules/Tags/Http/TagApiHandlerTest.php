@@ -161,7 +161,8 @@ class TagApiHandlerTest extends TestCase
     }
 
     // =========================================================================
-    // Trait-inherited method tests (routePost, routePut, routeDelete return 405)
+    // routePost is unsupported (405); routePut/routeDelete handle tag rename /
+    // delete and 404 when the /tags/{term|text}/{id} sub-path is missing.
     // =========================================================================
 
     #[Test]
@@ -175,23 +176,22 @@ class TagApiHandlerTest extends TestCase
     }
 
     #[Test]
-    public function routePutReturns405(): void
+    public function routePutWithoutTagTypeReturns404(): void
     {
-        $response = $this->handler->routePut([], []);
+        // No "term"/"text" sub-path → not a recognised rename target.
+        $response = $this->handler->routePut(['tags'], []);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertSame(405, $response->getStatusCode());
-        $this->assertSame(['error' => 'Method Not Allowed'], $response->getData());
+        $this->assertSame(404, $response->getStatusCode());
     }
 
     #[Test]
-    public function routeDeleteReturns405(): void
+    public function routeDeleteWithoutTagTypeReturns404(): void
     {
-        $response = $this->handler->routeDelete([], []);
+        $response = $this->handler->routeDelete(['tags'], []);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertSame(405, $response->getStatusCode());
-        $this->assertSame(['error' => 'Method Not Allowed'], $response->getData());
+        $this->assertSame(404, $response->getStatusCode());
     }
 
     // =========================================================================

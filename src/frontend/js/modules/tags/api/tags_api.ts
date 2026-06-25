@@ -1,13 +1,12 @@
 /**
  * Tags API — type-safe wrapper for tag management operations.
  *
- * The PHP server exposes tags over `/api/v1` as **GET only** (`/tags`,
- * `/tags/term`, `/tags/text` — the autocomplete + filter lists); renaming and
- * deleting tags are native web-route form POSTs, not JSON. The management arms
- * below (`/tags/manage`, `PUT`/`DELETE /tags/{term,text}/{id}`) are therefore
- * served only by the bundled client's local-first router, from IndexedDB. They
- * power the bundled `tags.html` page offline; there is no remote counterpart
- * (PHP being frozen), the same local-first-only shape as the per-text edit arms.
+ * The management arms (`GET /tags/manage`, `PUT`/`DELETE /tags/{term,text}/{id}`)
+ * power the bundled `tags.html` page. They are served both on-device (the
+ * local-first router, from IndexedDB) and server-backed (the matching `/api/v1`
+ * endpoints, added with the PHP-view cut-over so the page also works against a
+ * connected server). The read-only autocomplete/filter lists stay at `GET /tags`,
+ * `/tags/term`, `/tags/text`.
  *
  * @license Unlicense <http://unlicense.org/>
  */
@@ -38,7 +37,7 @@ export interface TagMutationResponse {
  * Tags API methods (management surface — see the module note on availability).
  */
 export const TagsApi = {
-  /** List every term + text tag with usage counts (local-first only). */
+  /** List every term + text tag with usage counts. */
   async listForManagement(): Promise<ApiResponse<TagsManageResponse>> {
     return apiGet<TagsManageResponse>('/tags/manage');
   },

@@ -186,12 +186,10 @@ export interface DisplayModeResponse {
 /**
  * One text's editable fields, as returned by GET /texts/{id}.
  *
- * Note: the PHP server exposes single-text edit only as a web-route form
- * (`/texts/{id}/edit`, a native POST) — there is no `/api/v1/texts/{id}` GET/PUT.
- * These are local-router-only arms served from IndexedDB, the same pattern as the
- * per-text archive/unarchive/delete helpers above. They power the bundled
- * `text-edit.html` form offline; in server-backed mode there is no remote
- * counterpart (a pre-existing server gap, PHP being frozen).
+ * Served both offline (the local router's IndexedDB arm) and server-backed
+ * (`GET`/`PUT /api/v1/texts/{id}`, added with the PHP-view cut-over so
+ * `text-edit.html` saves against a connected server too). PUT re-parses when the
+ * body or language changed.
  */
 export interface TextRecord {
   id: number;
@@ -229,9 +227,8 @@ export interface TextUpdateResponse {
 
 /**
  * Request to preview how a raw text parses for a language (the "check a text"
- * tool). Local-first only: the PHP server exposes this only as a web-route form
- * (`POST /text/check`, a native submit), not `/api/v1`, so it is served from the
- * on-device tokenizer and has no remote counterpart.
+ * tool). Served on-device (the local tokenizer) and server-backed
+ * (`POST /api/v1/texts/check`, added with the PHP-view cut-over).
  */
 export interface TextCheckRequest {
   langId: number;
@@ -388,7 +385,7 @@ export const TextsApi = {
   },
 
   /**
-   * Get one text's editable fields (local-first only — see {@link TextRecord}).
+   * Get one text's editable fields (see {@link TextRecord}).
    *
    * @param textId Text ID
    * @returns Promise with the text record or an error
@@ -399,7 +396,7 @@ export const TextsApi = {
 
   /**
    * Update one text's editable fields, re-parsing if the body/language changed
-   * (local-first only — see {@link TextRecord}).
+   * (see {@link TextRecord}).
    *
    * @param textId Text ID
    * @param data   Updated fields

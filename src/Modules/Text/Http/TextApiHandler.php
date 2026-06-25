@@ -26,9 +26,13 @@ use Lukaisu\Modules\Text\Application\Services\DifficultyEstimationService;
 use Lukaisu\Modules\Text\Application\Services\GdlImportService;
 use Lukaisu\Modules\Text\Application\Services\GutenbergSuggestionService;
 use Lukaisu\Modules\Book\Application\BookFacade;
+use Lukaisu\Modules\Tags\Application\TagsFacade;
 use Lukaisu\Modules\Text\Application\TextFacade;
 use Lukaisu\Shared\Infrastructure\Container\Container;
+use Lukaisu\Shared\Infrastructure\Database\Connection;
 use Lukaisu\Shared\Infrastructure\Database\Settings;
+use Lukaisu\Shared\Infrastructure\Database\TextParsing;
+use Lukaisu\Shared\Infrastructure\Database\UserScopedQuery;
 use Lukaisu\Shared\Infrastructure\Http\GdlClient;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordDiscoveryService;
 use Lukaisu\Shared\Http\ApiRoutableInterface;
@@ -284,6 +288,9 @@ class TextApiHandler implements ApiRoutableInterface
                 return $this->formatGetBookContext($textId);
             } elseif ($frag2 === 'audio') {
                 return $this->formatGetAudio($textId);
+            } elseif ($frag2 === '') {
+                // GET /texts/{id} — editable fields for the bundled edit form.
+                return $this->formatGetTextRecord($textId);
             }
             return Response::error(
                 'Expected "words", "print-items", "annotation", "book-context", or "audio"',
@@ -318,6 +325,11 @@ class TextApiHandler implements ApiRoutableInterface
 
         if ($frag1 === 'extract-epub-url') {
             return $this->handleExtractEpubUrl($params);
+        }
+
+        if ($frag1 === 'check') {
+            // POST /texts/check — parse-preview statistics (no text is created).
+            return $this->handleCheck($params);
         }
 
         if ($frag1 === '' || !ctype_digit($frag1)) {
@@ -364,6 +376,9 @@ class TextApiHandler implements ApiRoutableInterface
         $textId = (int) $frag1;
 
         switch ($frag2) {
+            case '':
+                // PUT /texts/{id} — save the bundled edit form.
+                return $this->handleUpdateText($textId, $params);
             case 'display-mode':
                 return Response::success($this->formatSetDisplayMode($textId, $params));
             case 'mark-all-wellknown':
@@ -373,6 +388,123 @@ class TextApiHandler implements ApiRoutableInterface
             default:
                 return Response::error('Expected "display-mode", "mark-all-wellknown", or "mark-all-ignored"', 404);
         }
+    }
+
+    /**
+     * GET /texts/{id} — one text's editable fields for the bundled edit form,
+     * mirroring the local router's `getText` (and the offline `TextRecord`). The
+     * server previously exposed single-text edit only as a web-route form, so
+     * the bundle's `text-edit.html` could not load/save server-backed; this
+     * closes that gap as part of the PHP-view cut-over.
+     *
+     * @param int $textId The text id.
+     *
+     * @return JsonResponse
+     */
+    private function formatGetTextRecord(int $textId): JsonResponse
+    {
+        $bindings = [$textId];
+        $row = Connection::preparedFetchOne(
+            "SELECT id, language_id, title, text, source_uri, audio_uri, archived_at
+            FROM texts WHERE id = ?"
+            . UserScopedQuery::forTablePrepared('texts', $bindings),
+            $bindings
+        );
+        if ($row === null) {
+            return Response::error('Text not found', 404);
+        }
+        return Response::success([
+            'id' => (int) $row['id'],
+            'langId' => (int) $row['language_id'],
+            'title' => (string) $row['title'],
+            'text' => (string) $row['text'],
+            'sourceUri' => (string) ($row['source_uri'] ?? ''),
+            'audioUri' => (string) ($row['audio_uri'] ?? ''),
+            'tags' => $this->getTextTagNames($textId),
+            'archived' => ($row['archived_at'] ?? null) !== null,
+        ]);
+    }
+
+    /**
+     * Tag names attached to a text (for the edit form's prefill).
+     *
+     * @param int $textId The text id.
+     *
+     * @return list<string>
+     */
+    private function getTextTagNames(int $textId): array
+    {
+        $bindings = [$textId];
+        $rows = Connection::preparedFetchAll(
+            "SELECT text_tags.text AS name
+            FROM text_tag_map
+            JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id
+            WHERE text_tag_map.text_id = ?"
+            . UserScopedQuery::forTablePrepared('text_tags', $bindings),
+            $bindings
+        );
+        $names = [];
+        foreach ($rows as $record) {
+            $names[] = (string) ($record['name'] ?? '');
+        }
+        return $names;
+    }
+
+    /**
+     * PUT /texts/{id} — update the editable fields (re-parsing on body/language
+     * change via UpdateText) and save tags. Mirrors the local router's
+     * `updateText`; returns `{ updated, reparsed }`.
+     *
+     * @param int                  $textId The text id.
+     * @param array<string, mixed> $params JSON body (TextUpdateRequest).
+     *
+     * @return JsonResponse
+     */
+    private function handleUpdateText(int $textId, array $params): JsonResponse
+    {
+        $langId = (int) ($params['langId'] ?? 0);
+        if ($langId <= 0) {
+            return Response::error('langId is required', 400);
+        }
+        $facade = Container::getInstance()->getTyped(TextFacade::class);
+        $result = $facade->updateText(
+            $textId,
+            $langId,
+            (string) ($params['title'] ?? ''),
+            (string) ($params['text'] ?? ''),
+            (string) ($params['audioUri'] ?? ''),
+            (string) ($params['sourceUri'] ?? '')
+        );
+        if (isset($params['tags']) && is_array($params['tags'])) {
+            $tags = array_values(array_filter(
+                array_map(
+                    static fn(mixed $tag): string => is_scalar($tag) ? (string) $tag : '',
+                    $params['tags']
+                ),
+                static fn(string $name): bool => $name !== ''
+            ));
+            TagsFacade::saveTextTags($textId, $tags);
+        }
+        return Response::success($result);
+    }
+
+    /**
+     * POST /texts/check — parse-preview statistics for a raw text (the "check a
+     * text" tool), mirroring the local router's `checkText`. Read-only: nothing
+     * is persisted.
+     *
+     * @param array<string, mixed> $params JSON body (TextCheckRequest).
+     *
+     * @return JsonResponse
+     */
+    private function handleCheck(array $params): JsonResponse
+    {
+        $langId = (int) ($params['langId'] ?? 0);
+        if ($langId <= 0) {
+            return Response::error('langId is required', 400);
+        }
+        $text = (string) ($params['text'] ?? '');
+        return Response::success(TextParsing::checkTextDetailed($text, $langId));
     }
 
     /**
