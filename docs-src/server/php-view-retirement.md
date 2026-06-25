@@ -9,13 +9,14 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Pages 1–7 landed
+> (`read`/`review`/`library`/connect + minimal create). **Pages 1–8 landed
 > 2026-06-25:** the terms list (`words.html`), the term **edit** form
 > (`word.html`), the languages list (`languages.html`), the language
 > **settings** form (`language-edit.html`), the **archived texts** page
-> (`texts.html`), the **text edit** form (`text-edit.html`), and the **tags**
-> management page (`tags.html`). Pages 8–11 are
-> the remaining Job-A work. (Page 2's "new term"
+> (`texts.html`), the **text edit** form (`text-edit.html`), the **tags**
+> management page (`tags.html`), and the **preferences** page (`settings.html`).
+> **This completes the critical path to the cut-over** (pages 5–8); pages 9–11
+> are the remaining *optional* Job-A work. (Page 2's "new term"
 > and page 4's standalone wizard halves are deferred — see their table notes;
 > page 5's *active* manage half was already bundled as `library.html` — see its
 > subsection.)
@@ -95,7 +96,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 | 5 ✅ | `texts.html` (archived) — **landed**; *active manage* = `library.html` | `Text/archived_list` (active `edit_list` already in `library.html`) | `text/pages/archived_texts_grouped_app.ts` (+ `texts_grouped_app.ts` for `library.html`) | ✅ added `GET /languages/with-archived-texts` + single-text `POST /texts/{id}/archive`·`/unarchive` + `DELETE /texts/{id}` to the local router | mount + data |
 | 6 ✅ | `text-edit.html` (full edit) — **landed** | `Text/edit_form` (full), `archived_form` | purpose-built form (like `word.ts`) | ✅ added local `GET`/`PUT /texts/{id}` (re-parse on body/lang change); importers stay server | form |
 | 7 ✅ | `tags.html` (term + text tags) — **landed** | `Tags/tag_list`, `tag_form` | purpose-built form (legacy `tag_list.ts` is native-nav, not mountable) | ✅ added local `GET /tags/manage` + `PUT`/`DELETE /tags/{term,text}/{id}` (rename/delete; create-on-tagging keeps working) | form + data |
-| 8 | `settings.html` (preferences) | `User/preferences` (+ local subset of `Admin/settings_form`) | `admin/pages/settings_form.ts` (scoped) | ✅ `settings` read/write | form |
+| 8 ✅ | `settings.html` (preferences) — **landed** | `User/preferences` (`Admin/settings_form` is server-only) | purpose-built form (like `language-edit.ts`; `settings_form.ts` is form-glue, not data-binding) | ✅ default language fully offline (`POST /settings` `currentlanguage`→`setCurrentLanguageId`); interface language server-only (offline ships English); the rest of `preferences.php` is server-consumed (deferred) | form |
 | 9 | `text-check.html` (parse preview) | `Text/check_form` | `text/pages/text_check_display.ts` | ✅ uses local parser (`text-assembly.ts`) directly | mount (optional) |
 | 10 | `home.html` (dashboard) | `Home/index`, `helpers` | `js/home/home_app.ts` | ✅ `navbar`, `activity/streak`; content suggestions are server-enhanced | mount (optional) |
 | 11 | `text-print.html` (print/annotate) | `Text/print_alpine`, `display_*` | `text/pages/text_print_app.ts` | ⚠️ annotations storage — confirm; low priority | mount (optional) |
@@ -337,7 +338,56 @@ them across `/tags/term` and `/tags/text`); each row renames or deletes inline.
   entry is a separate, optional follow-up.
 - **PHP deletion deferred** to the cut-over, same as pages 1–6.
 
+### Page 8: `settings.html` (preferences) — ✅ done 2026-06-25
+
+A **purpose-built API-client form** (like `language-edit.ts`/`word.ts`), not a
+mount — the table's "reuse `settings_form.ts` (scoped)" didn't survive contact:
+that component is form-dirty-tracking + theme-preview glue, it never reads or
+writes settings. Reached from the navbar's "Preferences" link
+(`/profile/preferences` → `settings.html`), which was a dead fall-through link
+offline until now.
+
+**Scope = the preferences the bundle actually honours.** The reconnaissance
+finding that shaped the page: *most* of `preferences.php` has **no consumer in
+the bundled client** — the per-page pagination counts, tooltip mode, review
+timings, sentence counts, translation delimiters, etc. are read by the **PHP
+renderer** at request time, and the offline reader config is hard-coded
+(`local/text-assembly.ts:buildReadingConfig` never reads the settings store).
+Porting them would ship dead controls. The whole `Admin/settings_form` is
+SCOPE_ADMIN (feed limits, registration, update-check) — server/multi-user only.
+So the honest page carries just two genuinely-working controls:
+
+- **Default language** (`currentlanguage`) — **fully offline.** Saved through the
+  API client (`SettingsApi.save` → offline `POST /settings`, which the local
+  router routes to `setCurrentLanguageId`); the library and "add a text" pages
+  read it back. This is the one preference that takes effect with no server, and
+  the E2E target.
+- **Interface language** (the UI locale) — **server-enhanced.** When connected,
+  saving fetches the chosen catalog (`GET /api/v1/i18n/{locale}`) and reloads.
+  Offline only English is bundled (`local/i18n.ts` resolves every locale to
+  English), so the picker is **disabled with a note** — the same graceful
+  degradation as language-edit's server-only fields.
+
+**Zero new data layer** — the offline `POST /settings` arm (generic
+`setSetting`, with `currentlanguage` special-cased) already existed; page 8 only
+*consumes* it. (Reading a setting back has no offline router arm, but the page
+needs none — it reads the current default via `GET /languages`'s
+`currentLanguageId`, exactly like `library.ts`.)
+
+1. New `src/frontend/app/settings.{html,ts}`; added the `settings` Vite input and
+   the `/profile/preferences` → `settings.html` mapping (`bundledPageFor` +
+   `pageUrl.settings`) so the navbar link resolves locally.
+2. A **separate** offline E2E spec (`cypress/app-e2e/settings.cy.ts`): boot →
+   open Preferences from the navbar → change the default language → it persists
+   across a reload, all at `apiAttempts === 0`, with the interface-language
+   picker asserted disabled offline.
+
+- **PHP deletion deferred** to the cut-over, same as pages 1–7.
+
 ## The cut-over (the payoff — do after Job A pages 1–8)
+
+> **Now unblocked (2026-06-25):** pages 1–8 have all landed, so this is the next
+> step. Pages 9–11 are optional and can follow the cut-over.
 
 Once the management pages are bundled, the PHP server no longer needs to *render*
 anything user-facing. Cut its own browser UI over to the bundle:
@@ -407,10 +457,12 @@ Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
 
 ## Open items / risks
 
-- **Data-layer gaps to close first:** tag write repositories (page 7). ~~single
-  text delete/archive/unarchive (page 5)~~ — **done** (page 5 added single-text
-  `archive`/`unarchive`/`delete` arms + `GET /languages/with-archived-texts`).
-  Do each remaining one in the same PR as its page.
+- **Data-layer gaps — all closed.** ~~tag write repositories (page 7)~~,
+  ~~single-text edit `GET`/`PUT /texts/{id}` (page 6)~~, ~~single-text
+  delete/archive/unarchive (page 5)~~ — each landed in its page's PR. Page 8
+  needed none (the offline `POST /settings` arm already existed). The optional
+  pages 9–11 add no new data layer (parser preview / dashboard / print read
+  existing arms).
 - **Navbar targets:** the bundled navbar (`GET /api/v1/navbar`) links to several
   of these pages; until each lands, those are dead links offline (today they
   fall through to the remote server). Track navbar link coverage as pages ship.

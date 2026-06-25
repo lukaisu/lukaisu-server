@@ -56,6 +56,9 @@ export const pageUrl = {
   tags(): string {
     return 'tags.html';
   },
+  settings(): string {
+    return 'settings.html';
+  },
   words(query = ''): string {
     return query ? `words.html?${query}` : 'words.html';
   },
@@ -126,6 +129,12 @@ export function bundledPageFor(path: string): string | null {
   // they never reach here.)
   if (pathname === '/tags' || pathname === '/tags/term' || pathname === '/tags/text') {
     return pageUrl.tags();
+  }
+  // Preferences: the navbar's "Preferences" link targets the server's
+  // /profile/preferences form; route it to the bundled settings page so it
+  // resolves locally instead of falling through to a remote server.
+  if (pathname === '/profile/preferences') {
+    return pageUrl.settings();
   }
   // /text/{id}/read
   const readMatch = pathname.match(/^\/text\/(\d+)\/read$/);

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Lukaisu — Preferences</title>
+  <!-- Navbar + i18n only. The server-rendered preferences form (Modules/User/
+       Views/preferences.php) POSTs natively to /profile/preferences; this drives
+       the API client directly so the preferences the bundle honours persist
+       on-device offline. -->
+  <meta name="lukaisu-modules" content="" />
+  <style>[x-cloak]{display:none !important}</style>
+</head>
+<body>
+  <div id="navbar-root" data-navbar-root data-current-page="preferences"></div>
+  <section class="section">
+    <div class="container" style="max-width: 42rem;">
+      <h1 class="title is-4">Preferences</h1>
+
+      <!-- Shown while the languages load. -->
+      <div id="st-loading" class="notification is-info is-light">Loading preferences…</div>
+
+      <form id="settings-form" novalidate style="display:none">
+        <!-- Reading -->
+        <h2 class="title is-5">Reading</h2>
+        <div class="field">
+          <label class="label" for="st-default-lang">Default language</label>
+          <div class="control">
+            <div class="select is-fullwidth">
+              <select id="st-default-lang"></select>
+            </div>
+          </div>
+          <p class="help">The language the library and "add a text" pages open to.</p>
+        </div>
+
+        <hr class="my-5" />
+
+        <!-- Appearance -->
+        <h2 class="title is-5">Appearance</h2>
+        <div class="field">
+          <label class="label" for="st-locale">Interface language</label>
+          <div class="control">
+            <div class="select is-fullwidth">
+              <select id="st-locale"></select>
+            </div>
+          </div>
+          <p id="st-locale-note" class="help is-warning" style="display:none">
+            Only English is bundled offline. Connect a server to use other
+            interface languages.
+          </p>
+        </div>
+
+        <p id="st-error" class="help is-danger" style="display:none"></p>
+        <div id="st-success" class="notification is-success is-light mt-4" style="display:none">
+          Preferences saved.
+        </div>
+
+        <div class="field is-grouped mt-5">
+          <div class="control">
+            <button id="st-submit" class="button is-primary" type="submit">Save preferences</button>
+          </div>
+          <div class="control">
+            <a class="button is-light" href="/texts">Cancel</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
+  <script type="module" src="./settings.ts"></script>
+</body>
+</html>

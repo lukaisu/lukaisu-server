@@ -81,7 +81,8 @@ export default defineConfig({
         'language-edit': resolve(__dirname, 'src/frontend/app/language-edit.html'),
         'text-edit': resolve(__dirname, 'src/frontend/app/text-edit.html'),
         tags: resolve(__dirname, 'src/frontend/app/tags.html'),
-        texts: resolve(__dirname, 'src/frontend/app/texts.html')
+        texts: resolve(__dirname, 'src/frontend/app/texts.html'),
+        settings: resolve(__dirname, 'src/frontend/app/settings.html')
       }
     }
   }
