@@ -356,9 +356,12 @@ CREATE TABLE IF NOT EXISTS _prefix_migration_log (
 
 -- ============================================================================
 -- Inter-table foreign key constraints
--- NOTE: FK constraints are added via migration 20251221_120000_add_inter_table_foreign_keys.sql
--- This ensures they are only applied once and allows for proper data cleanup.
--- The migration adds FK constraints:
+-- These are defined in db/schema/foreign_keys.sql, not inline above, because a
+-- CREATE TABLE cannot reference a table defined later in this file. On a fresh
+-- install the runner applies that file right after this baseline (see
+-- Migrations::applyForeignKeys / Migrations::checkAndUpdate); a legacy LWT upgrade
+-- gets the equivalent FKs from the rename migrations instead.
+-- The FKs:
 -- - Language references: texts, words, sentences, news_feeds -> languages
 -- - Text references: sentences, word_occurrences, text_tag_map -> texts
 -- - Other: word_occurrences -> sentences, word_occurrences -> words (SET NULL),

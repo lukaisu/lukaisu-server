@@ -192,6 +192,51 @@ class Migrations
     }
 
     /**
+     * Record every migration file as applied without running it.
+     *
+     * Used on a fresh install, where baseline.sql plus self::applyForeignKeys()
+     * already produce the current schema. The historical migration chain only
+     * exists to upgrade a legacy LWT database, so on a fresh install it must not
+     * run: seeding it as applied keeps the bookkeeping correct and stops
+     * self::update() from replaying ~60 migrations that would all fail-and-continue
+     * against the already-modern schema (filling the log with noise on first boot).
+     *
+     * @return void
+     */
+    public static function markAllMigrationsApplied(): void
+    {
+        $migrationsDir = __DIR__ . '/../../../../db/migrations/';
+        foreach (self::getMigrationFiles() as $filename) {
+            $checksum = self::calculateChecksum($migrationsDir . $filename);
+            self::recordMigration($filename, $checksum);
+        }
+    }
+
+    /**
+     * Apply the inter-table foreign keys from db/schema/foreign_keys.sql.
+     *
+     * baseline.sql creates every table with its user-scope FK inline but defers the
+     * inter-table content FKs to that file, because a CREATE TABLE cannot reference
+     * a table defined later in the same file. This is called once on a fresh install
+     * (right after baseline.sql); a legacy upgrade gets the equivalent FKs from the
+     * rename migrations instead, so this is not part of the per-boot rebuild. Each
+     * statement is best-effort so a single failure does not abort the rest.
+     *
+     * @return void
+     */
+    public static function applyForeignKeys(): void
+    {
+        $queries = SqlFileParser::parseFile(__DIR__ . '/../../../../db/schema/foreign_keys.sql');
+        foreach ($queries as $query) {
+            try {
+                Connection::execute($query);
+            } catch (\Throwable $e) {
+                error_log('Migrations::applyForeignKeys: ' . $e->getMessage());
+            }
+        }
+    }
+
+    /**
      * Calculate SHA-256 checksum for a migration file.
      *
      * @param string $filepath Full path to the migration file
@@ -475,6 +520,15 @@ class Migrations
             $tables[] = (string) $row['TABLE_NAME'];
         }
 
+        // A fresh install is an empty database: none of the core tables exist yet,
+        // captured here BEFORE baseline.sql runs below. In that case the historical
+        // migration chain (which only upgrades a legacy LWT/Hungarian schema) has
+        // nothing to do, so the fresh-install branch further down seeds it as
+        // already-applied instead of replaying every migration. A legacy or restored
+        // database already has its tables, so it is not "fresh" and the migrations
+        // still run to transform it.
+        $isFreshInstall = ($tables === []);
+
         /// counter for cache rebuild
         $count = 0;
 
@@ -501,6 +555,16 @@ class Migrations
 
         // Ensure _migrations table has the new schema with applied_at column
         self::upgradeMigrationsTable();
+
+        // Fresh install: baseline.sql just created the complete modern schema.
+        // Apply the inter-table foreign keys (baseline defers them so they can be
+        // added once every table exists) and record every migration as applied so
+        // update() skips the legacy chain entirely. This keeps first boot quiet
+        // instead of logging ~60 expected "Migration failed" lines.
+        if ($isFreshInstall) {
+            self::applyForeignKeys();
+            self::markAllMigrationsApplied();
+        }
 
         // Update the database (if necessary)
         self::update();

@@ -288,43 +288,22 @@ $appliedCount = 0;
 if (!in_array($fkMigration, $appliedMigrations)) {
     output("Applying foreign key constraints...\n", $quiet);
 
-    // FK constraints to add (baseline already has matching column types)
-    $fkConstraints = [
-        // Language references
-        "ALTER TABLE texts ADD CONSTRAINT fk_texts_language " .
-            "FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE",
-        "ALTER TABLE words ADD CONSTRAINT fk_words_language " .
-            "FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE",
-        "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_language " .
-            "FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE",
-        "ALTER TABLE news_feeds ADD CONSTRAINT fk_news_feeds_language " .
-            "FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE",
-        // Text references
-        "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_text " .
-            "FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE",
-        "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_text " .
-            "FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE",
-        "ALTER TABLE text_tag_map ADD CONSTRAINT fk_text_tag_map_text " .
-            "FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE",
-        // Sentence reference
-        "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_sentence " .
-            "FOREIGN KEY (sentence_id) REFERENCES sentences(id) ON DELETE CASCADE",
-        // Word reference (SET NULL for unknown words)
-        "ALTER TABLE word_occurrences MODIFY COLUMN word_id mediumint(8) unsigned DEFAULT NULL",
-        "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_word " .
-            "FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE SET NULL",
-        // Word tags
-        "ALTER TABLE word_tag_map ADD CONSTRAINT fk_word_tag_map_word " .
-            "FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE",
-        "ALTER TABLE word_tag_map ADD CONSTRAINT fk_word_tag_map_tag " .
-            "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE",
-        // Text tags
-        "ALTER TABLE text_tag_map ADD CONSTRAINT fk_text_tag_map_text_tag " .
-            "FOREIGN KEY (text_tag_id) REFERENCES text_tags(id) ON DELETE CASCADE",
-        // Feed links
-        "ALTER TABLE feed_links ADD CONSTRAINT fk_feed_links_newsfeed " .
-            "FOREIGN KEY (feed_id) REFERENCES news_feeds(id) ON DELETE CASCADE",
-    ];
+    // FK constraints come from the shared schema file (db/schema/foreign_keys.sql)
+    // so the test database and a real fresh install (Migrations::applyForeignKeys)
+    // stay in sync. baseline.sql already has matching column types.
+    $fkFile = __DIR__ . '/../db/schema/foreign_keys.sql';
+    $fkSql = file_get_contents($fkFile);
+    $fkConstraints = [];
+    if ($fkSql !== false) {
+        // Strip line comments, then split into individual statements on ';'.
+        $fkSql = preg_replace('/^\s*--.*$/m', '', $fkSql);
+        foreach (explode(';', (string) $fkSql) as $stmt) {
+            $stmt = trim($stmt);
+            if ($stmt !== '') {
+                $fkConstraints[] = $stmt;
+            }
+        }
+    }
 
     $fkCount = 0;
     $fkErrors = 0;
