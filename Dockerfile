@@ -2,9 +2,11 @@
 FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS frontend-builder
 
 WORKDIR /build
-COPY package.json package-lock.json vite.config.ts tsconfig.json ./
+COPY package.json package-lock.json vite.config.ts vite.app.config.ts tsconfig.json ./
 COPY src/frontend/ src/frontend/
 COPY scripts/ scripts/
+# build:app's copyReviewSounds plugin reads the review feedback sounds.
+COPY assets/sounds/ assets/sounds/
 RUN npm ci --ignore-scripts && npm run build:all
 
 # Stage 2: Final application image
@@ -92,6 +94,8 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 # Copy pre-built frontend assets from the builder stage
 COPY --from=frontend-builder /build/dist/ dist/
 COPY --from=frontend-builder /build/sw.js sw.js
+# The bundled client (served by BundleController under /app/ as the default UI).
+COPY --from=frontend-builder /build/dist-app/ dist-app/
 
 # Set proper ownership for Apache (www-data user)
 RUN chown -R www-data:www-data /var/www/html${APP_BASE_PATH}

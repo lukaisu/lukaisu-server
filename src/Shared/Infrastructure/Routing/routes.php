@@ -60,6 +60,21 @@ function registerRoutes(Router $router): void
     $router->registerWithMiddleware('/', 'Lukaisu\\Modules\\Home\\Http\\HomeController@index', AUTH_MIDDLEWARE);
     $router->registerWithMiddleware('/index.php', 'Lukaisu\\Modules\\Home\\Http\\HomeController@index', AUTH_MIDDLEWARE);
 
+    // ==================== BUNDLED CLIENT (PROTECTED) ====================
+
+    // The reading/learning UI is served from dist-app/ (built by
+    // `npm run build:app`) under /app/. HTML pages flow through BundleController
+    // so it can inject a fresh CSRF token + same-origin runtime config; the
+    // bundle's static assets are served by Router::resolveStaticAsset
+    // (/app/* -> dist-app/*). AuthMiddleware gates the pages exactly like the
+    // PHP views did (single-user passes through; multi-user → /login). The
+    // legacy Job-A page routes below redirect into these bundle URLs.
+    $router->registerPrefixWithMiddleware(
+        '/app',
+        'Lukaisu\\Shared\\Http\\BundleController@serve',
+        AUTH_MIDDLEWARE
+    );
+
     // ==================== TEXT ROUTES (PROTECTED) ====================
 
     // Read text (Alpine.js - client-side rendering)

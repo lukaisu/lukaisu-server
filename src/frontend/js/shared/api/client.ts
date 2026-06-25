@@ -393,15 +393,36 @@ export async function maybeRefreshAuthToken(): Promise<boolean> {
 }
 
 /**
- * `fetch` wrapper that ends the session on a 401 while a bearer token is set:
- * the token has been rejected (expired or invalidated) and cannot be
- * refreshed, so it is cleared and a `lukaisu:auth-expired` event is dispatched for
- * the UI to route back to the login screen. A no-op for same-origin cookie
- * callers (no token), so their behavior is unchanged.
+ * True when the bundle is served by a Lukaisu Server as its *own* web UI — the
+ * same-origin "cut-over" mode, enabled by `boot.ts` from the server-injected
+ * runtime config. Here requests authenticate via the session cookie (no bearer
+ * token), so a 401 still means the session lapsed and the UI should bounce to
+ * the server's `/login`. Left `false` for the classic PHP-served pages (which
+ * also use this client) and for packaged cross-origin clients, so their 401
+ * handling is unchanged.
+ */
+let sameOriginServerMode = false;
+
+/** Enable same-origin server-backed mode (see {@link sameOriginServerMode}). */
+export function setSameOriginServerMode(enabled: boolean): void {
+  sameOriginServerMode = enabled;
+}
+
+/**
+ * `fetch` wrapper that ends the session on a 401 when authenticated: the bearer
+ * token (or, in same-origin server mode, the session cookie) has been rejected
+ * and cannot be refreshed, so the token is cleared and a `lukaisu:auth-expired`
+ * event is dispatched for the UI to route back to the login screen. A no-op for
+ * unauthenticated same-origin cookie callers on the classic PHP pages, so their
+ * behavior is unchanged.
+ *
+ * `credentials: 'same-origin'` (the fetch default, made explicit) sends the
+ * session cookie on same-origin requests — how the bundle authenticates when it
+ * is the server's own UI — while never leaking cookies to a cross-origin server.
  */
 async function apiFetch(input: string, init: RequestInit): Promise<Response> {
-  const response = await fetch(input, init);
-  if (response.status === 401 && getAuthToken()) {
+  const response = await fetch(input, { credentials: 'same-origin', ...init });
+  if (response.status === 401 && (getAuthToken() || sameOriginServerMode)) {
     setAuthToken(null);
     try {
       document.dispatchEvent(new CustomEvent('lukaisu:auth-expired'));

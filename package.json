@@ -45,7 +45,7 @@
     "build:app": "vite build --config vite.app.config.ts",
     "build:themes": "node scripts/build-themes.js",
     "build:pwa-icons": "node scripts/generate-pwa-icons.js",
-    "build:all": "npm run build && npm run build:themes",
+    "build:all": "npm run build && npm run build:themes && npm run build:app",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
