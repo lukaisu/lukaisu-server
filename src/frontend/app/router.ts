@@ -35,6 +35,9 @@ export const pageUrl = {
     const query = params.toString();
     return query ? `review.html?${query}` : 'review.html';
   },
+  languages(): string {
+    return 'languages.html';
+  },
   newLanguage(): string {
     return 'language.html';
   },
@@ -71,6 +74,12 @@ export function bundledPageFor(path: string): string | null {
   }
   if (pathname === '/texts/new') {
     return pageUrl.newText();
+  }
+  // Languages list. Note: the single-language edit form (/languages/{id}/edit)
+  // is not bundled yet (Job A page 4), so it intentionally falls through to the
+  // remote server; only the literal list path maps here.
+  if (pathname === '/languages') {
+    return pageUrl.languages();
   }
   // Single-term edit form: /words/{id}/edit -> word.html?id={id}. Must precede
   // the list mapping below (which matches the literal /words/edit, not this).

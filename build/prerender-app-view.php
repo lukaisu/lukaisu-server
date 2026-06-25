@@ -40,6 +40,16 @@ namespace {
             // injectConfig(), so these only matter if the bundle JS fails to load.
             'vars' => ['currentlang' => 0, 'perPage' => 50],
         ],
+        'languages' => [
+            'view' => 'src/Modules/Language/Views/index.php',
+            'title' => 'Languages',
+            'modules' => 'language',
+            'currentPage' => 'languages',
+            'entry' => './languages.ts',
+            // The view reads everything it shows from the API at runtime; it needs
+            // no injected vars (only UrlUtilities::getBasePath(), stubbed below).
+            'vars' => [],
+        ],
     ];
 
     // --- English-locale-backed __() (namespace prefix selects the locale file).
@@ -151,6 +161,19 @@ HTML;
     </div>
 </div>
 HTML;
+        }
+    }
+}
+
+// --- UrlUtilities: getBasePath() is empty in the bundle. The views build
+//     server-relative links ("/languages/new"); the client link router resolves
+//     them at click time, so no base prefix is baked into the static HTML.
+namespace Lukaisu\Shared\Infrastructure\Http {
+    class UrlUtilities
+    {
+        public static function getBasePath(): string
+        {
+            return '';
         }
     }
 }

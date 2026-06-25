@@ -9,10 +9,10 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Pages 1–2 landed
-> 2026-06-25:** the terms list (`words.html`) and the term **edit** form
-> (`word.html`). Pages 3–11 are the remaining Job-A work. (Page 2's "new term"
-> half is deferred — see its table note.)
+> (`read`/`review`/`library`/connect + minimal create). **Pages 1–3 landed
+> 2026-06-25:** the terms list (`words.html`), the term **edit** form
+> (`word.html`), and the languages list (`languages.html`). Pages 4–11 are the
+> remaining Job-A work. (Page 2's "new term" half is deferred — see its table note.)
 
 ## The shape of the problem
 
@@ -84,7 +84,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 |---|---|---|---|---|---|
 | 1 ✅ | `words.html` (terms list) — **landed** | `Vocabulary/list_alpine`, `list_filter`, `show`, `*_result` | `vocabulary/pages/word_list_app.ts` | ✅ `terms/list`, `filter-options`, `bulk-action`, `inline-edit`, `for-edit` all in local router | mount |
 | 2 ½ | `word.html` (term **edit**) — **landed**; **new deferred** | `Vocabulary/form_edit_existing/_new/_term`, `edit_*_result` | purpose-built form (like `text.ts`) | ✅ load+save+delete offline (added `GET /terms/{id}`); ⚠️ **new term not bundled** | form |
-| 3 | `languages.html` (list) | `Language/index` | `language/pages/language_list.ts` | ✅ languages CRUD + reparse | mount |
+| 3 ✅ | `languages.html` (list) — **landed** | `Language/index` | `languageList` component (`language_list_component.ts`) | ✅ list/set-default/reparse/delete all in local router | mount |
 | 4 | `language-edit.html` (settings + wizard) | `Language/form`, `wizard` | `language/pages/language_form.ts`, `language_wizard.ts` | ✅ create/update/`definitions` | mount |
 | 5 | `texts.html` (manage + archived) | `Text/edit_list`, `archived_list` | `text/pages/texts_grouped_app.ts`, `archived_texts_grouped_app.ts` | ⚠️ list ✅; **add text delete + archive/unarchive repos** (router has `/texts`, `/texts/bulk-action` only) | mount + data |
 | 6 | `text-edit.html` (full edit) | `Text/edit_form` (full), `archived_form` | `text/pages/*` | ✅ `texts` PUT; importers stay server | form |
@@ -148,6 +148,33 @@ deletes — all on-device (offline E2E asserts `apiAttempts === 0`).
   server-only (falls through, like today). Revisit if/when a `POST /terms` that
   accepts full fields lands.
 - **PHP deletion deferred** to the cut-over, same as page 1.
+
+### Page 3: `languages.html` (languages list) — ✅ done 2026-06-25
+
+The textbook **mount-a-component prerender** with **zero data-layer work** — the
+local-first router already serves every endpoint `languageList` touches (`GET
+/languages`, `GET /languages/definitions`, `POST /languages/{id}/set-default`,
+`POST /languages/{id}/refresh`, `DELETE /languages/{id}`). As built:
+
+1. **Prerendered** `Modules/Language/Views/index.php` → `src/frontend/app/languages.html`
+   via `build/prerender-app-view.php` (registry entry `languages`). The view also
+   calls `UrlUtilities::getBasePath()`, so the harness gained a `UrlUtilities`
+   stub returning `''` (server-relative links; the client link router resolves
+   them at click time — same identity treatment as `PageLayoutHelper::url`).
+   Re-running the harness regenerates `words.html` byte-identically.
+2. `src/frontend/app/languages.ts`: the simplest boot entry yet — `initDataMode()`
+   → `bootAppPage({ requireAuth: true })`, **no `injectConfig`**. The component's
+   `init()` loads everything (`LanguagesApi.list()` + `getDefinitions()`) itself,
+   so there is no server-injected config to reproduce.
+3. `vite.app.config.ts`: added the `languages` input.
+4. `app/router.ts`: `pageUrl.languages()` + mapped the literal `/languages`.
+   `/languages/{id}/edit` is **intentionally left to fall through** to the remote
+   server — that single-language edit form is page 4, not bundled yet.
+5. Extended the offline E2E: boot+seed → open the languages list → assert the
+   seeded languages render → **set a non-current language as current**
+   (`POST /languages/{id}/set-default` on-device), all at `apiAttempts === 0`.
+
+**PHP deletion deferred** to the cut-over, same as pages 1–2.
 
 ## The cut-over (the payoff — do after Job A pages 1–8)
 

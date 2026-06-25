@@ -76,7 +76,8 @@ export default defineConfig({
         language: resolve(__dirname, 'src/frontend/app/language.html'),
         text: resolve(__dirname, 'src/frontend/app/text.html'),
         words: resolve(__dirname, 'src/frontend/app/words.html'),
-        word: resolve(__dirname, 'src/frontend/app/word.html')
+        word: resolve(__dirname, 'src/frontend/app/word.html'),
+        languages: resolve(__dirname, 'src/frontend/app/languages.html')
       }
     }
   }

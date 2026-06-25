@@ -149,6 +149,38 @@ describe('offline milestone — bundled app, no server', () => {
     });
   });
 
+  it('lists languages and sets the current one, with no server', () => {
+    // 1. Boot offline -> library, which seeds the starter languages + texts.
+    cy.clearLocalStorage();
+    cy.visit('/index.html');
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+
+    // 2. The bundled languages page (languages.html) lists the seeded languages
+    //    entirely from IndexedDB — GET /languages + /languages/definitions are
+    //    both served on-device by the local-first router.
+    cy.visit('/languages.html');
+    cy.get('[x-data="languageList"]', { timeout: 20000 }).should('exist');
+    cy.contains('.box', 'All Languages', { timeout: 20000 }).should('exist');
+    cy.get('table.is-fullwidth tbody tr', { timeout: 20000 })
+      .its('length').should('be.greaterThan', 0);
+    cy.contains('table.is-fullwidth tbody tr', 'English').should('exist');
+
+    // 3. Set a non-current language as current offline (POST
+    //    /languages/{id}/set-default served on-device); the success notice shows.
+    cy.get('button[title="Set as Current"]:visible', { timeout: 10000 })
+      .first()
+      .click();
+    cy.contains('.notification', 'is now the current language', { timeout: 10000 })
+      .should('exist');
+    cy.screenshot('07-languages-set-current', { capture: 'viewport' });
+
+    // 4. The whole list + set-current flow ran on-device.
+    cy.then(() => {
+      cy.log(`/api/v1 calls attempted during the languages flow: ${apiAttempts}`);
+      expect(apiAttempts, 'no /api/v1 calls — the languages list is fully on-device').to.equal(0);
+    });
+  });
+
   it('creates a language and pastes a text with no server', () => {
     cy.clearLocalStorage();
     // Unique name so the spec is re-runnable against a persisted IndexedDB.
