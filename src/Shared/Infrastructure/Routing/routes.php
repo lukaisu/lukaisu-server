@@ -786,6 +786,38 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
+    // ==================== JOB-A CUT-OVER: PAGES -> BUNDLED CLIENT ====================
+    // The reading/learning UI is no longer rendered by PHP views: these GET page
+    // routes 302 to the equivalent bundle page under /app/ (BundleController
+    // serves dist-app/, which talks to this server's /api/v1). Registered last so
+    // they OVERRIDE the page-render handlers above for GET; the POST/JSON/DELETE
+    // data routes on the same paths keep their controllers. Mirrors
+    // src/frontend/app/router.ts bundledPageFor(). Removing a line here restores
+    // the PHP page for that route (the views still exist until Job B/C land).
+    $bundleRedirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
+    $router->get('/', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/index.php', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/texts', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/text/{text:int}/read', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/text/read', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/texts/new', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/texts/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/text/archived', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/text/archived/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/text/check', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/text/{text:int}/print-plain', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/text/print-plain', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/words', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/words/edit', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/words/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/languages', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/languages/new', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/languages/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/tags', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/tags/text', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/review', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/profile/preferences', $bundleRedirect, AUTH_MIDDLEWARE);
+
     // ==================== DEPRECATED ROUTES ====================
     // These legacy routes still work but emit Deprecation headers.
     // They will be removed in the next major version.

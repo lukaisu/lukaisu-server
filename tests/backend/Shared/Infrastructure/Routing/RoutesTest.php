@@ -89,14 +89,14 @@ class RoutesTest extends TestCase
     {
         $result = $this->simulateRequest('/');
         $this->assertEquals('handler', $result['type']);
-        $this->assertEquals('Lukaisu\\Modules\\Home\\Http\\HomeController@index', $result['handler']);
+        $this->assertEquals('Lukaisu\\Shared\\Http\\BundleController@redirect', $result['handler']);
     }
 
     public function testIndexPhpRoute(): void
     {
         $result = $this->simulateRequest('/index.php');
         $this->assertEquals('handler', $result['type']);
-        $this->assertEquals('Lukaisu\\Modules\\Home\\Http\\HomeController@index', $result['handler']);
+        $this->assertEquals('Lukaisu\\Shared\\Http\\BundleController@redirect', $result['handler']);
     }
     #[DataProvider('indexPhpWithPathInfoProvider')]
     public function testIndexPhpWithPathInfoRedirect(string $path, string $expectedRedirect): void
@@ -132,16 +132,18 @@ class RoutesTest extends TestCase
     {
         $textController = 'Lukaisu\\Modules\\Text\\Http\\TextController';
         $textPrintController = 'Lukaisu\\Modules\\Text\\Http\\TextPrintController';
+        // Job-A page GET routes now 302 into the bundled client (the cut-over).
+        $redirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
         return [
-            'text read' => ['/text/read', "{$textController}@read"],
+            'text read' => ['/text/read', $redirect],
             'text edit' => ['/text/edit', "{$textController}@edit"],
-            'texts list' => ['/texts', "{$textController}@edit"],
+            'texts list' => ['/texts', $redirect],
             'text display' => ['/text/display', "{$textController}@display"],
             'text print' => ['/text/1/print', "{$textPrintController}@printAnnotated"],
             'text print edit' => ['/text/1/print/edit', "{$textPrintController}@editAnnotation"],
-            'text print-plain' => ['/text/print-plain', "{$textPrintController}@printPlain"],
-            'text check' => ['/text/check', "{$textController}@check"],
-            'text archived' => ['/text/archived', "{$textController}@archived"],
+            'text print-plain' => ['/text/print-plain', $redirect],
+            'text check' => ['/text/check', $redirect],
+            'text archived' => ['/text/archived', $redirect],
         ];
     }
 
@@ -176,9 +178,9 @@ class RoutesTest extends TestCase
         return [
             'word edit' => ['/word/edit', "{$termEditController}@editWord"],
             'word edit-term' => ['/word/edit-term', "{$termEditController}@editTerm"],
-            'words edit list' => ['/words/edit', "{$termDisplayController}@listEditAlpine"],
+            'words edit list' => ['/words/edit', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
             'word edit-multi' => ['/word/edit-multi', "{$multiWordController}@editMulti"],
-            'words list' => ['/words', "{$termDisplayController}@listEditAlpine"],
+            'words list' => ['/words', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
             'word new' => ['/word/new', "{$termEditController}@createWord"],
             'word show' => ['/word/show', "{$termDisplayController}@showWord"],
             'word inline-edit' => ['/word/inline-edit', "{$termEditController}@inlineEdit"],
@@ -201,7 +203,7 @@ class RoutesTest extends TestCase
     public static function reviewTestRoutesProvider(): array
     {
         return [
-            'review index' => ['/review', 'Lukaisu\\Modules\\Review\\Http\\ReviewController@index'],
+            'review index' => ['/review', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
         ];
     }
 
@@ -218,7 +220,7 @@ class RoutesTest extends TestCase
     public static function languageRoutesProvider(): array
     {
         return [
-            'languages list' => ['/languages', 'Lukaisu\\Modules\\Language\\Http\\LanguageController@index'],
+            'languages list' => ['/languages', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
         ];
     }
 
@@ -235,8 +237,8 @@ class RoutesTest extends TestCase
     public static function tagRoutesProvider(): array
     {
         return [
-            'tags list' => ['/tags', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@index'],
-            'tags text' => ['/tags/text', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@index'],
+            'tags list' => ['/tags', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
+            'tags text' => ['/tags/text', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
         ];
     }
 

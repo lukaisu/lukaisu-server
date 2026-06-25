@@ -83,6 +83,141 @@ final class BundleController
     }
 
     /**
+     * Redirect a legacy Job-A page path to its bundle URL (the "cut-over").
+     *
+     * The reading/learning page routes (`/`, `/texts`, `/text/{id}/read`, …) no
+     * longer render PHP views — they 302 to the equivalent bundle page under
+     * `/app/`, mirroring the client-side `bundledPageFor()` in app/router.ts so a
+     * direct hit / bookmark lands on the same page the in-app links resolve to.
+     * Only GET navigations are routed here; the POST/JSON data routes on the
+     * same paths keep their controllers.
+     *
+     * @param array<string, mixed> $params Query parameters (unused).
+     *
+     * @return void
+     */
+    public function redirect(array $params = []): void
+    {
+        unset($params);
+
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        $path = parse_url($uri, PHP_URL_PATH);
+        $path = is_string($path) ? $path : '/';
+        $path = '/' . trim($path, '/');
+        $path = UrlUtilities::stripBasePath($path);
+        $query = parse_url($uri, PHP_URL_QUERY);
+        $query = is_string($query) ? $query : '';
+
+        $page = $this->mapPathToBundlePage($path, $query);
+        if ($page === null) {
+            http_response_code(404);
+            header('Content-Type: text/plain; charset=UTF-8');
+            echo 'Not found';
+            return;
+        }
+
+        header('Location: ' . UrlUtilities::getBasePath() . '/app/' . $page, true, 302);
+    }
+
+    /**
+     * Map a legacy server path (+ query) to a bundle page like
+     * `read.html?text=5`, or null when no bundle page covers it.
+     *
+     * Mirrors `bundledPageFor()` in src/frontend/app/router.ts.
+     *
+     * @param string $path  Base-path-stripped request path.
+     * @param string $query Raw query string ('' when none).
+     *
+     * @return string|null
+     */
+    private function mapPathToBundlePage(string $path, string $query): ?string
+    {
+        $withQuery = static fn(string $page): string => $query !== '' ? $page . '?' . $query : $page;
+
+        switch (true) {
+            case $path === '/' || $path === '/index.php':
+                return 'home.html';
+            case $path === '/texts':
+                return 'library.html';
+            case $path === '/languages/new':
+                return 'language.html';
+            case $path === '/texts/new':
+                return 'text.html';
+            case $path === '/text/archived':
+                return 'texts.html';
+            case $path === '/text/check':
+                return 'text-check.html';
+            case $path === '/languages':
+                return 'languages.html';
+            case $path === '/tags' || $path === '/tags/term' || $path === '/tags/text':
+                return 'tags.html';
+            case $path === '/profile/preferences':
+                return 'settings.html';
+            case $path === '/words' || $path === '/words/edit':
+                return $withQuery('words.html');
+        }
+
+        if (
+            preg_match('#^/texts/(\d+)/edit$#', $path, $m) === 1
+            || preg_match('#^/text/archived/(\d+)/edit$#', $path, $m) === 1
+        ) {
+            return 'text-edit.html?id=' . $m[1];
+        }
+        if (preg_match('#^/languages/(\d+)/edit$#', $path, $m) === 1) {
+            return 'language-edit.html?id=' . $m[1];
+        }
+        if (preg_match('#^/words/(\d+)/edit$#', $path, $m) === 1) {
+            return 'word.html?id=' . $m[1];
+        }
+        if (preg_match('#^/text/(\d+)/print-plain$#', $path, $m) === 1) {
+            return 'text-print.html?text=' . $m[1];
+        }
+        if (preg_match('#^/text/(\d+)/read$#', $path, $m) === 1) {
+            $lang = $this->queryValue($query, 'lang');
+            return 'read.html?text=' . $m[1] . ($lang !== '' ? '&lang=' . rawurlencode($lang) : '');
+        }
+        if ($path === '/review') {
+            $parts = [];
+            foreach (['text', 'lang', 'selection'] as $key) {
+                $value = $this->queryValue($query, $key);
+                if ($value !== '') {
+                    $parts[] = $key . '=' . rawurlencode($value);
+                }
+            }
+            return $parts === [] ? 'review.html' : 'review.html?' . implode('&', $parts);
+        }
+        // Legacy query-string forms the server still routes.
+        if ($path === '/text/read' || $path === '/text/print-plain') {
+            $text = $this->queryValue($query, 'text');
+            if ($text !== '') {
+                $page = $path === '/text/read' ? 'read.html' : 'text-print.html';
+                return $page . '?text=' . rawurlencode($text);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Read a single value out of a raw query string (no superglobal access).
+     *
+     * @param string $query Raw query string.
+     * @param string $key   Parameter name.
+     *
+     * @return string Value, or '' when absent.
+     */
+    private function queryValue(string $query, string $key): string
+    {
+        if ($query === '') {
+            return '';
+        }
+        /** @var array<string, mixed> $parsed */
+        $parsed = [];
+        parse_str($query, $parsed);
+        return isset($parsed[$key]) && is_string($parsed[$key]) ? $parsed[$key] : '';
+    }
+
+    /**
      * Absolute path to the built bundle directory.
      *
      * @return string
