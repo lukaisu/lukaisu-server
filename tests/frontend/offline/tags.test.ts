@@ -15,8 +15,15 @@ import { getList, getFilterOptions } from '@shared/offline/local/repositories/wo
 import {
   getAllTermTags,
   getAllTextTags,
+  listTagsForManagement,
+  renameTermTag,
+  deleteTermTag,
+  renameTextTag,
+  deleteTextTag,
+  getWordTagNames,
 } from '@shared/offline/local/repositories/tags';
 import { apiGet } from '@shared/api/client';
+import { TagsApi } from '@modules/tags/api/tags_api';
 import type { LanguageCreateRequest } from '@modules/language/api/languages_api';
 import type { TextWordsResponse } from '@modules/text/api/texts_api';
 import { getTextWords } from '@shared/offline/local/repositories/texts';
@@ -190,5 +197,87 @@ describe('tag endpoints through the local seam', () => {
 
     const both = await apiGet<{ term: string[]; text: string[] }>('/tags');
     expect(both.data).toEqual({ term: ['animal'], text: ['news'] });
+  });
+});
+
+describe('tag management (rename / delete)', () => {
+  /** Seed one term tag ('animal' on cat+dog) and one text tag ('news'). */
+  async function seedTags(): Promise<{ termId: number; textTagId: number; catId: number }> {
+    const { langId, textId } = await setup();
+    const catId = await saveWordWithTags(textId, 'cat', ['animal']);
+    await saveWordWithTags(textId, 'dog', ['animal']);
+    await createText({ langId, title: 'T', text: 'Hi.', tags: ['news'] });
+    const termId = (await localDb.tags.where('text').equals('animal').first())!.id as number;
+    const textTagId = (await localDb.textTags.where('text').equals('news').first())!.id as number;
+    return { termId, textTagId, catId };
+  }
+
+  it('lists term + text tags with ids and usage counts', async () => {
+    const { termId, textTagId } = await seedTags();
+    const manage = await listTagsForManagement();
+    expect(manage.term).toEqual([{ id: termId, name: 'animal', count: 2 }]);
+    expect(manage.text).toEqual([{ id: textTagId, name: 'news', count: 1 }]);
+  });
+
+  it('renames a term tag everywhere it is applied', async () => {
+    const { termId, catId } = await seedTags();
+    const res = await renameTermTag(termId, 'creature');
+    expect(res.success).toBe(true);
+    expect(await getAllTermTags()).toEqual(['creature']);
+    // The rename is by tag row, so every tagged term reflects it.
+    expect(await getWordTagNames(catId)).toEqual(['creature']);
+  });
+
+  it('rejects a blank or duplicate term-tag name', async () => {
+    const { langId, textId } = await setup();
+    await saveWordWithTags(textId, 'cat', ['animal']);
+    await saveWordWithTags(textId, 'dog', ['pet']);
+    void langId;
+    const animalId = (await localDb.tags.where('text').equals('animal').first())!.id as number;
+    expect((await renameTermTag(animalId, '   ')).error).toBeTruthy();
+    expect((await renameTermTag(animalId, 'pet')).error).toBeTruthy();
+    // Unchanged.
+    expect(await getAllTermTags()).toEqual(['animal', 'pet']);
+  });
+
+  it('deletes a term tag and unassigns it from its terms', async () => {
+    const { termId, catId } = await seedTags();
+    const res = await deleteTermTag(termId);
+    expect(res.success).toBe(true);
+    expect(await getAllTermTags()).toEqual([]);
+    expect(await getWordTagNames(catId)).toEqual([]);
+    expect(await localDb.wordTags.where('tgId').equals(termId).count()).toBe(0);
+  });
+
+  it('renames and deletes a text tag', async () => {
+    const { textTagId } = await seedTags();
+    expect((await renameTextTag(textTagId, 'headlines')).success).toBe(true);
+    expect(await getAllTextTags()).toEqual(['headlines']);
+
+    expect((await deleteTextTag(textTagId)).success).toBe(true);
+    expect(await getAllTextTags()).toEqual([]);
+    expect(await localDb.textTagMap.where('t2Id').equals(textTagId).count()).toBe(0);
+  });
+
+  it('errors on missing tags', async () => {
+    expect((await renameTermTag(999999, 'x')).error).toBeTruthy();
+    expect((await deleteTermTag(999999)).error).toBeTruthy();
+    expect((await deleteTextTag(999999)).error).toBeTruthy();
+  });
+
+  it('drives the management arms through the local API seam', async () => {
+    const { termId } = await seedTags();
+    setLocalFirst(true);
+
+    const list = await TagsApi.listForManagement();
+    expect(list.error).toBeUndefined();
+    expect(list.data?.term.find((t) => t.id === termId)?.count).toBe(2);
+
+    const renamed = await TagsApi.renameTerm(termId, 'creature');
+    expect(renamed.data?.success).toBe(true);
+
+    const deleted = await TagsApi.deleteTerm(termId);
+    expect(deleted.data?.success).toBe(true);
+    expect((await TagsApi.listForManagement()).data?.term).toEqual([]);
   });
 });

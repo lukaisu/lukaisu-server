@@ -73,7 +73,16 @@ import {
 import { getNavbarData } from './repositories/navbar';
 import { getSentencesWithTerm } from './repositories/sentences';
 import { setSetting, setCurrentLanguageId } from './repositories/settings';
-import { getAllTags, getAllTermTags, getAllTextTags } from './repositories/tags';
+import {
+  getAllTags,
+  getAllTermTags,
+  getAllTextTags,
+  listTagsForManagement,
+  renameTermTag,
+  deleteTermTag,
+  renameTextTag,
+  deleteTextTag,
+} from './repositories/tags';
 import { getStreak } from './repositories/activity';
 import { getI18nBundle } from './i18n';
 import type {
@@ -237,6 +246,9 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   }
   if (path === '/tags') {
     return wrap(await getAllTags());
+  }
+  if (path === '/tags/manage') {
+    return wrap(await listTagsForManagement());
   }
   if (path === '/tags/term') {
     return wrap(await getAllTermTags());
@@ -443,6 +455,14 @@ async function routePut(path: string, p: Record<string, unknown>): Promise<Local
       })
     );
   }
+  m = path.match(/^\/tags\/term\/(\d+)$/);
+  if (m) {
+    return wrap(await renameTermTag(num(m[1]), str(p.name)));
+  }
+  m = path.match(/^\/tags\/text\/(\d+)$/);
+  if (m) {
+    return wrap(await renameTextTag(num(m[1]), str(p.name)));
+  }
   return NOT_HANDLED;
 }
 
@@ -458,6 +478,14 @@ async function routeDelete(path: string): Promise<LocalRouteResult> {
   m = path.match(/^\/languages\/(\d+)$/);
   if (m) {
     return wrap(await deleteLanguage(num(m[1])));
+  }
+  m = path.match(/^\/tags\/term\/(\d+)$/);
+  if (m) {
+    return wrap(await deleteTermTag(num(m[1])));
+  }
+  m = path.match(/^\/tags\/text\/(\d+)$/);
+  if (m) {
+    return wrap(await deleteTextTag(num(m[1])));
   }
   return NOT_HANDLED;
 }

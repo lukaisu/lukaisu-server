@@ -16,6 +16,10 @@
  */
 
 import { localDb } from '../schema';
+import type {
+  TagsManageResponse,
+  TagMutationResponse,
+} from '@modules/tags/api/tags_api';
 
 /** All term (word) tag names, sorted — mirrors `TagsFacade::getAllTermTags()`. */
 export async function getAllTermTags(): Promise<string[]> {
@@ -111,4 +115,102 @@ export async function getTextTagNames(txId: number): Promise<string[]> {
 /** Drop a text's tag mappings (on delete). Tag rows themselves are kept. */
 export async function clearTextTags(txId: number): Promise<void> {
   await localDb.textTagMap.where('txId').equals(txId).delete();
+}
+
+// =========================================================================
+// Tag management (the bundled tags.html page) — local-first only; the server
+// exposes tag mutations as web-route forms, not `/api/v1`. See tags_api.ts.
+// =========================================================================
+
+/** Every term + text tag with the number of terms/texts that carry it. */
+export async function listTagsForManagement(): Promise<TagsManageResponse> {
+  const [termRows, textRows] = await Promise.all([
+    localDb.tags.toArray(),
+    localDb.textTags.toArray(),
+  ]);
+  const term = await Promise.all(
+    termRows.map(async (t) => ({
+      id: t.id ?? 0,
+      name: t.text,
+      count: await localDb.wordTags.where('tgId').equals(t.id ?? -1).count(),
+    }))
+  );
+  const text = await Promise.all(
+    textRows.map(async (t) => ({
+      id: t.id ?? 0,
+      name: t.text,
+      count: await localDb.textTagMap.where('t2Id').equals(t.id ?? -1).count(),
+    }))
+  );
+  const byName = (a: { name: string }, b: { name: string }): number =>
+    a.name.localeCompare(b.name);
+  return { term: term.sort(byName), text: text.sort(byName) };
+}
+
+/** Rename a term tag, rejecting blank or duplicate names. */
+export async function renameTermTag(
+  id: number,
+  name: string
+): Promise<TagMutationResponse> {
+  const trimmed = name.trim();
+  if (trimmed === '') {
+    return { success: false, error: 'Tag name is required' };
+  }
+  const tag = await localDb.tags.get(id);
+  if (!tag) {
+    return { success: false, error: 'Tag not found' };
+  }
+  const clash = await localDb.tags.where('text').equals(trimmed).first();
+  if (clash && clash.id !== id) {
+    return { success: false, error: 'A tag with that name already exists' };
+  }
+  await localDb.tags.update(id, { text: trimmed });
+  return { success: true };
+}
+
+/** Delete a term tag and unassign it from every term. */
+export async function deleteTermTag(id: number): Promise<TagMutationResponse> {
+  const tag = await localDb.tags.get(id);
+  if (!tag) {
+    return { success: false, error: 'Tag not found' };
+  }
+  await localDb.transaction('rw', localDb.tags, localDb.wordTags, async () => {
+    await localDb.wordTags.where('tgId').equals(id).delete();
+    await localDb.tags.delete(id);
+  });
+  return { success: true };
+}
+
+/** Rename a text tag, rejecting blank or duplicate names. */
+export async function renameTextTag(
+  id: number,
+  name: string
+): Promise<TagMutationResponse> {
+  const trimmed = name.trim();
+  if (trimmed === '') {
+    return { success: false, error: 'Tag name is required' };
+  }
+  const tag = await localDb.textTags.get(id);
+  if (!tag) {
+    return { success: false, error: 'Tag not found' };
+  }
+  const clash = await localDb.textTags.where('text').equals(trimmed).first();
+  if (clash && clash.id !== id) {
+    return { success: false, error: 'A tag with that name already exists' };
+  }
+  await localDb.textTags.update(id, { text: trimmed });
+  return { success: true };
+}
+
+/** Delete a text tag and unassign it from every text. */
+export async function deleteTextTag(id: number): Promise<TagMutationResponse> {
+  const tag = await localDb.textTags.get(id);
+  if (!tag) {
+    return { success: false, error: 'Tag not found' };
+  }
+  await localDb.transaction('rw', localDb.textTags, localDb.textTagMap, async () => {
+    await localDb.textTagMap.where('t2Id').equals(id).delete();
+    await localDb.textTags.delete(id);
+  });
+  return { success: true };
 }

@@ -53,6 +53,9 @@ export const pageUrl = {
   editText(textId: number | string): string {
     return `text-edit.html?id=${encodeURIComponent(String(textId))}`;
   },
+  tags(): string {
+    return 'tags.html';
+  },
   words(query = ''): string {
     return query ? `words.html?${query}` : 'words.html';
   },
@@ -116,6 +119,13 @@ export function bundledPageFor(path: string): string | null {
   // SPA. Carry the query through (the list reads `lang` from it).
   if (pathname === '/words' || pathname === '/words/edit') {
     return pageUrl.words(query);
+  }
+  // Tag management: the server splits term tags (/tags, /tags/term) and text
+  // tags (/tags/text) across two pages; the bundle shows both on one tags.html.
+  // (The /tags/{term,text}/{id} mutation paths are API calls, not navigation, so
+  // they never reach here.)
+  if (pathname === '/tags' || pathname === '/tags/term' || pathname === '/tags/text') {
+    return pageUrl.tags();
   }
   // /text/{id}/read
   const readMatch = pathname.match(/^\/text\/(\d+)\/read$/);

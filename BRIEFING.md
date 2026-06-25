@@ -104,7 +104,13 @@ The end state is a small Python service. Get there in this order:
 > another data-layer gap: local `GET`/`PUT /texts/{id}` (`getText`/`updateText`)
 > now load + save a single text on-device, **re-parsing** the body when it changed
 > so the reader reflects the edit — the PHP server has these only as a web-route
-> form, so (like page 5's per-text arms) they are local-first only. "New term"
+> form, so (like page 5's per-text arms) they are local-first only — and the
+> **tags management page** (`tags.html`, a purpose-built API form; the legacy
+> `tag_list.ts` is native-nav, not mountable). Page 7 closed a third data-layer
+> gap: the server's `/api/v1` tags surface is GET-only, so local
+> `GET /tags/manage` + `PUT`/`DELETE /tags/{term,text}/{id}` (rename/delete) are
+> now served on-device — tag *creation* stays implicit (tagging a term/text), the
+> useful management ops being rename + delete. "New term"
 > stays server-only (no offline create contract); the standalone language *wizard*
 > is not separately bundled (the "add a language" page's presets already serve it);
 > text importers (file / URL / Gutenberg / GDL / transcription) stay server-side

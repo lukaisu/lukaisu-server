@@ -306,6 +306,56 @@ describe('offline milestone — bundled app, no server', () => {
     });
   });
 
+  it('renames and deletes a tag on the bundled tags page, with no server', () => {
+    // 1. Boot offline -> save a word (creates a term), then add a tag to it via
+    //    the bundled term edit form (word.html), so the tag store has a row.
+    cy.clearLocalStorage();
+    cy.visit('/index.html');
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+    cy.get('a[href*="/read"]', { timeout: 20000 }).first().click();
+    cy.location('pathname').should('include', 'read.html');
+    cy.get('.word.status0', { timeout: 20000 }).first().click();
+    cy.get('.word-popover', { timeout: 10000 }).should('be.visible');
+    cy.get('.word-popover').find('button.is-success').filter(':visible').first().click();
+    cy.get('.word.status99', { timeout: 10000 }).its('length').should('be.greaterThan', 0);
+
+    cy.visit('/words.html');
+    cy.get('a[href*="/edit"]:visible', { timeout: 20000 }).first().click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'word.html');
+    cy.get('#word-edit-form', { timeout: 20000 }).should('be.visible');
+    cy.get('#we-tags').clear().type('e2e-tag');
+    cy.get('#we-submit').click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'words.html');
+
+    // 2. The bundled tags page lists that tag from IndexedDB (GET /tags/manage).
+    cy.visit('/tags.html');
+    cy.get('#tg-content', { timeout: 20000 }).should('be.visible');
+    cy.get('#tg-term-body tr', { timeout: 20000 }).should('have.length', 1);
+    cy.get('#tg-term-body tr').first().find('input').should('have.value', 'e2e-tag');
+
+    // 3. Rename it offline (PUT /tags/term/{id}); the change persists.
+    cy.get('#tg-term-body tr').first().find('input').clear().type('e2e-renamed');
+    cy.get('#tg-term-body tr').first().contains('button', 'Save').click();
+    cy.get('#tg-notice', { timeout: 10000 }).should('be.visible').and('contain', 'Renamed');
+    cy.visit('/tags.html');
+    cy.get('#tg-term-body tr', { timeout: 20000 }).first().find('input').should('have.value', 'e2e-renamed');
+    cy.screenshot('11-tags-managed', { capture: 'viewport' });
+
+    // 4. Delete it offline (DELETE /tags/term/{id}); it leaves the store.
+    cy.get('#tg-term-body tr').first().contains('button', 'Delete').click();
+    cy.get('#tg-term-body tr').should('have.length', 0);
+    cy.visit('/tags.html');
+    cy.get('#tg-content', { timeout: 20000 }).should('be.visible');
+    cy.get('#tg-term-body tr').should('have.length', 0);
+    cy.get('#tg-term-empty').should('be.visible');
+
+    // 5. The whole list -> rename -> delete flow ran on-device.
+    cy.then(() => {
+      cy.log(`/api/v1 calls attempted during the tags flow: ${apiAttempts}`);
+      expect(apiAttempts, 'no /api/v1 calls — the tags page is fully on-device').to.equal(0);
+    });
+  });
+
   it('creates a language and pastes a text with no server', () => {
     cy.clearLocalStorage();
     // Unique name so the spec is re-runnable against a persisted IndexedDB.

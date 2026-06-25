@@ -9,11 +9,12 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Pages 1–6 landed
+> (`read`/`review`/`library`/connect + minimal create). **Pages 1–7 landed
 > 2026-06-25:** the terms list (`words.html`), the term **edit** form
 > (`word.html`), the languages list (`languages.html`), the language
 > **settings** form (`language-edit.html`), the **archived texts** page
-> (`texts.html`), and the **text edit** form (`text-edit.html`). Pages 7–11 are
+> (`texts.html`), the **text edit** form (`text-edit.html`), and the **tags**
+> management page (`tags.html`). Pages 8–11 are
 > the remaining Job-A work. (Page 2's "new term"
 > and page 4's standalone wizard halves are deferred — see their table notes;
 > page 5's *active* manage half was already bundled as `library.html` — see its
@@ -93,7 +94,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 | 4 ✅ | `language-edit.html` (settings) — landed; **wizard deferred** | `Language/form` (`wizard` → see note) | purpose-built form (like `word.ts`) | ✅ load+save offline (`GET`/`PUT /languages/{id}`) | form |
 | 5 ✅ | `texts.html` (archived) — **landed**; *active manage* = `library.html` | `Text/archived_list` (active `edit_list` already in `library.html`) | `text/pages/archived_texts_grouped_app.ts` (+ `texts_grouped_app.ts` for `library.html`) | ✅ added `GET /languages/with-archived-texts` + single-text `POST /texts/{id}/archive`·`/unarchive` + `DELETE /texts/{id}` to the local router | mount + data |
 | 6 ✅ | `text-edit.html` (full edit) — **landed** | `Text/edit_form` (full), `archived_form` | purpose-built form (like `word.ts`) | ✅ added local `GET`/`PUT /texts/{id}` (re-parse on body/lang change); importers stay server | form |
-| 7 | `tags.html` (term + text tags) | `Tags/tag_list`, `tag_form` | `tags/pages/tag_list.ts` | ⚠️ **tags repo is read-only — add create/rename/delete + POST/PUT/DELETE `/tags` arms** | mount + data |
+| 7 ✅ | `tags.html` (term + text tags) — **landed** | `Tags/tag_list`, `tag_form` | purpose-built form (legacy `tag_list.ts` is native-nav, not mountable) | ✅ added local `GET /tags/manage` + `PUT`/`DELETE /tags/{term,text}/{id}` (rename/delete; create-on-tagging keeps working) | form + data |
 | 8 | `settings.html` (preferences) | `User/preferences` (+ local subset of `Admin/settings_form`) | `admin/pages/settings_form.ts` (scoped) | ✅ `settings` read/write | form |
 | 9 | `text-check.html` (parse preview) | `Text/check_form` | `text/pages/text_check_display.ts` | ✅ uses local parser (`text-assembly.ts`) directly | mount (optional) |
 | 10 | `home.html` (dashboard) | `Home/index`, `helpers` | `js/home/home_app.ts` | ✅ `navbar`, `activity/streak`; content suggestions are server-enhanced | mount (optional) |
@@ -308,6 +309,33 @@ and asserts the **reader re-renders the new tokens** at `apiAttempts === 0`.
   transcription import panels are genuinely server-side (outbound bucket, Job B) and
   are **not** part of this offline editor; they remain on the server-rendered form.
 - **PHP deletion deferred** to the cut-over, same as pages 1–5.
+
+### Page 7: `tags.html` (tag management) — ✅ done 2026-06-25
+
+A **purpose-built API-client page**, not a mount — the doc's "reuse `tag_list.ts`"
+didn't survive contact: that legacy component drives **native navigation + native
+POST bulk actions** (it never touches `/api/v1`), so mounting it offline would
+dead-link. One bundled page shows **both** term tags and text tags (the server splits
+them across `/tags/term` and `/tags/text`); each row renames or deletes inline.
+
+- **Data-layer gap closed.** The server's `/api/v1` tags surface is **GET-only**
+  (`/tags`, `/tags/term`, `/tags/text` — autocomplete + filter lists); tag *writes*
+  are native web-route forms. So, like pages 5–6, the mutations are **local-router
+  only**: added `GET /tags/manage` (every tag with id + usage count) and
+  `PUT`/`DELETE /tags/term|text/{id}` (rename/delete, dropping the word/text
+  mappings), backed by new `tags.ts` repo methods (`listTagsForManagement`,
+  `rename*Tag`, `delete*Tag`) and a new `TagsApi` wrapper. In server-backed mode the
+  tag pages still reach the server's own forms (no remote counterpart; PHP frozen).
+- **Scope = rename + delete.** Creating a *standalone* tag is intentionally omitted —
+  tags are created on demand when you tag a term (`setWordTags`) or a text
+  (`setTextTags`), so an orphan tag has no use. This matches how the app already
+  works and keeps the page to the genuinely useful management ops. Tag *comments* are
+  likewise left out (rarely used; not in the offline contract).
+- **Reachability note:** the bundled navbar (`GET /api/v1/navbar`) doesn't currently
+  surface the tag pages, so `tags.html` is reached by direct path / `bundledPageFor`
+  mapping (`/tags`, `/tags/term`, `/tags/text`) rather than a nav link — adding a nav
+  entry is a separate, optional follow-up.
+- **PHP deletion deferred** to the cut-over, same as pages 1–6.
 
 ## The cut-over (the payoff — do after Job A pages 1–8)
 
