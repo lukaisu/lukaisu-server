@@ -330,14 +330,11 @@ CREATE TABLE IF NOT EXISTS local_dictionary_entries (
     KEY idx_entry_term_lc (term_lc)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Prefix migration tracking table for multi-user conversion
-CREATE TABLE IF NOT EXISTS _prefix_migration_log (
-    prefix VARCHAR(40) NOT NULL,
-    user_id INT UNSIGNED NOT NULL,
-    tables_migrated INT DEFAULT 0,
-    migrated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (prefix)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Note: _prefix_migration_log is intentionally NOT defined here. It tracks the
+-- one-time legacy prefix -> user_id conversion and is created (IF NOT EXISTS) by
+-- db/migrations/20251212_000004_migrate_prefix_to_user.sql, which only runs on a
+-- legacy upgrade. A fresh install has no prefixed tables to convert, so the table
+-- would be dead weight; nothing references it at runtime.
 
 -- ============================================================================
 -- Foreign keys

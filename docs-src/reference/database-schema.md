@@ -366,18 +366,6 @@ KEY idx_entry_dictionary (local_dictionary_id),
 KEY idx_entry_term_lc (term_lc)
 ```
 
-## `_prefix_migration_log`
-
-Prefix migration tracking table for multi-user conversion
-
-```sql
-prefix VARCHAR(40) NOT NULL,
-user_id INT UNSIGNED NOT NULL,
-tables_migrated INT DEFAULT 0,
-migrated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-PRIMARY KEY (prefix)
-```
-
 ## Foreign keys
 
 Defined in `db/schema/foreign_keys.sql` (baseline tables carry no inline foreign keys) and applied after every table exists — on a fresh install, a backup restore, or a legacy upgrade.
