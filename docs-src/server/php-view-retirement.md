@@ -9,12 +9,14 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Pages 1–4 landed
+> (`read`/`review`/`library`/connect + minimal create). **Pages 1–5 landed
 > 2026-06-25:** the terms list (`words.html`), the term **edit** form
-> (`word.html`), the languages list (`languages.html`), and the language
-> **settings** form (`language-edit.html`). Pages 5–11 are the remaining Job-A
-> work. (Page 2's "new term" and page 4's standalone wizard halves are deferred —
-> see their table notes.)
+> (`word.html`), the languages list (`languages.html`), the language
+> **settings** form (`language-edit.html`), and the **archived texts** page
+> (`texts.html`). Pages 6–11 are the remaining Job-A work. (Page 2's "new term"
+> and page 4's standalone wizard halves are deferred — see their table notes;
+> page 5's *active* manage half was already bundled as `library.html` — see its
+> subsection.)
 
 ## The shape of the problem
 
@@ -88,7 +90,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 | 2 ½ | `word.html` (term **edit**) — **landed**; **new deferred** | `Vocabulary/form_edit_existing/_new/_term`, `edit_*_result` | purpose-built form (like `text.ts`) | ✅ load+save+delete offline (added `GET /terms/{id}`); ⚠️ **new term not bundled** | form |
 | 3 ✅ | `languages.html` (list) — **landed** | `Language/index` | `languageList` component (`language_list_component.ts`) | ✅ list/set-default/reparse/delete all in local router | mount |
 | 4 ✅ | `language-edit.html` (settings) — landed; **wizard deferred** | `Language/form` (`wizard` → see note) | purpose-built form (like `word.ts`) | ✅ load+save offline (`GET`/`PUT /languages/{id}`) | form |
-| 5 | `texts.html` (manage + archived) | `Text/edit_list`, `archived_list` | `text/pages/texts_grouped_app.ts`, `archived_texts_grouped_app.ts` | ⚠️ list ✅; **add text delete + archive/unarchive repos** (router has `/texts`, `/texts/bulk-action` only) | mount + data |
+| 5 ✅ | `texts.html` (archived) — **landed**; *active manage* = `library.html` | `Text/archived_list` (active `edit_list` already in `library.html`) | `text/pages/archived_texts_grouped_app.ts` (+ `texts_grouped_app.ts` for `library.html`) | ✅ added `GET /languages/with-archived-texts` + single-text `POST /texts/{id}/archive`·`/unarchive` + `DELETE /texts/{id}` to the local router | mount + data |
 | 6 | `text-edit.html` (full edit) | `Text/edit_form` (full), `archived_form` | `text/pages/*` | ✅ `texts` PUT; importers stay server | form |
 | 7 | `tags.html` (term + text tags) | `Tags/tag_list`, `tag_form` | `tags/pages/tag_list.ts` | ⚠️ **tags repo is read-only — add create/rename/delete + POST/PUT/DELETE `/tags` arms** | mount + data |
 | 8 | `settings.html` (preferences) | `User/preferences` (+ local subset of `Admin/settings_form`) | `admin/pages/settings_form.ts` (scoped) | ✅ `settings` read/write | form |
@@ -212,6 +214,71 @@ all on-device (offline E2E asserts `apiAttempts === 0`).
   guided-setup flow is wanted on-device.
 - **PHP deletion deferred** to the cut-over, same as pages 1–3.
 
+### Page 5: `texts.html` (archived texts) — ✅ done 2026-06-25
+
+The **mount-a-component prerender**, with a real **data-layer** addition (the page's
+first such since page 2). The key finding while building it: the table's "manage +
+archived" framing is **already half-done** — `library.html` mounts the *same*
+`textsGroupedApp` component as `edit_list.php` (it *is* the prerendered active-manage
+list, with the read/review/archive/delete/edit cards). So page 5's genuinely new
+surface is the **archived** half (`archived_list.php` → `archivedTextsGroupedApp`),
+plus the single-text data layer both halves share.
+
+As built:
+
+1. **Prerendered** `Modules/Text/Views/archived_list.php` → `src/frontend/app/texts.html`
+   via `build/prerender-app-view.php` (registry entry `texts`, title "Archived
+   Texts", modules `text`). The view needed three more harness shims beyond
+   pages 1–4: an HTML-escaping `__e()`, a `PageLayoutHelper::renderMessage()`
+   (no-op on the empty prerender message), and the real `FormHelper` +
+   `SelectOptionsBuilder` (both pure, so `forTextSort()` / the archived-actions
+   `<select>` render their exact server option lists — same "require, don't stub"
+   treatment as `IconHelper`). Re-running the harness regenerates `words.html`
+   and `languages.html` byte-identically (backward-compat gate).
+2. `src/frontend/app/texts.ts`: resolves `activeLanguageId` exactly like
+   `library.ts` (current language, else first) → `injectConfig('archived-texts-grouped-config', …)`
+   → `bootAppPage({ requireAuth: true })`.
+3. `vite.app.config.ts`: added the `texts` input.
+4. `app/router.ts`: `pageUrl.archivedTexts()` + mapped `/text/archived`. The
+   action-card cross-links already resolve — the archived page's "Active Texts"
+   button (`/texts?…`) maps to `library.html`, the active list's "Archived Texts"
+   button (`/text/archived?…`) maps here — matching the server's two-page UX.
+
+**Data-layer gaps closed (the "+ data" half).** The archived page and the active
+manage list both performed their per-text actions via **web routes** (raw
+`fetch` / native form POST), never `/api/v1` — so they had no offline path. There
+is also **no** single-text `/api/v1` archive/delete/unarchive on the server (only
+`PUT /texts/bulk-action {action:'archive'|'delete', ids}`), so "match the server
+contract" meant mirroring the **web-route shapes** as new *local-router-only* arms:
+
+- `GET /languages/with-archived-texts` → `listLanguagesWithArchivedTexts()`
+  (`repositories/languages.ts`) — `{languages:[{id,name,text_count}]}` for
+  languages with ≥1 archived text. **This was the blocker for the list itself**:
+  the grouped view loads it first, and it wasn't in the router.
+- `POST /texts/{id}/archive` → `archiveText()` (flip `archivedAt`).
+- `POST /texts/{id}/unarchive` → `unarchiveText()` (clear `archivedAt`).
+- `DELETE /texts/{id}` → `deleteText()` (tombstone + drop occurrences/sentences/tags).
+  All three are in `repositories/texts.ts`; the on-device store keeps active +
+  archived rows in one table flagged by `archivedAt`, so archive/unarchive are
+  reversible soft flips (the language repo's soft-delete is the reference).
+
+`TextsApi` gained `archive`/`unarchive`/`deleteText` wrappers (via `apiPost`/
+`apiDelete`). The two shared components route through them **only when
+`isLocalFirst()`** — otherwise the original web-route `fetch`/form path runs
+unchanged, so **the server PWA is byte-for-byte unaffected** (it has those web
+routes; it has no `/api/v1` equivalents). A nice side effect: `library.html`'s
+per-card archive/delete now also work offline. Offline E2E (`09-archived-texts`):
+archive a seeded text from the library → it renders on `texts.html` from
+IndexedDB → unarchive it there → it leaves the list, all at `apiAttempts === 0`.
+
+- **Deferred:** the per-archived-text **edit** form (`/text/archived/{id}/edit`,
+  `archived_form.php`) is **page 6** (`text-edit.html`), so it is left to fall
+  through to the remote server for now. In the bundled app's **server-backed**
+  mode the single-text archive/unarchive/delete arms aren't wired (no `/api/v1`
+  counterpart; the JSON path there is `bulk-action`) — a pre-existing limitation,
+  since those web-route actions already targeted the bundle origin, not the
+  configured server. **PHP deletion deferred** to the cut-over, same as pages 1–4.
+
 ## The cut-over (the payoff — do after Job A pages 1–8)
 
 Once the management pages are bundled, the PHP server no longer needs to *render*
@@ -282,9 +349,10 @@ Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
 
 ## Open items / risks
 
-- **Data-layer gaps to close first:** tag write repositories (page 7) and single
-  text delete/archive/unarchive (page 5). Both small; do them in the same PR as
-  their page.
+- **Data-layer gaps to close first:** tag write repositories (page 7). ~~single
+  text delete/archive/unarchive (page 5)~~ — **done** (page 5 added single-text
+  `archive`/`unarchive`/`delete` arms + `GET /languages/with-archived-texts`).
+  Do each remaining one in the same PR as its page.
 - **Navbar targets:** the bundled navbar (`GET /api/v1/navbar`) links to several
   of these pages; until each lands, those are dead links offline (today they
   fall through to the remote server). Track navbar link coverage as pages ship.

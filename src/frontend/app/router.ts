@@ -47,6 +47,9 @@ export const pageUrl = {
   newText(): string {
     return 'text.html';
   },
+  archivedTexts(): string {
+    return 'texts.html';
+  },
   words(query = ''): string {
     return query ? `words.html?${query}` : 'words.html';
   },
@@ -77,6 +80,13 @@ export function bundledPageFor(path: string): string | null {
   }
   if (pathname === '/texts/new') {
     return pageUrl.newText();
+  }
+  // Archived texts list — reached from the active list's "Archived Texts" action
+  // card (/text/archived?query=&page=1) and the navbar. The per-archived-text
+  // edit form (/text/archived/{id}/edit) is page 6, so it is intentionally left
+  // to fall through to the remote server for now.
+  if (pathname === '/text/archived') {
+    return pageUrl.archivedTexts();
   }
   // Languages list, and the per-language settings form reached from its Edit
   // links (/languages/{id}/edit -> language-edit.html?id={id}).

@@ -8,12 +8,20 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { localDb } from '@shared/offline/local/schema';
-import { createLanguage } from '@shared/offline/local/repositories/languages';
+import {
+  createLanguage,
+  listLanguagesWithArchivedTexts,
+} from '@shared/offline/local/repositories/languages';
 import {
   createText,
   getTextWords,
   getStatistics,
   markAllWellKnown,
+  archiveText,
+  unarchiveText,
+  deleteText,
+  getTextsByLanguage,
+  getArchivedTextsByLanguage,
 } from '@shared/offline/local/repositories/texts';
 import {
   createQuick,
@@ -120,6 +128,66 @@ describe('reading path', () => {
 
     const after = words(await getTextWords(textId));
     expect(after.words.filter((w) => !w.isNotWord).every((w) => w.status === 99)).toBe(true);
+  });
+});
+
+describe('text management (archive / unarchive / delete)', () => {
+  it('archives a text out of the active list and into the archived list', async () => {
+    const { langId, textId } = await setupEnglishText();
+
+    // Starts active.
+    expect((await getTextsByLanguage(langId, 1, 10, 1)).pagination.total).toBe(1);
+    expect((await getArchivedTextsByLanguage(langId, 1, 10, 1)).pagination.total).toBe(0);
+
+    const res = await archiveText(textId);
+    expect('archived' in res && res.archived).toBe(true);
+
+    // Now archived: gone from active, present in archived.
+    expect((await getTextsByLanguage(langId, 1, 10, 1)).pagination.total).toBe(0);
+    expect((await getArchivedTextsByLanguage(langId, 1, 10, 1)).pagination.total).toBe(1);
+  });
+
+  it('unarchives a text back into the active list', async () => {
+    const { langId, textId } = await setupEnglishText();
+    await archiveText(textId);
+
+    const res = await unarchiveText(textId);
+    expect('unarchived' in res && res.unarchived).toBe(true);
+
+    expect((await getTextsByLanguage(langId, 1, 10, 1)).pagination.total).toBe(1);
+    expect((await getArchivedTextsByLanguage(langId, 1, 10, 1)).pagination.total).toBe(0);
+  });
+
+  it('deletes a text and drops its parsed structures', async () => {
+    const { langId, textId } = await setupEnglishText();
+    expect((await localDb.occurrences.where('textId').equals(textId).count())).toBeGreaterThan(0);
+
+    const res = await deleteText(textId);
+    expect('deleted' in res && res.deleted).toBe(true);
+
+    expect((await getTextsByLanguage(langId, 1, 10, 1)).pagination.total).toBe(0);
+    expect(await localDb.occurrences.where('textId').equals(textId).count()).toBe(0);
+    expect(await localDb.sentences.where('textId').equals(textId).count()).toBe(0);
+  });
+
+  it('errors when archiving / deleting a missing text', async () => {
+    const archived = await archiveText(999999);
+    expect('error' in archived).toBe(true);
+    const deleted = await deleteText(999999);
+    expect('error' in deleted).toBe(true);
+  });
+
+  it('reports only languages that have archived texts, with their counts', async () => {
+    const { langId, textId } = await setupEnglishText();
+
+    // No archived texts yet -> the language is absent from the grouped view.
+    expect((await listLanguagesWithArchivedTexts()).languages).toHaveLength(0);
+
+    await archiveText(textId);
+    const withArchived = await listLanguagesWithArchivedTexts();
+    expect(withArchived.languages).toHaveLength(1);
+    expect(withArchived.languages[0].id).toBe(langId);
+    expect(withArchived.languages[0].text_count).toBe(1);
   });
 });
 

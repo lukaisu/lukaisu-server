@@ -5,7 +5,7 @@
  * @since   3.0.0
  */
 
-import { apiGet, apiPost, apiPut, type ApiResponse } from '@shared/api/client';
+import { apiGet, apiPost, apiPut, apiDelete, type ApiResponse } from '@shared/api/client';
 
 /**
  * Dictionary links for a language.
@@ -363,6 +363,39 @@ export const TextsApi = {
     ids: number[]
   ): Promise<ApiResponse<{ count: number }>> {
     return apiPut<{ count: number }>('/texts/bulk-action', { action, ids });
+  },
+
+  /**
+   * Archive a single text (mirrors the web route `POST /texts/{id}/archive`).
+   *
+   * Used by the bundled local-first client's per-text actions: the local
+   * router serves it from IndexedDB by flipping `archivedAt`. The PHP server
+   * exposes single archive only as a web route (and the JSON bulk-action), so
+   * these per-text helpers are wired for offline mode and gated by the caller
+   * (`isLocalFirst`) to preserve the server PWA's existing web-route path.
+   *
+   * @param textId Text ID to archive
+   */
+  async archive(textId: number): Promise<ApiResponse<{ archived: boolean }>> {
+    return apiPost<{ archived: boolean }>(`/texts/${textId}/archive`, {});
+  },
+
+  /**
+   * Restore a single archived text (mirrors `POST /texts/{id}/unarchive`).
+   *
+   * @param textId Text ID to unarchive
+   */
+  async unarchive(textId: number): Promise<ApiResponse<{ unarchived: boolean }>> {
+    return apiPost<{ unarchived: boolean }>(`/texts/${textId}/unarchive`, {});
+  },
+
+  /**
+   * Delete a single text (mirrors the web route `DELETE /texts/{id}`).
+   *
+   * @param textId Text ID to delete
+   */
+  async deleteText(textId: number): Promise<ApiResponse<{ deleted: boolean }>> {
+    return apiDelete<{ deleted: boolean }>(`/texts/${textId}`);
   },
 
   /**

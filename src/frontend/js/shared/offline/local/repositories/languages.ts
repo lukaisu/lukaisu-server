@@ -214,6 +214,32 @@ export async function getLanguageStats(id: number): Promise<LanguageStatsRespons
   };
 }
 
+/**
+ * Languages that have at least one archived text, with their archived count.
+ *
+ * Backs the archived-texts page's `GET /languages/with-archived-texts` (the
+ * grouped archived view loads this first to render its language sections).
+ * Mirrors the server's `{ languages: [{ id, name, text_count }] }` shape.
+ */
+export async function listLanguagesWithArchivedTexts(): Promise<{
+  languages: Array<{ id: number; name: string; text_count: number }>;
+}> {
+  const langs = await activeLanguages();
+  const languages: Array<{ id: number; name: string; text_count: number }> = [];
+  for (const l of langs) {
+    const id = l.id ?? 0;
+    const text_count = await localDb.texts
+      .where('langId')
+      .equals(id)
+      .and((t) => t.deletedAt == null && t.archivedAt != null)
+      .count();
+    if (text_count > 0) {
+      languages.push({ id, name: l.name, text_count });
+    }
+  }
+  return { languages };
+}
+
 /** Preset definitions for the new-language wizard, keyed by language name. */
 export function getDefinitions(): LanguageDefinitionsResponse {
   const definitions: Record<string, LanguageDefinition> = {};

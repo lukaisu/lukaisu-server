@@ -374,6 +374,60 @@ export async function bulkAction(
 }
 
 /**
+ * Archive a single text (mirrors the web route `POST /texts/{id}/archive`).
+ *
+ * The on-device model keeps active and archived texts in one store, flagged by
+ * `archivedAt`, so archiving is a soft state flip — symmetric with
+ * {@link unarchiveText} and reversible.
+ */
+export async function archiveText(
+  id: number
+): Promise<{ archived: boolean } | { error: string }> {
+  const text = await localDb.texts.get(id);
+  if (!text || text.deletedAt != null) {
+    return { error: 'Text not found' };
+  }
+  const now = nowMs();
+  await localDb.texts.update(id, { archivedAt: now, updatedAt: now });
+  return { archived: true };
+}
+
+/** Restore a single archived text (mirrors `POST /texts/{id}/unarchive`). */
+export async function unarchiveText(
+  id: number
+): Promise<{ unarchived: boolean } | { error: string }> {
+  const text = await localDb.texts.get(id);
+  if (!text || text.deletedAt != null) {
+    return { error: 'Text not found' };
+  }
+  const now = nowMs();
+  await localDb.texts.update(id, { archivedAt: null, updatedAt: now });
+  return { unarchived: true };
+}
+
+/**
+ * Delete a single text (mirrors the web route `DELETE /texts/{id}`).
+ *
+ * Tombstones the row and drops its parsed structures + tags, the same way
+ * {@link bulkAction}'s delete branch does for a set. Works for active and
+ * archived texts alike (the on-device store is unified).
+ */
+export async function deleteText(
+  id: number
+): Promise<{ deleted: boolean } | { error: string }> {
+  const text = await localDb.texts.get(id);
+  if (!text || text.deletedAt != null) {
+    return { error: 'Text not found' };
+  }
+  const now = nowMs();
+  await localDb.texts.update(id, { deletedAt: now, updatedAt: now });
+  await localDb.occurrences.where('textId').equals(id).delete();
+  await localDb.sentences.where('textId').equals(id).delete();
+  await clearTextTags(id);
+  return { deleted: true };
+}
+
+/**
  * Mark every still-unknown word in a text with a terminal status (well-known or
  * ignored), creating the word rows and linking occurrences.
  */

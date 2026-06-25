@@ -221,6 +221,52 @@ describe('offline milestone — bundled app, no server', () => {
     });
   });
 
+  it('archives a text, lists it on the bundled archived page, and unarchives it offline', () => {
+    cy.clearLocalStorage();
+    cy.visit('/index.html');
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+
+    // 1. The active library (textsGroupedApp) lists seeded texts from IndexedDB.
+    //    Capture the first text's title, then archive it from its per-card menu
+    //    (POST /texts/{id}/archive served on-device by the local-first router).
+    cy.get('.text-card .card-header-title', { timeout: 20000 })
+      .its('length').should('be.greaterThan', 0);
+    cy.get('.text-card .card-header-title').first().invoke('text').then((raw) => {
+      const title = raw.trim();
+      cy.wrap(title).as('archivedTitle');
+
+      cy.get('.text-card').first().find('.dropdown-trigger-link').click();
+      cy.get('.text-card').first().find('.dropdown-menu').should('be.visible');
+      cy.get('.text-card').first().contains('.dropdown-item', 'Archive').click();
+
+      // After the reload, the archived text is gone from the active list.
+      cy.contains('.text-card .card-header-title', title).should('not.exist');
+    });
+
+    // 2. The bundled archived page (texts.html) renders the archived text from
+    //    IndexedDB (GET /languages/with-archived-texts + /texts/archived-by-language).
+    cy.visit('/texts.html');
+    cy.get('#archived-texts-grouped-config', { timeout: 20000 }).should('exist');
+    cy.get('@archivedTitle').then((aTitle) => {
+      const title = aTitle as unknown as string;
+      cy.contains('.text-card.is-archived .card-header-title', title, { timeout: 20000 })
+        .should('exist');
+      cy.screenshot('09-archived-texts', { capture: 'viewport' });
+
+      // 3. Unarchive it on-device (POST /texts/{id}/unarchive); it leaves the list.
+      cy.contains('.text-card.is-archived', title)
+        .contains('.card-footer-item', 'Unarchive').click();
+      cy.contains('.text-card.is-archived .card-header-title', title, { timeout: 20000 })
+        .should('not.exist');
+    });
+
+    // 4. The whole archive → list → unarchive flow ran on-device.
+    cy.then(() => {
+      cy.log(`/api/v1 calls attempted during the archived-texts flow: ${apiAttempts}`);
+      expect(apiAttempts, 'no /api/v1 calls — the archived texts page is fully on-device').to.equal(0);
+    });
+  });
+
   it('creates a language and pastes a text with no server', () => {
     cy.clearLocalStorage();
     // Unique name so the spec is re-runnable against a persisted IndexedDB.

@@ -50,6 +50,20 @@ namespace {
             // no injected vars (only UrlUtilities::getBasePath(), stubbed below).
             'vars' => [],
         ],
+        'texts' => [
+            // Archived texts (the "active manage" half is already bundled as
+            // library.html, which mounts the same textsGroupedApp component).
+            'view' => 'src/Modules/Text/Views/archived_list.php',
+            'title' => 'Archived Texts',
+            'modules' => 'text',
+            'currentPage' => 'texts',
+            'entry' => './texts.ts',
+            // The grouped archived view loads its languages/texts from the API at
+            // runtime; only $message (status banner) and $activeLanguageId
+            // (default expansion) are templated, and texts.ts overwrites the
+            // latter via injectConfig().
+            'vars' => ['message' => '', 'activeLanguageId' => 0],
+        ],
     ];
 
     // --- English-locale-backed __() (namespace prefix selects the locale file).
@@ -72,7 +86,19 @@ namespace {
         return $value;
     }
 
+    // HTML-escaping translation helper (mirrors src/helpers.php's __e()), used by
+    // views that interpolate labels into attributes/markup (e.g. archived_list).
+    function __e(string $key, array $params = []): string
+    {
+        return htmlspecialchars(__($key, $params), ENT_QUOTES, 'UTF-8');
+    }
+
     require "$REPO/src/Shared/UI/Helpers/IconHelper.php";
+    // FormHelper + SelectOptionsBuilder are pure (no DB), so the archived-texts
+    // view's real <select> option lists render unchanged — same treatment as
+    // IconHelper above (required, not stubbed).
+    require "$REPO/src/Shared/UI/Helpers/FormHelper.php";
+    require "$REPO/src/Shared/UI/Helpers/SelectOptionsBuilder.php";
 
     /**
      * Render a view file to its body HTML with the given template variables.
@@ -131,6 +157,18 @@ HTML;
 namespace Lukaisu\Shared\UI\Helpers {
     class PageLayoutHelper
     {
+        // The prerender always passes an empty status message, so this renders
+        // nothing into the static shell (the live banner is a server-only
+        // surface). Faithful to the real helper's empty-message early return.
+        public static function renderMessage(string $message, bool $autoHide = true): void
+        {
+            if (trim($message) === '') {
+                return;
+            }
+            $escaped = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+            echo '<div class="notification is-info" role="status">' . $escaped . '</div>';
+        }
+
         public static function buildActionCard(array $actions): string
         {
             $buttonsHtml = '';

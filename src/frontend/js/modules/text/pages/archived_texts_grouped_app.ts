@@ -14,9 +14,17 @@
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { apiGet, getCsrfToken } from '@shared/api/client';
+import { TextsApi } from '@modules/text/api/texts_api';
+import { isLocalFirst } from '@shared/offline/local/router';
 import { confirmDelete } from '@shared/utils/ui_utilities';
 
 const STORAGE_KEY = 'lukaisu_collapsed_archived_languages';
+
+/** Pull the numeric text id out of an action URL (`/text/archived/42`, `/texts/42/unarchive`, …). */
+function textIdFromUrl(url: string): number {
+  const m = url.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 0;
+}
 
 /**
  * Language with archived text count from API.
@@ -434,25 +442,50 @@ export function archivedTextsGroupedData(): ArchivedTextsGroupedData {
 
     handleRestDelete(event: Event, url: string) {
       event.preventDefault();
-      if (confirmDelete()) {
-        const headers: Record<string, string> = {
-          'X-Requested-With': 'XMLHttpRequest',
-        };
-        const csrf = getCsrfToken();
-        if (csrf) {
-          headers['X-CSRF-TOKEN'] = csrf;
-        }
-        fetch(url, { method: 'DELETE', headers }).then(() => {
-          window.location.reload();
-        }).catch((error) => {
-          console.error('Delete failed:', error);
-          alert('Failed to delete. Please try again.');
-        });
+      if (!confirmDelete()) {
+        return;
       }
+      // Local-first (bundled offline): delete the archived text in IndexedDB via
+      // the local router rather than a same-origin web-route fetch.
+      if (isLocalFirst()) {
+        void TextsApi.deleteText(textIdFromUrl(url)).then((res) => {
+          if (res.error) {
+            alert('Failed to delete. Please try again.');
+            return;
+          }
+          window.location.reload();
+        });
+        return;
+      }
+      const headers: Record<string, string> = {
+        'X-Requested-With': 'XMLHttpRequest',
+      };
+      const csrf = getCsrfToken();
+      if (csrf) {
+        headers['X-CSRF-TOKEN'] = csrf;
+      }
+      fetch(url, { method: 'DELETE', headers }).then(() => {
+        window.location.reload();
+      }).catch((error) => {
+        console.error('Delete failed:', error);
+        alert('Failed to delete. Please try again.');
+      });
     },
 
     handlePostAction(event: Event, url: string) {
       event.preventDefault();
+      // Local-first (bundled offline): unarchive on-device via the local seam
+      // rather than a web-route form POST that has no server to answer it.
+      if (isLocalFirst()) {
+        void TextsApi.unarchive(textIdFromUrl(url)).then((res) => {
+          if (res.error) {
+            alert('Action failed. Please try again.');
+            return;
+          }
+          window.location.reload();
+        });
+        return;
+      }
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = url;

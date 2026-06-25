@@ -20,6 +20,7 @@ import {
   getDefinitions,
   getLanguage,
   getLanguageStats,
+  listLanguagesWithArchivedTexts,
   createLanguage,
   updateLanguage,
   deleteLanguage,
@@ -33,6 +34,9 @@ import {
   getTextsByLanguage,
   getArchivedTextsByLanguage,
   bulkAction as textBulkAction,
+  archiveText,
+  unarchiveText,
+  deleteText,
   markAllWellKnown,
   markAllIgnored,
   reparseLanguage,
@@ -153,6 +157,9 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   }
   if (path === '/languages/definitions') {
     return wrap(getDefinitions());
+  }
+  if (path === '/languages/with-archived-texts') {
+    return wrap(await listLanguagesWithArchivedTexts());
   }
   let m = path.match(/^\/languages\/(\d+)\/stats$/);
   if (m) {
@@ -314,6 +321,14 @@ async function routePost(path: string, p: Record<string, unknown>): Promise<Loca
       })
     );
   }
+  m = path.match(/^\/texts\/(\d+)\/archive$/);
+  if (m) {
+    return wrap(await archiveText(num(m[1])));
+  }
+  m = path.match(/^\/texts\/(\d+)\/unarchive$/);
+  if (m) {
+    return wrap(await unarchiveText(num(m[1])));
+  }
   if (path === '/terms') {
     return wrap(
       await addWithTranslation(str(p.text), num(p.language_id), str(p.translation))
@@ -413,6 +428,10 @@ async function routeDelete(path: string): Promise<LocalRouteResult> {
   let m = path.match(/^\/terms\/(\d+)$/);
   if (m) {
     return wrap(await deleteTerm(num(m[1])));
+  }
+  m = path.match(/^\/texts\/(\d+)$/);
+  if (m) {
+    return wrap(await deleteText(num(m[1])));
   }
   m = path.match(/^\/languages\/(\d+)$/);
   if (m) {

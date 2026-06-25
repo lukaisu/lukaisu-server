@@ -91,12 +91,19 @@ The end state is a small Python service. Get there in this order:
 > prerendered; list / set-current / reparse / delete on-device, zero new
 > data-layer work) — and the **language settings form** (`language-edit.html`, a
 > purpose-built API form reached from the list's Edit links; load + save offline
-> via `GET`/`PUT /languages/{id}`, zero new data-layer work). "New term" stays
-> server-only (no offline create contract); the standalone language *wizard* is
-> not separately bundled (the "add a language" page's presets already serve it).
-> The PHP views are **kept** — they still back the server's own PWA — and are
-> deleted at the cut-over, not now. Plan + per-view checklist:
-> `docs-src/server/php-view-retirement.md`.
+> via `GET`/`PUT /languages/{id}`, zero new data-layer work) — and the **archived
+> texts** page (`texts.html`, prerendered from `archived_list.php`; the *active*
+> manage list was already bundled as `library.html`, which mounts the same
+> `textsGroupedApp`). Page 5 closed a real data-layer gap: the grouped archived
+> view's `GET /languages/with-archived-texts` plus single-text
+> `POST /texts/{id}/archive`·`/unarchive` and `DELETE /texts/{id}` are now served
+> on-device (the components route through them only when local-first, leaving the
+> server PWA's web-route path untouched). "New term" stays server-only (no offline
+> create contract); the standalone language *wizard* is not separately bundled
+> (the "add a language" page's presets already serve it); the per-archived-text
+> *edit* form is page 6 (falls through for now). The PHP views are **kept** — they
+> still back the server's own PWA — and are deleted at the cut-over, not now.
+> Plan + per-view checklist: `docs-src/server/php-view-retirement.md`.
 
 1. **Make the NLP service stand alone.** The Python NLP service (the `nlp`
    Docker service — verify its exact location; the Dockerfile copies an `app/`,

@@ -84,6 +84,45 @@ describe('local-first seam', () => {
     expect(res.data?.pagination.current_page).toBe(1);
   });
 
+  it('archives, unarchives and deletes a single text through TextsApi', async () => {
+    setLocalFirst(true);
+    await seedIfNeeded();
+    const text = await localDb.texts.toCollection().first();
+    const textId = text!.id as number;
+    const langId = text!.langId;
+
+    // The grouped archived view loads its languages first; none archived yet.
+    const before = await apiGet<{ languages: Array<{ id: number }> }>(
+      '/languages/with-archived-texts'
+    );
+    expect(before.data?.languages.some((l) => l.id === langId)).toBeFalsy();
+
+    // Archive on-device (POST /texts/{id}/archive).
+    const archived = await TextsApi.archive(textId);
+    expect(archived.error).toBeUndefined();
+    expect(archived.data?.archived).toBe(true);
+
+    const afterArchive = await apiGet<{ languages: Array<{ id: number; text_count: number }> }>(
+      '/languages/with-archived-texts'
+    );
+    expect(afterArchive.data?.languages.find((l) => l.id === langId)?.text_count).toBeGreaterThan(0);
+
+    // Unarchive (POST /texts/{id}/unarchive) removes it from the grouped view.
+    const unarchived = await TextsApi.unarchive(textId);
+    expect(unarchived.error).toBeUndefined();
+    expect(unarchived.data?.unarchived).toBe(true);
+    const afterUnarchive = await apiGet<{ languages: Array<{ id: number }> }>(
+      '/languages/with-archived-texts'
+    );
+    expect(afterUnarchive.data?.languages.some((l) => l.id === langId)).toBeFalsy();
+
+    // Delete (DELETE /texts/{id}) tombstones the row.
+    const deleted = await TextsApi.deleteText(textId);
+    expect(deleted.error).toBeUndefined();
+    expect(deleted.data?.deleted).toBe(true);
+    expect((await localDb.texts.get(textId))?.deletedAt).toBeTruthy();
+  });
+
   it('serves the global navbar chrome from the local DB', async () => {
     setLocalFirst(true);
     await seedIfNeeded();
