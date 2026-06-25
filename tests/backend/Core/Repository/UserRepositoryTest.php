@@ -111,7 +111,7 @@ class UserRepositoryTest extends TestCase
                 UsWordPressId, UsCreated, UsLastLogin, UsIsActive, UsRole
             ) VALUES (
                 '$escapedUsername', '$escapedEmail', 'hash123', $escapedApiToken, NULL,
-                $wpIdValue, NOW(), NOW(), $isActiveInt, '$escapedRole'
+                $wpIdValue, NOW(), NULL, $isActiveInt, '$escapedRole'
             )"
         );
         $id = (int) mysqli_insert_id($conn);

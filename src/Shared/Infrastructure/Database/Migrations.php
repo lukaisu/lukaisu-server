@@ -300,6 +300,7 @@ class Migrations
         // DB Version
         $currversion = ApplicationInfo::getVersionNumber();
 
+        $dbversionMissing = false;
         try {
             /** @var string|null $dbversion */
             $dbversion = QueryBuilder::table('settings')
@@ -307,6 +308,7 @@ class Migrations
                 ->valuePrepared('StValue');
             if ($dbversion === null) {
                 $dbversion = 'v001000000';
+                $dbversionMissing = true;
             }
         } catch (\RuntimeException $e) {
             ErrorHandler::die(
@@ -405,6 +407,11 @@ class Migrations
             // Set database to current version
             Settings::save('dbversion', $currversion);
             Settings::save('lastscorecalc', '0');  // Reset to trigger recalculation
+        } elseif ($dbversionMissing) {
+            // First run on a database whose schema already matches the current
+            // version (e.g. a fresh install from baseline): record the version
+            // marker so it exists, without the version-upgrade side effects.
+            Settings::save('dbversion', $currversion);
         }
     }
 
@@ -440,11 +447,25 @@ class Migrations
         /// counter for cache rebuild
         $count = 0;
 
-        // Rebuild in missing table
+        // Rebuild in missing table (best-effort).
+        // On a legacy or restored schema a brand-new baseline table can carry an
+        // FK to a column that a pending rename migration has not produced yet
+        // (e.g. review_log -> words.id before the words-rename migration runs),
+        // which makes its CREATE fail with errno 150. Skip such a statement and
+        // let self::update() below create the table once the migrations have
+        // renamed the referenced columns. On a fresh install every statement
+        // succeeds, so this only affects legacy upgrades/restores.
         $queries = SqlFileParser::parseFile(__DIR__ . "/../../../../db/schema/baseline.sql");
         foreach ($queries as $query) {
             // Execute schema queries directly - no prefix in multi-user system
-            $count += (int) Connection::execute($query);
+            try {
+                $count += (int) Connection::execute($query);
+            } catch (\Throwable $e) {
+                error_log(
+                    'Migrations::checkAndUpdate: skipping baseline statement during '
+                    . 'rebuild (a pending migration will create it): ' . $e->getMessage()
+                );
+            }
         }
 
         // Ensure _migrations table has the new schema with applied_at column

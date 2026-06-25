@@ -191,6 +191,10 @@ class GetDashboardDataTest extends TestCase
     {
         $result = $this->useCase->execute();
 
+        // The dashboard always reports a current_text_info key (null when there is
+        // no current text); assert it so the test is never "risky".
+        $this->assertArrayHasKey('current_text_info', $result);
+
         // If text info exists, its language_id should be consistent
         if ($result['current_text_info'] !== null && isset($result['current_text_info']['language_id'])) {
             $this->assertIsInt($result['current_text_info']['language_id']);

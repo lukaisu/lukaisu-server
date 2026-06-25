@@ -18,27 +18,26 @@ final class WordScoringTest extends TestCase
      */
     public function testMakeScoreRandomInsertUpdate(): void
     {
-        // Test 'iv' type - column names only
+        // Test 'iv' type - FSRS column names only (no assignments)
         $result = TermStatusService::makeScoreRandomInsertUpdate('iv');
-        $this->assertStringContainsString('today_score', $result);
-        $this->assertStringContainsString('tomorrow_score', $result);
-        $this->assertStringContainsString('random', $result);
+        $this->assertStringContainsString('stability', $result);
+        $this->assertStringContainsString('difficulty', $result);
+        $this->assertStringContainsString('due_at', $result);
+        $this->assertStringContainsString('fsrs_state', $result);
         $this->assertStringNotContainsString('=', $result);
 
-        // Test 'id' type - values only (for INSERT)
+        // Test 'id' type - FSRS seed values only (for INSERT), derived from status
         $result = TermStatusService::makeScoreRandomInsertUpdate('id');
-        $this->assertStringContainsString('RAND()', $result);
-        $this->assertStringContainsString('GREATEST', $result);
+        $this->assertStringContainsString('CASE', $result);
         $this->assertStringContainsString('status', $result);
-        // Note: The result contains '=' in CASE conditions like "status = 1"
-        // but not in assignment context (no "column = value")
+        $this->assertStringNotContainsString('stability =', $result);
 
-        // Test 'u' type - key=value pairs for UPDATE
+        // Test 'u' type - column = value pairs for UPDATE
         $result = TermStatusService::makeScoreRandomInsertUpdate('u');
-        $this->assertStringContainsString('today_score =', $result);
-        $this->assertStringContainsString('tomorrow_score =', $result);
-        $this->assertStringContainsString('random = RAND()', $result);
-        $this->assertStringContainsString('GREATEST', $result);
+        $this->assertStringContainsString('stability =', $result);
+        $this->assertStringContainsString('difficulty =', $result);
+        $this->assertStringContainsString('fsrs_state =', $result);
+        $this->assertStringContainsString('lapses = 0', $result);
 
         // Test default case (should return empty string)
         $result = TermStatusService::makeScoreRandomInsertUpdate('anything_else');

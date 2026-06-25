@@ -141,7 +141,9 @@ class ApiV1Test extends TestCase
      */
     public function testVersionConstantExists(): void
     {
-        $reflection = new \ReflectionClass(ApiV1::class);
+        // VERSION lives on ApplicationInfo (single source of truth); ApiV1 reads
+        // it via ApplicationInfo::getRawVersion().
+        $reflection = new \ReflectionClass(\Lukaisu\Shared\Infrastructure\ApplicationInfo::class);
         $this->assertTrue($reflection->hasConstant('VERSION'));
     }
 
@@ -150,7 +152,9 @@ class ApiV1Test extends TestCase
      */
     public function testReleaseDateConstantExists(): void
     {
-        $reflection = new \ReflectionClass(ApiV1::class);
+        // RELEASE_DATE lives on ApplicationInfo; ApiV1 reads it via
+        // ApplicationInfo::getReleaseDate().
+        $reflection = new \ReflectionClass(\Lukaisu\Shared\Infrastructure\ApplicationInfo::class);
         $this->assertTrue($reflection->hasConstant('RELEASE_DATE'));
     }
 
