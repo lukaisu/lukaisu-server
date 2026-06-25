@@ -68,14 +68,14 @@ class LocalDictionaryService
         }
 
         $data = [
-            'LdLgID' => $dictionary->languageId(),
-            'LdName' => $dictionary->name(),
-            'LdDescription' => $dictionary->description(),
-            'LdSourceFormat' => $dictionary->sourceFormat(),
-            'LdEntryCount' => 0,
-            'LdPriority' => $dictionary->priority(),
-            'LdEnabled' => $dictionary->isEnabled() ? 1 : 0,
-            'LdUsID' => $dictionary->userId(),
+            'language_id' => $dictionary->languageId(),
+            'name' => $dictionary->name(),
+            'description' => $dictionary->description(),
+            'source_format' => $dictionary->sourceFormat(),
+            'entry_count' => 0,
+            'priority' => $dictionary->priority(),
+            'enabled' => $dictionary->isEnabled() ? 1 : 0,
+            'user_id' => $dictionary->userId(),
         ];
 
         QueryBuilder::table('local_dictionaries')->insertPrepared($data);
@@ -92,7 +92,7 @@ class LocalDictionaryService
     public function getById(int $dictId): ?LocalDictionary
     {
         $record = QueryBuilder::table('local_dictionaries')
-            ->where('LdID', '=', $dictId)
+            ->where('id', '=', $dictId)
             ->firstPrepared();
 
         if ($record === null) {
@@ -112,9 +112,9 @@ class LocalDictionaryService
     public function getForLanguage(int $languageId): array
     {
         $records = QueryBuilder::table('local_dictionaries')
-            ->where('LdLgID', '=', $languageId)
-            ->where('LdEnabled', '=', 1)
-            ->orderBy('LdPriority', 'ASC')
+            ->where('language_id', '=', $languageId)
+            ->where('enabled', '=', 1)
+            ->orderBy('priority', 'ASC')
             ->getPrepared();
 
         return array_map([$this, 'hydrateFromRecord'], $records);
@@ -130,8 +130,8 @@ class LocalDictionaryService
     public function getAllForLanguage(int $languageId): array
     {
         $records = QueryBuilder::table('local_dictionaries')
-            ->where('LdLgID', '=', $languageId)
-            ->orderBy('LdPriority', 'ASC')
+            ->where('language_id', '=', $languageId)
+            ->orderBy('priority', 'ASC')
             ->getPrepared();
 
         return array_map([$this, 'hydrateFromRecord'], $records);
@@ -151,15 +151,15 @@ class LocalDictionaryService
         }
 
         $data = [
-            'LdName' => $dictionary->name(),
-            'LdDescription' => $dictionary->description(),
-            'LdPriority' => $dictionary->priority(),
-            'LdEnabled' => $dictionary->isEnabled() ? 1 : 0,
-            'LdEntryCount' => $dictionary->entryCount(),
+            'name' => $dictionary->name(),
+            'description' => $dictionary->description(),
+            'priority' => $dictionary->priority(),
+            'enabled' => $dictionary->isEnabled() ? 1 : 0,
+            'entry_count' => $dictionary->entryCount(),
         ];
 
         return QueryBuilder::table('local_dictionaries')
-            ->where('LdID', '=', $dictionary->id())
+            ->where('id', '=', $dictionary->id())
             ->updatePrepared($data) > 0;
     }
 
@@ -174,7 +174,7 @@ class LocalDictionaryService
     {
         // Entries are deleted via CASCADE
         return QueryBuilder::table('local_dictionaries')
-            ->where('LdID', '=', $dictId)
+            ->where('id', '=', $dictId)
             ->deletePrepared() > 0;
     }
 
@@ -191,22 +191,22 @@ class LocalDictionaryService
         $termLc = mb_strtolower(trim($term), 'UTF-8');
 
         $bindings = [$languageId, $termLc];
-        $sql = "SELECT le.LeTerm, le.LeDefinition, le.LeReading, le.LePartOfSpeech, ld.LdName
+        $sql = "SELECT le.term, le.definition, le.reading, le.part_of_speech, ld.name
                 FROM " . Globals::table('local_dictionary_entries') . " le
-                INNER JOIN " . Globals::table('local_dictionaries') . " ld ON le.LeLdID = ld.LdID
-                WHERE ld.LdLgID = ? AND ld.LdEnabled = 1 AND le.LeTermLc = ?"
+                INNER JOIN " . Globals::table('local_dictionaries') . " ld ON le.local_dictionary_id = ld.id
+                WHERE ld.language_id = ? AND ld.enabled = 1 AND le.term_lc = ?"
                 . UserScopedQuery::forTablePrepared('local_dictionaries', $bindings, 'ld')
-                . " ORDER BY ld.LdPriority ASC";
+                . " ORDER BY ld.priority ASC";
 
         $records = Connection::preparedFetchAll($sql, $bindings);
 
         return array_map(function ($row): array {
             return [
-                'term' => (string) ($row['LeTerm'] ?? ''),
-                'definition' => (string) ($row['LeDefinition'] ?? ''),
-                'reading' => isset($row['LeReading']) ? (string) $row['LeReading'] : null,
-                'pos' => isset($row['LePartOfSpeech']) ? (string) $row['LePartOfSpeech'] : null,
-                'dictionary' => (string) ($row['LdName'] ?? ''),
+                'term' => (string) ($row['term'] ?? ''),
+                'definition' => (string) ($row['definition'] ?? ''),
+                'reading' => isset($row['reading']) ? (string) $row['reading'] : null,
+                'pos' => isset($row['part_of_speech']) ? (string) $row['part_of_speech'] : null,
+                'dictionary' => (string) ($row['name'] ?? ''),
             ];
         }, $records);
     }
@@ -228,20 +228,20 @@ class LocalDictionaryService
         $userScope = UserScopedQuery::forTablePrepared('local_dictionaries', $bindings, 'ld');
         $bindings[] = $limit;
 
-        $sql = "SELECT DISTINCT le.LeTerm, le.LeDefinition
+        $sql = "SELECT DISTINCT le.term, le.definition
                 FROM " . Globals::table('local_dictionary_entries') . " le
-                INNER JOIN " . Globals::table('local_dictionaries') . " ld ON le.LeLdID = ld.LdID
-                WHERE ld.LdLgID = ? AND ld.LdEnabled = 1 AND le.LeTermLc LIKE ?"
+                INNER JOIN " . Globals::table('local_dictionaries') . " ld ON le.local_dictionary_id = ld.id
+                WHERE ld.language_id = ? AND ld.enabled = 1 AND le.term_lc LIKE ?"
                 . $userScope
-                . " ORDER BY le.LeTermLc ASC
+                . " ORDER BY le.term_lc ASC
                 LIMIT ?";
 
         $records = Connection::preparedFetchAll($sql, $bindings);
 
         return array_map(function ($row): array {
             return [
-                'term' => (string) ($row['LeTerm'] ?? ''),
-                'definition' => (string) ($row['LeDefinition'] ?? ''),
+                'term' => (string) ($row['term'] ?? ''),
+                'definition' => (string) ($row['definition'] ?? ''),
             ];
         }, $records);
     }
@@ -267,12 +267,12 @@ class LocalDictionaryService
         $this->assertOwnsDictionary($dictId);
 
         $data = [
-            'LeLdID' => $dictId,
-            'LeTerm' => $term,
-            'LeTermLc' => mb_strtolower($term, 'UTF-8'),
-            'LeDefinition' => $definition,
-            'LeReading' => $reading,
-            'LePartOfSpeech' => $pos,
+            'local_dictionary_id' => $dictId,
+            'term' => $term,
+            'term_lc' => mb_strtolower($term, 'UTF-8'),
+            'definition' => $definition,
+            'reading' => $reading,
+            'part_of_speech' => $pos,
         ];
 
         QueryBuilder::table('local_dictionary_entries')->insertPrepared($data);
@@ -297,12 +297,12 @@ class LocalDictionaryService
 
         foreach ($entries as $entry) {
             $batch[] = [
-                'LeLdID' => $dictId,
-                'LeTerm' => $entry['term'],
-                'LeTermLc' => mb_strtolower($entry['term'], 'UTF-8'),
-                'LeDefinition' => $entry['definition'],
-                'LeReading' => $entry['reading'] ?? null,
-                'LePartOfSpeech' => $entry['pos'] ?? null,
+                'local_dictionary_id' => $dictId,
+                'term' => $entry['term'],
+                'term_lc' => mb_strtolower($entry['term'], 'UTF-8'),
+                'definition' => $entry['definition'],
+                'reading' => $entry['reading'] ?? null,
+                'part_of_speech' => $entry['pos'] ?? null,
             ];
 
             if (count($batch) >= self::BATCH_SIZE) {
@@ -335,7 +335,7 @@ class LocalDictionaryService
         $this->assertOwnsDictionary($dictId);
 
         $deleted = QueryBuilder::table('local_dictionary_entries')
-            ->where('LeLdID', '=', $dictId)
+            ->where('local_dictionary_id', '=', $dictId)
             ->deletePrepared();
 
         $this->updateEntryCount($dictId);
@@ -356,7 +356,7 @@ class LocalDictionaryService
 
         $result = QueryBuilder::table('local_dictionary_entries')
             ->select(['COUNT(*) as cnt'])
-            ->where('LeLdID', '=', $dictId)
+            ->where('local_dictionary_id', '=', $dictId)
             ->firstPrepared();
 
         return (int) ($result['cnt'] ?? 0);
@@ -380,19 +380,19 @@ class LocalDictionaryService
         $total = $this->getEntryCount($dictId);
 
         $records = QueryBuilder::table('local_dictionary_entries')
-            ->where('LeLdID', '=', $dictId)
-            ->orderBy('LeTermLc', 'ASC')
+            ->where('local_dictionary_id', '=', $dictId)
+            ->orderBy('term_lc', 'ASC')
             ->limit($perPage)
             ->offset($offset)
             ->getPrepared();
 
         $entries = array_map(function ($row) {
             return [
-                'id' => (int) $row['LeID'],
-                'term' => $row['LeTerm'],
-                'definition' => $row['LeDefinition'],
-                'reading' => $row['LeReading'],
-                'pos' => $row['LePartOfSpeech'],
+                'id' => (int) $row['id'],
+                'term' => $row['term'],
+                'definition' => $row['definition'],
+                'reading' => $row['reading'],
+                'pos' => $row['part_of_speech'],
             ];
         }, $records);
 
@@ -423,24 +423,24 @@ class LocalDictionaryService
         ?string $pos = null
     ): bool {
         $entry = QueryBuilder::table('local_dictionary_entries')
-            ->select(['LeLdID'])
-            ->where('LeID', '=', $entryId)
+            ->select(['local_dictionary_id'])
+            ->where('id', '=', $entryId)
             ->firstPrepared();
         if ($entry === null) {
             return false;
         }
-        $this->assertOwnsDictionary((int) $entry['LeLdID']);
+        $this->assertOwnsDictionary((int) $entry['local_dictionary_id']);
 
         $data = [
-            'LeTerm' => $term,
-            'LeTermLc' => mb_strtolower($term, 'UTF-8'),
-            'LeDefinition' => $definition,
-            'LeReading' => $reading,
-            'LePartOfSpeech' => $pos,
+            'term' => $term,
+            'term_lc' => mb_strtolower($term, 'UTF-8'),
+            'definition' => $definition,
+            'reading' => $reading,
+            'part_of_speech' => $pos,
         ];
 
         return QueryBuilder::table('local_dictionary_entries')
-            ->where('LeID', '=', $entryId)
+            ->where('id', '=', $entryId)
             ->updatePrepared($data) > 0;
     }
 
@@ -455,21 +455,21 @@ class LocalDictionaryService
     {
         // Get dictionary ID first to update count
         $entry = QueryBuilder::table('local_dictionary_entries')
-            ->select(['LeLdID'])
-            ->where('LeID', '=', $entryId)
+            ->select(['local_dictionary_id'])
+            ->where('id', '=', $entryId)
             ->firstPrepared();
 
         if ($entry === null) {
             return false;
         }
-        $this->assertOwnsDictionary((int) $entry['LeLdID']);
+        $this->assertOwnsDictionary((int) $entry['local_dictionary_id']);
 
         $deleted = QueryBuilder::table('local_dictionary_entries')
-            ->where('LeID', '=', $entryId)
+            ->where('id', '=', $entryId)
             ->deletePrepared() > 0;
 
         if ($deleted) {
-            $this->updateEntryCount((int) $entry['LeLdID']);
+            $this->updateEntryCount((int) $entry['local_dictionary_id']);
         }
 
         return $deleted;
@@ -486,8 +486,8 @@ class LocalDictionaryService
     {
         $result = QueryBuilder::table('local_dictionaries')
             ->select(['COUNT(*) as cnt'])
-            ->where('LdLgID', '=', $languageId)
-            ->where('LdEnabled', '=', 1)
+            ->where('language_id', '=', $languageId)
+            ->where('enabled', '=', 1)
             ->firstPrepared();
 
         return ((int) ($result['cnt'] ?? 0)) > 0;
@@ -521,11 +521,11 @@ class LocalDictionaryService
                     sentence, romanization, status_changed_at,
                     today_score, tomorrow_score, random{$userColumn}
                 )
-                SELECT ?, le.LeTermLc, le.LeTerm, 1, le.LeDefinition,
+                SELECT ?, le.term_lc, le.term, 1, le.definition,
                        '', '', NOW(),
                        0, -7, RAND(){$userValue}
                 FROM {$entriesTable} le
-                WHERE le.LeLdID = ?";
+                WHERE le.local_dictionary_id = ?";
 
         return Connection::preparedExecute($sql, $bindings);
     }
@@ -570,7 +570,7 @@ class LocalDictionaryService
     /**
      * Reject operations that target a dictionary the current user does not own.
      *
-     * `local_dictionary_entries` is not auto-scoped (it has no LdUsID column),
+     * `local_dictionary_entries` is not auto-scoped (it has no user_id column),
      * so every entry-level call has to bounce through `getById` — which IS
      * user-scoped via QueryBuilder — to confirm ownership before touching the
      * row. Single-user mode is a no-op.
@@ -597,16 +597,16 @@ class LocalDictionaryService
     private function hydrateFromRecord(array $record): LocalDictionary
     {
         return LocalDictionary::reconstitute(
-            (int) $record['LdID'],
-            (int) $record['LdLgID'],
-            (string) $record['LdName'],
-            $record['LdDescription'] !== null ? (string) $record['LdDescription'] : null,
-            (string) $record['LdSourceFormat'],
-            (int) $record['LdEntryCount'],
-            (int) $record['LdPriority'],
-            (bool) $record['LdEnabled'],
-            new DateTimeImmutable((string) $record['LdCreated']),
-            $record['LdUsID'] !== null ? (int) $record['LdUsID'] : null
+            (int) $record['id'],
+            (int) $record['language_id'],
+            (string) $record['name'],
+            $record['description'] !== null ? (string) $record['description'] : null,
+            (string) $record['source_format'],
+            (int) $record['entry_count'],
+            (int) $record['priority'],
+            (bool) $record['enabled'],
+            new DateTimeImmutable((string) $record['created_at']),
+            $record['user_id'] !== null ? (int) $record['user_id'] : null
         );
     }
 
@@ -623,23 +623,23 @@ class LocalDictionaryService
             return;
         }
 
-        $columns = ['LeLdID', 'LeTerm', 'LeTermLc', 'LeDefinition', 'LeReading', 'LePartOfSpeech'];
+        $columns = ['local_dictionary_id', 'term', 'term_lc', 'definition', 'reading', 'part_of_speech'];
         $placeholders = [];
         $values = [];
 
         foreach ($batch as $row) {
             $placeholders[] = '(?, ?, ?, ?, ?, ?)';
             /** @var int $dictId */
-            $dictId = $row['LeLdID'];
+            $dictId = $row['local_dictionary_id'];
             $values[] = $dictId;
-            $values[] = (string) ($row['LeTerm'] ?? '');
-            $values[] = (string) ($row['LeTermLc'] ?? '');
-            $values[] = (string) ($row['LeDefinition'] ?? '');
+            $values[] = (string) ($row['term'] ?? '');
+            $values[] = (string) ($row['term_lc'] ?? '');
+            $values[] = (string) ($row['definition'] ?? '');
             /** @var string|null $reading */
-            $reading = $row['LeReading'] ?? null;
+            $reading = $row['reading'] ?? null;
             $values[] = $reading;
             /** @var string|null $pos */
-            $pos = $row['LePartOfSpeech'] ?? null;
+            $pos = $row['part_of_speech'] ?? null;
             $values[] = $pos;
         }
 
@@ -662,7 +662,7 @@ class LocalDictionaryService
         $count = $this->getEntryCount($dictId);
 
         QueryBuilder::table('local_dictionaries')
-            ->where('LdID', '=', $dictId)
-            ->updatePrepared(['LdEntryCount' => $count]);
+            ->where('id', '=', $dictId)
+            ->updatePrepared(['entry_count' => $count]);
     }
 }

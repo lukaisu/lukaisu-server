@@ -5,7 +5,7 @@
 -- Table: local_dictionaries (metadata about imported dictionaries)
 CREATE TABLE IF NOT EXISTS `local_dictionaries` (
     `LdID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `LdLgID` INT(11) UNSIGNED NOT NULL COMMENT 'Language ID this dictionary belongs to',
+    `LdLgID` TINYINT(3) UNSIGNED NOT NULL COMMENT 'Language ID this dictionary belongs to',
     `LdName` VARCHAR(100) NOT NULL COMMENT 'Dictionary name',
     `LdDescription` VARCHAR(500) DEFAULT NULL COMMENT 'Optional description',
     `LdSourceFormat` VARCHAR(20) NOT NULL DEFAULT 'csv' COMMENT 'Original import format: csv, json, stardict',
@@ -19,9 +19,9 @@ CREATE TABLE IF NOT EXISTS `local_dictionaries` (
     KEY `LdUsID` (`LdUsID`),
     KEY `LdEnabled_LdPriority` (`LdEnabled`, `LdPriority`),
     CONSTRAINT `fk_local_dict_language` FOREIGN KEY (`LdLgID`)
-        REFERENCES `languages` (`LgID`) ON DELETE CASCADE,
+        REFERENCES `languages` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_local_dict_user` FOREIGN KEY (`LdUsID`)
-        REFERENCES `users` (`UsID`) ON DELETE CASCADE
+        REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Table: local_dictionary_entries (individual dictionary entries)

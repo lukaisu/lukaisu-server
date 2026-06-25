@@ -64,7 +64,7 @@ class UserScopedQuery
         'text_tags' => 'user_id',
         'news_feeds' => 'user_id',
         'settings' => 'user_id',
-        'local_dictionaries' => 'LdUsID',
+        'local_dictionaries' => 'user_id',
         'activity_log' => 'user_id',
         'books' => 'user_id',
     ];

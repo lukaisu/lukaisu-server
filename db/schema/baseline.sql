@@ -313,6 +313,44 @@ CREATE TABLE IF NOT EXISTS activity_log (
     KEY idx_activity_date (date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Imported offline/local dictionaries and their per-language metadata.
+CREATE TABLE IF NOT EXISTS local_dictionaries (
+    id int(10) unsigned NOT NULL AUTO_INCREMENT,
+    language_id tinyint(3) unsigned NOT NULL COMMENT 'Language this dictionary belongs to',
+    name varchar(100) NOT NULL COMMENT 'Dictionary name',
+    description varchar(500) DEFAULT NULL COMMENT 'Optional description',
+    source_format varchar(20) NOT NULL DEFAULT 'csv' COMMENT 'Original import format: csv, json, stardict',
+    entry_count int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Number of entries',
+    priority tinyint(3) unsigned NOT NULL DEFAULT 1 COMMENT 'Lookup order (1=highest)',
+    enabled tinyint(1) unsigned NOT NULL DEFAULT 1 COMMENT 'Whether the dictionary is active',
+    created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    user_id int(10) unsigned DEFAULT NULL COMMENT 'User ID (NULL in single-user mode)',
+    PRIMARY KEY (id),
+    KEY idx_local_dict_language (language_id),
+    KEY idx_local_dict_user (user_id),
+    KEY idx_local_dict_enabled_priority (enabled, priority),
+    CONSTRAINT fk_local_dict_language FOREIGN KEY (language_id)
+        REFERENCES languages(id) ON DELETE CASCADE,
+    CONSTRAINT fk_local_dict_user FOREIGN KEY (user_id)
+        REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Individual entries (headword -> definition) for a local dictionary.
+CREATE TABLE IF NOT EXISTS local_dictionary_entries (
+    id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    local_dictionary_id int(10) unsigned NOT NULL COMMENT 'Owning dictionary',
+    term varchar(250) NOT NULL COMMENT 'Headword/term',
+    term_lc varchar(250) NOT NULL COMMENT 'Lowercased term for searching',
+    definition text NOT NULL COMMENT 'Definition/translation',
+    reading varchar(250) DEFAULT NULL COMMENT 'Pronunciation/reading (e.g. furigana)',
+    part_of_speech varchar(50) DEFAULT NULL COMMENT 'Part of speech',
+    PRIMARY KEY (id),
+    KEY idx_entry_dictionary (local_dictionary_id),
+    KEY idx_entry_term_lc (term_lc),
+    CONSTRAINT fk_entry_dictionary FOREIGN KEY (local_dictionary_id)
+        REFERENCES local_dictionaries(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Prefix migration tracking table for multi-user conversion
 CREATE TABLE IF NOT EXISTS _prefix_migration_log (
     prefix VARCHAR(40) NOT NULL,

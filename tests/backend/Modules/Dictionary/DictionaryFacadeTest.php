@@ -98,7 +98,7 @@ class DictionaryFacadeTest extends TestCase
         // Clean up test dictionaries
         if (self::$dbConnected && self::$tablesExist) {
             QueryBuilder::table('local_dictionaries')
-                ->where('LdName', 'LIKE', 'Test Dict%')
+                ->where('name', 'LIKE', 'Test Dict%')
                 ->delete();
         }
     }
@@ -714,8 +714,8 @@ class DictionaryFacadeTest extends TestCase
 
         // Check if there are any OTHER enabled dictionaries for this language
         $enabledCount = QueryBuilder::table('local_dictionaries')
-            ->where('LdLgID', '=', self::$testLanguageId)
-            ->where('LdEnabled', '=', 1)
+            ->where('language_id', '=', self::$testLanguageId)
+            ->where('enabled', '=', 1)
             ->countPrepared();
 
         // If there are other enabled dictionaries, we can't test this properly

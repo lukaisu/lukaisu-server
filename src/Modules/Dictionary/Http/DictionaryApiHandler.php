@@ -127,7 +127,7 @@ class DictionaryApiHandler implements ApiRoutableInterface
         }
 
         // In multi-user mode, refuse to create a dictionary against
-        // another user's language. The DB column `LdLgID` has no
+        // another user's language. The DB column `language_id` has no
         // foreign-key constraint that fences cross-user references,
         // so an authenticated user could otherwise plant rows pinned
         // to a stranger's id.
