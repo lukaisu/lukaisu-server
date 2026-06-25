@@ -368,11 +368,11 @@ describe('text_keyboard.ts', () => {
   });
 
   // ===========================================================================
-  // Number Keys (1-5) Status Change Tests
+  // Number Keys (1-5) No Longer Set Status (issue #238)
   // ===========================================================================
 
-  describe('Number keys (1-5) for status change', () => {
-    it('changes status of known word via API', () => {
+  describe('Number keys (1-5) no longer change status', () => {
+    it('does not call the status API for any number key', () => {
       document.body.innerHTML = `
         <span id="w1" class="word status3 kwordmarked"
               data_wid="100" data_order="5" data_status="3">word</span>
@@ -380,42 +380,14 @@ describe('text_keyboard.ts', () => {
 
       setReadingPosition(0);
 
-      const event = createKeyEvent(50); // key '2'
-      handleTextKeydown(event);
+      // Top-row 1-5 (49-53) and numpad 1-5 (97-101).
+      for (const code of [49, 50, 51, 52, 53, 97, 98, 99, 100, 101]) {
+        handleTextKeydown(createKeyEvent(code));
+      }
 
-      // Now uses TermsApi.setStatus instead of loadModalFrame
-      expect(mockTermsApiSetStatus).toHaveBeenCalledWith(100, 2);
-    });
-
-    it('updates status for a word via keyboard navigation', () => {
-      // Note: status0 words are not in the knownwordlist, so keyboard navigation
-      // doesn't include them directly. We need to mark a known word first.
-      document.body.innerHTML = `
-        <span id="w1" class="word status1 kwordmarked" data_wid="100" data_order="5" data_status="1" data_ann="">known</span>
-      `;
-
-      setReadingPosition(0);
-
-      // Press number key to change the status of the marked known word
-      const event = createKeyEvent(49); // key '1'
-      handleTextKeydown(event);
-
-      // Known word gets API call
-      expect(mockTermsApiSetStatus).toHaveBeenCalledWith(100, 1);
-    });
-
-    it('handles numpad keys (96-100)', () => {
-      document.body.innerHTML = `
-        <span id="w1" class="word status3 kwordmarked"
-              data_wid="100" data_order="5" data_status="3">word</span>
-      `;
-
-      setReadingPosition(0);
-
-      const event = createKeyEvent(99); // numpad '3'
-      handleTextKeydown(event);
-
-      expect(mockTermsApiSetStatus).toHaveBeenCalledWith(100, 3);
+      // Learning level 1-5 is derived from FSRS, not hand-set, so the number
+      // keys are inert. Only I (ignore) and W (well-known) remain as shortcuts.
+      expect(mockTermsApiSetStatus).not.toHaveBeenCalled();
     });
   });
 

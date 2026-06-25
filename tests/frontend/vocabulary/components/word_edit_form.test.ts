@@ -152,12 +152,15 @@ describe('word_edit_form.ts', () => {
       expect(component.showRomanization).toBe(true);
     });
 
-    it('statuses returns status definitions', () => {
+    it('statuses returns only the settable statuses (issue #238)', () => {
       const component = wordEditFormData();
 
-      expect(component.statuses).toHaveLength(7);
-      expect(component.statuses[0]).toEqual({ value: 1, label: 'Learning (1)', abbr: '1' });
-      expect(component.statuses[6]).toEqual({ value: 98, label: 'Ignored', abbr: 'Ignored' });
+      // Learning level 1-5 is derived from FSRS, not hand-set, so the picker
+      // offers only Learning / Well-known / Ignored.
+      expect(component.statuses).toHaveLength(3);
+      expect(component.statuses[0]).toEqual({ value: 1, label: 'Learning', abbr: 'Learning' });
+      expect(component.statuses[1]).toEqual({ value: 99, label: 'Well Known', abbr: 'Well Known' });
+      expect(component.statuses[2]).toEqual({ value: 98, label: 'Ignored', abbr: 'Ignored' });
     });
   });
 

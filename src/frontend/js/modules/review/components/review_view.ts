@@ -366,13 +366,20 @@ function buildTableReview(): string {
                   </a>
                 </td>
                 <td x-show="columns.status" class="has-text-centered">
-                  <div class="buttons are-small is-centered">
-                    <template x-for="s in [1, 2, 3, 4, 5]" :key="s">
-                      <button class="button status-btn"
-                              :class="{ ['status-' + s]: word.status === s }"
-                              @click="setWordStatus(word.id, s)"
-                              x-text="s"></button>
-                    </template>
+                  <!-- Learning level 1-5 is derived from FSRS (read-only); only
+                       Well-known / Ignored are settable (issue #238). -->
+                  <div class="is-flex is-align-items-center is-justify-content-center" style="gap: 0.4rem;">
+                    <span class="tag status-btn" :class="'status-' + word.status" x-text="word.status"></span>
+                    <button class="button is-small is-success"
+                            :class="{ 'is-light is-outlined': word.status !== 99 }"
+                            @click="setWordStatus(word.id, 99)"
+                            title="${escapeHtml(t('common.status_well_known'))}"
+                            >${escapeHtml(t('common.status_well_known'))}</button>
+                    <button class="button is-small is-warning"
+                            :class="{ 'is-light is-outlined': word.status !== 98 }"
+                            @click="setWordStatus(word.id, 98)"
+                            title="${escapeHtml(t('common.status_ignored'))}"
+                            >${escapeHtml(t('common.status_ignored'))}</button>
                   </div>
                 </td>
                 <td x-show="columns.term"

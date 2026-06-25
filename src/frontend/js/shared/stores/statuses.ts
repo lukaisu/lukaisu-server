@@ -70,6 +70,22 @@ export const STORED_STATUSES: number[] = STATUS_DEFINITIONS
   .map((d) => d.value)
   .filter((v) => v !== 0);
 
+/**
+ * Statuses a user can set directly (issue #238, Phase 2). The learning level
+ * 1-5 is no longer hand-set — it is derived from FSRS stability
+ * (`statusFromStability`) and shown read-only. The only settable states are
+ * start-Learning (1), Well-known (99), and Ignored (98), in display order.
+ */
+export const SETTABLE_STATUSES: number[] = [1, 99, 98];
+
+/**
+ * Button/label text for a settable status. The settable "1" means "start
+ * learning", so it reads "Learning" rather than the display label "Learning (1)".
+ */
+export function settableLabel(value: number): string {
+  return value === 1 ? 'Learning' : statusLabel(value);
+}
+
 /** Look up the full definition for a status value (falls back to Unknown). */
 export function statusDef(value: number): StatusDefinition {
   return BY_VALUE.get(value) ?? UNKNOWN;

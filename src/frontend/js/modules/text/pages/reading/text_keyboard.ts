@@ -278,19 +278,9 @@ export function handleTextKeydown(e: KeyboardEvent): boolean {
     ? getAttrElement(curr, 'data_text')
     : (curr.textContent || '');
 
-  // Status keys 1-5
-  for (let i = 1; i <= 5; i++) {
-    if (keyCode === (48 + i) || keyCode === (96 + i)) { // 1,.. : status=i
-      if (stat === '0') {
-        // New word - open edit form with pre-set status
-        openWordEditForm(textId, parseInt(ord, 10));
-      } else {
-        // Existing word - set status via API
-        setWordStatusViaApi(parseInt(wid, 10), i, curr);
-      }
-      return false;
-    }
-  }
+  // Number keys 1-5 no longer set the learning level (issue #238): status 1-5
+  // is derived from FSRS stability, not hand-set. Only I (ignored) and W
+  // (well-known) remain as direct status shortcuts.
 
   if (keyCode === 73) { // I : status=98 (ignored)
     if (stat === '0') {

@@ -15,27 +15,6 @@ import { trapFocus, releaseFocus } from '@shared/accessibility/focus_trap';
 import { announce } from '@shared/accessibility/aria_live';
 
 /**
- * Status display information.
- */
-interface StatusInfo {
-  value: number;
-  label: string;
-  abbr: string;
-  class: string;
-}
-
-/**
- * Status definitions for learning words (1-5 only for multi-words).
- */
-const STATUSES: StatusInfo[] = [
-  { value: 1, label: 'Learning (1)', abbr: '1', class: 'is-danger' },
-  { value: 2, label: 'Learning (2)', abbr: '2', class: 'is-warning' },
-  { value: 3, label: 'Learning (3)', abbr: '3', class: 'is-info' },
-  { value: 4, label: 'Learning (4)', abbr: '4', class: 'is-primary' },
-  { value: 5, label: 'Learned', abbr: '5', class: 'is-success' }
-];
-
-/**
  * Multi-word modal Alpine.js component interface.
  */
 export interface MultiWordModalData {
@@ -45,7 +24,6 @@ export interface MultiWordModalData {
   readonly isLoading: boolean;
   readonly isSubmitting: boolean;
   readonly modalTitle: string;
-  readonly statuses: StatusInfo[];
 
   // CSP-safe proxy properties for x-model
   translation: string;
@@ -70,11 +48,8 @@ export interface MultiWordModalData {
   // Methods
   close(): void;
   save(): Promise<void>;
-  setStatus(status: number): void;
   clearGeneralError(): void;
   validateField(field: string): void;
-  isCurrentStatus(status: number): boolean;
-  getStatusButtonClass(status: number): string;
 }
 
 /**
@@ -127,10 +102,6 @@ export function multiWordModalData(): MultiWordModalData {
         return `New Multi-Word Expression (${this.store.formData.wordCount} words)`;
       }
       return `Edit Multi-Word Expression (${this.store.formData.wordCount} words)`;
-    },
-
-    get statuses(): StatusInfo[] {
-      return STATUSES;
     },
 
     // CSP-safe proxy properties — Alpine CSP build prohibits nested
@@ -232,34 +203,6 @@ export function multiWordModalData(): MultiWordModalData {
         this.store.reset();
       }
       // On error, store.errors.general will be set and displayed
-    },
-
-    /**
-     * Set the status value.
-     */
-    setStatus(status: number): void {
-      this.store.formData.status = status;
-    },
-
-    /**
-     * Check if a status is the current status.
-     */
-    isCurrentStatus(status: number): boolean {
-      return this.store.formData.status === status;
-    },
-
-    /**
-     * Get Bulma button class for a status.
-     */
-    getStatusButtonClass(status: number): string {
-      const statusInfo = STATUSES.find(s => s.value === status);
-      const base = 'button is-small';
-      const colorClass = statusInfo?.class || '';
-
-      if (this.isCurrentStatus(status)) {
-        return `${base} ${colorClass}`;
-      }
-      return `${base} is-outlined ${colorClass}`;
     }
   };
 }

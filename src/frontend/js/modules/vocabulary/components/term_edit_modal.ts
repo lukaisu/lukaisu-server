@@ -16,13 +16,27 @@ import {
   type TermUpdateFullRequest
 } from '@modules/vocabulary/api/terms_api';
 import { escapeHtml } from '@shared/utils/html_utils';
-import { orderedStatuses } from '@shared/stores/statuses';
+import { settableLabel } from '@shared/stores/statuses';
 
-/** Status options for the form, from the single status store (issue #238). */
-const STATUSES = orderedStatuses([1, 2, 3, 4, 5, 99, 98]).map((d) => ({
-  value: d.value,
-  label: d.label
-}));
+/**
+ * Build the settable status <select> options (issue #238, Phase 2). The
+ * learning level 1-5 is derived from FSRS stability, not hand-set, so the only
+ * choices are Learning, Well-known and Ignored. For a term already in a
+ * learning stage the "Learning" option keeps that stage's value, so editing the
+ * translation and saving without changing status leaves the FSRS schedule
+ * intact instead of resetting it to 1.
+ */
+function buildStatusOptions(currentStatus: number): string {
+  const learningValue = currentStatus >= 1 && currentStatus <= 5 ? currentStatus : 1;
+  const options = [
+    { value: learningValue, label: settableLabel(1) },
+    { value: 99, label: settableLabel(99) },
+    { value: 98, label: settableLabel(98) }
+  ];
+  return options.map(o =>
+    `<option value="${o.value}"${currentStatus === o.value ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
+  ).join('');
+}
 
 /** Current form context */
 let currentContext: {
@@ -41,9 +55,7 @@ function renderForm(data: TermForEditResponse): string {
   const lang = data.language;
   const translation = term.translation === '*' ? '' : term.translation;
 
-  const statusOptions = STATUSES.map(s =>
-    `<option value="${s.value}"${term.status === s.value ? ' selected' : ''}>${escapeHtml(s.label)}</option>`
-  ).join('');
+  const statusOptions = buildStatusOptions(term.status);
 
   const romanizationField = lang.showRomanization ? `
     <div class="field">

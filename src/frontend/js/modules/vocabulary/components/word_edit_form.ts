@@ -30,22 +30,17 @@ interface StatusInfo {
 type FormDataField = 'translation' | 'romanization' | 'sentence' | 'notes';
 
 /**
- * Status definitions matching word_modal.ts. Computed lazily so translations are loaded.
+ * Settable status options (issue #238, Phase 2). The learning level 1-5 is no
+ * longer hand-set — it is derived from FSRS stability — so the picker offers
+ * only start-Learning, Well-known and Ignored. Computed lazily so translations
+ * are loaded; the localized full name doubles as the button label.
  */
 function buildStatuses(): StatusInfo[] {
   const learning = t('common.status_learning');
-  const learned = t('common.status_learned');
   const wellKnown = t('common.status_well_known');
   const ignored = t('common.status_ignored');
-  // For numeric statuses `abbr` is the digit (button label).
-  // For 98/99 there is no language-neutral abbreviation, so the
-  // localized full name doubles as the button label.
   return [
-    { value: 1, label: `${learning} (1)`, abbr: '1' },
-    { value: 2, label: `${learning} (2)`, abbr: '2' },
-    { value: 3, label: `${learning} (3)`, abbr: '3' },
-    { value: 4, label: `${learning} (4)`, abbr: '4' },
-    { value: 5, label: learned, abbr: '5' },
+    { value: 1, label: learning, abbr: learning },
     { value: 99, label: wellKnown, abbr: wellKnown },
     { value: 98, label: ignored, abbr: ignored }
   ];

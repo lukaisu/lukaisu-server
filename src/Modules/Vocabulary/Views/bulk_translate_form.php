@@ -95,11 +95,11 @@ $lblChangeStatus = htmlspecialchars(__('vocabulary.bulk.change_status'), ENT_QUO
                                                $event.target.selectedIndex = 0;">
                                     <option value="0" selected><?= __('vocabulary.bulk.choose_placeholder') ?></option>
                                     <optgroup label="<?= $lblChangeStatus ?>">
-                                        <?php for ($i = 1; $i <= 5; $i++) : ?>
-                                        <option value="<?= $i ?>">
-                                            <?= __('vocabulary.bulk.set_status_to', ['n' => $i]) ?>
+                                        <?php // Learning level 1-5 is derived from FSRS, not hand-set (issue #238). ?>
+                                        <option value="1">
+                                            <?= __('vocabulary.bulk.set_status_to_prefix') ?>
+                                            <?= __('common.status_learning') ?>
                                         </option>
-                                        <?php endfor; ?>
                                         <option value="99"><?= __('vocabulary.bulk.set_status_wkn') ?></option>
                                         <option value="98"><?= __('vocabulary.bulk.set_status_ign') ?></option>
                                     </optgroup>
@@ -158,12 +158,9 @@ $lblChangeStatus = htmlspecialchars(__('vocabulary.bulk.change_status'), ENT_QUO
                     </td>
                     <td class="has-text-centered notranslate">
                         <div class="select is-small">
+                            <?php // Learning level 1-5 is derived from FSRS, not hand-set (issue #238). ?>
                             <select id="Stat_<?php echo $cnt ?>" name="term[<?php echo $cnt ?>][status]">
-                                <option value="1" selected>[1]</option>
-                                <option value="2">[2]</option>
-                                <option value="3">[3]</option>
-                                <option value="4">[4]</option>
-                                <option value="5">[5]</option>
+                                <option value="1" selected><?= __e('common.status_learning') ?></option>
                                 <option value="99"><?= __e('common.status_well_known') ?></option>
                                 <option value="98"><?= __e('common.status_ignored') ?></option>
                             </select>

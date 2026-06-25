@@ -81,9 +81,6 @@ describe('multi_word_modal.ts', () => {
       expect(typeof component.init).toBe('function');
       expect(typeof component.close).toBe('function');
       expect(typeof component.save).toBe('function');
-      expect(typeof component.setStatus).toBe('function');
-      expect(typeof component.isCurrentStatus).toBe('function');
-      expect(typeof component.getStatusButtonClass).toBe('function');
     });
 
     describe('store getter', () => {
@@ -163,25 +160,8 @@ describe('multi_word_modal.ts', () => {
       });
     });
 
-    describe('statuses getter', () => {
-      it('returns array of 5 status options', () => {
-        const component = multiWordModalData();
-
-        expect(component.statuses).toHaveLength(5);
-        expect(component.statuses[0]).toEqual({
-          value: 1,
-          label: 'Learning (1)',
-          abbr: '1',
-          class: 'is-danger'
-        });
-        expect(component.statuses[4]).toEqual({
-          value: 5,
-          label: 'Learned',
-          abbr: '5',
-          class: 'is-success'
-        });
-      });
-    });
+    // The status picker was removed (issue #238): new multi-word expressions
+    // start as Learning and the level 1-5 is then derived from FSRS.
 
     describe('close', () => {
       it('calls store.close()', () => {
@@ -212,83 +192,6 @@ describe('multi_word_modal.ts', () => {
 
         expect(mockStore.save).toHaveBeenCalled();
         expect(mockStore.reset).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('setStatus', () => {
-      it('sets store.formData.status to provided value', () => {
-        const component = multiWordModalData();
-
-        component.setStatus(3);
-
-        expect(mockStore.formData.status).toBe(3);
-      });
-
-      it('can set any status value 1-5', () => {
-        const component = multiWordModalData();
-
-        for (const status of [1, 2, 3, 4, 5]) {
-          component.setStatus(status);
-          expect(mockStore.formData.status).toBe(status);
-        }
-      });
-    });
-
-    describe('isCurrentStatus', () => {
-      it('returns true when status matches current', () => {
-        mockStore.formData.status = 2;
-        const component = multiWordModalData();
-
-        expect(component.isCurrentStatus(2)).toBe(true);
-      });
-
-      it('returns false when status does not match current', () => {
-        mockStore.formData.status = 2;
-        const component = multiWordModalData();
-
-        expect(component.isCurrentStatus(1)).toBe(false);
-        expect(component.isCurrentStatus(3)).toBe(false);
-      });
-    });
-
-    describe('getStatusButtonClass', () => {
-      it('returns active class for current status', () => {
-        mockStore.formData.status = 1;
-        const component = multiWordModalData();
-
-        const className = component.getStatusButtonClass(1);
-
-        expect(className).toBe('button is-small is-danger');
-        expect(className).not.toContain('is-outlined');
-      });
-
-      it('returns outlined class for non-current status', () => {
-        mockStore.formData.status = 1;
-        const component = multiWordModalData();
-
-        const className = component.getStatusButtonClass(2);
-
-        expect(className).toBe('button is-small is-outlined is-warning');
-      });
-
-      it('returns correct color class for each status', () => {
-        mockStore.formData.status = 0; // Set to non-matching status
-        const component = multiWordModalData();
-
-        expect(component.getStatusButtonClass(1)).toContain('is-danger');
-        expect(component.getStatusButtonClass(2)).toContain('is-warning');
-        expect(component.getStatusButtonClass(3)).toContain('is-info');
-        expect(component.getStatusButtonClass(4)).toContain('is-primary');
-        expect(component.getStatusButtonClass(5)).toContain('is-success');
-      });
-
-      it('handles unknown status gracefully', () => {
-        mockStore.formData.status = 0;
-        const component = multiWordModalData();
-
-        const className = component.getStatusButtonClass(99);
-
-        expect(className).toBe('button is-small is-outlined ');
       });
     });
 

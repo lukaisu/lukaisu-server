@@ -227,19 +227,23 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
   // ===========================================================================
 
   describe('Form Rendering', () => {
-    it('renders all status options', async () => {
+    it('renders only the settable status options (issue #238)', async () => {
       await openTermEditModal(1, 5, 123);
 
       const lastCall = vi.mocked(openModal).mock.calls.slice(-1)[0];
       const formHtml = lastCall[0];
 
-      expect(formHtml).toContain('value="1"');
-      expect(formHtml).toContain('value="2"');
-      expect(formHtml).toContain('value="3"');
-      expect(formHtml).toContain('value="4"');
-      expect(formHtml).toContain('value="5"');
+      // Learning level 1-5 is derived from FSRS, not hand-set: only Learning /
+      // Well-known / Ignored are offered.
       expect(formHtml).toContain('value="99"');
       expect(formHtml).toContain('value="98"');
+      expect(formHtml).toContain('Learning');
+      expect(formHtml).toContain('Well Known');
+      expect(formHtml).toContain('Ignored');
+      // No granular learning-level picker.
+      expect(formHtml).not.toContain('value="2"');
+      expect(formHtml).not.toContain('value="4"');
+      expect(formHtml).not.toContain('value="5"');
     });
 
     it('pre-selects current status', async () => {
@@ -400,19 +404,19 @@ describe('modules/vocabulary/components/term_edit_modal.ts', () => {
   // ===========================================================================
 
   describe('Status Constants', () => {
-    it('includes all learning statuses', async () => {
+    it('offers only the settable statuses (issue #238)', async () => {
       await openTermEditModal(1, 5, 123);
 
       const lastCall = vi.mocked(openModal).mock.calls.slice(-1)[0];
       const formHtml = lastCall[0];
 
-      expect(formHtml).toContain('Learning (1)');
-      expect(formHtml).toContain('Learning (2)');
-      expect(formHtml).toContain('Learning (3)');
-      expect(formHtml).toContain('Learning (4)');
-      expect(formHtml).toContain('Learned');
+      expect(formHtml).toContain('Learning');
       expect(formHtml).toContain('Well Known');
       expect(formHtml).toContain('Ignored');
+      // The granular learning-level labels are gone (status 1-5 is derived).
+      expect(formHtml).not.toContain('Learning (2)');
+      expect(formHtml).not.toContain('Learning (3)');
+      expect(formHtml).not.toContain('Learned');
     });
   });
 

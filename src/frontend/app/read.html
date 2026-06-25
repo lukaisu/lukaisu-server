@@ -390,19 +390,18 @@
             </div>
           </template>
 
-          <!-- Status buttons for known words -->
+          <!-- Status actions for known words. Learning level 1-5 is derived
+               from FSRS (read-only); only Learning / Well-known / Ignored are
+               settable (issue #238). -->
           <template x-if="!isUnknown">
             <div class="mb-2">
               <div class="buttons are-small mb-0">
-                <template x-for="s in [1,2,3,4,5]" :key="s">
-                  <button
-                    class="button"
-                    :class="getStatusButtonClass(s)"
-                    :disabled="isLoading"
-                    @click="setStatus(s)"
-                    x-text="s"
-                  ></button>
-                </template>
+                <button
+                  class="button"
+                  :class="getStatusButtonClass(1)"
+                  :disabled="isLoading"
+                  @click="setStatus(1)"
+                >Learning</button>
                 <button
                   class="button"
                   :class="isCurrentStatus(99) ? 'is-success' : 'is-outlined is-success'"
@@ -536,20 +535,19 @@
               </div>
             </template>
 
-            <!-- Status buttons for known words -->
+            <!-- Status actions for known words. Learning level 1-5 is derived
+                 from FSRS (read-only); only Learning / Well-known / Ignored are
+                 settable (issue #238). -->
             <template x-if="!isUnknown">
               <div class="mb-4">
                 <p class="is-size-7 has-text-grey mb-2">Status:</p>
                 <div class="buttons are-small">
-                  <template x-for="s in [1,2,3,4,5]" :key="s">
-                    <button
-                      class="button"
-                      :class="getStatusButtonClass(s)"
-                      :disabled="isLoading"
-                      @click="setStatus(s)"
-                      x-text="s"
-                    ></button>
-                  </template>
+                  <button
+                    class="button"
+                    :class="getStatusButtonClass(1)"
+                    :disabled="isLoading"
+                    @click="setStatus(1)"
+                  >Learning</button>
                   <button
                     class="button"
                     :class="isCurrentStatus(99) ? 'is-success' : 'is-outlined is-success'"
@@ -946,22 +944,8 @@
               <p class="help">Use {curly braces} around the term</p>
             </div>
 
-            <!-- Status (1-5 only for multi-words) -->
-            <div class="field">
-              <label class="label is-small">Status</label>
-              <div class="buttons are-small">
-                <template x-for="s in statuses" :key="s.value">
-                  <button
-                    type="button"
-                    class="button"
-                    :class="getStatusButtonClass(s.value)"
-                    @click="setStatus(s.value)"
-                    x-text="s.abbr"
-                    :title="s.label"
-                  ></button>
-                </template>
-              </div>
-            </div>
+            <!-- New multi-word expressions start as Learning; the level 1-5 is
+                 then derived from FSRS, not hand-set (issue #238). -->
 
             <!-- Action buttons -->
             <div class="field is-grouped mt-5">
