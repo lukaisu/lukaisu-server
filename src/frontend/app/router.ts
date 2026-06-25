@@ -41,6 +41,9 @@ export const pageUrl = {
   newLanguage(): string {
     return 'language.html';
   },
+  editLanguage(langId: number | string): string {
+    return `language-edit.html?id=${encodeURIComponent(String(langId))}`;
+  },
   newText(): string {
     return 'text.html';
   },
@@ -75,11 +78,14 @@ export function bundledPageFor(path: string): string | null {
   if (pathname === '/texts/new') {
     return pageUrl.newText();
   }
-  // Languages list. Note: the single-language edit form (/languages/{id}/edit)
-  // is not bundled yet (Job A page 4), so it intentionally falls through to the
-  // remote server; only the literal list path maps here.
+  // Languages list, and the per-language settings form reached from its Edit
+  // links (/languages/{id}/edit -> language-edit.html?id={id}).
   if (pathname === '/languages') {
     return pageUrl.languages();
+  }
+  const langEditMatch = pathname.match(/^\/languages\/(\d+)\/edit$/);
+  if (langEditMatch) {
+    return pageUrl.editLanguage(langEditMatch[1]);
   }
   // Single-term edit form: /words/{id}/edit -> word.html?id={id}. Must precede
   // the list mapping below (which matches the literal /words/edit, not this).

@@ -9,10 +9,12 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Pages 1–3 landed
+> (`read`/`review`/`library`/connect + minimal create). **Pages 1–4 landed
 > 2026-06-25:** the terms list (`words.html`), the term **edit** form
-> (`word.html`), and the languages list (`languages.html`). Pages 4–11 are the
-> remaining Job-A work. (Page 2's "new term" half is deferred — see its table note.)
+> (`word.html`), the languages list (`languages.html`), and the language
+> **settings** form (`language-edit.html`). Pages 5–11 are the remaining Job-A
+> work. (Page 2's "new term" and page 4's standalone wizard halves are deferred —
+> see their table notes.)
 
 ## The shape of the problem
 
@@ -85,7 +87,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 | 1 ✅ | `words.html` (terms list) — **landed** | `Vocabulary/list_alpine`, `list_filter`, `show`, `*_result` | `vocabulary/pages/word_list_app.ts` | ✅ `terms/list`, `filter-options`, `bulk-action`, `inline-edit`, `for-edit` all in local router | mount |
 | 2 ½ | `word.html` (term **edit**) — **landed**; **new deferred** | `Vocabulary/form_edit_existing/_new/_term`, `edit_*_result` | purpose-built form (like `text.ts`) | ✅ load+save+delete offline (added `GET /terms/{id}`); ⚠️ **new term not bundled** | form |
 | 3 ✅ | `languages.html` (list) — **landed** | `Language/index` | `languageList` component (`language_list_component.ts`) | ✅ list/set-default/reparse/delete all in local router | mount |
-| 4 | `language-edit.html` (settings + wizard) | `Language/form`, `wizard` | `language/pages/language_form.ts`, `language_wizard.ts` | ✅ create/update/`definitions` | mount |
+| 4 ✅ | `language-edit.html` (settings) — landed; **wizard deferred** | `Language/form` (`wizard` → see note) | purpose-built form (like `word.ts`) | ✅ load+save offline (`GET`/`PUT /languages/{id}`) | form |
 | 5 | `texts.html` (manage + archived) | `Text/edit_list`, `archived_list` | `text/pages/texts_grouped_app.ts`, `archived_texts_grouped_app.ts` | ⚠️ list ✅; **add text delete + archive/unarchive repos** (router has `/texts`, `/texts/bulk-action` only) | mount + data |
 | 6 | `text-edit.html` (full edit) | `Text/edit_form` (full), `archived_form` | `text/pages/*` | ✅ `texts` PUT; importers stay server | form |
 | 7 | `tags.html` (term + text tags) | `Tags/tag_list`, `tag_form` | `tags/pages/tag_list.ts` | ⚠️ **tags repo is read-only — add create/rename/delete + POST/PUT/DELETE `/tags` arms** | mount + data |
@@ -175,6 +177,40 @@ local-first router already serves every endpoint `languageList` touches (`GET
    (`POST /languages/{id}/set-default` on-device), all at `apiAttempts === 0`.
 
 **PHP deletion deferred** to the cut-over, same as pages 1–2.
+
+### Page 4: `language-edit.html` (language settings) — ✅ done 2026-06-25; **wizard deferred**
+
+Built as a **purpose-built API-client form** (like `word.ts`/`language.ts`), *not*
+a prerender-and-mount. The table optimistically said "mount `language_form.ts`", but
+that component is the **legacy** behavior: `form.php` is a native `<form method="post"
+action="/languages/{id}/edit" op="Change">`, and `language_form.ts` only does
+client-side validation before letting the native POST through — it never touches the
+API. So mounting it offline would dead-submit, exactly the page-2 lesson. Reached from
+the languages list's Edit links (`/languages/{id}/edit` → `language-edit.html?id=N`):
+loads the language (`GET /languages/{id}` → `getLanguage`), edits its fields, saves
+(`PUT /languages/{id}` → `updateLanguage`, which also re-parses the language's texts) —
+all on-device (offline E2E asserts `apiAttempts === 0`).
+
+- **Zero data-layer work** — the local router already served both `GET` and `PUT
+  /languages/{id}`. The doc's "✅ create/update" held here (unlike page 2, where
+  `GET /terms/{id}` was missing).
+- **Scope = the round-tripping fields.** The form carries exactly `LanguageFull` /
+  the update request (name, dict 1/2 URIs + popups, translator URI + popup,
+  source/target codes, text size, character substitutions, the three parsing
+  regexes, the four script checkboxes, export template, TTS JSON). Left out are the
+  genuinely **server-enhanced** bits of `form.php`: the local-dictionaries table +
+  import (Job B), the parser-type picker and local-dict lookup mode (no on-device
+  contract — neither is in `LanguageFull`), and the live TTS check/test buttons
+  (outbound network). Dictionary popups + the target code are *sent* (so they persist
+  in server-backed mode) but the offline store drops them — they load blank and are
+  never clobbered, the same graceful degradation as word.ts's notes/tags.
+- **The standalone wizard (`wizard.php`) is NOT separately bundled.** Its job —
+  picking L1/L2 to seed a *new* language's settings — is already served by the
+  bundled "add a language" page (`language.html`), whose preset dropdown fills the
+  same fields offline. `form.php`'s `?wizard=1` hand-off path (sessionStorage) is a
+  server-form mechanism with no role in the bundle. Revisit only if a richer
+  guided-setup flow is wanted on-device.
+- **PHP deletion deferred** to the cut-over, same as pages 1–3.
 
 ## The cut-over (the payoff — do after Job A pages 1–8)
 

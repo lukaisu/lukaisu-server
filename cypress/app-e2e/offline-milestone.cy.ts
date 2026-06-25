@@ -181,6 +181,46 @@ describe('offline milestone — bundled app, no server', () => {
     });
   });
 
+  it('edits a language in the settings form and saves, with no server', () => {
+    // 1. Boot offline -> library (seeds the starter languages).
+    cy.clearLocalStorage();
+    cy.visit('/index.html');
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+
+    // 2. Open the languages list, then the per-row Edit link, which the link
+    //    router maps /languages/{id}/edit -> language-edit.html?id={id}.
+    cy.visit('/languages.html');
+    cy.get('table.is-fullwidth tbody tr', { timeout: 20000 })
+      .its('length').should('be.greaterThan', 0);
+    cy.get('table.is-fullwidth tbody tr').first().find('a[title="Edit"]').click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'language-edit.html');
+
+    // 3. The form loaded the language from IndexedDB (GET /languages/{id}); the
+    //    name prefilled.
+    cy.get('#language-edit-form', { timeout: 20000 }).should('be.visible');
+    cy.get('#le-name').invoke('val').should('not.be.empty');
+
+    // 4. Edit a round-tripping field (text size) and save (PUT /languages/{id} ->
+    //    updateLanguage, which also reparses the texts), all on-device.
+    cy.get('#le-text-size').clear().type('150');
+    cy.get('#le-submit').click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'languages.html');
+
+    // 5. Re-open the same language's edit form; the new size persisted in
+    //    IndexedDB.
+    cy.get('table.is-fullwidth tbody tr', { timeout: 20000 })
+      .first().find('a[title="Edit"]').click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'language-edit.html');
+    cy.get('#le-text-size', { timeout: 20000 }).should('have.value', '150');
+    cy.screenshot('08-language-edited', { capture: 'viewport' });
+
+    // 6. The whole edit flow ran on-device.
+    cy.then(() => {
+      cy.log(`/api/v1 calls attempted during the language edit flow: ${apiAttempts}`);
+      expect(apiAttempts, 'no /api/v1 calls — the language edit form is fully on-device').to.equal(0);
+    });
+  });
+
   it('creates a language and pastes a text with no server', () => {
     cy.clearLocalStorage();
     // Unique name so the spec is re-runnable against a persisted IndexedDB.
