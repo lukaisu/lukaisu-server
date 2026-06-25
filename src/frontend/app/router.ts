@@ -40,6 +40,9 @@ export const pageUrl = {
   },
   newText(): string {
     return 'text.html';
+  },
+  words(query = ''): string {
+    return query ? `words.html?${query}` : 'words.html';
   }
 };
 
@@ -65,6 +68,11 @@ export function bundledPageFor(path: string): string | null {
   }
   if (pathname === '/texts/new') {
     return pageUrl.newText();
+  }
+  // Terms list: both /words and the legacy /words/edit render the same Alpine
+  // SPA. Carry the query through (the list reads `lang` from it).
+  if (pathname === '/words' || pathname === '/words/edit') {
+    return pageUrl.words(query);
   }
   // /text/{id}/read
   const readMatch = pathname.match(/^\/text\/(\d+)\/read$/);

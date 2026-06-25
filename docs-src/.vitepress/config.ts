@@ -55,7 +55,8 @@ export default defineConfig({
             { text: 'Local-First Migration', link: '/server/local-first' },
             { text: 'Edge HTTP Contract', link: '/server/http-contract' },
             { text: 'Sync Contract (design)', link: '/server/sync-contract' },
-            { text: 'Auth (design note)', link: '/server/auth' }
+            { text: 'Auth (design note)', link: '/server/auth' },
+            { text: 'PHP View Retirement (plan)', link: '/server/php-view-retirement' }
           ]
         }
       ],

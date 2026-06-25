@@ -75,6 +75,40 @@ describe('offline milestone — bundled app, no server', () => {
     });
   });
 
+  it('lists saved terms and edits one inline, with no server', () => {
+    // 1. Boot offline -> library -> open a text and save a word, so the on-device
+    //    terms store has a row for the list to show (the seed ships no terms).
+    cy.clearLocalStorage();
+    cy.visit('/index.html');
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+    cy.get('a[href*="/read"]', { timeout: 20000 }).first().click();
+    cy.location('pathname').should('include', 'read.html');
+    cy.get('.word.status0', { timeout: 20000 }).first().click();
+    cy.get('.word-popover', { timeout: 10000 }).should('be.visible');
+    cy.get('.word-popover').find('button.is-success').filter(':visible').first().click();
+    cy.get('.word.status99', { timeout: 10000 }).its('length').should('be.greaterThan', 0);
+
+    // 2. The bundled terms list (words.html) renders that term entirely from
+    //    IndexedDB — both /words and /words/edit route here via bundledPageFor().
+    cy.visit('/words.html');
+    cy.get('#word-list-config', { timeout: 20000 }).should('exist');
+    cy.get('.clickedit:visible', { timeout: 20000 }).its('length').should('be.greaterThan', 0);
+
+    // 3. Inline-edit a translation offline: open the editor, type, save; the cell
+    //    reflects the new value (PUT /terms/{id}/inline-edit served on-device).
+    cy.get('.clickedit:visible').first().click();
+    cy.get('textarea:visible', { timeout: 10000 }).first().clear().type('e2e-offline-gloss');
+    cy.get('button.is-success:visible').first().click();
+    cy.contains('e2e-offline-gloss', { timeout: 10000 }).should('exist');
+    cy.screenshot('05-terms-list-inline-edit', { capture: 'viewport' });
+
+    // 4. The whole list + edit flow ran on-device.
+    cy.then(() => {
+      cy.log(`/api/v1 calls attempted during the terms flow: ${apiAttempts}`);
+      expect(apiAttempts, 'no /api/v1 calls — the terms list is fully on-device').to.equal(0);
+    });
+  });
+
   it('creates a language and pastes a text with no server', () => {
     cy.clearLocalStorage();
     // Unique name so the spec is re-runnable against a persisted IndexedDB.

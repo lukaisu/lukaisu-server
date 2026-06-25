@@ -81,6 +81,13 @@ The end state is a small Python service. Get there in this order:
 > server-rendered forms do native POSTs and can't run offline). CJK still falls
 > back to the on-device character parser when no server is connected, per the
 > degradation rule.
+>
+> **Rendering hollow-out underway (Job A).** The first management page is now
+> bundled: the **terms list** (`src/frontend/app/words.html`, prerendered from the
+> PHP view by `build/prerender-app-view.php`) lists and inline-edits terms fully
+> offline (asserted `apiAttempts === 0`). The PHP `/words` view is **kept** — it
+> still backs the server's own PWA — and is deleted at the cut-over, not now. Plan
+> + per-view checklist: `docs-src/server/php-view-retirement.md`.
 
 1. **Make the NLP service stand alone.** The Python NLP service (the `nlp`
    Docker service — verify its exact location; the Dockerfile copies an `app/`,
@@ -187,7 +194,9 @@ diverging copies.
 - **Server-side design docs:** `docs-src/server/` — `http-contract.md` (the
   optional NLP/outbound HTTP surface), `local-first.md` (the offline
   architecture and four-bucket seam), `sync-contract.md` (the design-only sync
-  model and conflict strategy), `auth.md` (the design-only auth model).
+  model and conflict strategy), `auth.md` (the design-only auth model),
+  `php-view-retirement.md` (the plan + per-view checklist for moving rendering
+  off PHP — *Rendering hollow-out* made concrete).
 
 ## Out of scope (for the F-Droid milestone)
 
