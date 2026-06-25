@@ -15,7 +15,7 @@ SET @db = DATABASE();
 -- WoID -> id
 SET @old = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = @db AND table_name = 'words' AND column_name = 'WoID');
 SET @new = (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = @db AND table_name = 'words' AND column_name = 'id');
-SET @sql = IF(@old > 0 AND @new = 0, 'ALTER TABLE words CHANGE COLUMN WoID id int(11) unsigned NOT NULL AUTO_INCREMENT', IF(@old > 0 AND @new > 0, 'ALTER TABLE words DROP COLUMN WoID', 'SELECT 1'));
+SET @sql = IF(@old > 0 AND @new = 0, 'ALTER TABLE words CHANGE COLUMN WoID id mediumint(8) unsigned NOT NULL AUTO_INCREMENT', IF(@old > 0 AND @new > 0, 'ALTER TABLE words DROP COLUMN WoID', 'SELECT 1'));
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
