@@ -53,6 +53,9 @@ export const pageUrl = {
   editText(textId: number | string): string {
     return `text-edit.html?id=${encodeURIComponent(String(textId))}`;
   },
+  textCheck(): string {
+    return 'text-check.html';
+  },
   tags(): string {
     return 'tags.html';
   },
@@ -94,6 +97,12 @@ export function bundledPageFor(path: string): string | null {
   // card (/text/archived?query=&page=1) and the navbar.
   if (pathname === '/text/archived') {
     return pageUrl.archivedTexts();
+  }
+  // Parse-preview tool, reached from the navbar's "Check a text" link
+  // (/text/check). The server form does a native POST; the bundle parses
+  // on-device instead.
+  if (pathname === '/text/check') {
+    return pageUrl.textCheck();
   }
   // Single-text edit form, reached from both lists' Edit links: /texts/{id}/edit
   // (active, from library.html) and /text/archived/{id}/edit (archived, from

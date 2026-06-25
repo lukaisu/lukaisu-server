@@ -31,6 +31,7 @@ import {
   getAudioInfo,
   getText,
   updateText,
+  checkText,
   createText,
   getStatistics,
   getTextsByLanguage,
@@ -338,6 +339,11 @@ async function routePost(path: string, p: Record<string, unknown>): Promise<Loca
         tags: Array.isArray(p.tags) ? (p.tags as string[]) : undefined,
       })
     );
+  }
+  if (path === '/texts/check') {
+    // Parse-preview ("check a text"). Local-first only — the server's
+    // /text/check is a native web-route form, not /api/v1.
+    return wrap(await checkText({ langId: num(p.langId ?? p.language_id), text: str(p.text) }));
   }
   m = path.match(/^\/texts\/(\d+)\/archive$/);
   if (m) {

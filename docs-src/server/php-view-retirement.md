@@ -9,17 +9,17 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Pages 1–8 landed
+> (`read`/`review`/`library`/connect + minimal create). **Pages 1–9 landed
 > 2026-06-25:** the terms list (`words.html`), the term **edit** form
 > (`word.html`), the languages list (`languages.html`), the language
 > **settings** form (`language-edit.html`), the **archived texts** page
 > (`texts.html`), the **text edit** form (`text-edit.html`), the **tags**
-> management page (`tags.html`), and the **preferences** page (`settings.html`).
-> **This completes the critical path to the cut-over** (pages 5–8); pages 9–11
-> are the remaining *optional* Job-A work. (Page 2's "new term"
-> and page 4's standalone wizard halves are deferred — see their table notes;
-> page 5's *active* manage half was already bundled as `library.html` — see its
-> subsection.)
+> management page (`tags.html`), the **preferences** page (`settings.html`), and
+> the **parse-preview** tool (`text-check.html`). Pages 5–8 completed **the
+> critical path to the cut-over**; page 9 is the first of the *optional* Job-A
+> pages, leaving 10–11. (Page 2's "new term" and page 4's standalone wizard
+> halves are deferred — see their table notes; page 5's *active* manage half was
+> already bundled as `library.html` — see its subsection.)
 
 ## The shape of the problem
 
@@ -97,7 +97,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 | 6 ✅ | `text-edit.html` (full edit) — **landed** | `Text/edit_form` (full), `archived_form` | purpose-built form (like `word.ts`) | ✅ added local `GET`/`PUT /texts/{id}` (re-parse on body/lang change); importers stay server | form |
 | 7 ✅ | `tags.html` (term + text tags) — **landed** | `Tags/tag_list`, `tag_form` | purpose-built form (legacy `tag_list.ts` is native-nav, not mountable) | ✅ added local `GET /tags/manage` + `PUT`/`DELETE /tags/{term,text}/{id}` (rename/delete; create-on-tagging keeps working) | form + data |
 | 8 ✅ | `settings.html` (preferences) — **landed** | `User/preferences` (`Admin/settings_form` is server-only) | purpose-built form (like `language-edit.ts`; `settings_form.ts` is form-glue, not data-binding) | ✅ default language fully offline (`POST /settings` `currentlanguage`→`setCurrentLanguageId`); interface language server-only (offline ships English); the rest of `preferences.php` is server-consumed (deferred) | form |
-| 9 | `text-check.html` (parse preview) | `Text/check_form` | `text/pages/text_check_display.ts` | ✅ uses local parser (`text-assembly.ts`) directly | mount (optional) |
+| 9 ✅ | `text-check.html` (parse preview) — **landed** | `Text/check_form` | purpose-built page (legacy `text_check_display.ts` is a server-driven auto-init reader, not mountable) | ✅ added local `POST /texts/check` → `checkText` (on-device tokenizer); multi-word matching stays server-enhanced | form + data |
 | 10 | `home.html` (dashboard) | `Home/index`, `helpers` | `js/home/home_app.ts` | ✅ `navbar`, `activity/streak`; content suggestions are server-enhanced | mount (optional) |
 | 11 | `text-print.html` (print/annotate) | `Text/print_alpine`, `display_*` | `text/pages/text_print_app.ts` | ⚠️ annotations storage — confirm; low priority | mount (optional) |
 
@@ -383,6 +383,37 @@ needs none — it reads the current default via `GET /languages`'s
    picker asserted disabled offline.
 
 - **PHP deletion deferred** to the cut-over, same as pages 1–7.
+
+### Page 9: `text-check.html` (parse preview) — ✅ done 2026-06-25
+
+A **purpose-built API-client page**, not a mount — the table's "reuse
+`text_check_display.ts`" didn't survive contact: that component is a *server-
+driven* auto-init reader that renders a JSON config the PHP server pre-computed,
+and `check_form.php` itself does a native POST to `/text/check`. Neither runs
+offline. So this is a small diagnostic page — pick a language, paste a text, hit
+**Check** — that parses the text **on-device** and reports the same statistics
+the server's "check a text" tool does: the reconstructed sentences, and the
+distinct **word** / **non-word** tokens with their occurrence counts. Words you
+already know (saved with a translation) are highlighted, mirroring the server's
+"red = already saved". Nothing is persisted — it is read-only.
+
+- **Data-layer gap closed.** Added `checkText()` to the texts repo (it tokenizes
+  via the existing local parser — `parseText` + `languageToParserConfig` — and
+  groups tokens exactly as the server's `checkValid` / `displayStatistics` do)
+  and a `POST /texts/check` arm to the local router, with a `TextsApi.check`
+  wrapper. This mirrors `TextParsingPersistence::checkValid`'s output shape
+  (`[word, count, translation]` / `[nonword, count]`) so the on-device preview
+  reads identically.
+- **Local-first only**, like pages 5–8's per-resource arms: the server exposes
+  `/text/check` only as a web-route form (no `/api/v1`, PHP frozen), so in
+  server-backed mode the `/text/check` link still reaches the server's own form.
+- **Multi-word matching stays server-enhanced.** Multi-word terms are never
+  *created* on-device, so the offline preview reports no expressions
+  (`multiWords` is always empty) rather than replicating the server's
+  `tempexprs` expression-matching. The genuinely useful core — sentences + word
+  / non-word lists + known-word marking — is fully faithful. Reached by direct
+  path (the navbar surfaces no "Check" link), like `tags.html`.
+- **PHP deletion deferred** to the cut-over, same as pages 1–8.
 
 ## The cut-over (the payoff — do after Job A pages 1–8)
 

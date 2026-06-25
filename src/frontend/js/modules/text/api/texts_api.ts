@@ -228,6 +228,40 @@ export interface TextUpdateResponse {
 }
 
 /**
+ * Request to preview how a raw text parses for a language (the "check a text"
+ * tool). Local-first only: the PHP server exposes this only as a web-route form
+ * (`POST /text/check`, a native submit), not `/api/v1`, so it is served from the
+ * on-device tokenizer and has no remote counterpart.
+ */
+export interface TextCheckRequest {
+  langId: number;
+  text: string;
+}
+
+/** A word/expression row in a parse preview: `[textLc, occurrences, translation]`. */
+export type TextCheckWordRow = [string, number, string];
+
+/** A non-word row in a parse preview: `[textLc, occurrences]`. */
+export type TextCheckNonWordRow = [string, number];
+
+/**
+ * Parse-preview statistics for a text, mirroring the server's "check a text"
+ * output: the reconstructed sentences, and the distinct word / non-word tokens
+ * with their occurrence counts. Each word carries its saved translation (or `''`
+ * when unknown, which the UI flags as "already saved" / red). `multiWords` is
+ * always empty offline — multi-word terms are not created on-device, so
+ * expression matching stays server-enhanced.
+ */
+export interface TextCheckResult {
+  sentences: string[];
+  words: TextCheckWordRow[];
+  multiWords: TextCheckWordRow[];
+  nonWords: TextCheckNonWordRow[];
+  rtlScript: boolean;
+  error?: string;
+}
+
+/**
  * Word data returned from mark-all operations.
  */
 export interface MarkedWordData {
@@ -379,6 +413,19 @@ export const TextsApi = {
       `/texts/${textId}`,
       data as unknown as Record<string, unknown>
     );
+  },
+
+  /**
+   * Preview how a raw text parses for a language — the "check a text" tool:
+   * sentences plus the distinct word / non-word tokens with occurrence counts
+   * and known-word translations. Local-first only (see {@link TextCheckRequest}).
+   *
+   * @param langId Language to parse with
+   * @param text   The raw text to check
+   * @returns Promise with the parse preview, or an error
+   */
+  async check(langId: number, text: string): Promise<ApiResponse<TextCheckResult>> {
+    return apiPost<TextCheckResult>('/texts/check', { langId, text });
   },
 
   /**

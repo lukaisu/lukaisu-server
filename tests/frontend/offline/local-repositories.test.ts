@@ -16,6 +16,7 @@ import {
   createText,
   getText,
   updateText,
+  checkText,
   getTextWords,
   getStatistics,
   markAllWellKnown,
@@ -32,6 +33,7 @@ import {
   deleteTerm,
   getTerm,
   setStatus,
+  addWithTranslation,
 } from '@shared/offline/local/repositories/terms';
 import {
   getReviewConfig,
@@ -266,6 +268,52 @@ describe('single text edit (text-edit.html)', () => {
     const res = await updateText(999999, { title: 'x', langId: 1, text: 'y' });
     expect(res.updated).toBe(false);
     expect(res.error).toBeTruthy();
+  });
+});
+
+describe('parse preview (text-check.html)', () => {
+  function ok(
+    res: Awaited<ReturnType<typeof checkText>>
+  ): Exclude<Awaited<ReturnType<typeof checkText>>, { error: string }> {
+    if ('error' in res) throw new Error(res.error);
+    return res;
+  }
+
+  it('reports sentences and distinct word counts without persisting anything', async () => {
+    const { langId } = await setupEnglishText();
+    const textsBefore = await localDb.texts.count();
+
+    const res = ok(await checkText({ langId, text: 'The cat sat. The cat ran.' }));
+
+    // Two sentences, reconstructed from the tokens.
+    expect(res.sentences.length).toBe(2);
+    expect(res.sentences.join(' ')).toContain('cat');
+
+    // "cat" occurs twice; "the" twice; "sat"/"ran" once each.
+    const cat = res.words.find((w) => w[0] === 'cat');
+    expect(cat).toEqual(['cat', 2, '']);
+    expect(res.words.find((w) => w[0] === 'sat')?.[1]).toBe(1);
+    // The non-word list captures punctuation/whitespace.
+    expect(res.nonWords.length).toBeGreaterThan(0);
+    // Expression matching stays server-enhanced.
+    expect(res.multiWords).toEqual([]);
+
+    // Checking is a read-only diagnostic — no new text was created.
+    expect(await localDb.texts.count()).toBe(textsBefore);
+  });
+
+  it('flags an already-saved word with its translation', async () => {
+    const { langId } = await setupEnglishText();
+    await addWithTranslation('cat', langId, 'gato');
+
+    const res = ok(await checkText({ langId, text: 'The cat sat.' }));
+    expect(res.words.find((w) => w[0] === 'cat')).toEqual(['cat', 1, 'gato']);
+    // An unsaved word carries no translation (renders un-highlighted).
+    expect(res.words.find((w) => w[0] === 'sat')?.[2]).toBe('');
+  });
+
+  it('errors on a missing language', async () => {
+    expect('error' in (await checkText({ langId: 999999, text: 'hi' }))).toBe(true);
   });
 });
 

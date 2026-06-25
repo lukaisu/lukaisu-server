@@ -80,6 +80,7 @@ export default defineConfig({
         languages: resolve(__dirname, 'src/frontend/app/languages.html'),
         'language-edit': resolve(__dirname, 'src/frontend/app/language-edit.html'),
         'text-edit': resolve(__dirname, 'src/frontend/app/text-edit.html'),
+        'text-check': resolve(__dirname, 'src/frontend/app/text-check.html'),
         tags: resolve(__dirname, 'src/frontend/app/tags.html'),
         texts: resolve(__dirname, 'src/frontend/app/texts.html'),
         settings: resolve(__dirname, 'src/frontend/app/settings.html')

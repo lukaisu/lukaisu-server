@@ -152,6 +152,18 @@ describe('local-first seam', () => {
     expect(reloaded.data?.tags).toEqual(['edited']);
   });
 
+  it('previews a parse through TextsApi.check (POST /texts/check)', async () => {
+    setLocalFirst(true);
+    await seedIfNeeded();
+    const text = await localDb.texts.toCollection().first();
+    const langId = text!.langId;
+
+    const res = await TextsApi.check(langId, 'The cat sat. The cat ran.');
+    expect(res.error).toBeUndefined();
+    expect(res.data?.sentences.length).toBe(2);
+    expect(res.data?.words.find((w) => w[0] === 'cat')?.[1]).toBe(2);
+  });
+
   it('serves the global navbar chrome from the local DB', async () => {
     setLocalFirst(true);
     await seedIfNeeded();

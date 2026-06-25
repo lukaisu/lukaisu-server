@@ -13,6 +13,7 @@ import {
   toLocalOccurrences,
   assembleTextWords,
   buildReadingConfig,
+  lowerCaseTerm,
 } from '../text-assembly';
 import {
   WordStatus,
@@ -30,6 +31,10 @@ import type {
   TextUpdateRequest,
   TextUpdateResponse,
   TextWordsResponse,
+  TextCheckRequest,
+  TextCheckResult,
+  TextCheckWordRow,
+  TextCheckNonWordRow,
   MarkAllResponse,
   MarkedWordData,
 } from '@modules/text/api/texts_api';
@@ -224,6 +229,79 @@ export async function getTextWords(
   return {
     words: assembleTextWords(occ, wordsById),
     config: buildReadingConfig(text, language),
+  };
+}
+
+/**
+ * Preview how a raw text parses for a language — the on-device equivalent of the
+ * server's "check a text" tool (`TextParsingPersistence::checkValid` +
+ * `displayStatistics`). Tokenizes with the local parser, then reports the
+ * reconstructed sentences and the distinct word / non-word tokens with their
+ * occurrence counts; each word carries its saved translation (`''` when unknown,
+ * which the UI flags as already-saved). Multi-word expression matching stays
+ * server-enhanced (multi-word terms are not created on-device), so `multiWords`
+ * is always empty here. Local-first only — the server's `/text/check` is a
+ * native web-route form, not `/api/v1`.
+ */
+export async function checkText(
+  req: TextCheckRequest
+): Promise<TextCheckResult | { error: string }> {
+  const language = await localDb.languages.get(req.langId);
+  if (!language) {
+    return { error: 'Language not found' };
+  }
+
+  const parse = parseText(req.text, languageToParserConfig(language));
+
+  // Reconstruct each sentence by concatenating its tokens in reading order,
+  // mirroring the server's GROUP_CONCAT(text ORDER BY position SEPARATOR '').
+  const sentenceText = new Map<number, string>();
+  for (const token of parse.tokens) {
+    sentenceText.set(
+      token.sentenceIndex,
+      (sentenceText.get(token.sentenceIndex) ?? '') + token.text
+    );
+  }
+  const sentences = [...sentenceText.keys()]
+    .sort((a, b) => a - b)
+    .map((i) => sentenceText.get(i) ?? '');
+
+  // Group distinct tokens (case-insensitively) into words vs non-words, the way
+  // the server GROUPs by LOWER(text) and splits on word_count.
+  const wordCounts = new Map<string, number>();
+  const nonWordCounts = new Map<string, number>();
+  for (const token of parse.tokens) {
+    const lc = lowerCaseTerm(token.text);
+    const bucket = token.isWord ? wordCounts : nonWordCounts;
+    bucket.set(lc, (bucket.get(lc) ?? 0) + 1);
+  }
+
+  // Saved-word translations for this language, to flag already-known words (the
+  // server's LEFT JOIN words ON text_lc). A blank translation is still "saved"
+  // but renders un-highlighted, matching the server's red = non-empty rule.
+  const transByLc = new Map<string, string>();
+  for (const w of await localDb.words
+    .where('langId')
+    .equals(req.langId)
+    .and((w) => w.deletedAt == null)
+    .toArray()) {
+    transByLc.set(w.textLc, w.translation ?? '');
+  }
+
+  const words: TextCheckWordRow[] = [...wordCounts.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([lc, count]): TextCheckWordRow => [lc, count, transByLc.get(lc) ?? '']);
+
+  const nonWords: TextCheckNonWordRow[] = [...nonWordCounts.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([lc, count]): TextCheckNonWordRow => [lc, count]);
+
+  return {
+    sentences,
+    words,
+    multiWords: [],
+    nonWords,
+    rtlScript: language.rightToLeft,
   };
 }
 
