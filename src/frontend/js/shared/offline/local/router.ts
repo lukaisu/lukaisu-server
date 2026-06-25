@@ -47,6 +47,7 @@ import {
   addWithTranslation,
   deleteTerm,
   getForEdit,
+  getTerm,
 } from './repositories/terms';
 import {
   getReviewConfig,
@@ -214,6 +215,12 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   }
   if (path === '/terms/filter-options') {
     return wrap(await getFilterOptions(p.language_id != null ? num(p.language_id) : null));
+  }
+  // Single term by id — backs the standalone edit form (word.html). Must come
+  // after the literal /terms/* paths above (none are all-digits, so no clash).
+  m = path.match(/^\/terms\/(\d+)$/);
+  if (m) {
+    return wrap(await getTerm(num(m[1])));
   }
   if (path === '/tags') {
     return wrap(await getAllTags());

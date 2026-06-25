@@ -20,6 +20,7 @@ import {
 } from './helpers';
 import { getWordTagNames } from './tags';
 import type {
+  Term,
   TermStatusResponse,
   TermQuickCreateResponse,
   TermTranslationResponse,
@@ -129,6 +130,35 @@ export async function createQuick(
   )) as number;
   await linkWordOccurrences(id, occ.langId, occ.textLc);
   return { term_id: id, term_lc: occ.textLc };
+}
+
+/**
+ * Load a single term's full editable data by id (backs `GET /terms/{id}`).
+ *
+ * Superset of the server's `GET /terms/{id}`, which omits `notes` and `tags`:
+ * offline we can return them so the standalone edit form (`word.html`) prefills
+ * every field on-device. In server-backed mode the server omits notes/tags *and*
+ * its PUT ignores them, so the form degrades gracefully without clobbering them.
+ */
+export async function getTerm(termId: number): Promise<Term | { error: string }> {
+  const word = await localDb.words.get(termId);
+  if (!word || word.id == null) {
+    return { error: 'Term not found' };
+  }
+  return {
+    id: word.id,
+    text: word.text,
+    textLc: word.textLc,
+    lemma: word.lemma,
+    lemmaLc: word.lemmaLc,
+    translation: word.translation,
+    romanization: word.romanization,
+    notes: word.notes,
+    sentence: word.sentence,
+    status: word.status,
+    langId: word.langId,
+    tags: await getWordTagNames(word.id),
+  };
 }
 
 /** Update an existing term's translation. */

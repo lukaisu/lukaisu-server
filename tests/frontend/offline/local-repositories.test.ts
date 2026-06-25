@@ -18,6 +18,9 @@ import {
 import {
   createQuick,
   createFull,
+  updateFull,
+  deleteTerm,
+  getTerm,
   setStatus,
 } from '@shared/offline/local/repositories/terms';
 import {
@@ -179,6 +182,62 @@ describe('review path', () => {
 
     const tomorrow = await getTomorrowCount('local', `lang:${langId}`);
     expect(tomorrow.count).toBe(0); // no translation -> never reviewable
+  });
+});
+
+describe('standalone term edit (word.html)', () => {
+  it('loads a term by id, round-trips a full edit, and deletes it', async () => {
+    const { textId } = await setupEnglishText();
+    const snapshot = words(await getTextWords(textId));
+    const cat = snapshot.words.find((w) => w.textLc === 'cat')!;
+
+    const full = await createFull({
+      textId,
+      position: cat.position,
+      translation: 'feline',
+      romanization: 'kat',
+      sentence: 'The {cat} sat.',
+      notes: 'a note',
+      status: 1,
+      tags: ['animal'],
+    });
+    const termId = full.term!.id;
+
+    // GET /terms/{id} returns the full editable shape — incl. notes + tags, which
+    // the form prefills (the server's GET omits them; offline we have them).
+    const loaded = await getTerm(termId);
+    if ('error' in loaded) {
+      throw new Error(loaded.error);
+    }
+    expect(loaded.text).toBe('cat');
+    expect(loaded.translation).toBe('feline');
+    expect(loaded.romanization).toBe('kat');
+    expect(loaded.notes).toBe('a note');
+    expect(loaded.status).toBe(1);
+    expect(loaded.tags).toEqual(['animal']);
+
+    // The form's save (updateFull) changes every field; reload reflects it.
+    await updateFull(termId, {
+      translation: 'a cat',
+      romanization: 'neko',
+      sentence: 'The {cat} ran.',
+      notes: 'updated',
+      lemma: 'cat',
+      status: 3,
+      tags: ['animal', 'noun'],
+    });
+    const after = await getTerm(termId);
+    if ('error' in after) {
+      throw new Error(after.error);
+    }
+    expect(after.translation).toBe('a cat');
+    expect(after.status).toBe(3);
+    expect(after.lemma).toBe('cat');
+    expect((after.tags ?? []).sort()).toEqual(['animal', 'noun']);
+
+    // The form's delete removes it; a subsequent load errors.
+    expect(await deleteTerm(termId)).toEqual({ deleted: true });
+    expect(await getTerm(termId)).toEqual({ error: 'Term not found' });
   });
 });
 

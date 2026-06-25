@@ -82,12 +82,15 @@ The end state is a small Python service. Get there in this order:
 > back to the on-device character parser when no server is connected, per the
 > degradation rule.
 >
-> **Rendering hollow-out underway (Job A).** The first management page is now
+> **Rendering hollow-out underway (Job A).** The first management pages are now
 > bundled: the **terms list** (`src/frontend/app/words.html`, prerendered from the
-> PHP view by `build/prerender-app-view.php`) lists and inline-edits terms fully
-> offline (asserted `apiAttempts === 0`). The PHP `/words` view is **kept** — it
-> still backs the server's own PWA — and is deleted at the cut-over, not now. Plan
-> + per-view checklist: `docs-src/server/php-view-retirement.md`.
+> PHP view by `build/prerender-app-view.php`) and the **term edit form**
+> (`word.html`, a purpose-built API form) list, inline-edit, full-edit and delete
+> terms fully offline (asserted `apiAttempts === 0`; closing this needed a new
+> on-device `GET /terms/{id}`). "New term" stays server-only (no offline create
+> contract). The PHP `/words*` views are **kept** — they still back the server's
+> own PWA — and are deleted at the cut-over, not now. Plan + per-view checklist:
+> `docs-src/server/php-view-retirement.md`.
 
 1. **Make the NLP service stand alone.** The Python NLP service (the `nlp`
    Docker service — verify its exact location; the Dockerfile copies an `app/`,

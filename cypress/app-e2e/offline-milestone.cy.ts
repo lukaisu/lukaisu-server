@@ -109,6 +109,46 @@ describe('offline milestone — bundled app, no server', () => {
     });
   });
 
+  it('edits a term in the standalone form and saves, with no server', () => {
+    const gloss = `gloss-${Date.now()}`;
+
+    // 1. Boot offline -> library -> open a text and save a word so a term exists.
+    cy.clearLocalStorage();
+    cy.visit('/index.html');
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+    cy.get('a[href*="/read"]', { timeout: 20000 }).first().click();
+    cy.location('pathname').should('include', 'read.html');
+    cy.get('.word.status0', { timeout: 20000 }).first().click();
+    cy.get('.word-popover', { timeout: 10000 }).should('be.visible');
+    cy.get('.word-popover').find('button.is-success').filter(':visible').first().click();
+    cy.get('.word.status99', { timeout: 10000 }).its('length').should('be.greaterThan', 0);
+
+    // 2. From the terms list, the per-row Edit link routes to word.html via
+    //    bundledPageFor (/words/{id}/edit -> word.html?id={id}).
+    cy.visit('/words.html');
+    cy.get('a[href*="/edit"]:visible', { timeout: 20000 }).first().click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'word.html');
+
+    // 3. The form loaded the term from IndexedDB (GET /terms/{id}); edit and save
+    //    (PUT /terms/{id} -> updateFull), all on-device.
+    cy.get('#word-edit-form', { timeout: 20000 }).should('be.visible');
+    cy.get('#we-translation').clear().type(gloss);
+    cy.get('#we-status').select('3');
+    cy.get('#we-notes').clear().type('seen in chapter 1');
+    cy.get('#we-submit').click();
+
+    // 4. Back on the terms list, the edited translation is persisted.
+    cy.location('pathname', { timeout: 20000 }).should('include', 'words.html');
+    cy.contains(gloss, { timeout: 20000 }).should('exist');
+    cy.screenshot('06-term-edited', { capture: 'viewport' });
+
+    // 5. The whole edit flow ran on-device.
+    cy.then(() => {
+      cy.log(`/api/v1 calls attempted during the edit flow: ${apiAttempts}`);
+      expect(apiAttempts, 'no /api/v1 calls — the term edit form is fully on-device').to.equal(0);
+    });
+  });
+
   it('creates a language and pastes a text with no server', () => {
     cy.clearLocalStorage();
     // Unique name so the spec is re-runnable against a persisted IndexedDB.

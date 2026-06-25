@@ -75,7 +75,8 @@ export default defineConfig({
         review: resolve(__dirname, 'src/frontend/app/review.html'),
         language: resolve(__dirname, 'src/frontend/app/language.html'),
         text: resolve(__dirname, 'src/frontend/app/text.html'),
-        words: resolve(__dirname, 'src/frontend/app/words.html')
+        words: resolve(__dirname, 'src/frontend/app/words.html'),
+        word: resolve(__dirname, 'src/frontend/app/word.html')
       }
     }
   }

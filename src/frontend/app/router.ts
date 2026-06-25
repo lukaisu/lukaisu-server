@@ -43,6 +43,9 @@ export const pageUrl = {
   },
   words(query = ''): string {
     return query ? `words.html?${query}` : 'words.html';
+  },
+  word(termId: number | string): string {
+    return `word.html?id=${encodeURIComponent(String(termId))}`;
   }
 };
 
@@ -68,6 +71,12 @@ export function bundledPageFor(path: string): string | null {
   }
   if (pathname === '/texts/new') {
     return pageUrl.newText();
+  }
+  // Single-term edit form: /words/{id}/edit -> word.html?id={id}. Must precede
+  // the list mapping below (which matches the literal /words/edit, not this).
+  const wordEditMatch = pathname.match(/^\/words\/(\d+)\/edit$/);
+  if (wordEditMatch) {
+    return pageUrl.word(wordEditMatch[1]);
   }
   // Terms list: both /words and the legacy /words/edit render the same Alpine
   // SPA. Carry the query through (the list reads `lang` from it).

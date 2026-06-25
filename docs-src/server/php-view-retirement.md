@@ -9,9 +9,10 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Page 1 — the terms
-> list (`words.html`) — landed 2026-06-25** (the pattern is locked; see *First
-> PR* below); pages 2–11 are the remaining Job-A work.
+> (`read`/`review`/`library`/connect + minimal create). **Pages 1–2 landed
+> 2026-06-25:** the terms list (`words.html`) and the term **edit** form
+> (`word.html`). Pages 3–11 are the remaining Job-A work. (Page 2's "new term"
+> half is deferred — see its table note.)
 
 ## The shape of the problem
 
@@ -82,7 +83,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 | # | New bundle page | Replaces (PHP views) | Reuse component | Offline data status | Template |
 |---|---|---|---|---|---|
 | 1 ✅ | `words.html` (terms list) — **landed** | `Vocabulary/list_alpine`, `list_filter`, `show`, `*_result` | `vocabulary/pages/word_list_app.ts` | ✅ `terms/list`, `filter-options`, `bulk-action`, `inline-edit`, `for-edit` all in local router | mount |
-| 2 | `word.html` (term new/edit) | `Vocabulary/form_new`, `form_edit_*`, `edit_*_result` | `vocabulary/pages/*` form parts | ✅ `terms/full`, `terms/quick`, `terms` PUT/DELETE | mount/form |
+| 2 ½ | `word.html` (term **edit**) — **landed**; **new deferred** | `Vocabulary/form_edit_existing/_new/_term`, `edit_*_result` | purpose-built form (like `text.ts`) | ✅ load+save+delete offline (added `GET /terms/{id}`); ⚠️ **new term not bundled** | form |
 | 3 | `languages.html` (list) | `Language/index` | `language/pages/language_list.ts` | ✅ languages CRUD + reparse | mount |
 | 4 | `language-edit.html` (settings + wizard) | `Language/form`, `wizard` | `language/pages/language_form.ts`, `language_wizard.ts` | ✅ create/update/`definitions` | mount |
 | 5 | `texts.html` (manage + archived) | `Text/edit_list`, `archived_list` | `text/pages/texts_grouped_app.ts`, `archived_texts_grouped_app.ts` | ⚠️ list ✅; **add text delete + archive/unarchive repos** (router has `/texts`, `/texts/bulk-action` only) | mount + data |
@@ -124,6 +125,29 @@ PWA from these views (`ViteHelper.php` present) — deleting now would 404 self-
 the transition" (`BRIEFING.md`). The bundle page and the PHP page **coexist** through
 Job A; the views are removed at the cut-over, when the PHP server's UI is itself
 cut over to the bundle. (This corrects the original step 6, which deleted too early.)
+
+### Page 2: `word.html` (term **edit**) — ✅ done 2026-06-25; **new term deferred**
+
+Built as a **purpose-built API-client form** (like `text.ts`/`language.ts`), not a
+prerender — the PHP `form_edit_*` views do native POSTs and render `*_result`
+fragments, neither of which runs offline. Reached from the terms list's per-row
+Edit link (`/words/{id}/edit` → `word.html?id=N`): loads the term, edits
+status/translation/romanization/lemma/sentence/notes/tags, saves (`updateFull`) or
+deletes — all on-device (offline E2E asserts `apiAttempts === 0`).
+
+- **Data-layer gap closed:** there was **no offline `GET /terms/{id}`** (routeGet
+  didn't handle it; the doc's earlier "✅" only covered *save*). Added
+  `getTerm()` to `repositories/terms.ts` + the route in `local/router.ts`. It is a
+  *superset* of the server's `GET /terms/{id}` (which omits `notes`/`tags`): offline
+  returns them so the form prefills; in server-backed mode the server omits them and
+  its `PUT` ignores them, so they degrade gracefully and are never clobbered.
+- **"New term" (`/words/new`) is NOT bundled.** There is no clean offline/`/api/v1`
+  contract for creating a *full* standalone term outside a text — `/terms/full`
+  requires a text occurrence, and server-side `/words/new` is a native form, not
+  JSON. Bundling it would need new API surface, and **PHP is frozen**. It stays
+  server-only (falls through, like today). Revisit if/when a `POST /terms` that
+  accepts full fields lands.
+- **PHP deletion deferred** to the cut-over, same as page 1.
 
 ## The cut-over (the payoff — do after Job A pages 1–8)
 
