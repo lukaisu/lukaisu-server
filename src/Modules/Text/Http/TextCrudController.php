@@ -603,6 +603,8 @@ class TextCrudController extends BaseController
 
         $activeLanguageId = (int) Settings::get('currentlanguage');
 
-        include self::MODULE_VIEWS . '/edit_list.php';
+        // Cut-over: the active texts list is served by the bundled client. GET
+        // /texts redirects to /app/library.html (see routes.php), so this path
+        // is unreachable; the PHP view (Text/Views/edit_list.php) was removed.
     }
 }

@@ -219,7 +219,9 @@ class LanguageController extends BaseController
         $currentLanguageId = (int) Settings::get('currentlanguage');
         $languages = $this->languageFacade->getLanguagesWithStats();
 
-        include __DIR__ . '/../Views/index.php';
+        // Cut-over: the languages list is served by the bundled client. GET
+        // /languages redirects to /app/languages.html (see routes.php), so this
+        // path is unreachable; the PHP view (Language/Views/index.php) was removed.
     }
 
     /**

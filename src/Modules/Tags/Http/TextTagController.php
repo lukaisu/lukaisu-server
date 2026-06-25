@@ -291,8 +291,11 @@ class TextTagController extends AbstractCrudController
         $currentSort = $this->currentSort;
         $isTextTag = true;
         $service = $this->facade; // Backward compatible variable name
+        unset($isTextTag, $service);
 
-        include __DIR__ . '/../Views/tag_list.php';
+        // Cut-over: text-tag management is served by the bundled client. GET
+        // /tags/text redirects to /app/tags.html (see routes.php), so this
+        // render path is unreachable; the PHP view (tag_list.php) was removed.
     }
 
     /**

@@ -223,8 +223,12 @@ class TextReadController extends BaseController
                 Settings::get('currentlanguage'),
                 '[Choose...]'
             );
+            unset($languageData, $languagesOption);
 
-            include self::MODULE_VIEWS . '/check_form.php';
+            // Cut-over: the parse-preview form is served by the bundled client.
+            // GET /text/check redirects to /app/text-check.html (see routes.php),
+            // so this render path is unreachable; the PHP view (check_form.php)
+            // was removed. (The POST `op=Check` branch above still echoes results.)
         }
 
         PageLayoutHelper::renderPageEnd();

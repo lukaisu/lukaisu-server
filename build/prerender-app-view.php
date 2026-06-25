@@ -28,43 +28,16 @@ declare(strict_types=1);
 namespace {
     $REPO = dirname(__DIR__);
 
-    /** Registered app pages: page id => view + shell metadata. */
-    $PAGES = [
-        'words' => [
-            'view' => 'src/Modules/Vocabulary/Views/list_alpine.php',
-            'title' => 'Terms',
-            'modules' => 'vocabulary,language',
-            'currentPage' => 'terms',
-            'entry' => './words.ts',
-            // Baked config defaults; overwritten at runtime by the page's TS via
-            // injectConfig(), so these only matter if the bundle JS fails to load.
-            'vars' => ['currentlang' => 0, 'perPage' => 50],
-        ],
-        'languages' => [
-            'view' => 'src/Modules/Language/Views/index.php',
-            'title' => 'Languages',
-            'modules' => 'language',
-            'currentPage' => 'languages',
-            'entry' => './languages.ts',
-            // The view reads everything it shows from the API at runtime; it needs
-            // no injected vars (only UrlUtilities::getBasePath(), stubbed below).
-            'vars' => [],
-        ],
-        'texts' => [
-            // Archived texts (the "active manage" half is already bundled as
-            // library.html, which mounts the same textsGroupedApp component).
-            'view' => 'src/Modules/Text/Views/archived_list.php',
-            'title' => 'Archived Texts',
-            'modules' => 'text',
-            'currentPage' => 'texts',
-            'entry' => './texts.ts',
-            // The grouped archived view loads its languages/texts from the API at
-            // runtime; only $message (status banner) and $activeLanguageId
-            // (default expansion) are templated, and texts.ts overwrites the
-            // latter via injectConfig().
-            'vars' => ['message' => '', 'activeLanguageId' => 0],
-        ],
-    ];
+    /**
+     * Registered app pages: page id => view + shell metadata.
+     *
+     * Empty since the Job-A cut-over: the three prerendered mount pages (words,
+     * languages, texts) had their source PHP views removed when the bundle
+     * became the server's UI, so the committed `src/frontend/app/*.html` are now
+     * the source of truth — they are no longer regenerated from PHP views. Add an
+     * entry here only to re-introduce a prerender-from-PHP-view page.
+     */
+    $PAGES = [];
 
     // --- English-locale-backed __() (namespace prefix selects the locale file).
     $GLOBALS['LOCALE'] = [];

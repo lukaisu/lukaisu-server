@@ -15,6 +15,7 @@
             <directory name="node_modules" />
             <directory name="assets" />
             <directory name="bin" />
+            <directory name="build" />
             <directory name="docs-src" />
             <directory name="src/tools" />
             <directory name="tests" />
@@ -52,7 +53,6 @@
                 <directory name="src/Modules/Book/Views" />
                 <directory name="src/Modules/Dictionary/Views" />
                 <directory name="src/Modules/Feed/Views" />
-                <directory name="src/Modules/Home/Views" />
                 <directory name="src/Modules/Language/Views" />
                 <directory name="src/Modules/Review/Views" />
                 <directory name="src/Modules/Tags/Views" />
@@ -68,7 +68,6 @@
                 <directory name="src/Modules/Dictionary/Infrastructure/Translation" />
                 <directory name="src/Modules/Book/Views" />
                 <directory name="src/Modules/Dictionary/Views" />
-                <directory name="src/Modules/Home/Views" />
                 <directory name="src/Modules/Tags/Views" />
                 <directory name="src/Modules/Vocabulary/Views" />
                 <directory name="src/Shared/UI/Assets" />
@@ -102,7 +101,6 @@
                 <directory name="src/Modules/Dictionary/Views" />
                 <directory name="src/Modules/Feed/Http" />
                 <directory name="src/Modules/Feed/Views" />
-                <directory name="src/Modules/Home/Views" />
                 <directory name="src/Modules/Language/Views" />
                 <directory name="src/Modules/Review/Views" />
                 <directory name="src/Modules/Tags/Views" />
@@ -120,7 +118,6 @@
                 <directory name="src/Modules/Dictionary/Infrastructure" />
                 <directory name="src/Modules/Feed/Views" />
                 <directory name="src/Modules/Feed/Application" />
-                <directory name="src/Modules/Home/Views" />
                 <directory name="src/Modules/Language/Views" />
                 <directory name="src/Modules/Review/Views" />
                 <directory name="src/Modules/Tags/Views" />
@@ -150,7 +147,6 @@
                 <directory name="src/Modules/Feed/Views" />
                 <directory name="src/Modules/Feed/Application" />
                 <directory name="src/Modules/Feed/Http" />
-                <directory name="src/Modules/Home/Views" />
                 <directory name="src/Modules/Language/Views" />
                 <directory name="src/Modules/Review/Views" />
                 <directory name="src/Modules/Tags/Views" />

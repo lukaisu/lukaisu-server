@@ -118,10 +118,12 @@ class ArchivedTextController extends BaseController
                 $archivedTextTagsHtml = TagsFacade::getArchivedTextTagsHtml($textId);
                 include self::MODULE_VIEWS . '/archived_form.php';
             }
-        } else {
-            $activeLanguageId = (int) Settings::get('currentlanguage');
-            include self::MODULE_VIEWS . '/archived_list.php';
         }
+        // Cut-over: the archived texts list is served by the bundled client.
+        // GET /text/archived redirects to /app/texts.html (see routes.php), so
+        // the list path is unreachable; the PHP view (archived_list.php) was
+        // removed. (The archived_form.php branch above is still rendered by
+        // archivedEdit() for the ?chg= edit form.)
 
         PageLayoutHelper::renderPageEnd();
 

@@ -375,7 +375,10 @@ class TermDisplayController extends VocabularyBaseController
         // Use a placeholder title - Alpine.js will update it dynamically
         PageLayoutHelper::renderPageStart('Terms', true);
 
-        include $this->viewPath . 'list_alpine.php';
+        // Cut-over: the terms list is served by the bundled client. GET /words
+        // (and /words/edit) redirect to /app/words.html (see routes.php), so
+        // this render path is unreachable; the PHP view (list_alpine.php) was
+        // removed.
 
         PageLayoutHelper::renderPageEnd();
     }

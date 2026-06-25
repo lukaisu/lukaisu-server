@@ -75,7 +75,8 @@ class ReviewController extends BaseController
      *
      * @param array $params Route parameters
      *
-     * @return \Lukaisu\Shared\Infrastructure\Http\RedirectResponse|null Redirect when no review context, null when the page rendered
+     * @return \Lukaisu\Shared\Infrastructure\Http\RedirectResponse|null Redirect
+     *         when there is no review context, null when the page rendered
      */
     public function index(array $params): ?\Lukaisu\Shared\Infrastructure\Http\RedirectResponse
     {
@@ -395,7 +396,9 @@ class ReviewController extends BaseController
         ];
 
         PageLayoutHelper::renderPageStartNobody(__('review.page_title'), 'full-width');
-        include __DIR__ . '/../Views/review_desktop.php';
+        // Cut-over: the review screen is served by the bundled client. GET
+        // /review redirects to /app/review.html (see routes.php), so this render
+        // path is unreachable; the PHP view (review_desktop.php) was removed.
         PageLayoutHelper::renderPageEnd();
     }
 }
