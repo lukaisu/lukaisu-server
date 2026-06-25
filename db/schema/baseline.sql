@@ -73,11 +73,11 @@ CREATE TABLE IF NOT EXISTS languages (
     split_each_char tinyint(1) unsigned NOT NULL DEFAULT '0',
     right_to_left tinyint(1) unsigned NOT NULL DEFAULT '0',
     tts_voice_api varchar(2048) NOT NULL DEFAULT '',
+    piper_voice_id varchar(100) DEFAULT NULL COMMENT 'Piper TTS voice ID for this language (e.g., en_US-lessac-medium)',
     show_romanization tinyint(1) unsigned NOT NULL DEFAULT '0',
     PRIMARY KEY (id),
     KEY user_id (user_id),
-    UNIQUE KEY name (name),
-    CONSTRAINT fk_languages_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    UNIQUE KEY name (name)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -149,8 +149,7 @@ CREATE TABLE IF NOT EXISTS texts (
     KEY user_id (user_id),
     KEY language_id (language_id),
     KEY source_uri_language_id (source_uri(20),language_id),
-    KEY archived_at (archived_at),
-    CONSTRAINT fk_texts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    KEY archived_at (archived_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS words (
@@ -186,8 +185,7 @@ CREATE TABLE IF NOT EXISTS words (
     KEY status_changed_at (status_changed_at),
     KEY word_count(word_count),
     KEY due_at (due_at),
-    KEY idx_words_lemma (lemma_lc, language_id),
-    CONSTRAINT fk_words_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    KEY idx_words_lemma (lemma_lc, language_id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -207,9 +205,7 @@ CREATE TABLE IF NOT EXISTS review_log (
     PRIMARY KEY (id),
     KEY word_id (word_id),
     KEY user_id (user_id),
-    KEY reviewed_at (reviewed_at),
-    CONSTRAINT fk_review_log_word FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE,
-    CONSTRAINT fk_review_log_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    KEY reviewed_at (reviewed_at)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -220,8 +216,7 @@ CREATE TABLE IF NOT EXISTS tags (
     comment varchar(200) NOT NULL DEFAULT '',
     PRIMARY KEY (id),
     KEY user_id (user_id),
-    UNIQUE KEY text (text),
-    CONSTRAINT fk_tags_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    UNIQUE KEY text (text)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -239,8 +234,7 @@ CREATE TABLE IF NOT EXISTS text_tags (
     comment varchar(200) NOT NULL DEFAULT '',
     PRIMARY KEY (id),
     KEY user_id (user_id),
-    UNIQUE KEY text (text),
-    CONSTRAINT fk_text_tags_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    UNIQUE KEY text (text)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS text_tag_map (
@@ -262,8 +256,7 @@ CREATE TABLE IF NOT EXISTS news_feeds (
     PRIMARY KEY (id),
     KEY user_id (user_id),
     KEY language_id (language_id),
-    KEY update_interval (update_interval),
-    CONSTRAINT fk_news_feeds_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    KEY update_interval (update_interval)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS feed_links (
@@ -289,9 +282,7 @@ CREATE TABLE IF NOT EXISTS whisper_jobs (
     user_id int(10) unsigned DEFAULT NULL,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (job_id),
-    KEY idx_whisper_jobs_user (user_id),
-    CONSTRAINT fk_whisper_jobs_user FOREIGN KEY (user_id)
-        REFERENCES users(id) ON DELETE CASCADE
+    KEY idx_whisper_jobs_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Daily learning-activity counters (one row per user per calendar date).
@@ -322,11 +313,7 @@ CREATE TABLE IF NOT EXISTS local_dictionaries (
     PRIMARY KEY (id),
     KEY idx_local_dict_language (language_id),
     KEY idx_local_dict_user (user_id),
-    KEY idx_local_dict_enabled_priority (enabled, priority),
-    CONSTRAINT fk_local_dict_language FOREIGN KEY (language_id)
-        REFERENCES languages(id) ON DELETE CASCADE,
-    CONSTRAINT fk_local_dict_user FOREIGN KEY (user_id)
-        REFERENCES users(id) ON DELETE CASCADE
+    KEY idx_local_dict_enabled_priority (enabled, priority)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Individual entries (headword -> definition) for a local dictionary.
@@ -340,9 +327,7 @@ CREATE TABLE IF NOT EXISTS local_dictionary_entries (
     part_of_speech varchar(50) DEFAULT NULL COMMENT 'Part of speech',
     PRIMARY KEY (id),
     KEY idx_entry_dictionary (local_dictionary_id),
-    KEY idx_entry_term_lc (term_lc),
-    CONSTRAINT fk_entry_dictionary FOREIGN KEY (local_dictionary_id)
-        REFERENCES local_dictionaries(id) ON DELETE CASCADE
+    KEY idx_entry_term_lc (term_lc)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Prefix migration tracking table for multi-user conversion
@@ -355,15 +340,10 @@ CREATE TABLE IF NOT EXISTS _prefix_migration_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- Inter-table foreign key constraints
--- These are defined in db/schema/foreign_keys.sql, not inline above, because a
--- CREATE TABLE cannot reference a table defined later in this file. On a fresh
--- install the runner applies that file right after this baseline (see
--- Migrations::applyForeignKeys / Migrations::checkAndUpdate); a legacy LWT upgrade
--- gets the equivalent FKs from the rename migrations instead.
--- The FKs:
--- - Language references: texts, words, sentences, news_feeds -> languages
--- - Text references: sentences, word_occurrences, text_tag_map -> texts
--- - Other: word_occurrences -> sentences, word_occurrences -> words (SET NULL),
---   word_tag_map -> words/tags, text_tag_map -> text_tags, feed_links -> news_feeds
+-- Foreign keys
+-- This file defines tables and indexes only. EVERY foreign key (user-scope and
+-- inter-table) lives in db/schema/foreign_keys.sql so there is a single source of
+-- truth and so each FK can be (re)applied idempotently after every table exists.
+-- The runner applies that file after a fresh install, a backup restore, and a
+-- legacy upgrade (see Migrations::applyForeignKeys / Migrations::checkAndUpdate).
 -- ============================================================================

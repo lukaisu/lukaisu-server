@@ -78,11 +78,11 @@ remove_spaces tinyint(1) unsigned NOT NULL DEFAULT '0',
 split_each_char tinyint(1) unsigned NOT NULL DEFAULT '0',
 right_to_left tinyint(1) unsigned NOT NULL DEFAULT '0',
 tts_voice_api varchar(2048) NOT NULL DEFAULT '',
+piper_voice_id varchar(100) DEFAULT NULL COMMENT 'Piper TTS voice ID for this language (e.g., en_US-lessac-medium)',
 show_romanization tinyint(1) unsigned NOT NULL DEFAULT '0',
 PRIMARY KEY (id),
 KEY user_id (user_id),
-UNIQUE KEY name (name),
-CONSTRAINT fk_languages_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+UNIQUE KEY name (name)
 ```
 
 ## `sentences`
@@ -162,8 +162,7 @@ PRIMARY KEY (id),
 KEY user_id (user_id),
 KEY language_id (language_id),
 KEY source_uri_language_id (source_uri(20),language_id),
-KEY archived_at (archived_at),
-CONSTRAINT fk_texts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+KEY archived_at (archived_at)
 ```
 
 ## `words`
@@ -201,8 +200,7 @@ KEY created_at (created_at),
 KEY status_changed_at (status_changed_at),
 KEY word_count(word_count),
 KEY due_at (due_at),
-KEY idx_words_lemma (lemma_lc, language_id),
-CONSTRAINT fk_words_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+KEY idx_words_lemma (lemma_lc, language_id)
 ```
 
 ## `review_log`
@@ -223,9 +221,7 @@ reviewed_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (id),
 KEY word_id (word_id),
 KEY user_id (user_id),
-KEY reviewed_at (reviewed_at),
-CONSTRAINT fk_review_log_word FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE,
-CONSTRAINT fk_review_log_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+KEY reviewed_at (reviewed_at)
 ```
 
 ## `tags`
@@ -237,8 +233,7 @@ text varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
 comment varchar(200) NOT NULL DEFAULT '',
 PRIMARY KEY (id),
 KEY user_id (user_id),
-UNIQUE KEY text (text),
-CONSTRAINT fk_tags_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+UNIQUE KEY text (text)
 ```
 
 ## `word_tag_map`
@@ -259,8 +254,7 @@ text varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
 comment varchar(200) NOT NULL DEFAULT '',
 PRIMARY KEY (id),
 KEY user_id (user_id),
-UNIQUE KEY text (text),
-CONSTRAINT fk_text_tags_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+UNIQUE KEY text (text)
 ```
 
 ## `text_tag_map`
@@ -286,8 +280,7 @@ options varchar(200) NOT NULL,
 PRIMARY KEY (id),
 KEY user_id (user_id),
 KEY language_id (language_id),
-KEY update_interval (update_interval),
-CONSTRAINT fk_news_feeds_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+KEY update_interval (update_interval)
 ```
 
 ## `feed_links`
@@ -316,9 +309,7 @@ job_id varchar(64) NOT NULL,
 user_id int(10) unsigned DEFAULT NULL,
 created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (job_id),
-KEY idx_whisper_jobs_user (user_id),
-CONSTRAINT fk_whisper_jobs_user FOREIGN KEY (user_id)
-REFERENCES users(id) ON DELETE CASCADE
+KEY idx_whisper_jobs_user (user_id)
 ```
 
 ## `activity_log`
@@ -355,11 +346,7 @@ user_id int(10) unsigned DEFAULT NULL COMMENT 'User ID (NULL in single-user mode
 PRIMARY KEY (id),
 KEY idx_local_dict_language (language_id),
 KEY idx_local_dict_user (user_id),
-KEY idx_local_dict_enabled_priority (enabled, priority),
-CONSTRAINT fk_local_dict_language FOREIGN KEY (language_id)
-REFERENCES languages(id) ON DELETE CASCADE,
-CONSTRAINT fk_local_dict_user FOREIGN KEY (user_id)
-REFERENCES users(id) ON DELETE CASCADE
+KEY idx_local_dict_enabled_priority (enabled, priority)
 ```
 
 ## `local_dictionary_entries`
@@ -376,9 +363,7 @@ reading varchar(250) DEFAULT NULL COMMENT 'Pronunciation/reading (e.g. furigana)
 part_of_speech varchar(50) DEFAULT NULL COMMENT 'Part of speech',
 PRIMARY KEY (id),
 KEY idx_entry_dictionary (local_dictionary_id),
-KEY idx_entry_term_lc (term_lc),
-CONSTRAINT fk_entry_dictionary FOREIGN KEY (local_dictionary_id)
-REFERENCES local_dictionaries(id) ON DELETE CASCADE
+KEY idx_entry_term_lc (term_lc)
 ```
 
 ## `_prefix_migration_log`
@@ -391,4 +376,110 @@ user_id INT UNSIGNED NOT NULL,
 tables_migrated INT DEFAULT 0,
 migrated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (prefix)
+```
+
+## Foreign keys
+
+Defined in `db/schema/foreign_keys.sql` (baseline tables carry no inline foreign keys) and applied after every table exists — on a fresh install, a backup restore, or a legacy upgrade.
+
+```sql
+ALTER TABLE languages
+    ADD CONSTRAINT fk_languages_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE texts
+    ADD CONSTRAINT fk_texts_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE words
+    ADD CONSTRAINT fk_words_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE tags
+    ADD CONSTRAINT fk_tags_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE text_tags
+    ADD CONSTRAINT fk_text_tags_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE news_feeds
+    ADD CONSTRAINT fk_news_feeds_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE whisper_jobs
+    ADD CONSTRAINT fk_whisper_jobs_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE review_log
+    ADD CONSTRAINT fk_review_log_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE local_dictionaries
+    ADD CONSTRAINT fk_local_dict_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE review_log
+    ADD CONSTRAINT fk_review_log_word
+    FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE;
+
+ALTER TABLE local_dictionaries
+    ADD CONSTRAINT fk_local_dict_language
+    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE;
+
+ALTER TABLE local_dictionary_entries
+    ADD CONSTRAINT fk_entry_dictionary
+    FOREIGN KEY (local_dictionary_id) REFERENCES local_dictionaries(id) ON DELETE CASCADE;
+
+ALTER TABLE texts
+    ADD CONSTRAINT fk_texts_language
+    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE;
+
+ALTER TABLE words
+    ADD CONSTRAINT fk_words_language
+    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE;
+
+ALTER TABLE sentences
+    ADD CONSTRAINT fk_sentences_language
+    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE;
+
+ALTER TABLE news_feeds
+    ADD CONSTRAINT fk_news_feeds_language
+    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE;
+
+ALTER TABLE sentences
+    ADD CONSTRAINT fk_sentences_text
+    FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE;
+
+ALTER TABLE word_occurrences
+    ADD CONSTRAINT fk_word_occurrences_text
+    FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE;
+
+ALTER TABLE text_tag_map
+    ADD CONSTRAINT fk_text_tag_map_text
+    FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE;
+
+ALTER TABLE word_occurrences
+    ADD CONSTRAINT fk_word_occurrences_sentence
+    FOREIGN KEY (sentence_id) REFERENCES sentences(id) ON DELETE CASCADE;
+
+ALTER TABLE word_occurrences
+    ADD CONSTRAINT fk_word_occurrences_word
+    FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE SET NULL;
+
+ALTER TABLE word_tag_map
+    ADD CONSTRAINT fk_word_tag_map_word
+    FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE;
+
+ALTER TABLE word_tag_map
+    ADD CONSTRAINT fk_word_tag_map_tag
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE;
+
+ALTER TABLE text_tag_map
+    ADD CONSTRAINT fk_text_tag_map_text_tag
+    FOREIGN KEY (text_tag_id) REFERENCES text_tags(id) ON DELETE CASCADE;
+
+ALTER TABLE feed_links
+    ADD CONSTRAINT fk_feed_links_newsfeed
+    FOREIGN KEY (feed_id) REFERENCES news_feeds(id) ON DELETE CASCADE;
 ```

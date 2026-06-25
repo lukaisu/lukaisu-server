@@ -1,2743 +1,3050 @@
--- lukaisu-backup--- /ensures that this can be imported via Restore/
---
+-- lukaisu-backup--- Lukaisu Server demo database (modern snake_case schema, generated)
+-- Loaded by Admin > Install Demo via Restore::restoreFile.
+-- Regenerated from the historical LWT demo, transformed to the modern schema and
+-- projected onto the baseline columns. Foreign keys are applied by the restore path,
+-- so this file is FK-free.
 SET FOREIGN_KEY_CHECKS = 0;
--- --------------------------------------------------------------
--- "Lukaisu Server" (Lukaisu Server) is free and unencumbered software
--- released into the PUBLIC DOMAIN.
---
--- Anyone is free to copy, modify, publish, use, compile, sell, or
--- distribute this software, either in source code form or as a
--- compiled binary, for any purpose, commercial or non-commercial,
--- and by any means.
---
--- In jurisdictions that recognize copyright laws, the author or
--- authors of this software dedicate any and all copyright
--- interest in the software to the public domain. We make this
--- dedication for the benefit of the public at large and to the
--- detriment of our heirs and successors. We intend this
--- dedication to be an overt act of relinquishment in perpetuity
--- of all present and future rights to this software under
--- copyright law.
---
--- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
--- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
--- WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
--- AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE
--- FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
--- OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
--- CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
--- THE SOFTWARE.
---
--- For more information, please refer to [http://unlicense.org/].
--- --------------------------------------------------------------
---
--- --------------------------------------------------------------
--- Installing an Lukaisu Server demo database
--- --------------------------------------------------------------
--- Schema updated to use InnoDB engine
--- Compatible with FK constraints when migrations are applied
-DROP
-  TABLE IF EXISTS archivedtexts;
-
-CREATE TABLE `archivedtexts` (
-  `AtID` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `AtLgID` tinyint(3) unsigned NOT NULL,
-  `AtTitle` varchar(200) NOT NULL,
-  `AtText` text NOT NULL,
-  `AtAnnotatedText` longtext NOT NULL DEFAULT '',
-  `AtAudioURI` varchar(200) DEFAULT NULL,
-  `AtSourceURI` varchar(1000) DEFAULT NULL,
-  PRIMARY KEY (`AtID`),
-  KEY `AtLgID` (`AtLgID`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-
-INSERT INTO archivedtexts
-VALUES
-  (
-    '1', '1', 'Bonjour!', 'Bonjour Manon.\nBonjour.\nAlors, je crois qu’il y a pas longtemps, là, vous avez fait une bonne action ?\nOui.',
-    '', NULL, 'http://francebienvenue1.wordpress.com/2011/06/18/generosite/'
-  );
-
-DROP
-  TABLE IF EXISTS archtexttags;
-CREATE TABLE `archtexttags` (
-  `AgAtID` smallint(5) unsigned NOT NULL,
-  `AgT2ID` smallint(5) unsigned NOT NULL,
-  PRIMARY KEY (`AgAtID`, `AgT2ID`),
-  KEY `AgAtID` (`AgAtID`),
-  KEY `AgT2ID` (`AgT2ID`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-
-INSERT INTO archtexttags
-VALUES
-  ('1', '1');
-INSERT INTO archtexttags
-VALUES
-  ('1', '4');
-INSERT INTO archtexttags
-VALUES
-  ('1', '8');
-
-DROP
-  TABLE IF EXISTS books;
-CREATE TABLE `books` (
-  `BkID` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `BkUsID` int(10) unsigned DEFAULT NULL,
-  `BkLgID` tinyint(3) unsigned NOT NULL,
-  `BkTitle` varchar(200) NOT NULL,
-  `BkAuthor` varchar(200) DEFAULT NULL,
-  `BkDescription` text DEFAULT NULL,
-  `BkCoverPath` varchar(500) DEFAULT NULL COMMENT 'Path to cover image file',
-  `BkSourceType` enum('text','epub','pdf') NOT NULL DEFAULT 'text',
-  `BkSourceHash` varchar(64) DEFAULT NULL COMMENT 'SHA-256 hash for duplicate detection',
-  `BkTotalChapters` smallint(5) unsigned NOT NULL DEFAULT 0,
-  `BkCurrentChapter` smallint(5) unsigned NOT NULL DEFAULT 1,
-  `BkCreated` timestamp NOT NULL DEFAULT current_timestamp(),
-  `BkUpdated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`BkID`),
-  KEY `idx_books_language` (`BkLgID`),
-  KEY `idx_books_user` (`BkUsID`),
-  KEY `idx_books_source_hash` (`BkSourceHash`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-DROP
-  TABLE IF EXISTS newsfeeds;
-
-CREATE TABLE `newsfeeds` (
-  `NfID` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
-  `NfLgID` tinyint(3) unsigned NOT NULL,
-  `NfName` varchar(40) NOT NULL,
-  `NfSourceURI` varchar(200) NOT NULL,
-  `NfArticleSectionTags` text NOT NULL,
-  `NfFilterTags` text NOT NULL,
-  `NfUpdate` int(12) unsigned NOT NULL,
-  `NfOptions` varchar(200) NOT NULL,
-  PRIMARY KEY (`NfID`),
-  KEY `NfLgID` (`NfLgID`),
-  KEY `NfUpdate` (`NfUpdate`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-INSERT INTO newsfeeds
-VALUES
-  (
-    1, 9, 'The Guardian', 'http://www.theguardian.com/theguardian/mainsection/rss',
-    '//div[@id="article-wrapper"]',
-    '//div[@id="main-content-picture"] | //div[@id="article-wrapper"]/span[@class="trackable-component component-wrapper six-col"]',
-    0, 'edit_text=1'
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    2, 1, 'Le Monde', 'http://www.lemonde.fr/rss/une.xml',
-    '//*[@id="articleBody"] | //div[@class="entry-content"]/p',
-    '', 0, 'edit_text=1'
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    3, 11, 'Il Corriere', 'http://xml.corriereobjects.it/rss/homepage.xml',
-    '//div[@class="contenuto_articolo"]/p | //div[@id="content-to-read"]/p | //blockquote/p | //p[@class="chapter-paragraph"]',
-    '', 0, 'edit_text=1,max_links=200'
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    4, 3, 'wissen.de', 'http://feeds.feedburner.com/wissen/wissen_de',
-    '//div[@class="article-content"]',
-    '//div[@class="file file-image file-image-jpeg"] | //em[last()] | //div[@class="imagegallery-wrapper hide"] | //ul[@class="links inline"] | //div[@class="smart-paging-pager"] | //div[@class="field-item even"]/div',
-    0, 'edit_text=1,max_links=500'
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    5, 3, 'Der Spiegel', 'http://www.spiegel.de/schlagzeilen/index.rss',
-    '//p[@class="article-intro"] | //div[@class="article-section clearfix"]',
-    '//*[@class[contains(concat(" ",normalize-space(.)," ")," js-module-box-image ")]] |  //*[@class[contains(concat(" ",normalize-space(.)," ")," asset-box ")]] |  //*[@class[contains(concat(" ",normalize-space(.)," ")," htmlartikellistbox ")]] |  //p/i',
-    0, 'edit_text=1,charset=meta'
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    6, 3, 'deutsche Welle Nachrichten',
-    'http://rss.dw-world.de/xml/DKpodcast_lgn_de',
-    '//description', '', 0, 'article_source=description'
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    7, 10, 'El Pais', 'http://ep00.epimg.net/rss/elpais/portada.xml',
-    '//div[@id="cuerpo_noticia"]/p',
-    '', 0, ''
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    8, 12, 'RIA Novosti', 'http://ria.ru/export/rss2/index.xml',
-    '//div[@class="article_lead"] | //*[@*[contains(.,"articleBody")]]/p',
-    '//p[@class="marker-quote3"]',
-    0, 'edit_text=1'
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    9, 7, 'ข่าวไทยรัฐออนไลน์',
-    'http://www.thairath.co.th/rss/news.xml',
-    '//div[@class="entry"]/p', '//div[@id="content"]/p[@class="time"]',
-    1455049278, 'edit_text=1'
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    10, 14, 'Euronews Arabic', 'http://feeds.feedburner.com/euronews/ar/news/',
-    '//div[@id="article-text"]/p |  //div[@id="articleTranscript"]/p',
-    '//div[@id="article-text"]/p[@class="en-cpy"]',
-    0, ''
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    11, 10, 'Spanish Podcast', 'http://www.spanishpodcast.org/podcasts/index.xml',
-    'redirect://div[@class="figure-content caption"]//a | //div[@class="figure-content caption"]/p | //div/p[@class="MsoNormal"]',
-    '', 0, 'edit_text=1'
-  );
-INSERT INTO newsfeeds
-VALUES
-  (
-    12, 3, 'NachDenkSeiten', 'http://www.nachdenkseiten.de/?feed=audiopodcast',
-    '//encoded/p', '', 0, 'edit_text=1,article_source=encoded'
-  );
-DROP
-  TABLE IF EXISTS languages;
 CREATE TABLE `languages` (
-  `LgID` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
-  `LgName` varchar(40) NOT NULL,
-  `LgDict1URI` varchar(200) NOT NULL,
-  `LgDict2URI` varchar(200) DEFAULT NULL,
-  `LgGoogleTranslateURI` varchar(200) DEFAULT NULL,
-  `LgDict1PopUp` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  `LgDict2PopUp` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  `LgGoogleTranslatePopUp` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  `LgSourceLang` varchar(10) DEFAULT NULL,
-  `LgTargetLang` varchar(10) DEFAULT NULL,
-  `LgExportTemplate` varchar(1000) DEFAULT NULL,
-  `LgTextSize` int(5) unsigned NOT NULL DEFAULT '100',
-  `LgCharacterSubstitutions` varchar(500) NOT NULL DEFAULT '',
-  `LgRegexpSplitSentences` varchar(500) NOT NULL DEFAULT '.!?',
-  `LgExceptionsSplitSentences` varchar(500) NOT NULL DEFAULT '',
-  `LgRegexpWordCharacters` varchar(500) NOT NULL DEFAULT 'a-zA-ZÀ-ÖØ-öø-ȳ',
-  `LgParserType` varchar(50) DEFAULT NULL,
-  `LgRemoveSpaces` int(1) unsigned NOT NULL DEFAULT '0',
-  `LgSplitEachChar` int(1) unsigned NOT NULL DEFAULT '0',
-  `LgRightToLeft` int(1) unsigned NOT NULL DEFAULT '0',
-  `LgTTSVoiceAPI` varchar(2048) NOT NULL DEFAULT '',
-  `LgShowRomanization` tinyint(1) DEFAULT '1',
-  `LgLocalDictMode` tinyint(1) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`LgID`),
-  UNIQUE KEY `LgName` (`LgName`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-INSERT INTO languages (LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, LgExportTemplate, LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgTTSVoiceAPI, LgShowRomanization)
-VALUES
-  (
-    '1', 'French', 'http://www.wordreference.com/fren/lukaisu_term',
-    NULL, 'https://translate.google.com/?ie=UTF-8&sl=fr&tl=en&text=lukaisu_term',
-    '$y\\t$t\\n', '100', '´=\'|`=\'|’=\'|‘=\'|...=…|..=‥',
-    '.!?:;', '[A-Z].|Dr.', 'a-zA-ZÀ-ÖØ-öø-ȳ',
-    '0', '0', '0', '', '1'
-  );
-INSERT INTO languages (LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, LgExportTemplate, LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgTTSVoiceAPI, LgShowRomanization)
-VALUES
-  (
-    '2', 'Chinese', 'https://ce.linedict.com/dict.html#/cnen/search?query=lukaisu_term',
-    'http://chinesedictionary.mobi/?handler=QueryWorddict&mwdqb=lukaisu_term',
-    'https://translate.google.com/?ie=UTF-8&sl=zh&tl=en&text=lukaisu_term',
-    '$y\\t$t\\n', '200', '', '.!?:;。！？：；',
-    '', '一-龥', '1', '1', '0', '', '1'
-  );
-INSERT INTO languages (LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, LgExportTemplate, LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgTTSVoiceAPI, LgShowRomanization)
-VALUES
-  (
-    '3', 'German', 'http://de-en.syn.dict.cc/?s=lukaisu_term',
-    NULL, 'https://translate.google.com/?ie=UTF-8&sl=de&tl=en&text=lukaisu_term',
-    '$y\\t$t\\n', '150', '´=\'|`=\'|’=\'|‘=\'|...=…|..=‥',
-    '.!?:;', '[A-Z].|Dr.', 'a-zA-ZäöüÄÖÜß',
-    '0', '0', '0', '', '1'
-  );
-INSERT INTO languages (LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, LgExportTemplate, LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgTTSVoiceAPI, LgShowRomanization)
-VALUES
-  (
-    '4', 'Chinese2', 'https://ce.linedict.com/dict.html#/cnen/search?query=lukaisu_term',
-    'http://chinesedictionary.mobi/?handler=QueryWorddict&mwdqb=lukaisu_term',
-    'https://translate.google.com/?ie=UTF-8&sl=zh&tl=en&text=lukaisu_term',
-    '$y\\t$t\\n', '200', '', '.!?:;。！？：；',
-    '', '一-龥', '1', '0', '0', '', '1'
-  );
-INSERT INTO languages (LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, LgExportTemplate, LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgTTSVoiceAPI, LgShowRomanization)
-VALUES
-  (
-    '5', 'Japanese', 'https://jisho.org/words?eng=&dict=edict&jap=lukaisu_term',
-    'http://jisho.org/kanji/details/lukaisu_term',
-    'https://translate.google.com/?ie=UTF-8&sl=ja&tl=en&text=lukaisu_term',
-    '$y\\t$t\\n', '200', '', '.!?:;。！？：；',
-    '', '一-龥ぁ-ヾ', '1', '1', '0', '', '1'
-  );
-INSERT INTO languages (LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, LgExportTemplate, LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgTTSVoiceAPI, LgShowRomanization)
-VALUES
-  (
-    '6', 'Korean', 'http://endic.naver.com/search.nhn?sLn=kr&isOnlyViewEE=N&query=lukaisu_term',
-    NULL, 'https://translate.google.com/?text=lukaisu_term&ie=UTF-8&sl=ko&tl=en',
-    '$y\\t$t\\n', '150', '', '.!?:;。！？：；',
-    '', '가-힣ᄀ-ᇂ', '0', '0', '0', '', '1'
-  );
-INSERT INTO languages (LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, LgExportTemplate, LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgTTSVoiceAPI, LgShowRomanization)
-VALUES
-  (
-    '7', 'Thai', 'http://dict.longdo.com/search/lukaisu_term',
-    NULL, 'https://translate.google.com/?ie=UTF-8&sl=th&tl=en&text=lukaisu_term',
-    '$y\\t$t\\n', '250', '', '.!?:;',
-    '', 'ก-๛', '1', '0', '0', '', '1'
-  );
-INSERT INTO languages (LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, LgExportTemplate, LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgTTSVoiceAPI, LgShowRomanization)
-VALUES
-  (
-    '8', 'Hebrew', 'http://dictionary.reverso.net/hebrew-english/lukaisu_term',
-    NULL, 'https://translate.google.com/?ie=UTF-8&sl=iw&tl=en&text=lukaisu_term',
-    '$y\\t$t\\n', '150', '', '.!?:;',
-    '', '\\x{0590}-\\x{05FF}', '0', '0',
-    '1', '', '1'
-  );
-DROP
-  TABLE IF EXISTS sentences;
+  `id` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `name` varchar(40) NOT NULL,
+  `dict1_uri` varchar(200) NOT NULL,
+  `dict2_uri` varchar(200) DEFAULT NULL,
+  `google_translate_uri` varchar(200) DEFAULT NULL,
+  `dict1_popup` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Dictionary 1 opens in popup window',
+  `dict2_popup` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Dictionary 2 opens in popup window',
+  `google_translate_popup` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Translator opens in popup window',
+  `source_lang` varchar(10) DEFAULT NULL COMMENT 'Source language code (BCP 47)',
+  `target_lang` varchar(10) DEFAULT NULL COMMENT 'Target language code (BCP 47)',
+  `local_dict_mode` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Local dictionary mode (0=online,1=local first,2=local only,3=combined)',
+  `export_template` varchar(1000) DEFAULT NULL,
+  `text_size` smallint(5) unsigned NOT NULL DEFAULT 100,
+  `character_substitutions` varchar(500) NOT NULL DEFAULT '',
+  `regexp_split_sentences` varchar(500) NOT NULL DEFAULT '.!?',
+  `exceptions_split_sentences` varchar(500) NOT NULL DEFAULT '',
+  `regexp_word_characters` varchar(500) NOT NULL DEFAULT 'a-zA-ZÀ-ÖØ-öø-ȳ',
+  `parser_type` varchar(50) DEFAULT NULL,
+  `remove_spaces` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `split_each_char` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `right_to_left` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  `tts_voice_api` varchar(2048) NOT NULL DEFAULT '',
+  `piper_voice_id` varchar(100) DEFAULT NULL COMMENT 'Piper TTS voice ID for this language (e.g., en_US-lessac-medium)',
+  `show_romanization` tinyint(1) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+INSERT INTO `languages` VALUES
+(1,1,'French','http://www.wordreference.com/fren/lukaisu_term',NULL,'https://translate.google.com/?ie=UTF-8&sl=fr&tl=en&text=lukaisu_term',0,0,0,'fr','en',0,'$y\\t$t\\n',100,'´=\'|`=\'|’=\'|‘=\'|...=…|..=‥','.!?:;','[A-Z].|Dr.','a-zA-ZÀ-ÖØ-öø-ȳ',NULL,0,0,0,'',NULL,1),
+(2,1,'Chinese','https://ce.linedict.com/dict.html#/cnen/search?query=lukaisu_term','http://chinesedictionary.mobi/?handler=QueryWorddict&mwdqb=lukaisu_term','https://translate.google.com/?ie=UTF-8&sl=zh&tl=en&text=lukaisu_term',0,0,0,'zh','en',0,'$y\\t$t\\n',200,'','.!?:;。！？：；','','一-龥','character',1,1,0,'',NULL,1),
+(3,1,'German','http://de-en.syn.dict.cc/?s=lukaisu_term',NULL,'https://translate.google.com/?ie=UTF-8&sl=de&tl=en&text=lukaisu_term',0,0,0,'de','en',0,'$y\\t$t\\n',150,'´=\'|`=\'|’=\'|‘=\'|...=…|..=‥','.!?:;','[A-Z].|Dr.','a-zA-ZäöüÄÖÜß',NULL,0,0,0,'',NULL,1),
+(4,1,'Chinese2','https://ce.linedict.com/dict.html#/cnen/search?query=lukaisu_term','http://chinesedictionary.mobi/?handler=QueryWorddict&mwdqb=lukaisu_term','https://translate.google.com/?ie=UTF-8&sl=zh&tl=en&text=lukaisu_term',0,0,0,'zh','en',0,'$y\\t$t\\n',200,'','.!?:;。！？：；','','一-龥',NULL,1,0,0,'',NULL,1),
+(5,1,'Japanese','https://jisho.org/words?eng=&dict=edict&jap=lukaisu_term','http://jisho.org/kanji/details/lukaisu_term','https://translate.google.com/?ie=UTF-8&sl=ja&tl=en&text=lukaisu_term',0,0,0,'ja','en',0,'$y\\t$t\\n',200,'','.!?:;。！？：；','','一-龥ぁ-ヾ','character',1,1,0,'',NULL,1),
+(6,1,'Korean','http://endic.naver.com/search.nhn?sLn=kr&isOnlyViewEE=N&query=lukaisu_term',NULL,'https://translate.google.com/?text=lukaisu_term&ie=UTF-8&sl=ko&tl=en',0,0,0,'ko','en',0,'$y\\t$t\\n',150,'','.!?:;。！？：；','','가-힣ᄀ-ᇂ',NULL,0,0,0,'',NULL,1),
+(7,1,'Thai','http://dict.longdo.com/search/lukaisu_term',NULL,'https://translate.google.com/?ie=UTF-8&sl=th&tl=en&text=lukaisu_term',0,0,0,'th','en',0,'$y\\t$t\\n',250,'','.!?:;','','ก-๛',NULL,1,0,0,'',NULL,1),
+(8,1,'Hebrew','http://dictionary.reverso.net/hebrew-english/lukaisu_term',NULL,'https://translate.google.com/?ie=UTF-8&sl=iw&tl=en&text=lukaisu_term',0,0,0,'iw','en',0,'$y\\t$t\\n',150,'','.!?:;','','\\x{0590}-\\x{05FF}',NULL,0,0,1,'',NULL,1);
 CREATE TABLE `sentences` (
-  `SeID` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
-  `SeLgID` tinyint(3) unsigned NOT NULL,
-  `SeTxID` smallint(5) unsigned NOT NULL,
-  `SeOrder` smallint(5) unsigned NOT NULL,
-  `SeText` text,
-  `SeFirstPos` smallint(5) unsigned NOT NULL,
-  PRIMARY KEY (`SeID`),
-  KEY `SeLgID` (`SeLgID`),
-  KEY `SeTxID` (`SeTxID`),
-  KEY `SeOrder` (`SeOrder`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-DROP
-  TABLE IF EXISTS settings;
+  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+  `language_id` tinyint(3) unsigned NOT NULL,
+  `text_id` smallint(5) unsigned NOT NULL,
+  `position` smallint(5) unsigned NOT NULL,
+  `text` text DEFAULT NULL,
+  `first_pos` smallint(5) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `language_id` (`language_id`),
+  KEY `text_id` (`text_id`),
+  KEY `position` (`position`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+INSERT INTO `sentences` VALUES
+(1,1,1,1,'BonjourManon.¶Bonjour.¶Alors,jecroisqu\'ilyapaslongtemps,là,vousavezfaitunebonneaction ?¶Oui.¶Onpeutdireçacommeça.Qu\'est-cequevousavezfait,alors ?¶Alors,j\'aifaitmonpremierdondusang.Doncc\'estàdirequeonvadansune…Unorganismespécialisévientdansl\'IUT,dansnotreuniversitépour…pourprendrenotresangpourlesmaladesdel\'hôpitalquienontbesoin…¶Oui,voilà,encasd\'accidentparexemple,etc…¶Encasd\'accidentouencasd\'anémie …¶Oui,oui.D\'accord.Etalors,donc,c\'étaitlapremièrefoisquevouslefaisiez ?¶C\'estlapremièrefoisetçam\'amarquéeparcequej\'ai…j\'aitrèspeurdespiquresentempshabituel.¶Ahbon !¶Voilà.J\'enai…j\'enfaistrèsrarement,leplusrarementpossible…¶Oui ?¶…pour…pouréviterçaaumaximum.Etpuis…¶Oui,etlà,c\'estpasunepetitepiqure !Çadureunmoment,enfait !¶Ahnon,çadurequinze –vingtminutes.¶Ah,d\'accord.¶Ilsprennent…jesaispluscombiendelitresdesang.Ah,c\'estbeaucoup.¶Oui,oui.D\'accord.¶Ouais,ouais,ouais.¶Etdoncvousavezfranchilepas.¶Voilà.¶Maispourquoi,alors ?¶Parcequejepensequec\'estimportantd\'aiderlesautres,surtoutquej\'aiapprisquej\'aiunsangassezrare.¶Ahoui ?C\'estvrai ?¶Ouais.¶Pourquoi ?C\'estquoi ?¶Anégatif.¶Ah,d\'accord.Oui,oui.Moi,c\'estpareil.¶C\'estunsang…Ah,c\'estvrai ?¶Oui,oui.¶Assezrare,doncvoilà,lesgens,siilsenontbesoin.Etpuissiunjour,moij\'enaibesoin,jeseraicontentequed\'autresendonnent.Doncvoilà.¶Oui,oui.D\'accord.¶Enattendant,jefaisça.¶Oui,oui,biensûr.Etalors,commentçasepasseconcrètement?Doncvousêtesallée…Doncilssontvenusàl\'IUT,là.Ilsinstallenttoutbiencommeilfaut,etalorsvousyallezetpuis…¶Onyva,ilsnousde …Ilsnousposentquelquesquestionsparrapportànotrehygiènedevieévidemment,pour…pourlesmaladies,toutça,sionn\'apaseu…étémalades,pourlesmédicamentsdanslesang,toutça.Etpuisaprès,ilsvousinstallentsurune…surunetable,allongé,etilsvous…ilsvouspiquentet…¶Etonattend.¶Etonattend, 15ou 20minutes.¶Oui,d\'accord.Etletempsn\'estpastroplong ?Onsesentpasunpeubizarreou…?¶Onsesentbizarre,maisilssontvraimentàcôtédenouspour…pourjustementqu\'on…qu\'onresteéveilléenquelquesorte,etqu\'onresteactifpourpasjustementqu\'onparte…unpeuà…¶Oui,àseposerdesquestions,toutça,etpuissesentiraffaibliouquelquechose.¶Voilà.Doncilssontvraimentàcôtédenous,ànousparler,ànousfairerigolerpourvoirsionesttoujoursconscient,finalement.¶Ahoui,d\'accord.¶Oui,oui.Voilà.¶Oui,oui,oui.Etaprès,alors,àlafin,qu\'est-cequisepasse ?¶Alafin,ilsvousenlèventlapiqure.Etd\'ailleurs,c\'estlàquejemesuisévanouie !¶Carrément ?¶Ouais.¶Ahbon,d\'accord !¶Oui,oui.Ilsontdû…Ilsontdûmemettrelespiedsenl\'air.Ilsont…Ilsontbienrigoléparcequejustement,ils…ilsontvuquequandjesuispartie,justement,c\'estquandilsontenlevélapiqure,jesouriaisetquandjesuis…quandjemesuis…quandj\'aireprisconscience,ilsm\'ontditquec\'étaitla…lapremièrefoisqu\'ilsavaientvuquelqu\'unpartir…¶Ensouriant ?¶…ensouriant.¶Ahbon,d\'accord.Alorsvousêtestrèsspéciale !¶Voilà.¶Ahoui ?Etalors,donc…maisvousvousêtesévanouiecarrément ?¶Ahoui,carrément !J\'aiperduconsciencependant…bonpaslongtemps,hein,peut-êtreuneoudeuxminutes,letempsque…queçarevienne.Jepensequec\'étaitun…¶Unétourdissement ?¶…untrop-plein…trop-pleind\'émotionsenfait.¶Ahd\'accord !¶D\'êtrecontenteetàlafoisd\'avoireupeur.¶Ahbon !¶Toutça,ouais.¶Vousêtesàcepointsensible…¶Ahoui,oui,vraiment.¶…émotive.¶Ouais.¶D\'accord.Etalors,qu\'est-cequ\'ilsontfait,eux ?Ilsvousont…quoi ?Jesaispas…tapésurlesjoues ?¶Non,non,ilsontététrèscalmes,apparemment,d\'aprèscequej\'aientendu.¶Ilfautplacerdansunebonneposition,quoi.C\'estça ?¶Voilà,ilsontjusterelevémespieds.Etilsm\'ont…Ilsm\'ontmisun…uncotonimbibéde…dequelquechose.Jesaispascequec\'était.Ça…çasentaitl\'eucalyptus.¶Ahoui,oui.Pourunpeuvous…¶Pourunpeu…¶…stimuler.¶Ouais,voilà.¶D\'accord.Bonbahc\'estsympa !J\'espèrequetoutlemondese…s\'évanouitpasaprèsles…lesprisesdesangcommeça !Etilyapasàmangeraussiunpeu,non ?C\'estça ?¶Voilà,etaprèsilsnous…ilsnousdonnentcequ\'onveut:un…ungâteauouunverrede…desoda‥¶Ouais,ouais,pourreconstituer…¶…untrucbiensucré.¶Ouaisd\'accord,poursereconstituerlesforces.¶Pourrepartir,voilà.¶D\'accord.Bonbahc\'estbien,alors,d\'avoirfaitça.Est-cequevousrecommencerez,alors ?¶Oui,oui.Ilfautattendretroismois.Doncjel\'aifaitenfévrieretjecomptebienlefaireenjuin,là,ouais.¶Ahbond\'accord.Etalors,vouscomptezvousévanouirànouveau ?¶Non,jevaisessayer…jevaisessayerdemeretenir.¶D\'accord.¶Jevaisleurexpliquerquejesuisunpeuémotive.Et…¶Unpeu,oui.Hm,hm.Maispeut-êtrequeladeuxièmefois,commevoussaurezdéjàcommentçasepasse,ceseramoins…¶Oui,jepense.¶…moinsstressant.¶Je…jeparsavecmoinsd\'appréhension,entoutcas,pourladeuxièmefois.¶Oui,d\'accord.Bon,bah,c\'estbien,alors,d\'avoirfaitça.¶Oui.¶D\'accord.Bahtrèsbienpourles…pourlesgensàquiçavaservir.MerciManon.',1),
+(2,1,9,1,'BonjourManon.¶Bonjour.¶Alors,jecroisqu\'ilyapaslongtemps,là,vousavezfaitunebonneaction ?¶Oui.¶Onpeutdireçacommeça.Qu\'est-cequevousavezfait,alors ?¶Alors,j\'aifaitmonpremierdondusang.',1),
+(3,1,10,1,'BonjourManon.¶Bonjour.¶Alors,jecroisqu\'ilyapaslongtemps,là,vousavezfaitunebonneaction ?¶Oui.',1),
+(4,2,2,1,'一天，一个男人走在街上。突然，他看见前面有一只黑色的大狗，看起来很凶。男人非常害怕，不敢往前走。狗的旁边站着一个女人，男人问她：你的狗咬人吗？女人说：我的狗不咬人。这时，那只狗咬了男人。他气坏了，大叫：你说你的狗不咬人！女人回答：这不是我的狗。',1),
+(5,3,3,1,'Wiefrohbinich,daßichwegbin!BesterFreund,wasistdasHerzdesMenschen!Dichzuverlassen,denichsoliebe,vondemichunzertrennlichwar,undfrohzusein!Ichweiß,duverzeihstmir\'s.WarennichtmeineübrigenVerbindungenrechtausgesuchtvomSchicksal,umeinHerzwiedasmeinezuängstigen?DiearmeLeonore!Unddochwarichunschuldig.Konnt\'ichdafür,daß,währenddieeigensinnigenReizeihrerSchwestermireineangenehmeUnterhaltungverschafften,daßeineLeidenschaftindemarmenHerzensichbildete?Unddoch –binichganzunschuldig?Hab\'ichnichtihreEmpfindungengenährt?Hab\'ichmichnichtandenganzwahrenAusdrückenderNatur,dieunssooftzulachenmachten,soweniglächerlichsiewaren,selbstergetzt?Hab\'ichnicht –owasistderMensch,daßerübersichklagendarf!Ichwill,lieberFreund,ichversprechedir\'s,ichwillmichbessern,willnichtmehreinbißchenÜbel,dasunsdasSchicksalvorlegt,wiederkäuen,wieich\'simmergetanhabe;ichwilldasGegenwärtigegenießen,unddasVergangenesollmirvergangensein.Gewiß,duhastrecht,Bester,derSchmerzenwärenminderunterdenMenschen,wennsienicht –Gottweiß,warumsiesogemachtsind! –mitsovielEmsigkeitderEinbildungskraftsichbeschäftigten,dieErinnerungendesvergangenenÜbelszurückzurufen,eheralseinegleichgültigeGegenwartzuertragen.¶Dubistsogut,meinerMutterzusagen,daßichihrGeschäftbestensbetreibenundihrehstensNachrichtdavongebenwerde.IchhabemeineTantegesprochenundbeiweitemdasböseWeibnichtgefunden,dasmanbeiunsausihrmacht.Sieisteinemuntere,heftigeFrauvondembestenHerzen.IcherklärteihrmeinerMutterBeschwerdenüberdenzurückgehaltenenErbschaftsanteil;siesagtemirihreGründe,UrsachenunddieBedingungen,unterwelchensiebereitwäre,allesherauszugeben,undmehralswirverlangten –kurz,ichmagjetztnichtsdavonschreiben,sagemeinerMutter,eswerdeallesgutgehen.Undichhabe,meinLieber,wiederbeidiesemkleinenGeschäftgefunden,daßMißverständnisseundTrägheitvielleichtmehrIrrungeninderWeltmachenalsListundBosheit.Wenigstenssinddiebeidenletzterengewißseltener.¶Übrigensbefindeichmichhiergarwohl.DieEinsamkeitistmeinemHerzenköstlicherBalsamindieserparadiesischenGegend,unddieseJahreszeitderJugendwärmtmitallerFüllemeinoftschauderndesHerz.JederBaum,jedeHeckeisteinStraußvonBlüten,undmanmöchtezumMaienkäferwerden,umindemMeervonWohlgerüchenherumschwebenundalleseineNahrungdarinfindenzukönnen.¶DieStadtselbstistunangenehm,dagegenringsumhereineunaussprechlicheSchönheitderNatur.DasbewogdenverstorbenenGrafenvonM.,einenGartenaufeinemderHügelanzulegen,diemitderschönstenMannigfaltigkeitsichkreuzenunddielieblichstenTälerbilden.DerGartenisteinfach,undmanfühltgleichbeidemEintritte,daßnichteinwissenschaftlicherGärtner,sonderneinfühlendesHerzdenPlangezeichnet,dasseinerselbsthiergenießenwollte.SchonmancheTränehab\'ichdemAbgeschiedenenindemverfallenenKabinettchengeweint,dasseinLieblingsplätzchenwarundauchmeinesist.BaldwerdeichHerrvomGartensein;derGärtneristmirzugetan,nurseitdenpaarTagen,underwirdsichnichtübeldabeibefinden.',1),
+(6,4,4,1,'一天，一个男人走在街上。突然，他看见前面有一只黑色的大狗，看起来很凶。男人非常害怕，不敢往前走。狗的旁边站着一个女人，男人问她：你的狗咬人吗？女人说：我的狗不咬人。这时，那只狗咬了男人。他气坏了，大叫：你说你的狗不咬人！女人回答：这不是我的狗。',1),
+(7,5,5,1,'はい。いいえ。¶すみません。¶どうも。¶ありがとうございます。¶日本語を話しますか。はい、少し。¶イギリスから来ました。',1),
+(8,6,6,1,'좋은아침.¶안녕하세요.¶잘자요.¶잘가요.¶안녕하세요,잘지냈어요?¶네,잘지냈어요?¶네그럼요.¶이름이뭐에요?¶제이름은존이에요,이름이뭐에요?¶제이름은메리에요.',1),
+(9,7,7,1,'สวัสดีครับ¶สวัสดีค่ะ',1),
+(10,8,8,1,'בוקרטוב¶אחרצהרייםטובים¶ערבטוב¶לילהטוב¶להתראות',1);
 CREATE TABLE `settings` (
-  `StKey` varchar(40) NOT NULL,
-  `StValue` varchar(40) DEFAULT NULL,
-  PRIMARY KEY (`StKey`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-INSERT INTO settings
-VALUES
-  ('dbversion', 'v002000000');
-INSERT INTO settings
-VALUES
-  ('showallwords', '0');
-INSERT INTO settings
-VALUES
-  ('currentlanguage', '1');
-INSERT INTO settings
-VALUES
-  ('lastscorecalc', '2020-10-03');
-INSERT INTO settings
-VALUES
-  (
-    'set-test-main-frame-waiting-time',
-    '0'
-  );
-INSERT INTO settings
-VALUES
-  (
-    'set-test-edit-frame-waiting-time',
-    '500'
-  );
-INSERT INTO settings
-VALUES
-  ('set-test-sentence-count', '1');
-INSERT INTO settings
-VALUES
-  ('set-term-sentence-count', '1');
-INSERT INTO settings
-VALUES
-  (
-    'set-archivedtexts-per-page', '100'
-  );
-INSERT INTO settings
-VALUES
-  ('set-texts-per-page', '10');
-INSERT INTO settings
-VALUES
-  ('set-terms-per-page', '100');
-INSERT INTO settings
-VALUES
-  ('set-tags-per-page', '100');
-INSERT INTO settings
-VALUES
-  (
-    'set-show-text-word-counts', '1'
-  );
-INSERT INTO settings
-VALUES
-  (
-    'set-term-translation-delimiters',
-    '/;|'
-  );
-INSERT INTO settings
-VALUES
-  ('set-similar-terms-count', '0');
-INSERT INTO settings
-VALUES
-  ('currenttext', '1');
-DROP
-  TABLE IF EXISTS tags;
+  `name` varchar(40) NOT NULL,
+  `user_id` int(10) unsigned NOT NULL DEFAULT 0,
+  `value` varchar(40) DEFAULT NULL,
+  PRIMARY KEY (`name`,`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+INSERT INTO `settings` VALUES
+('currentlanguage',1,'1'),
+('currenttext',1,'1'),
+('dbversion',0,'v000001000'),
+('dbversion',1,'v002000000'),
+('lastscorecalc',0,'2026-06-25'),
+('lastscorecalc',1,'2020-10-03'),
+('set-archivedtexts-per-page',1,'100'),
+('set-show-text-word-counts',1,'1'),
+('set-similar-terms-count',1,'0'),
+('set-tags-per-page',1,'100'),
+('set-term-sentence-count',1,'1'),
+('set-term-translation-delimiters',1,'/;|'),
+('set-terms-per-page',1,'100'),
+('set-test-edit-frame-waiting-time',1,'500'),
+('set-test-main-frame-waiting-time',1,'0'),
+('set-test-sentence-count',1,'1'),
+('set-texts-per-page',1,'10'),
+('showallwords',1,'0');
 CREATE TABLE `tags` (
-  `TgID` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `TgText` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `TgComment` varchar(200) NOT NULL DEFAULT '',
-  PRIMARY KEY (`TgID`),
-  UNIQUE KEY `TgText` (`TgText`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-INSERT INTO tags
-VALUES
-  ('1', 'masc', '');
-INSERT INTO tags
-VALUES
-  ('2', 'fem', '');
-INSERT INTO tags
-VALUES
-  ('8', '3p-sg', '');
-INSERT INTO tags
-VALUES
-  ('5', '1p-sg', '');
-INSERT INTO tags
-VALUES
-  ('6', '2p-sg', '');
-INSERT INTO tags
-VALUES
-  ('7', 'verb', '');
-INSERT INTO tags
-VALUES
-  ('9', '1p-pl', '');
-INSERT INTO tags
-VALUES
-  ('10', '2p-pl', '');
-INSERT INTO tags
-VALUES
-  ('11', '3p-pl', '');
-INSERT INTO tags
-VALUES
-  ('12', 'adj', '');
-INSERT INTO tags
-VALUES
-  ('13', 'adv', '');
-INSERT INTO tags
-VALUES
-  ('14', 'interj', '');
-INSERT INTO tags
-VALUES
-  ('15', 'conj', '');
-INSERT INTO tags
-VALUES
-  ('16', 'num', '');
-INSERT INTO tags
-VALUES
-  ('17', 'infinitive', '');
-INSERT INTO tags
-VALUES
-  ('18', 'noun', '');
-INSERT INTO tags
-VALUES
-  ('19', 'pronoun', '');
-INSERT INTO tags
-VALUES
-  ('20', 'informal', '');
-INSERT INTO tags
-VALUES
-  ('21', 'colloc', '');
-INSERT INTO tags
-VALUES
-  ('22', 'pres', '');
-INSERT INTO tags
-VALUES
-  ('23', 'impf', '');
-INSERT INTO tags
-VALUES
-  ('24', 'subj', '');
-INSERT INTO tags
-VALUES
-  ('25', 'pastpart', '');
-INSERT INTO tags
-VALUES
-  ('26', 'prespart', '');
-INSERT INTO tags
-VALUES
-  ('27', 'name', '');
-INSERT INTO tags
-VALUES
-  ('28', 'greeting', '');
-DROP
-  TABLE IF EXISTS tags2;
-CREATE TABLE `tags2` (
-  `T2ID` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `T2Text` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `T2Comment` varchar(200) NOT NULL DEFAULT '',
-  PRIMARY KEY (`T2ID`),
-  UNIQUE KEY `T2Text` (`T2Text`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-INSERT INTO tags2
-VALUES
-  ('1', 'demo', '');
-INSERT INTO tags2
-VALUES
-  ('2', 'basic', '');
-INSERT INTO tags2
-VALUES
-  ('3', 'goethe', '');
-INSERT INTO tags2
-VALUES
-  ('4', 'conversation', '');
-INSERT INTO tags2
-VALUES
-  ('5', 'joke', '');
-INSERT INTO tags2
-VALUES
-  ('6', 'chinesepod', '');
-INSERT INTO tags2
-VALUES
-  ('7', 'literature', '');
-INSERT INTO tags2
-VALUES
-  ('8', 'fragment', '');
-INSERT INTO tags2
-VALUES
-  ('9', 'annotation', '');
-DROP
-  TABLE IF EXISTS textitems;
-CREATE TABLE `textitems` (
-  `TiID` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `TiLgID` int(11) unsigned NOT NULL,
-  `TiTxID` int(11) unsigned NOT NULL,
-  `TiSeID` int(11) unsigned NOT NULL,
-  `TiOrder` int(11) unsigned NOT NULL,
-  `TiWordCount` int(1) unsigned NOT NULL,
-  `TiText` varchar(250) NOT NULL,
-  `TiTextLC` varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `TiIsNotWord` tinyint(1) NOT NULL,
-  PRIMARY KEY (`TiID`),
-  KEY `TiLgID` (`TiLgID`),
-  KEY `TiTxID` (`TiTxID`),
-  KEY `TiSeID` (`TiSeID`),
-  KEY `TiOrder` (`TiOrder`),
-  KEY `TiTextLC` (`TiTextLC`),
-  KEY `TiIsNotWord` (`TiIsNotWord`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-DROP
-  TABLE IF EXISTS textitems2;
-CREATE TABLE `textitems2` (
-  `Ti2WoID` mediumint(8) unsigned DEFAULT NULL,
-  `Ti2LgID` tinyint(3) unsigned NOT NULL,
-  `Ti2TxID` smallint(5) unsigned NOT NULL,
-  `Ti2SeID` mediumint(8) unsigned NOT NULL,
-  `Ti2Order` smallint(5) unsigned NOT NULL,
-  `Ti2WordCount` tinyint(3) unsigned NOT NULL,
-  `Ti2Text` varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  PRIMARY KEY (
-    `Ti2TxID`, `Ti2Order`, `Ti2WordCount`
-  ),
-  KEY `Ti2WoID` (`Ti2WoID`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-DROP
-  TABLE IF EXISTS temptextitems;
-CREATE TABLE `temptextitems` (
-  `TiCount` smallint(5) unsigned NOT NULL,
-  `TiSeID` mediumint(8) unsigned NOT NULL,
-  `TiOrder` smallint(5) unsigned NOT NULL,
-  `TiWordCount` tinyint(3) unsigned NOT NULL,
-  `TiText` varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
-) ENGINE = MEMORY DEFAULT CHARSET = utf8;
-DROP
-  TABLE IF EXISTS tempwords;
-CREATE TABLE `tempwords` (
-  `WoText` varchar(250) DEFAULT NULL,
-  `WoTextLC` varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `WoTranslation` varchar(500) NOT NULL DEFAULT '*',
-  `WoRomanization` varchar(100) DEFAULT NULL,
-  `WoSentence` varchar(1000) DEFAULT NULL,
-  `WoTaglist` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`WoTextLC`)
-) ENGINE = MEMORY DEFAULT CHARSET = utf8;
-DROP
-  TABLE IF EXISTS texts;
+  `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `text` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `comment` varchar(200) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `text` (`text`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO `tags` VALUES
+(1,1,'masc',''),
+(2,1,'fem',''),
+(5,1,'1p-sg',''),
+(6,1,'2p-sg',''),
+(7,1,'verb',''),
+(8,1,'3p-sg',''),
+(9,1,'1p-pl',''),
+(10,1,'2p-pl',''),
+(11,1,'3p-pl',''),
+(12,1,'adj',''),
+(13,1,'adv',''),
+(14,1,'interj',''),
+(15,1,'conj',''),
+(16,1,'num',''),
+(17,1,'infinitive',''),
+(18,1,'noun',''),
+(19,1,'pronoun',''),
+(20,1,'informal',''),
+(21,1,'colloc',''),
+(22,1,'pres',''),
+(23,1,'impf',''),
+(24,1,'subj',''),
+(25,1,'pastpart',''),
+(26,1,'prespart',''),
+(27,1,'name',''),
+(28,1,'greeting','');
 CREATE TABLE `texts` (
-  `TxID` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `TxLgID` tinyint(3) unsigned NOT NULL,
-  `TxTitle` varchar(200) NOT NULL,
-  `TxText` text NOT NULL,
-  `TxAnnotatedText` longtext NOT NULL DEFAULT '',
-  `TxAudioURI` varchar(2048) DEFAULT NULL,
-  `TxSourceURI` varchar(1000) DEFAULT NULL,
-  `TxPosition` smallint(5) NOT NULL DEFAULT '0',
-  `TxAudioPosition` float NOT NULL DEFAULT '0',
-  `TxBkID` smallint(5) unsigned DEFAULT NULL,
-  `TxChapterNum` smallint(5) unsigned DEFAULT NULL,
-  `TxChapterTitle` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`TxID`),
-  KEY `TxLgID` (`TxLgID`),
-  KEY `idx_texts_book` (`TxBkID`, `TxChapterNum`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-INSERT INTO texts (TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI)
-VALUES
-  (
-    '1', '1', 'Mon premier don du sang',
-    'Bonjour Manon.\nBonjour.\nAlors, je crois qu’il y a pas longtemps, là, vous avez fait une bonne action ?\nOui. \nOn peut dire ça comme ça. Qu’est-ce que vous avez fait, alors ?\nAlors, j’ai fait mon premier don du sang. Donc c’est à dire que on va dans une... Un organisme spécialisé vient dans l’IUT, dans notre université pour... pour prendre notre sang pour les malades de l’hôpital qui en ont besoin...\nOui, voilà, en cas d’accident par exemple, etc...\nEn cas d’accident ou en cas d’anémie ...\nOui, oui. D’accord. Et alors, donc, c’était la première fois que vous le faisiez ?\nC’est la première fois et ça m’a marquée parce que j’ai... j’ai très peur des piqures en temps habituel.\nAh bon !\nVoilà. J’en ai... j’en fais très rarement, le plus rarement possible...\nOui ?\n... pour... pour éviter ça au maximum. Et puis...\nOui, et là, c’est pas une petite piqure ! Ça dure un moment, en fait !\nAh non, ça dure quinze – vingt minutes.\nAh, d’accord.\nIls prennent... je sais plus combien de litres de sang. Ah, c’est beaucoup.\nOui, oui. D’accord.\nOuais, ouais, ouais.\nEt donc vous avez franchi le pas.\nVoilà.\nMais pourquoi, alors ?\nParce que je pense que c’est important d’aider les autres, surtout que j’ai appris que j’ai un sang assez rare.\nAh oui ? C’est vrai ?\nOuais.\nPourquoi ? C’est quoi ?\nA négatif.\nAh, d’accord. Oui, oui. Moi, c’est pareil.\nC’est un sang... Ah, c’est vrai ?\nOui, oui.\nAssez rare, donc voilà, les gens, si ils en ont besoin. Et puis si un jour, moi j’en ai besoin, je serai contente que d’autres en donnent. Donc voilà.\nOui, oui. D’accord.\nEn attendant, je fais ça.\nOui, oui, bien sûr. Et alors, comment ça se passe concrètement? Donc vous êtes allée... Donc ils sont venus à l’IUT, là. Ils installent tout bien comme il faut, et alors vous y allez et puis...\nOn y va, ils nous de ... Ils nous posent quelques questions par rapport à notre hygiène de vie évidemment, pour... pour les maladies, tout ça, si on n’a pas eu... été malades, pour les médicaments dans le sang, tout ça. Et puis après, ils vous installent sur une... sur une table, allongé, et ils vous... ils vous piquent et...\nEt on attend.\nEt on attend, 15 ou 20 minutes.\nOui, d’accord. Et le temps n’est pas trop long ? On se sent pas un peu bizarre ou...?\nOn se sent bizarre, mais ils sont vraiment à côté de nous pour... pour justement qu’on... qu’on reste éveillé en quelque sorte, et qu’on reste actif pour pas justement qu’on parte... un peu à...\nOui, à se poser des questions, tout ça, et puis se sentir affaibli ou quelque chose.\nVoilà. Donc ils sont vraiment à côté de nous, à nous parler, à nous faire rigoler pour voir si on est toujours conscient, finalement.\nAh oui, d’accord.\nOui, oui. Voilà.\nOui, oui, oui. Et après, alors, à la fin, qu’est-ce qui se passe ?\nA la fin, ils vous enlèvent la piqure. Et d’ailleurs, c’est là que je me suis évanouie !\nCarrément ?\nOuais.\nAh bon, d’accord !\nOui, oui. Ils ont dû... Ils ont dû me mettre les pieds en l’air. Ils ont... Ils ont bien rigolé parce que justement, ils... ils ont vu que quand je suis partie, justement, c’est quand ils ont enlevé la piqure, je souriais et quand je suis... quand je me suis... quand j’ai repris conscience, ils m’ont dit que c’était la... la première fois qu’ils avaient vu quelqu’un partir...\nEn souriant ?\n...en souriant.\nAh bon, d’accord. Alors vous êtes très spéciale !\nVoilà.\nAh oui ? Et alors, donc... mais vous vous êtes évanouie carrément ?\nAh oui, carrément ! J’ai perdu conscience pendant... bon pas longtemps, hein, peut-être une ou deux minutes, le temps que... que ça revienne. Je pense que c’était un...\nUn étourdissement ?\n... un trop-plein... trop-plein d’émotions en fait.\nAh d’accord !\nD’être contente et à la fois d’avoir eu peur.\nAh bon !\nTout ça, ouais.\nVous êtes à ce point sensible...\nAh oui, oui, vraiment.\n... émotive.\nOuais.\nD’accord. Et alors, qu’est-ce qu’ils ont fait, eux ? Ils vous ont... quoi ? Je sais pas... tapé sur les joues ?\nNon, non, ils ont été très calmes, apparemment, d’après ce que j’ai entendu.\nIl faut placer dans une bonne position, quoi. C’est ça ?\nVoilà, ils ont juste relevé mes pieds. Et ils m’ont... Ils m’ont mis un... un coton imbibé de... de quelque chose. Je sais pas ce que c’était. Ça... ça sentait l’eucalyptus.\nAh oui, oui. Pour un peu vous...\nPour un peu...\n... stimuler.\nOuais, voilà.\nD’accord. Bon bah c’est sympa ! J’espère que tout le monde se... s’évanouit pas après les... les prises de sang comme ça ! Et il y a pas à manger aussi un peu, non ? C’est ça ?\nVoilà, et après ils nous... ils nous donnent ce qu’on veut: un... un gâteau ou un verre de... de soda..\nOuais, ouais, pour reconstituer...\n... un truc bien sucré.\nOuais d’accord, pour se reconstituer les forces.\nPour repartir, voilà.\nD’accord. Bon bah c’est bien, alors, d’avoir fait ça. Est-ce que vous recommencerez, alors ?\nOui, oui. Il faut attendre trois mois. Donc je l’ai fait en février et je compte bien le faire en juin, là, ouais.\nAh bon d’accord. Et alors, vous comptez vous évanouir à nouveau ?\nNon, je vais essayer... je vais essayer de me retenir.\nD’accord.\nJe vais leur expliquer que je suis un peu émotive. Et...\nUn peu, oui. Hm, hm. Mais peut-être que la deuxième fois, comme vous saurez déjà comment ça se passe, ce sera moins...\nOui, je pense.\n... moins stressant.\nJe... je pars avec moins d’appréhension, en tout cas, pour la deuxième fois.\nOui, d’accord. Bon, bah, c’est bien, alors, d’avoir fait ça.\nOui.\nD’accord. Bah très bien pour les... pour les gens à qui ça va servir. Merci Manon.',
-    '', 'https://francebienvenue.fr/wp-content/uploads/2011/06/gc3a9nc3a9rositc3a9-et-don-du-sang-france-bienvenue.mp3',
-    'http://francebienvenue1.wordpress.com/2011/06/18/generosite/'
-  );
-INSERT INTO texts (TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI)
-VALUES
-  (
-    '2', '2', 'The Man and the Dog (annotated version)',
-    '一天，一个男人走在街上。突然，他看见前面有一只黑色的大狗，看起来很凶。男人非常害怕，不敢往前走。狗的旁边站着一个女人，男人问她：你的狗咬人吗？女人说：我的狗不咬人。这时，那只狗咬了男人。他气坏了，大叫：你说你的狗不咬人！女人回答：这不是我的狗。',
-    '4  一天  11  one day\n-1  ，\n6  一  9  a\n8  个  12  (MW)\n12  男人  15  man\n14  走  16  walk\n16  在  17  at\n20  街上  20  on the street\n-1  。\n24  突然  21  suddenly\n-1  ，\n26  他  184  he\n30  看见  185  catch sight\n34  前面  186  ahead\n36  有  187  have\n38  一  9  a\n40  只  188  (MW)\n44  黑色  189  black color\n46  的  190  \'s\n48  大  191  big\n50  狗  192  dog\n-1  ，\n56  看起来  193  appears\n58  很  194  very\n60  凶  195  ferocious\n-1  。\n64  男人  15  man\n68  非常  196  exceptional\n72  害怕  197  be afraid\n-1  ，\n74  不  198  not\n76  敢  199  dare\n80  往前  200  move ahead\n82  走  16  walk\n-1  。\n84  狗  192  dog\n86  的  190  \'s\n90  旁边  201  side\n92  站  202  stand\n94  着  203  (there)\n96  一  9  a\n98  个  12  (MW)\n102  女人  204  woman\n-1  ，\n106  男人  15  man\n108  问  205  ask\n110  她  206  her\n-1  ：\n114  你的  220  your\n116  狗  192  dog\n118  咬  208  bite\n120  人  14  person\n122  吗  209  (QW)\n-1  ？\n126  女人  204  woman\n128  说  210  say\n-1  ：\n132  我的  211  my\n134  狗  192  dog\n136  不  198  not\n138  咬  208  bite\n140  人  14  person\n-1  。\n144  这时  212  at this time\n-1  ，\n146  那  213  that\n148  只  188  (MW)\n150  狗  192  dog\n152  咬  208  bite\n154  了  214  finish\n158  男人  15  man\n-1  。\n160  他  184  he\n164  气坏  215  furious\n166  了  214  (change)\n-1  ，\n168  大  191  strong\n170  叫  216  shout\n-1  ：\n172  你  207  you\n174  说  210  say\n178  你的  220  your\n180  狗  192  dog\n182  不  198  not\n184  咬  208  bite\n186  人  14  person\n-1  ！\n190  女人  204  woman\n194  回答  217  answer\n-1  ：\n196  这  218  this\n198  不  198  not\n200  是  219  be\n204  我的  211  my\n206  狗  192  dog\n-1  。',
-    '',
-    'http://chinesepod.com/lessons/the-man-and-the-dog'
-  );
-INSERT INTO texts (TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI)
-VALUES
-  (
-    '3', '3', 'Die Leiden des jungen Werther',
-    'Wie froh bin ich, daß ich weg bin! Bester Freund, was ist das Herz des Menschen! Dich zu verlassen, den ich so liebe, von dem ich unzertrennlich war, und froh zu sein! Ich weiß, du verzeihst mir\'s. Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das meine zu ängstigen? Die arme Leonore! Und doch war ich unschuldig. Konnt\' ich dafür, daß, während die eigensinnigen Reize ihrer Schwester mir eine angenehme Unterhaltung verschafften, daß eine Leidenschaft in dem armen Herzen sich bildete? Und doch – bin ich ganz unschuldig? Hab\' ich nicht ihre Empfindungen genährt? Hab\' ich mich nicht an den ganz wahren Ausdrücken der Natur, die uns so oft zu lachen machten, so wenig lächerlich sie waren, selbst ergetzt? Hab\' ich nicht – o was ist der Mensch, daß er über sich klagen darf! Ich will, lieber Freund, ich verspreche dir\'s, ich will mich bessern, will nicht mehr ein bißchen Übel, das uns das Schicksal vorlegt, wiederkäuen, wie ich\'s immer getan habe; ich will das Gegenwärtige genießen, und das Vergangene soll mir vergangen sein. Gewiß, du hast recht, Bester, der Schmerzen wären minder unter den Menschen, wenn sie nicht – Gott weiß, warum sie so gemacht sind! – mit so viel Emsigkeit der Einbildungskraft sich beschäftigten, die Erinnerungen des vergangenen Übels zurückzurufen, eher als eine gleichgültige Gegenwart zu ertragen.\nDu bist so gut, meiner Mutter zu sagen, daß ich ihr Geschäft bestens betreiben und ihr ehstens Nachricht davon geben werde. Ich habe meine Tante gesprochen und bei weitem das böse Weib nicht gefunden, das man bei uns aus ihr macht. Sie ist eine muntere, heftige Frau von dem besten Herzen. Ich erklärte ihr meiner Mutter Beschwerden über den zurückgehaltenen Erbschaftsanteil; sie sagte mir ihre Gründe, Ursachen und die Bedingungen, unter welchen sie bereit wäre, alles herauszugeben, und mehr als wir verlangten – kurz, ich mag jetzt nichts davon schreiben, sage meiner Mutter, es werde alles gut gehen. Und ich habe, mein Lieber, wieder bei diesem kleinen Geschäft gefunden, daß Mißverständnisse und Trägheit vielleicht mehr Irrungen in der Welt machen als List und Bosheit. Wenigstens sind die beiden letzteren gewiß seltener.\nÜbrigens befinde ich mich hier gar wohl. Die Einsamkeit ist meinem Herzen köstlicher Balsam in dieser paradiesischen Gegend, und diese Jahreszeit der Jugend wärmt mit aller Fülle mein oft schauderndes Herz. Jeder Baum, jede Hecke ist ein Strauß von Blüten, und man möchte zum Maienkäfer werden, um in dem Meer von Wohlgerüchen herumschweben und alle seine Nahrung darin finden zu können.\nDie Stadt selbst ist unangenehm, dagegen rings umher eine unaussprechliche Schönheit der Natur. Das bewog den verstorbenen Grafen von M., einen Garten auf einem der Hügel anzulegen, die mit der schönsten Mannigfaltigkeit sich kreuzen und die lieblichsten Täler bilden. Der Garten ist einfach, und man fühlt gleich bei dem Eintritte, daß nicht ein wissenschaftlicher Gärtner, sondern ein fühlendes Herz den Plan gezeichnet, das seiner selbst hier genießen wollte. Schon manche Träne hab\' ich dem Abgeschiedenen in dem verfallenen Kabinettchen geweint, das sein Lieblingsplätzchen war und auch meines ist. Bald werde ich Herr vom Garten sein; der Gärtner ist mir zugetan, nur seit den paar Tagen, und er wird sich nicht übel dabei befinden.',
-    '', 'https://archive.org/download/leiden_werther_librivox/01_goethe_werther_mai_1771.mp3',
-    'http://www.gutenberg.org/ebooks/2407'
-  );
-INSERT INTO texts (TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI)
-VALUES
-  (
-    '4', '4', 'The Man and the Dog', '一天，一 个 男人 走 在 街上。 突然，他 看见 前面 有 一 只 黑色 的 大 狗，看起来 很 凶。 男人 非常 害怕，不敢 往前 走。 狗 的 旁边 站着 一 个 女人，男人 问 她： 你 的 狗 咬 人 吗？ 女人 说： 我 的 狗 不 咬 人。 这时，那 只 狗 咬 了 男人。 他 气坏 了，大 叫： 你 说 你 的 狗 不 咬 人！ 女人 回答： 这 不是 我 的 狗。',
-    '', '',
-    'http://chinesepod.com/lessons/the-man-and-the-dog'
-  );
-INSERT INTO texts (TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI)
-VALUES
-  (
-    '5', '5', 'Some expressions', 'はい。いいえ。\nすみません。\nどうも。\nありがとうございます。\n日本語を話しますか。はい、少し。\nイギリスから来ました。',
-    '', '',
-    NULL
-  );
-INSERT INTO texts (TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI)
-VALUES
-  (
-    '6', '6', 'Test in Korean', '좋은 아침.\n안녕하세요.\n잘자요.\n잘가요.\n안녕하세요, 잘지냈어요?\n네, 잘지냈어요?\n네 그럼요.\n이름이 뭐에요?\n제 이름은 존이에요, 이름이 뭐에요?\n제 이름은 메리에요.',
-    '', '',
-    NULL
-  );
-INSERT INTO texts (TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI)
-VALUES
-  (
-    '7', '7', 'Hello in Thai', 'ส วัส ดี ครับ\nส วัส ดี ค่ะ',
-    '', '',
-    NULL
-  );
-INSERT INTO texts (TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI)
-VALUES
-  (
-    '8', '8', 'Greetings', 'בוקר טוב\nאחר צהריים טובים\nערב טוב\nלילה טוב\nלהתראות',
-    '', '',
-    NULL
-  );
-INSERT INTO texts (TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI)
-VALUES
-  (
-    '9', '1', 'Mon premier don du sang (Short & annotated version)',
-    'Bonjour Manon.\nBonjour.\nAlors, je crois qu’il y a pas longtemps, là, vous avez fait une bonne action ?\nOui. \nOn peut dire ça comme ça. Qu’est-ce que vous avez fait, alors ?\nAlors, j’ai fait mon premier don du sang.',
-    '2  Bonjour  2  hello\n-1   \n4  Manon  1  *\n-1  . \n-1  ¶ \n7  Bonjour  2  hello\n-1  . \n-1  ¶ \n10  Alors  3  well\n-1  , \n12  je  7  I\n-1   \n14  crois  8  think\n-1   \n16  qu  6  that\n-1  \'\n22  il y a  4  there is\n-1   \n24  pas  170  (not)\n-1   \n26  longtemps  171  long time\n-1  , \n28  là  172  there\n-1  , \n30  vous  146  you\n-1   \n32  avez  150  have\n-1   \n34  fait  147  done\n-1   \n36  une  173  a\n-1   \n40  bonne action  46  good deed\n-1   ? \n-1  ¶ \n43  Oui  165  yes\n-1  . \n-1  ¶ \n46  On  166  one\n-1   \n48  peut  167  can\n-1   \n50  dire  26  say\n-1   \n52  ça  168  that\n-1   \n54  comme  169  as\n-1   \n56  ça  168  that\n-1  . \n64  Qu\'est-ce que  22  what\n-1   \n66  vous  146  you\n-1   \n68  avez  150  have\n-1   \n70  fait  147  done\n-1  , \n72  alors  3  then\n-1   ? \n-1  ¶ \n75  Alors  3  well\n-1  , \n77  j  174  I\n-1  \'\n79  ai  149  have\n-1   \n81  fait  147  made\n-1   \n83  mon  151  my\n-1   \n85  premier  175  first\n-1   \n91  don du sang  33  blood donation\n-1  .',
-    'https://francebienvenue.fr/wp-content/uploads/2011/06/gc3a9nc3a9rositc3a9-et-don-du-sang-france-bienvenue.mp3',
-    'http://francebienvenue1.wordpress.com/2011/06/18/generosite/'
-  );
-DROP
-  TABLE IF EXISTS texttags;
-CREATE TABLE `texttags` (
-  `TtTxID` smallint(5) unsigned NOT NULL,
-  `TtT2ID` smallint(5) unsigned NOT NULL,
-  PRIMARY KEY (`TtTxID`, `TtT2ID`),
-  KEY `TtTxID` (`TtTxID`),
-  KEY `TtT2ID` (`TtT2ID`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-INSERT INTO texttags
-VALUES
-  ('1', '1');
-INSERT INTO texttags
-VALUES
-  ('1', '4');
-INSERT INTO texttags
-VALUES
-  ('2', '1');
-INSERT INTO texttags
-VALUES
-  ('2', '5');
-INSERT INTO texttags
-VALUES
-  ('2', '6');
-INSERT INTO texttags
-VALUES
-  ('2', '9');
-INSERT INTO texttags
-VALUES
-  ('3', '1');
-INSERT INTO texttags
-VALUES
-  ('3', '3');
-INSERT INTO texttags
-VALUES
-  ('3', '7');
-INSERT INTO texttags
-VALUES
-  ('4', '1');
-INSERT INTO texttags
-VALUES
-  ('4', '5');
-INSERT INTO texttags
-VALUES
-  ('4', '6');
-INSERT INTO texttags
-VALUES
-  ('5', '1');
-INSERT INTO texttags
-VALUES
-  ('5', '2');
-INSERT INTO texttags
-VALUES
-  ('6', '1');
-INSERT INTO texttags
-VALUES
-  ('6', '2');
-INSERT INTO texttags
-VALUES
-  ('7', '1');
-INSERT INTO texttags
-VALUES
-  ('7', '2');
-INSERT INTO texttags
-VALUES
-  ('8', '1');
-INSERT INTO texttags
-VALUES
-  ('8', '2');
-INSERT INTO texttags
-VALUES
-  ('9', '1');
-INSERT INTO texttags
-VALUES
-  ('9', '4');
-INSERT INTO texttags
-VALUES
-  ('9', '9');
-DROP
-  TABLE IF EXISTS words;
+  `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `language_id` tinyint(3) unsigned NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `text` text NOT NULL,
+  `annotated_text` longtext NOT NULL DEFAULT '',
+  `audio_uri` varchar(2048) DEFAULT NULL,
+  `source_uri` varchar(1000) DEFAULT NULL,
+  `position` smallint(5) DEFAULT 0,
+  `audio_position` float DEFAULT 0,
+  `archived_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `language_id` (`language_id`),
+  KEY `source_uri_language_id` (`source_uri`(20),`language_id`),
+  KEY `archived_at` (`archived_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO `texts` VALUES
+(1,1,1,'Mon premier don du sang','Bonjour Manon.\nBonjour.\nAlors, je crois qu’il y a pas longtemps, là, vous avez fait une bonne action ?\nOui. \nOn peut dire ça comme ça. Qu’est-ce que vous avez fait, alors ?\nAlors, j’ai fait mon premier don du sang. Donc c’est à dire que on va dans une... Un organisme spécialisé vient dans l’IUT, dans notre université pour... pour prendre notre sang pour les malades de l’hôpital qui en ont besoin...\nOui, voilà, en cas d’accident par exemple, etc...\nEn cas d’accident ou en cas d’anémie ...\nOui, oui. D’accord. Et alors, donc, c’était la première fois que vous le faisiez ?\nC’est la première fois et ça m’a marquée parce que j’ai... j’ai très peur des piqures en temps habituel.\nAh bon !\nVoilà. J’en ai... j’en fais très rarement, le plus rarement possible...\nOui ?\n... pour... pour éviter ça au maximum. Et puis...\nOui, et là, c’est pas une petite piqure ! Ça dure un moment, en fait !\nAh non, ça dure quinze – vingt minutes.\nAh, d’accord.\nIls prennent... je sais plus combien de litres de sang. Ah, c’est beaucoup.\nOui, oui. D’accord.\nOuais, ouais, ouais.\nEt donc vous avez franchi le pas.\nVoilà.\nMais pourquoi, alors ?\nParce que je pense que c’est important d’aider les autres, surtout que j’ai appris que j’ai un sang assez rare.\nAh oui ? C’est vrai ?\nOuais.\nPourquoi ? C’est quoi ?\nA négatif.\nAh, d’accord. Oui, oui. Moi, c’est pareil.\nC’est un sang... Ah, c’est vrai ?\nOui, oui.\nAssez rare, donc voilà, les gens, si ils en ont besoin. Et puis si un jour, moi j’en ai besoin, je serai contente que d’autres en donnent. Donc voilà.\nOui, oui. D’accord.\nEn attendant, je fais ça.\nOui, oui, bien sûr. Et alors, comment ça se passe concrètement? Donc vous êtes allée... Donc ils sont venus à l’IUT, là. Ils installent tout bien comme il faut, et alors vous y allez et puis...\nOn y va, ils nous de ... Ils nous posent quelques questions par rapport à notre hygiène de vie évidemment, pour... pour les maladies, tout ça, si on n’a pas eu... été malades, pour les médicaments dans le sang, tout ça. Et puis après, ils vous installent sur une... sur une table, allongé, et ils vous... ils vous piquent et...\nEt on attend.\nEt on attend, 15 ou 20 minutes.\nOui, d’accord. Et le temps n’est pas trop long ? On se sent pas un peu bizarre ou...?\nOn se sent bizarre, mais ils sont vraiment à côté de nous pour... pour justement qu’on... qu’on reste éveillé en quelque sorte, et qu’on reste actif pour pas justement qu’on parte... un peu à...\nOui, à se poser des questions, tout ça, et puis se sentir affaibli ou quelque chose.\nVoilà. Donc ils sont vraiment à côté de nous, à nous parler, à nous faire rigoler pour voir si on est toujours conscient, finalement.\nAh oui, d’accord.\nOui, oui. Voilà.\nOui, oui, oui. Et après, alors, à la fin, qu’est-ce qui se passe ?\nA la fin, ils vous enlèvent la piqure. Et d’ailleurs, c’est là que je me suis évanouie !\nCarrément ?\nOuais.\nAh bon, d’accord !\nOui, oui. Ils ont dû... Ils ont dû me mettre les pieds en l’air. Ils ont... Ils ont bien rigolé parce que justement, ils... ils ont vu que quand je suis partie, justement, c’est quand ils ont enlevé la piqure, je souriais et quand je suis... quand je me suis... quand j’ai repris conscience, ils m’ont dit que c’était la... la première fois qu’ils avaient vu quelqu’un partir...\nEn souriant ?\n...en souriant.\nAh bon, d’accord. Alors vous êtes très spéciale !\nVoilà.\nAh oui ? Et alors, donc... mais vous vous êtes évanouie carrément ?\nAh oui, carrément ! J’ai perdu conscience pendant... bon pas longtemps, hein, peut-être une ou deux minutes, le temps que... que ça revienne. Je pense que c’était un...\nUn étourdissement ?\n... un trop-plein... trop-plein d’émotions en fait.\nAh d’accord !\nD’être contente et à la fois d’avoir eu peur.\nAh bon !\nTout ça, ouais.\nVous êtes à ce point sensible...\nAh oui, oui, vraiment.\n... émotive.\nOuais.\nD’accord. Et alors, qu’est-ce qu’ils ont fait, eux ? Ils vous ont... quoi ? Je sais pas... tapé sur les joues ?\nNon, non, ils ont été très calmes, apparemment, d’après ce que j’ai entendu.\nIl faut placer dans une bonne position, quoi. C’est ça ?\nVoilà, ils ont juste relevé mes pieds. Et ils m’ont... Ils m’ont mis un... un coton imbibé de... de quelque chose. Je sais pas ce que c’était. Ça... ça sentait l’eucalyptus.\nAh oui, oui. Pour un peu vous...\nPour un peu...\n... stimuler.\nOuais, voilà.\nD’accord. Bon bah c’est sympa ! J’espère que tout le monde se... s’évanouit pas après les... les prises de sang comme ça ! Et il y a pas à manger aussi un peu, non ? C’est ça ?\nVoilà, et après ils nous... ils nous donnent ce qu’on veut: un... un gâteau ou un verre de... de soda..\nOuais, ouais, pour reconstituer...\n... un truc bien sucré.\nOuais d’accord, pour se reconstituer les forces.\nPour repartir, voilà.\nD’accord. Bon bah c’est bien, alors, d’avoir fait ça. Est-ce que vous recommencerez, alors ?\nOui, oui. Il faut attendre trois mois. Donc je l’ai fait en février et je compte bien le faire en juin, là, ouais.\nAh bon d’accord. Et alors, vous comptez vous évanouir à nouveau ?\nNon, je vais essayer... je vais essayer de me retenir.\nD’accord.\nJe vais leur expliquer que je suis un peu émotive. Et...\nUn peu, oui. Hm, hm. Mais peut-être que la deuxième fois, comme vous saurez déjà comment ça se passe, ce sera moins...\nOui, je pense.\n... moins stressant.\nJe... je pars avec moins d’appréhension, en tout cas, pour la deuxième fois.\nOui, d’accord. Bon, bah, c’est bien, alors, d’avoir fait ça.\nOui.\nD’accord. Bah très bien pour les... pour les gens à qui ça va servir. Merci Manon.','','https://francebienvenue.fr/wp-content/uploads/2011/06/gc3a9nc3a9rositc3a9-et-don-du-sang-france-bienvenue.mp3','http://francebienvenue1.wordpress.com/2011/06/18/generosite/',0,0,NULL),
+(2,1,2,'The Man and the Dog (annotated version)','一天，一个男人走在街上。突然，他看见前面有一只黑色的大狗，看起来很凶。男人非常害怕，不敢往前走。狗的旁边站着一个女人，男人问她：你的狗咬人吗？女人说：我的狗不咬人。这时，那只狗咬了男人。他气坏了，大叫：你说你的狗不咬人！女人回答：这不是我的狗。','4  一天  11  one day\n-1  ，\n6  一  9  a\n8  个  12  (MW)\n12  男人  15  man\n14  走  16  walk\n16  在  17  at\n20  街上  20  on the street\n-1  。\n24  突然  21  suddenly\n-1  ，\n26  他  184  he\n30  看见  185  catch sight\n34  前面  186  ahead\n36  有  187  have\n38  一  9  a\n40  只  188  (MW)\n44  黑色  189  black color\n46  的  190  \'s\n48  大  191  big\n50  狗  192  dog\n-1  ，\n56  看起来  193  appears\n58  很  194  very\n60  凶  195  ferocious\n-1  。\n64  男人  15  man\n68  非常  196  exceptional\n72  害怕  197  be afraid\n-1  ，\n74  不  198  not\n76  敢  199  dare\n80  往前  200  move ahead\n82  走  16  walk\n-1  。\n84  狗  192  dog\n86  的  190  \'s\n90  旁边  201  side\n92  站  202  stand\n94  着  203  (there)\n96  一  9  a\n98  个  12  (MW)\n102  女人  204  woman\n-1  ，\n106  男人  15  man\n108  问  205  ask\n110  她  206  her\n-1  ：\n114  你的  220  your\n116  狗  192  dog\n118  咬  208  bite\n120  人  14  person\n122  吗  209  (QW)\n-1  ？\n126  女人  204  woman\n128  说  210  say\n-1  ：\n132  我的  211  my\n134  狗  192  dog\n136  不  198  not\n138  咬  208  bite\n140  人  14  person\n-1  。\n144  这时  212  at this time\n-1  ，\n146  那  213  that\n148  只  188  (MW)\n150  狗  192  dog\n152  咬  208  bite\n154  了  214  finish\n158  男人  15  man\n-1  。\n160  他  184  he\n164  气坏  215  furious\n166  了  214  (change)\n-1  ，\n168  大  191  strong\n170  叫  216  shout\n-1  ：\n172  你  207  you\n174  说  210  say\n178  你的  220  your\n180  狗  192  dog\n182  不  198  not\n184  咬  208  bite\n186  人  14  person\n-1  ！\n190  女人  204  woman\n194  回答  217  answer\n-1  ：\n196  这  218  this\n198  不  198  not\n200  是  219  be\n204  我的  211  my\n206  狗  192  dog\n-1  。','','http://chinesepod.com/lessons/the-man-and-the-dog',0,0,NULL),
+(3,1,3,'Die Leiden des jungen Werther','Wie froh bin ich, daß ich weg bin! Bester Freund, was ist das Herz des Menschen! Dich zu verlassen, den ich so liebe, von dem ich unzertrennlich war, und froh zu sein! Ich weiß, du verzeihst mir\'s. Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das meine zu ängstigen? Die arme Leonore! Und doch war ich unschuldig. Konnt\' ich dafür, daß, während die eigensinnigen Reize ihrer Schwester mir eine angenehme Unterhaltung verschafften, daß eine Leidenschaft in dem armen Herzen sich bildete? Und doch – bin ich ganz unschuldig? Hab\' ich nicht ihre Empfindungen genährt? Hab\' ich mich nicht an den ganz wahren Ausdrücken der Natur, die uns so oft zu lachen machten, so wenig lächerlich sie waren, selbst ergetzt? Hab\' ich nicht – o was ist der Mensch, daß er über sich klagen darf! Ich will, lieber Freund, ich verspreche dir\'s, ich will mich bessern, will nicht mehr ein bißchen Übel, das uns das Schicksal vorlegt, wiederkäuen, wie ich\'s immer getan habe; ich will das Gegenwärtige genießen, und das Vergangene soll mir vergangen sein. Gewiß, du hast recht, Bester, der Schmerzen wären minder unter den Menschen, wenn sie nicht – Gott weiß, warum sie so gemacht sind! – mit so viel Emsigkeit der Einbildungskraft sich beschäftigten, die Erinnerungen des vergangenen Übels zurückzurufen, eher als eine gleichgültige Gegenwart zu ertragen.\nDu bist so gut, meiner Mutter zu sagen, daß ich ihr Geschäft bestens betreiben und ihr ehstens Nachricht davon geben werde. Ich habe meine Tante gesprochen und bei weitem das böse Weib nicht gefunden, das man bei uns aus ihr macht. Sie ist eine muntere, heftige Frau von dem besten Herzen. Ich erklärte ihr meiner Mutter Beschwerden über den zurückgehaltenen Erbschaftsanteil; sie sagte mir ihre Gründe, Ursachen und die Bedingungen, unter welchen sie bereit wäre, alles herauszugeben, und mehr als wir verlangten – kurz, ich mag jetzt nichts davon schreiben, sage meiner Mutter, es werde alles gut gehen. Und ich habe, mein Lieber, wieder bei diesem kleinen Geschäft gefunden, daß Mißverständnisse und Trägheit vielleicht mehr Irrungen in der Welt machen als List und Bosheit. Wenigstens sind die beiden letzteren gewiß seltener.\nÜbrigens befinde ich mich hier gar wohl. Die Einsamkeit ist meinem Herzen köstlicher Balsam in dieser paradiesischen Gegend, und diese Jahreszeit der Jugend wärmt mit aller Fülle mein oft schauderndes Herz. Jeder Baum, jede Hecke ist ein Strauß von Blüten, und man möchte zum Maienkäfer werden, um in dem Meer von Wohlgerüchen herumschweben und alle seine Nahrung darin finden zu können.\nDie Stadt selbst ist unangenehm, dagegen rings umher eine unaussprechliche Schönheit der Natur. Das bewog den verstorbenen Grafen von M., einen Garten auf einem der Hügel anzulegen, die mit der schönsten Mannigfaltigkeit sich kreuzen und die lieblichsten Täler bilden. Der Garten ist einfach, und man fühlt gleich bei dem Eintritte, daß nicht ein wissenschaftlicher Gärtner, sondern ein fühlendes Herz den Plan gezeichnet, das seiner selbst hier genießen wollte. Schon manche Träne hab\' ich dem Abgeschiedenen in dem verfallenen Kabinettchen geweint, das sein Lieblingsplätzchen war und auch meines ist. Bald werde ich Herr vom Garten sein; der Gärtner ist mir zugetan, nur seit den paar Tagen, und er wird sich nicht übel dabei befinden.','','https://archive.org/download/leiden_werther_librivox/01_goethe_werther_mai_1771.mp3','http://www.gutenberg.org/ebooks/2407',0,0,NULL),
+(4,1,4,'The Man and the Dog','一天，一 个 男人 走 在 街上。 突然，他 看见 前面 有 一 只 黑色 的 大 狗，看起来 很 凶。 男人 非常 害怕，不敢 往前 走。 狗 的 旁边 站着 一 个 女人，男人 问 她： 你 的 狗 咬 人 吗？ 女人 说： 我 的 狗 不 咬 人。 这时，那 只 狗 咬 了 男人。 他 气坏 了，大 叫： 你 说 你 的 狗 不 咬 人！ 女人 回答： 这 不是 我 的 狗。','','','http://chinesepod.com/lessons/the-man-and-the-dog',0,0,NULL),
+(5,1,5,'Some expressions','はい。いいえ。\nすみません。\nどうも。\nありがとうございます。\n日本語を話しますか。はい、少し。\nイギリスから来ました。','','',NULL,0,0,NULL),
+(6,1,6,'Test in Korean','좋은 아침.\n안녕하세요.\n잘자요.\n잘가요.\n안녕하세요, 잘지냈어요?\n네, 잘지냈어요?\n네 그럼요.\n이름이 뭐에요?\n제 이름은 존이에요, 이름이 뭐에요?\n제 이름은 메리에요.','','',NULL,0,0,NULL),
+(7,1,7,'Hello in Thai','ส วัส ดี ครับ\nส วัส ดี ค่ะ','','',NULL,0,0,NULL),
+(8,1,8,'Greetings','בוקר טוב\nאחר צהריים טובים\nערב טוב\nלילה טוב\nלהתראות','','',NULL,0,0,NULL),
+(9,1,1,'Mon premier don du sang (Short & annotated version)','Bonjour Manon.\nBonjour.\nAlors, je crois qu’il y a pas longtemps, là, vous avez fait une bonne action ?\nOui. \nOn peut dire ça comme ça. Qu’est-ce que vous avez fait, alors ?\nAlors, j’ai fait mon premier don du sang.','2  Bonjour  2  hello\n-1   \n4  Manon  1  *\n-1  . \n-1  ¶ \n7  Bonjour  2  hello\n-1  . \n-1  ¶ \n10  Alors  3  well\n-1  , \n12  je  7  I\n-1   \n14  crois  8  think\n-1   \n16  qu  6  that\n-1  \'\n22  il y a  4  there is\n-1   \n24  pas  170  (not)\n-1   \n26  longtemps  171  long time\n-1  , \n28  là  172  there\n-1  , \n30  vous  146  you\n-1   \n32  avez  150  have\n-1   \n34  fait  147  done\n-1   \n36  une  173  a\n-1   \n40  bonne action  46  good deed\n-1   ? \n-1  ¶ \n43  Oui  165  yes\n-1  . \n-1  ¶ \n46  On  166  one\n-1   \n48  peut  167  can\n-1   \n50  dire  26  say\n-1   \n52  ça  168  that\n-1   \n54  comme  169  as\n-1   \n56  ça  168  that\n-1  . \n64  Qu\'est-ce que  22  what\n-1   \n66  vous  146  you\n-1   \n68  avez  150  have\n-1   \n70  fait  147  done\n-1  , \n72  alors  3  then\n-1   ? \n-1  ¶ \n75  Alors  3  well\n-1  , \n77  j  174  I\n-1  \'\n79  ai  149  have\n-1   \n81  fait  147  made\n-1   \n83  mon  151  my\n-1   \n85  premier  175  first\n-1   \n91  don du sang  33  blood donation\n-1  .','https://francebienvenue.fr/wp-content/uploads/2011/06/gc3a9nc3a9rositc3a9-et-don-du-sang-france-bienvenue.mp3','http://francebienvenue1.wordpress.com/2011/06/18/generosite/',0,0,NULL),
+(10,1,1,'Bonjour!','Bonjour Manon.\nBonjour.\nAlors, je crois qu’il y a pas longtemps, là, vous avez fait une bonne action ?\nOui.','',NULL,'http://francebienvenue1.wordpress.com/2011/06/18/generosite/',0,0,'2026-06-25 17:26:40');
 CREATE TABLE `words` (
-  `WoID` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
-  `WoLgID` tinyint(3) unsigned NOT NULL,
-  `WoText` varchar(250) NOT NULL,
-  `WoTextLC` varchar(250) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `WoStatus` tinyint(4) NOT NULL,
-  `WoTranslation` varchar(500) NOT NULL DEFAULT '*',
-  `WoRomanization` varchar(100) DEFAULT NULL,
-  `WoSentence` varchar(1000) DEFAULT NULL,
-  `WoNotes` varchar(1000) DEFAULT NULL,
-  `WoWordCount` tinyint(3) unsigned NOT NULL DEFAULT '0',
-  `WoCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `WoStatusChanged` timestamp NOT NULL DEFAULT '1970-01-01 01:00:01',
-  `WoTodayScore` double NOT NULL DEFAULT '0',
-  `WoTomorrowScore` double NOT NULL DEFAULT '0',
-  `WoRandom` double NOT NULL DEFAULT '0',
-  PRIMARY KEY (`WoID`),
-  UNIQUE KEY `WoLgIDTextLC` (`WoLgID`, `WoTextLC`),
-  KEY `WoLgID` (`WoLgID`),
-  KEY `WoStatus` (`WoStatus`),
-  KEY `WoTextLC` (`WoTextLC`),
-  KEY `WoTranslation` (
-    `WoTranslation`(333)
-  ),
-  KEY `WoCreated` (`WoCreated`),
-  KEY `WoStatusChanged` (`WoStatusChanged`),
-  KEY `WoWordCount` (`WoWordCount`),
-  KEY `WoTodayScore` (`WoTodayScore`),
-  KEY `WoTomorrowScore` (`WoTomorrowScore`),
-  KEY `WoRandom` (`WoRandom`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-INSERT INTO words
-VALUES
-  (
-    '1', '1', 'Manon', 'manon', '98', '(name)',
-    NULL, 'Bonjour {Manon}.', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '100', '100',
-    '0.77861288634931'
-  );
-INSERT INTO words
-VALUES
-  (
-    '2', '1', 'bonjour', 'bonjour', '5',
-    'hello / good morning / good afternoon',
-    NULL, '{Bonjour} Manon.', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.15276275961917152'
-  );
-INSERT INTO words
-VALUES
-  (
-    '3', '1', 'alors', 'alors', '5', 'then / in that case / at the time / else / if not / my goodness / well',
-    NULL, '{Alors}, je crois qu\'il y a pas longtemps, là, vous avez fait une bonne action ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.42797516978157235'
-  );
-INSERT INTO words
-VALUES
-  (
-    '4', '1', 'il y a', 'il y a', '2', 'there is / there are',
-    NULL, 'Alors, je crois qu\'{il y a} pas longtemps, là, vous avez fait une bonne action ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.6815876007839922'
-  );
-INSERT INTO words
-VALUES
-  (
-    '170', '1', 'pas', 'pas', '2', '(not) / footstep / step / walk',
-    NULL, 'Alors, je crois qu\'il y a {pas} longtemps, là, vous avez fait une bonne action ?',
-    NULL, '1', '2013-03-27 12:21:30', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.5153064034090437'
-  );
-INSERT INTO words
-VALUES
-  (
-    '6', '1', 'qu', 'qu', '5', 'that / how / so that',
-    NULL, 'Alors, je crois {qu}\'il y a pas longtemps, là, vous avez fait une bonne action ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.1240125253088889'
-  );
-INSERT INTO words
-VALUES
-  (
-    '7', '1', 'je', 'je', '5', 'I', NULL,
-    'Alors, {je} crois qu\'il y a pas longtemps, là, vous avez fait une bonne action ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.5752998549261129'
-  );
-INSERT INTO words
-VALUES
-  (
-    '8', '1', 'crois', 'crois', '4', 'believe / think',
-    NULL, 'Alors, je {crois} qu\'il y a pas longtemps, là, vous avez fait une bonne action ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.5044617294375429'
-  );
-INSERT INTO words
-VALUES
-  (
-    '9', '2', '一', '一', '2', 'one / a',
-    NULL, '{一}天，{一}个男人走在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.7964091131430204'
-  );
-INSERT INTO words
-VALUES
-  (
-    '10', '2', '天', '天', '2', 'sky, day',
-    NULL, '一{天}，一个男人走在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.4686604081361186'
-  );
-INSERT INTO words
-VALUES
-  (
-    '11', '2', '一天', '一天', '1',
-    'one day', NULL, '{一天}，一个男人走在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9540747319851767'
-  );
-INSERT INTO words
-VALUES
-  (
-    '12', '2', '个', '个', '2', '(MW)',
-    NULL, '一天，一{个}男人走在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.36439246625117255'
-  );
-INSERT INTO words
-VALUES
-  (
-    '13', '2', '男', '男', '2', 'male',
-    NULL, '一天，一个{男}人走在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.9597381660339778'
-  );
-INSERT INTO words
-VALUES
-  (
-    '14', '2', '人', '人', '2', 'human being / person',
-    NULL, '一天，一个男{人}走在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.7055134621500163'
-  );
-INSERT INTO words
-VALUES
-  (
-    '15', '2', '男人', '男人', '2',
-    'man', NULL, '一天，一个{男人}走在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.6483528433817931'
-  );
-INSERT INTO words
-VALUES
-  (
-    '16', '2', '走', '走', '2', 'walk',
-    NULL, '一天，一个男人{走}在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.12522386119256157'
-  );
-INSERT INTO words
-VALUES
-  (
-    '17', '2', '在', '在', '2', 'be / live/ at',
-    NULL, '一天，一个男人走{在}街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.6810608065510735'
-  );
-INSERT INTO words
-VALUES
-  (
-    '18', '2', '街', '街', '1', 'street',
-    NULL, '一天，一个男人走在{街}上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.029632479911327808'
-  );
-INSERT INTO words
-VALUES
-  (
-    '19', '2', '上', '上', '2', 'on / in / go up / upper part / last',
-    NULL, '一天，一个男人走在街{上}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.10498001063706354'
-  );
-INSERT INTO words
-VALUES
-  (
-    '20', '2', '街上', '街上', '1',
-    'on the street', NULL, '一天，一个男人走在{街上}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.4360026441849793'
-  );
-INSERT INTO words
-VALUES
-  (
-    '21', '2', '突然', '突然', '2',
-    'suddenly', NULL, '{突然}，他看见前面有一只黑色的大狗，看起来很凶。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.8650732197473507'
-  );
-INSERT INTO words
-VALUES
-  (
-    '22', '1', 'qu\'est-ce que', 'qu\'est-ce que',
-    '4', 'what', NULL, '{Qu\'est-ce que} vous avez fait, alors ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.017358196915460936'
-  );
-INSERT INTO words
-VALUES
-  (
-    '23', '1', 'est-ce que', 'est-ce que',
-    '4', 'is it that', NULL, 'Qu\'{est-ce que} vous avez fait, alors ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.4915713560688974'
-  );
-INSERT INTO words
-VALUES
-  (
-    '24', '1', 'est-ce', 'est-ce', '3',
-    'is that / is this', NULL, 'Qu\'{est-ce} que vous avez fait, alors ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '20.067133683596026', '17.74023970358721',
-    '0.40578222033174915'
-  );
-INSERT INTO words
-VALUES
-  (
-    '25', '1', 'est', 'est', '1', 'is / east',
-    NULL, 'Qu\'{est}-ce que vous avez fait, alors ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5541970641856986'
-  );
-INSERT INTO words
-VALUES
-  (
-    '26', '1', 'dire', 'dire', '3', 'say / tell',
-    NULL, 'On peut {dire} ça comme ça.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '20.067133683596026', '17.74023970358721',
-    '0.5536386906668904'
-  );
-INSERT INTO words
-VALUES
-  (
-    '27', '3', 'wie', 'wie', '2', 'how',
-    NULL, '{Wie} froh bin ich, daß ich weg bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.10560229151100134'
-  );
-INSERT INTO words
-VALUES
-  (
-    '28', '3', 'froh', 'froh', '2', 'happy / glad',
-    NULL, 'Wie {froh} bin ich, daß ich weg bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.8670954162879805'
-  );
-INSERT INTO words
-VALUES
-  (
-    '29', '3', 'bin', 'bin', '2', 'am', NULL,
-    'Wie froh {bin} ich, daß ich weg {bin}!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.01867023764054313'
-  );
-INSERT INTO words
-VALUES
-  (
-    '30', '3', 'ich', 'ich', '2', 'I', NULL,
-    'Wie froh bin {ich}, daß {ich} weg bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.49206497007241934'
-  );
-INSERT INTO words
-VALUES
-  (
-    '31', '3', 'daß', 'daß', '2', 'that / so that',
-    NULL, 'Wie froh bin ich, {daß} ich weg bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.40431416817411236'
-  );
-INSERT INTO words
-VALUES
-  (
-    '32', '3', 'weg', 'weg', '2', 'away / gone / path / way',
-    NULL, 'Wie froh bin ich, daß ich {weg} bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.5453759613869488'
-  );
-INSERT INTO words
-VALUES
-  (
-    '33', '1', 'don du sang', 'don du sang',
-    '2', 'blood donation', NULL, 'Alors, j\'ai fait mon premier {don du sang}.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.5139373331460518'
-  );
-INSERT INTO words
-VALUES
-  (
-    '34', '4', '一天', '一天', '1',
-    'one day', 'yìtiān', '{一天}，一个男人走在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9335588123030577'
-  );
-INSERT INTO words
-VALUES
-  (
-    '35', '4', '男人', '男人', '1',
-    'man', 'nánrén', '一天，一个{男人}走在街上。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.12598209281077805'
-  );
-INSERT INTO words
-VALUES
-  (
-    '36', '4', '突然', '突然', '1',
-    'suddenly', 'tūrán', '{突然}，他看见前面有一只黑色的大狗，看起来很凶。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.829234057878362'
-  );
-INSERT INTO words
-VALUES
-  (
-    '37', '4', '他', '他', '1', 'he', 'tā',
-    '{他}气坏了，大叫：', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '0', '-6.980681940026449',
-    '0.7682240416931212'
-  );
-INSERT INTO words
-VALUES
-  (
-    '38', '4', '这时', '这时', '1',
-    'at this moment', 'zhèshí', '{这时}，那只狗咬了男人。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.35341806556416494'
-  );
-INSERT INTO words
-VALUES
-  (
-    '39', '4', '狗', '狗', '1', 'dog',
-    'gǒu', '{狗}的旁边站着一个女人，男人问她：',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.4624182334751061'
-  );
-INSERT INTO words
-VALUES
-  (
-    '40', '4', '女人', '女人', '1',
-    'woman', 'nǚrén', '{女人}说：',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.2518370014166804'
-  );
-INSERT INTO words
-VALUES
-  (
-    '41', '4', '看起来', '看起来',
-    '1', 'it seems / it appears / it looks as if',
-    'kànqǐlái', '突然，他看见前面有一只黑色的大狗，{看起来}很凶。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8719303373917289'
-  );
-INSERT INTO words
-VALUES
-  (
-    '42', '4', '凶', '凶', '1', 'ferocious, fierce',
-    'xiōng', '突然，他看见前面有一只黑色的大狗，看起来很{凶}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6041407134422481'
-  );
-INSERT INTO words
-VALUES
-  (
-    '43', '1', 'c\'est', 'c\'est', '1',
-    'it\'s / that\'s', NULL, '{C\'est} quoi ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.4049125857696986'
-  );
-INSERT INTO words
-VALUES
-  (
-    '44', '1', 'c', 'c', '5', 'that / it',
-    NULL, '{C}\'est quoi ?', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.21214081925539377'
-  );
-INSERT INTO words
-VALUES
-  (
-    '45', '1', 'quoi', 'quoi', '3', 'what',
-    NULL, 'C\'est {quoi} ?', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '20.067133683596026',
-    '17.74023970358721', '0.8459663697015181'
-  );
-INSERT INTO words
-VALUES
-  (
-    '46', '1', 'bonne action', 'bonne action',
-    '2', 'good deed', NULL, 'Alors, je crois qu\'il y a pas longtemps, là, vous avez fait une {bonne action} ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.5934094214750542'
-  );
-INSERT INTO words
-VALUES
-  (
-    '47', '4', '你', '你', '1', 'you',
-    'nǐ', '{你}的狗咬人吗？',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.4291480290043615'
-  );
-INSERT INTO words
-VALUES
-  (
-    '48', '4', '你的', '你的', '1',
-    'your', 'nǐde', '{你的}狗咬人吗？',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.36551191133029004'
-  );
-INSERT INTO words
-VALUES
-  (
-    '49', '4', '的', '的', '5', 'of / \'s / (Part.)',
-    'de', '你{的}狗咬人吗？',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.5401155003720107'
-  );
-INSERT INTO words
-VALUES
-  (
-    '50', '1', 'il', 'il', '1', 'he', NULL,
-    '{Il} faut attendre trois mois.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6040417986028286'
-  );
-INSERT INTO words
-VALUES
-  (
-    '51', '1', 'ils', 'ils', '1', 'they',
-    NULL, 'A la fin, {ils} vous enlèvent la piqure.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.3998625226317556'
-  );
-INSERT INTO words
-VALUES
-  (
-    '52', '5', 'フランス', 'フランス',
-    '1', 'France', 'ふらんす', '私は{フランス}から来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.18718724808393722'
-  );
-INSERT INTO words
-VALUES
-  (
-    '53', '5', 'はい', 'はい', '1',
-    'yes / OK / okay', 'hai', '{はい}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.7363487032580643'
-  );
-INSERT INTO words
-VALUES
-  (
-    '103', '5', '日', '日', '3', 'day / Japan / sun',
-    'kun: -か、 ひ、 -び / on: ジツ、 ニチ / names: あ、 あき、 いる、 く、 くさ、 こう、 す、 たち、 に、 にっ、 につ、 へ',
-    '{日}本語を話しますか。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '20.067133683596026', '17.74023970358721',
-    '0.5647589448511218'
-  );
-INSERT INTO words
-VALUES
-  (
-    '54', '5', 'は', 'は', '5', '(Hiragana: ha) / (topic m.)',
-    'ha // わ / wa', '私{は}イギリスから来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.12018180277215484'
-  );
-INSERT INTO words
-VALUES
-  (
-    '55', '5', 'い', 'い', '5', '(Hiragana: i)',
-    'i', 'は{い}。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.3918629348202263'
-  );
-INSERT INTO words
-VALUES
-  (
-    '56', '5', 'え', 'え', '5', '(Hiragana: e)',
-    'e', 'いい{え}。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.5987692965183121'
-  );
-INSERT INTO words
-VALUES
-  (
-    '57', '5', 'す', 'す', '5', '(Hiragana: su)',
-    'su', '{す}みません。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.8182577088645265'
-  );
-INSERT INTO words
-VALUES
-  (
-    '58', '5', 'み', 'み', '5', '(Hiragana: mi)',
-    'mi', 'す{み}ません。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.29498068550134143'
-  );
-INSERT INTO words
-VALUES
-  (
-    '59', '5', 'ま', 'ま', '5', '(Hiragana: ma)',
-    'ma', 'すみ{ま}せん。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.02013033164677241'
-  );
-INSERT INTO words
-VALUES
-  (
-    '60', '5', 'せ', 'せ', '5', '(Hiragana: se)',
-    'se', 'すみま{せ}ん。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.2157096324634828'
-  );
-INSERT INTO words
-VALUES
-  (
-    '61', '5', 'ん', 'ん', '5', '(Hiragana: n)',
-    'n', 'すみませ{ん}。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.01815719811074175'
-  );
-INSERT INTO words
-VALUES
-  (
-    '62', '5', 'いいえ', 'いいえ',
-    '1', 'no / nay', 'iie', '{いいえ}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.4436571238969053'
-  );
-INSERT INTO words
-VALUES
-  (
-    '63', '5', 'すみません', 'すみません',
-    '3', 'sorry / excuse me', 'sumimasen',
-    '{すみません}。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '20.067133683596026',
-    '17.74023970358721', '0.16381405588594644'
-  );
-INSERT INTO words
-VALUES
-  (
-    '64', '5', 'ど', 'ど', '5', '(Hiragana: do)',
-    'do', '{ど}うも。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.4880989384726611'
-  );
-INSERT INTO words
-VALUES
-  (
-    '65', '5', 'う', 'う', '5', '(Hiragana: u)',
-    'u', 'ど{う}も。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.9490525554391114'
-  );
-INSERT INTO words
-VALUES
-  (
-    '66', '5', 'も', 'も', '5', '(Hiragana: mo)',
-    'mo', 'どう{も}。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.2809659925112184'
-  );
-INSERT INTO words
-VALUES
-  (
-    '104', '5', '本', '本', '3', 'book / main / origin / present / real / true',
-    'kun: もと / on: ホン / names: まと',
-    '日{本}語を話しますか。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '20.067133683596026', '17.74023970358721',
-    '0.12560323916897478'
-  );
-INSERT INTO words
-VALUES
-  (
-    '68', '5', 'あ', 'あ', '5', '(Hiragana: a)',
-    'a', '{あ}りがとうございます。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.557672326972403'
-  );
-INSERT INTO words
-VALUES
-  (
-    '69', '5', 'り', 'り', '5', '(Hiragana: ri)',
-    'ri', 'あ{り}がとうございます。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.9454636880620044'
-  );
-INSERT INTO words
-VALUES
-  (
-    '70', '5', 'が', 'が', '5', '(Hiragana: ga)',
-    'ga', 'あり{が}とうございます。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.054301490126458456'
-  );
-INSERT INTO words
-VALUES
-  (
-    '71', '5', 'と', 'と', '5', '(Hiragana: to)',
-    'to', 'ありが{と}うございます。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.4351164171799239'
-  );
-INSERT INTO words
-VALUES
-  (
-    '72', '5', 'ありがとう', 'ありがとう',
-    '1', 'thank you', 'arigatou', '{ありがとう}ございます。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.012677646253889098'
-  );
-INSERT INTO words
-VALUES
-  (
-    '73', '5', 'ご', 'ご', '5', '(Hiragana: go)',
-    'go', 'ありがとう{ご}ざいます。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.7580390104633188'
-  );
-INSERT INTO words
-VALUES
-  (
-    '74', '5', 'ざ', 'ざ', '5', '(Hiragana: za)',
-    'za', 'ありがとうご{ざ}います。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.7521621442885716'
-  );
-INSERT INTO words
-VALUES
-  (
-    '75', '5', 'ございます', 'ございます',
-    '1', '(polite) be / exist', 'gozaimasu',
-    'ありがとう{ございます}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.48669372078654705'
-  );
-INSERT INTO words
-VALUES
-  (
-    '108', '5', 'どうも', 'どうも',
-    '1', 'thanks', 'doumo', '{どうも}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.4154293177793075'
-  );
-INSERT INTO words
-VALUES
-  (
-    '77', '5', 'た', 'た', '5', '(Hiragana: ta)',
-    'ta', 'どうい{た}しまして。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.17698220180066507'
-  );
-INSERT INTO words
-VALUES
-  (
-    '78', '5', 'し', 'し', '5', '(Hiragana: shi)',
-    'shi', 'どういた{し}ま{し}て。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.4248298773773293'
-  );
-INSERT INTO words
-VALUES
-  (
-    '79', '5', 'て', 'て', '5', '(Hiragana: te)',
-    'te', 'どういたしまし{て}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.5932028122182962'
-  );
-INSERT INTO words
-VALUES
-  (
-    '109', '5', '来ました', '来ました',
-    '1', 'came', 'きました / kimashita',
-    'イギリスから{来ました}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.10249195536830645'
-  );
-INSERT INTO words
-VALUES
-  (
-    '83', '5', '日本', '日本', '1',
-    'Japan', 'にほん / nihon', '{日本}語を話しますか。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.691524459693138'
-  );
-INSERT INTO words
-VALUES
-  (
-    '85', '5', '日本語', '日本語',
-    '1', 'Japanese lang.', 'にほんご / nihongo',
-    '{日本語}を話しますか。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6780138925444464'
-  );
-INSERT INTO words
-VALUES
-  (
-    '86', '5', 'を', 'を', '5', '(Hiragana: wo), (direct object)',
-    'wo', '日本語{を}話しますか。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.3154961143764631'
-  );
-INSERT INTO words
-VALUES
-  (
-    '87', '5', 'か', 'か', '5', '(Hiragana: ka) / (question)',
-    'ka', '日本語を話します{か}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.5434389249826213'
-  );
-INSERT INTO words
-VALUES
-  (
-    '88', '5', 'ます', 'ます', '1',
-    '(respect)', 'masu', '日本語を話し{ます}か。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.770706312517362'
-  );
-INSERT INTO words
-VALUES
-  (
-    '89', '5', '話し', '話し', '1',
-    'talk / speech', 'はなし / hanashi',
-    '日本語を{話し}ますか。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.22321481837259122'
-  );
-INSERT INTO words
-VALUES
-  (
-    '105', '5', '語', '語', '4', 'language / speech / word',
-    'kun: かた.らう、 かた.る / on: ゴ',
-    '日本{語}を話しますか。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.9337393920251535'
-  );
-INSERT INTO words
-VALUES
-  (
-    '106', '5', '話', '話', '3', 'tale / talk',
-    'kun: はなし、 はな.す / on: ワ',
-    '日本語を{話}しますか。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '20.067133683596026', '17.74023970358721',
-    '0.2918872733524882'
-  );
-INSERT INTO words
-VALUES
-  (
-    '92', '5', '少し', '少し', '1',
-    'small quantity / little / few',
-    'すこし / sukoshi', 'はい、{少し}。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8039551850445151'
-  );
-INSERT INTO words
-VALUES
-  (
-    '93', '5', '少', '少', '1', 'few / little',
-    'kun: すく.ない、 すこ.し / on: ショウ',
-    'はい、{少}し。', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '0', '-6.980681940026449',
-    '0.3501315008384469'
-  );
-INSERT INTO words
-VALUES
-  (
-    '94', '5', '私', '私', '1', 'I / me',
-    'あたし / watashi', '{私}はイギリスから来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.3387919797923341'
-  );
-INSERT INTO words
-VALUES
-  (
-    '96', '5', 'ギ', 'ギ', '5', '(Katakana: gi)',
-    'ぎ / gi', '私はイ{ギ}リスから来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.6435654271799749'
-  );
-INSERT INTO words
-VALUES
-  (
-    '97', '5', 'イギリス', 'イギリス',
-    '1', 'Great Britain / United Kingdom',
-    'igirisu', '私は{イギリス}から来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.20145122725651715'
-  );
-INSERT INTO words
-VALUES
-  (
-    '98', '5', 'イ', 'イ', '5', '(Katakana: i)',
-    'い / i', '私は{イ}ギリスから来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.07655988547630597'
-  );
-INSERT INTO words
-VALUES
-  (
-    '99', '5', 'リ', 'リ', '5', '(Katakana: ri)',
-    'ri', '私はイギ{リ}スから来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.7784457763456234'
-  );
-INSERT INTO words
-VALUES
-  (
-    '100', '5', 'ス', 'ス', '5', '(Katakana: su)',
-    'su', '私はイギリ{ス}から来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.6625492560328443'
-  );
-INSERT INTO words
-VALUES
-  (
-    '101', '5', 'ら', 'ら', '5', '(Hiragana: ra)',
-    'ra', '私はイギリスか{ら}来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.9774089818609962'
-  );
-INSERT INTO words
-VALUES
-  (
-    '102', '5', 'から', 'から', '1',
-    'from', 'kara', '私はイギリス{から}来ています。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.899397171940093'
-  );
-INSERT INTO words
-VALUES
-  (
-    '107', '5', '来', '来', '1', 'become / cause / come / due / next',
-    'kun: き、 きた.す、 き.たす、 きた.る、 き.たる、 く.る、 こ / on: タイ、 ライ / names: くり、 くる、 ごろ、 さ',
-    'イギリスから{来}ました。',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6582182214206255'
-  );
-INSERT INTO words
-VALUES
-  (
-    '110', '3', 'wie froh', 'wie froh',
-    '1', 'how happy', NULL, '{Wie froh} bin ich, daß ich weg bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.2661718542372546'
-  );
-INSERT INTO words
-VALUES
-  (
-    '111', '3', 'wie froh bin', 'wie froh bin',
-    '1', 'how happy am', NULL, '{Wie froh bin} ich, daß ich weg bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.023383435814998518'
-  );
-INSERT INTO words
-VALUES
-  (
-    '112', '3', 'wie froh bin ich', 'wie froh bin ich',
-    '1', 'how happy I am', NULL, '{Wie froh bin ich}, daß ich weg bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.31840164709687385'
-  );
-INSERT INTO words
-VALUES
-  (
-    '113', '3', 'wie froh bin ich, daß',
-    'wie froh bin ich, daß', '1', 'how happy I am that',
-    NULL, '{Wie froh bin ich, daß} ich weg bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5218579587730188'
-  );
-INSERT INTO words
-VALUES
-  (
-    '114', '3', 'wie froh bin ich, daß ich',
-    'wie froh bin ich, daß ich', '1',
-    'how happy I am that I', NULL, '{Wie froh bin ich, daß ich} weg bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6540848833081172'
-  );
-INSERT INTO words
-VALUES
-  (
-    '115', '3', 'wie froh bin ich, daß ich weg',
-    'wie froh bin ich, daß ich weg',
-    '1', 'how happy I am that I (am) gone',
-    NULL, '{Wie froh bin ich, daß ich weg} bin!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.7048505709551746'
-  );
-INSERT INTO words
-VALUES
-  (
-    '116', '3', 'wie froh bin ich, daß ich weg bin',
-    'wie froh bin ich, daß ich weg bin',
-    '1', 'how happy I am that I am gone',
-    NULL, '{Wie froh bin ich, daß ich weg bin}!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5619982355851664'
-  );
-INSERT INTO words
-VALUES
-  (
-    '117', '3', 'waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal',
-    'waren nicht meine übrigen verbindungen recht ausgesucht vom schicksal',
-    '1', 'have not other attachments been specially appointed by fate',
-    NULL, '{Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal}, um ein Herz wie das meine zu ängstigen?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.695439495793953'
-  );
-INSERT INTO words
-VALUES
-  (
-    '118', '3', 'um ein Herz wie das meine zu ängstigen',
-    'um ein herz wie das meine zu ängstigen',
-    '1', 'to torment a head like mine',
-    NULL, 'Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, {um ein Herz wie das meine zu ängstigen}?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.7912028029479112'
-  );
-INSERT INTO words
-VALUES
-  (
-    '119', '3', 'Waren', 'waren', '99',
-    'were / goods', NULL, '{Waren} nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das meine zu ängstigen?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '100', '100', '0.869695558091342'
-  );
-INSERT INTO words
-VALUES
-  (
-    '120', '3', 'nicht', 'nicht', '99',
-    'not', NULL, 'Waren {nicht} meine übrigen Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das meine zu ängstigen?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '100', '100', '0.9748694123466214'
-  );
-INSERT INTO words
-VALUES
-  (
-    '121', '3', 'meine', 'meine', '99',
-    'my', NULL, 'Waren nicht {meine} übrigen Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das {meine} zu ängstigen?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '100', '100', '0.265260418192726'
-  );
-INSERT INTO words
-VALUES
-  (
-    '122', '3', 'übrigen', 'übrigen',
-    '99', 'others', NULL, 'Waren nicht meine {übrigen} Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das meine zu ängstigen?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '100', '100', '0.4016938846574108'
-  );
-INSERT INTO words
-VALUES
-  (
-    '123', '3', 'um', 'um', '99', 'to', NULL,
-    'Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, {um} ein Herz wie das meine zu ängstigen?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '100', '100', '0.21268819944252093'
-  );
-INSERT INTO words
-VALUES
-  (
-    '124', '3', 'ein', 'ein', '99', 'a / one',
-    NULL, 'Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, um {ein} Herz wie das meine zu ängstigen?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '100', '100', '0.8583593739740172'
-  );
-INSERT INTO words
-VALUES
-  (
-    '125', '3', 'Herz', 'herz', '99', 'heart',
-    NULL, 'Bester Freund, was ist das {Herz} des Menschen!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '100', '100', '0.6537323022761683'
-  );
-INSERT INTO words
-VALUES
-  (
-    '126', '3', 'Leonore', 'leonore', '98',
-    '*', NULL, 'Die arme {Leonore}!',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '100', '100', '0.6935834201924348'
-  );
-INSERT INTO words
-VALUES
-  (
-    '127', '6', '좋은', '좋은', '1',
-    'good', 'joh-eun', '{좋은} 아침.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5067202248673143'
-  );
-INSERT INTO words
-VALUES
-  (
-    '128', '6', '아침', '아침', '1',
-    'morning', 'achim', '좋은 {아침}.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.452850894492912'
-  );
-INSERT INTO words
-VALUES
-  (
-    '129', '6', '좋은 아침', '좋은 아침',
-    '1', 'good morning', 'joh-eun achim',
-    '{좋은 아침}.', NULL, '1', '2011-08-30 12:00:00',
-    '2020-10-03 18:08:22', '0', '-6.980681940026449',
-    '0.744093828596262'
-  );
-INSERT INTO words
-VALUES
-  (
-    '130', '6', '안녕하세요', '안녕하세요',
-    '1', 'how are you / hello / good day',
-    'annyeonghaseyo', '{안녕하세요}.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.36191649023621947'
-  );
-INSERT INTO words
-VALUES
-  (
-    '131', '6', '잘지냈어요', '잘지냈어요',
-    '1', 'how are you', 'jaljinaess-eoyo',
-    '안녕하세요, {잘지냈어요}?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5773009961259561'
-  );
-INSERT INTO words
-VALUES
-  (
-    '132', '6', '잘자요', '잘자요',
-    '1', 'good night', 'jaljayo', '{잘자요}.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8007555406547668'
-  );
-INSERT INTO words
-VALUES
-  (
-    '133', '6', '잘가요', '잘가요',
-    '1', 'good bye', 'jalgayo', '{잘가요}.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.27187474562961117'
-  );
-INSERT INTO words
-VALUES
-  (
-    '134', '6', '네', '네', '1', 'four / yes / ok / you(r)',
-    'ne', '{네}, 잘지냈어요?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9571071369174003'
-  );
-INSERT INTO words
-VALUES
-  (
-    '135', '6', '그럼요', '그럼요',
-    '1', 'by all means / without fail / certainly / definitely',
-    'geuleom-yo', '네 {그럼요}.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9699114784318129'
-  );
-INSERT INTO words
-VALUES
-  (
-    '136', '7', 'ดี', 'ดี', '1',
-    'good / is good', 'diː', 'สวัส{ดี}',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9782360121405087'
-  );
-INSERT INTO words
-VALUES
-  (
-    '137', '7', 'สวัส', 'สวัส',
-    '1', 'blessing / good fortune',
-    'sà wàt', '{สวัส}ดี',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.98144565614075'
-  );
-INSERT INTO words
-VALUES
-  (
-    '139', '7', 'ครับ', 'ครับ',
-    '1', '(polite M)', 'kʰráp', 'สวัสดี{ครับ}',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9725202750158685'
-  );
-INSERT INTO words
-VALUES
-  (
-    '140', '7', 'ค่ะ', 'ค่ะ',
-    '1', '(polite, F)', 'kʰáʔ', 'สวัสดี{ค่ะ}',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9182644373907376'
-  );
-INSERT INTO words
-VALUES
-  (
-    '141', '7', 'สวัสดีครับ',
-    'สวัสดีครับ',
-    '1', 'hello (M) / goodbye (M)',
-    'sà wàt diː kʰráp', '{สวัสดีครับ}',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6737613926397277'
-  );
-INSERT INTO words
-VALUES
-  (
-    '142', '7', 'สวัสดีค่ะ',
-    'สวัสดีค่ะ',
-    '1', 'hello (F) / goodbye (F)',
-    'sà wàt diː kʰáʔ', '{สวัสดีค่ะ}',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6140136817600705'
-  );
-INSERT INTO words
-VALUES
-  (
-    '145', '7', 'วัสดี', 'วัสดี',
-    '1', 'hi / hey / (inf. abbrev.)',
-    'wàt diː', 'ส{วัสดี}ครับ',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.048784261614814646'
-  );
-INSERT INTO words
-VALUES
-  (
-    '146', '1', 'vous', 'vous', '5', 'you / you all',
-    NULL, 'Alors, je crois qu\'il y a pas longtemps, là, {vous} avez fait une bonne action ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.40188029352750654'
-  );
-INSERT INTO words
-VALUES
-  (
-    '147', '1', 'fait', 'fait', '4', 'made / done / make / fact / occurrence',
-    NULL, 'Alors, je crois qu\'il y a pas longtemps, là, vous avez {fait} une bonne action ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.8630487135267338'
-  );
-INSERT INTO words
-VALUES
-  (
-    '148', '1', 'bonne', 'bonne', '2', 'good',
-    NULL, 'Alors, je crois qu\'il y a pas longtemps, là, vous avez fait une {bonne} action ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.10960271778479472'
-  );
-INSERT INTO words
-VALUES
-  (
-    '149', '1', 'ai', 'ai', '3', 'have',
-    NULL, 'Alors, j\'{ai} fait mon premier don du sang.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '20.067133683596026', '17.74023970358721',
-    '0.9588674790774169'
-  );
-INSERT INTO words
-VALUES
-  (
-    '150', '1', 'avez', 'avez', '4', 'have',
-    NULL, 'Qu\'est-ce que vous {avez} fait, alors ?',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.4655292727663454'
-  );
-INSERT INTO words
-VALUES
-  (
-    '151', '1', 'mon', 'mon', '4', 'my',
-    NULL, 'Alors, j\'ai fait {mon} premier don du sang.',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.4510439573331214'
-  );
-INSERT INTO words
-VALUES
-  (
-    '152', '8', 'טוב', 'טוב', '1',
-    'good', 'tov', 'בוקר {טוב}',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8586319991002157'
-  );
-INSERT INTO words
-VALUES
-  (
-    '153', '8', 'בוקר', 'בוקר',
-    '1', 'morning', 'boker', '{בוקר} טוב',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9400281542353595'
-  );
-INSERT INTO words
-VALUES
-  (
-    '154', '8', 'ערב', 'ערב', '1',
-    'evening', 'erev', '{ערב} טוב',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.12424480460979492'
-  );
-INSERT INTO words
-VALUES
-  (
-    '155', '8', 'לילה', 'לילה',
-    '1', 'night', 'laila', '{לילה} טוב',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8011395910765413'
-  );
-INSERT INTO words
-VALUES
-  (
-    '156', '8', 'להתראות', 'להתראות',
-    '1', 'good bye', 'lehitraot', '{להתראות}',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6329635722869668'
-  );
-INSERT INTO words
-VALUES
-  (
-    '157', '8', 'טובים', 'טובים',
-    '1', 'good', 'tovim', 'אחר צהריים {טובים}',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.761399118938855'
-  );
-INSERT INTO words
-VALUES
-  (
-    '158', '8', 'צהריים', 'צהריים',
-    '1', 'noon', 'tzahara\'im', 'אחר {צהריים} טובים',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9081049085670196'
-  );
-INSERT INTO words
-VALUES
-  (
-    '159', '8', 'אחר', 'אחר', '1',
-    'after / other', 'achar', '{אחר} צהריים טובים',
-    NULL, '1', '2011-08-30 12:00:00', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.25632721675217823'
-  );
-INSERT INTO words
-VALUES
-  (
-    '160', '8', 'בוקר טוב', 'בוקר טוב',
-    '1', 'good morning', 'boker tov',
-    '{בוקר טוב}', NULL, '1', '2011-09-02 19:00:09',
-    '2020-10-03 18:08:22', '0', '-6.980681940026449',
-    '0.5573213887934773'
-  );
-INSERT INTO words
-VALUES
-  (
-    '161', '8', 'אחר צהריים טובים',
-    'אחר צהריים טובים',
-    '1', 'good afternoon', 'achar tzahara\'im tovim',
-    '{אחר צהריים טובים}',
-    NULL, '1', '2011-09-02 19:00:50', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.017625324444496375'
-  );
-INSERT INTO words
-VALUES
-  (
-    '162', '8', 'ערב טוב', 'ערב טוב',
-    '1', 'good evening', 'erev tov',
-    '{ערב טוב}', NULL, '1', '2011-09-02 19:01:21',
-    '2020-10-03 18:08:22', '0', '-6.980681940026449',
-    '0.4161624865756952'
-  );
-INSERT INTO words
-VALUES
-  (
-    '163', '8', 'לילה טוב', 'לילה טוב',
-    '1', 'good night', 'laila tov', '{לילה טוב}',
-    NULL, '1', '2011-09-02 19:01:50', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.027936490278631907'
-  );
-INSERT INTO words
-VALUES
-  (
-    '164', '8', 'אחר צהריים',
-    'אחר צהריים', '1', 'afternoon',
-    'achar tzahara\'im', '{אחר צהריים} טובים',
-    NULL, '1', '2011-09-02 19:21:20', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8911950223997189'
-  );
-INSERT INTO words
-VALUES
-  (
-    '165', '1', 'Oui', 'oui', '5', 'yes',
-    NULL, '{Oui}.', NULL, '1', '2013-03-27 12:13:44',
-    '2020-10-03 18:08:22', '99.99999999999999',
-    '98.6038636119947', '0.37216567189634375'
-  );
-INSERT INTO words
-VALUES
-  (
-    '166', '1', 'On', 'on', '4', 'someone / somebody / you / one / we',
-    NULL, '{On} peut dire ça comme ça.',
-    NULL, '1', '2013-03-27 12:14:40', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.18724332301620703'
-  );
-INSERT INTO words
-VALUES
-  (
-    '167', '1', 'peut', 'peut', '5', 'can / may',
-    NULL, 'On {peut} dire ça comme ça.',
-    NULL, '1', '2013-03-27 12:15:10', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.819719630125649'
-  );
-INSERT INTO words
-VALUES
-  (
-    '168', '1', 'ça', 'ça', '4', 'that / this / it',
-    NULL, 'On peut dire {ça} comme {ça}.',
-    NULL, '1', '2013-03-27 12:16:08', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.5368682123132685'
-  );
-INSERT INTO words
-VALUES
-  (
-    '169', '1', 'comme', 'comme', '3', 'as / just as / like / how',
-    NULL, 'On peut dire ça {comme} ça.',
-    NULL, '1', '2013-03-27 12:16:47', '2020-10-03 18:08:22',
-    '20.067133683596026', '17.74023970358721',
-    '0.22518220192304086'
-  );
-INSERT INTO words
-VALUES
-  (
-    '171', '1', 'longtemps', 'longtemps',
-    '5', 'long time / long while / long',
-    NULL, 'Alors, je crois qu\'il y a pas {longtemps}, là, vous avez fait une bonne action ?',
-    NULL, '1', '2013-03-27 12:22:02', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.900985442009741'
-  );
-INSERT INTO words
-VALUES
-  (
-    '172', '1', 'là', 'là', '1', 'there',
-    NULL, 'Alors, je crois qu\'il y a pas longtemps, {là}, vous avez fait une bonne action ?',
-    NULL, '1', '2013-03-27 12:22:35', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9590080305552184'
-  );
-INSERT INTO words
-VALUES
-  (
-    '173', '1', 'une', 'une', '5', 'a / an / one / front page',
-    NULL, 'Alors, je crois qu\'il y a pas longtemps, là, vous avez fait {une} bonne action ?',
-    NULL, '1', '2013-03-27 12:24:25', '2020-10-03 18:08:22',
-    '99.99999999999999', '98.6038636119947',
-    '0.09208385748051466'
-  );
-INSERT INTO words
-VALUES
-  (
-    '174', '1', 'j', 'j', '99', 'I', NULL,
-    'Alors, {j}\'ai fait mon premier don du sang …',
-    NULL, '1', '2013-03-27 12:26:34', '2020-10-03 18:08:22',
-    '100', '100', '0.5833952264705629'
-  );
-INSERT INTO words
-VALUES
-  (
-    '175', '1', 'premier', 'premier', '4',
-    'first / primary / prime / initial',
-    NULL, 'Alors, j\'ai fait mon {premier} don du sang …',
-    NULL, '1', '2013-03-27 12:27:33', '2020-10-03 18:08:22',
-    '46.38244308231173', '44.63727259730512',
-    '0.6407245906449152'
-  );
-INSERT INTO words
-VALUES
-  (
-    '176', '1', 'y', 'y', '2', 'there / here / in',
-    NULL, 'Alors, je crois qu\'il {y} a pas longtemps, là, vous avez fait une bonne action ?',
-    NULL, '1', '2013-03-27 12:32:17', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.4534373045465325'
-  );
-INSERT INTO words
-VALUES
-  (
-    '177', '1', 'a', 'a', '2', 'have / has',
-    NULL, 'Alors, je crois qu\'il y {a} pas longtemps, là, vous avez fait une bonne action ?',
-    NULL, '1', '2013-03-27 12:34:33', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.3450127815315619'
-  );
-INSERT INTO words
-VALUES
-  (
-    '178', '1', 'action', 'action', '2',
-    'action / deed', NULL, 'Alors, je crois qu\'il y a pas longtemps, là, vous avez fait une bonne {action} ?',
-    NULL, '1', '2013-03-27 12:35:08', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.364752024751857'
-  );
-INSERT INTO words
-VALUES
-  (
-    '179', '1', 'don', 'don', '1', 'donation',
-    NULL, 'Alors, j\'ai fait mon premier {don} du sang …',
-    NULL, '1', '2013-03-27 12:35:50', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.788721809898244'
-  );
-INSERT INTO words
-VALUES
-  (
-    '180', '1', 'du', 'du', '1', 'of / from / some',
-    NULL, 'Alors, j\'ai fait mon premier don {du} sang …',
-    NULL, '1', '2013-03-27 12:36:09', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8493530059692943'
-  );
-INSERT INTO words
-VALUES
-  (
-    '181', '1', 'sang', 'sang', '1', 'blood',
-    NULL, 'Alors, j\'ai fait mon premier don du {sang} …',
-    NULL, '1', '2013-03-27 12:36:17', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8805996308853846'
-  );
-INSERT INTO words
-VALUES
-  (
-    '182', '1', 'ce', 'ce', '1', 'this / that / it',
-    NULL, 'Qu\'est-{ce} que vous avez fait, alors ?',
-    NULL, '1', '2013-03-27 12:36:32', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8549391672526852'
-  );
-INSERT INTO words
-VALUES
-  (
-    '183', '1', 'que', 'que', '1', 'that / how / so that / so',
-    NULL, 'Qu\'est-ce {que} vous avez fait, alors ?',
-    NULL, '1', '2013-03-27 12:36:48', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6328969743409166'
-  );
-INSERT INTO words
-VALUES
-  (
-    '184', '2', '他', '他', '1', 'he',
-    NULL, '突然，{他}看见前面有一只黑色的大狗，看起来很凶。',
-    NULL, '1', '2013-04-18 09:03:32', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5996674006801727'
-  );
-INSERT INTO words
-VALUES
-  (
-    '185', '2', '看见', '看见', '1',
-    'see / catch sight', NULL, '突然，他{看见}前面有一只黑色的大狗，看起来很凶。',
-    NULL, '1', '2013-04-18 09:03:53', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.09964611111175838'
-  );
-INSERT INTO words
-VALUES
-  (
-    '186', '2', '前面', '前面', '1',
-    'ahead / front', NULL, '突然，他看见{前面}有一只黑色的大狗，看起来很凶。',
-    NULL, '1', '2013-04-18 09:04:12', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.699228384251919'
-  );
-INSERT INTO words
-VALUES
-  (
-    '187', '2', '有', '有', '1', 'have / occur',
-    NULL, '突然，他看见前面{有}一只黑色的大狗，看起来很凶。',
-    NULL, '1', '2013-04-18 09:04:29', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.19720361865796485'
-  );
-INSERT INTO words
-VALUES
-  (
-    '188', '2', '只', '只', '1', '(MW) / only',
-    NULL, '突然，他看见前面有一{只}黑色的大狗，看起来很凶。',
-    NULL, '1', '2013-04-18 09:04:58', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8883329712677123'
-  );
-INSERT INTO words
-VALUES
-  (
-    '189', '2', '黑色', '黑色', '1',
-    'black color', NULL, '突然，他看见前面有一只{黑色}的大狗，看起来很凶。',
-    NULL, '1', '2013-04-18 09:05:13', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8500540310983118'
-  );
-INSERT INTO words
-VALUES
-  (
-    '190', '2', '的', '的', '1', '(Part.) / \'s',
-    NULL, '突然，他看见前面有一只黑色{的}大狗，看起来很凶。',
-    NULL, '1', '2013-04-18 09:05:54', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5852712724220671'
-  );
-INSERT INTO words
-VALUES
-  (
-    '191', '2', '大', '大', '1', 'big / strong',
-    NULL, '突然，他看见前面有一只黑色的{大}狗，看起来很凶。',
-    NULL, '1', '2013-04-18 09:06:02', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.3761942995490453'
-  );
-INSERT INTO words
-VALUES
-  (
-    '192', '2', '狗', '狗', '1', 'dog',
-    NULL, '突然，他看见前面有一只黑色的大{狗}，看起来很凶。',
-    NULL, '1', '2013-04-18 09:06:08', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.12515771121267016'
-  );
-INSERT INTO words
-VALUES
-  (
-    '193', '2', '看起来', '看起来',
-    '1', 'seems / appears / looks as',
-    NULL, '突然，他看见前面有一只黑色的大狗，{看起来}很凶。',
-    NULL, '1', '2013-04-18 09:06:36', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.4972056881498598'
-  );
-INSERT INTO words
-VALUES
-  (
-    '194', '2', '很', '很', '1', 'very',
-    NULL, '突然，他看见前面有一只黑色的大狗，看起来{很}凶。',
-    NULL, '1', '2013-04-18 09:06:42', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.1105553378449337'
-  );
-INSERT INTO words
-VALUES
-  (
-    '195', '2', '凶', '凶', '1', 'ferocious / terrible',
-    NULL, '突然，他看见前面有一只黑色的大狗，看起来很{凶}。',
-    NULL, '1', '2013-04-18 09:07:12', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.061159655508733965'
-  );
-INSERT INTO words
-VALUES
-  (
-    '196', '2', '非常', '非常', '1',
-    'exceptional / very', NULL, '男人{非常}害怕，不敢往前走。',
-    NULL, '1', '2013-04-18 09:07:24', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9741322947425137'
-  );
-INSERT INTO words
-VALUES
-  (
-    '197', '2', '害怕', '害怕', '1',
-    'be afraid', NULL, '男人非常{害怕}，不敢往前走。',
-    NULL, '1', '2013-04-18 09:07:52', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6871825379200117'
-  );
-INSERT INTO words
-VALUES
-  (
-    '198', '2', '不', '不', '1', 'not',
-    NULL, '男人非常害怕，{不}敢往前走。',
-    NULL, '1', '2013-04-18 09:08:01', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5135158361061624'
-  );
-INSERT INTO words
-VALUES
-  (
-    '199', '2', '敢', '敢', '1', 'dare',
-    NULL, '男人非常害怕，不{敢}往前走。',
-    NULL, '1', '2013-04-18 09:08:10', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5060315975044217'
-  );
-INSERT INTO words
-VALUES
-  (
-    '200', '2', '往前', '往前', '1',
-    'go forward / move ahead', NULL,
-    '男人非常害怕，不敢{往前}走。',
-    NULL, '1', '2013-04-18 09:08:45', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9896105099372664'
-  );
-INSERT INTO words
-VALUES
-  (
-    '201', '2', '旁边', '旁边', '1',
-    'side / near by position/ right by',
-    NULL, '狗的{旁边}站着一个女人，男人问她：',
-    NULL, '1', '2013-04-18 09:09:15', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.42995778790671174'
-  );
-INSERT INTO words
-VALUES
-  (
-    '202', '2', '站', '站', '1', 'stand',
-    NULL, '狗的旁边{站}着一个女人，男人问她：',
-    NULL, '1', '2013-04-18 09:09:29', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.18095744045540452'
-  );
-INSERT INTO words
-VALUES
-  (
-    '203', '2', '着', '着', '1', '(there) / (cont.)',
-    NULL, '狗的旁边站{着}一个女人，男人问她：',
-    NULL, '1', '2013-04-18 09:10:04', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.6149138692905324'
-  );
-INSERT INTO words
-VALUES
-  (
-    '204', '2', '女人', '女人', '2',
-    'woman', NULL, '狗的旁边站着一个{女人}，男人问她：',
-    NULL, '1', '2013-04-18 09:10:13', '2020-10-03 18:08:22',
-    '6.84106830122592', '3.3507273312126955',
-    '0.5316970558200935'
-  );
-INSERT INTO words
-VALUES
-  (
-    '205', '2', '问', '问', '1', 'ask',
-    NULL, '狗的旁边站着一个女人，男人{问}她：',
-    NULL, '1', '2013-04-18 09:10:20', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8137437019625154'
-  );
-INSERT INTO words
-VALUES
-  (
-    '206', '2', '她', '她', '1', 'she / her',
-    NULL, '狗的旁边站着一个女人，男人问{她}：',
-    NULL, '1', '2013-04-18 09:10:29', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.47362737308594155'
-  );
-INSERT INTO words
-VALUES
-  (
-    '207', '2', '你', '你', '1', 'you',
-    NULL, '{你}的狗咬人吗？',
-    NULL, '1', '2013-04-18 09:10:35', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.9269057902758063'
-  );
-INSERT INTO words
-VALUES
-  (
-    '208', '2', '咬', '咬', '1', 'bite',
-    NULL, '你的狗{咬}人吗？',
-    NULL, '1', '2013-04-18 09:10:44', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.2136468628548522'
-  );
-INSERT INTO words
-VALUES
-  (
-    '209', '2', '吗', '吗', '1', '(QW)',
-    NULL, '你的狗咬人{吗}？',
-    NULL, '1', '2013-04-18 09:10:59', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.28751697418048694'
-  );
-INSERT INTO words
-VALUES
-  (
-    '210', '2', '说', '说', '1', 'say',
-    NULL, '女人{说}：', NULL, '1', '2013-04-18 09:11:06',
-    '2020-10-03 18:08:22', '0', '-6.980681940026449',
-    '0.7966443130715232'
-  );
-INSERT INTO words
-VALUES
-  (
-    '211', '2', '我的', '我的', '1',
-    'my', NULL, '{我的}狗不咬人。',
-    NULL, '1', '2013-04-18 09:11:16', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.12067067354979988'
-  );
-INSERT INTO words
-VALUES
-  (
-    '212', '2', '这时', '这时', '1',
-    'at this time', NULL, '{这时}，那只狗咬了男人。',
-    NULL, '1', '2013-04-18 09:12:08', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.2134204592680749'
-  );
-INSERT INTO words
-VALUES
-  (
-    '213', '2', '那', '那', '1', 'that',
-    NULL, '这时，{那}只狗咬了男人。',
-    NULL, '1', '2013-04-18 09:12:19', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.7050903064246199'
-  );
-INSERT INTO words
-VALUES
-  (
-    '214', '2', '了', '了', '1', '(compl.) / finish / (change)',
-    NULL, '这时，那只狗咬{了}男人。',
-    NULL, '1', '2013-04-18 09:12:48', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8851901850525198'
-  );
-INSERT INTO words
-VALUES
-  (
-    '215', '2', '气坏', '气坏', '1',
-    'furious', NULL, '他{气坏}了，大叫：',
-    NULL, '1', '2013-04-18 09:13:54', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.3106800367223844'
-  );
-INSERT INTO words
-VALUES
-  (
-    '216', '2', '叫', '叫', '1', 'shout',
-    NULL, '他气坏了，大{叫}：',
-    NULL, '1', '2013-04-18 09:14:07', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.8978296591880076'
-  );
-INSERT INTO words
-VALUES
-  (
-    '217', '2', '回答', '回答', '1',
-    'answer', NULL, '女人{回答}：',
-    NULL, '1', '2013-04-18 09:14:18', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.5571082165065298'
-  );
-INSERT INTO words
-VALUES
-  (
-    '218', '2', '这', '这', '1', 'this',
-    NULL, '{这}不是我的狗。',
-    NULL, '1', '2013-04-18 09:14:24', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.09205213570227114'
-  );
-INSERT INTO words
-VALUES
-  (
-    '219', '2', '是', '是', '1', 'be',
-    NULL, '这不{是}我的狗。',
-    NULL, '1', '2013-04-18 09:14:30', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.7889360597254113'
-  );
-INSERT INTO words
-VALUES
-  (
-    '220', '2', '你的', '你的', '1',
-    'your', NULL, '{你的}狗咬人吗？',
-    NULL, '1', '2013-04-18 09:22:32', '2020-10-03 18:08:22',
-    '0', '-6.980681940026449', '0.668523922253888'
-  );
-DROP
-  TABLE IF EXISTS wordtags;
-CREATE TABLE `wordtags` (
-  `WtWoID` mediumint(8) unsigned NOT NULL,
-  `WtTgID` smallint(5) unsigned NOT NULL,
-  PRIMARY KEY (`WtWoID`, `WtTgID`),
-  KEY `WtTgID` (`WtTgID`),
-  KEY `WtWoID` (`WtWoID`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-INSERT INTO wordtags
-VALUES
-  ('1', '27');
-INSERT INTO wordtags
-VALUES
-  ('2', '1');
-INSERT INTO wordtags
-VALUES
-  ('2', '14');
-INSERT INTO wordtags
-VALUES
-  ('2', '18');
-INSERT INTO wordtags
-VALUES
-  ('2', '28');
-INSERT INTO wordtags
-VALUES
-  ('3', '13');
-INSERT INTO wordtags
-VALUES
-  ('6', '15');
-INSERT INTO wordtags
-VALUES
-  ('7', '5');
-INSERT INTO wordtags
-VALUES
-  ('7', '19');
-INSERT INTO wordtags
-VALUES
-  ('8', '5');
-INSERT INTO wordtags
-VALUES
-  ('8', '6');
-INSERT INTO wordtags
-VALUES
-  ('8', '7');
-INSERT INTO wordtags
-VALUES
-  ('8', '22');
-INSERT INTO wordtags
-VALUES
-  ('22', '19');
-INSERT INTO wordtags
-VALUES
-  ('25', '1');
-INSERT INTO wordtags
-VALUES
-  ('25', '7');
-INSERT INTO wordtags
-VALUES
-  ('25', '8');
-INSERT INTO wordtags
-VALUES
-  ('25', '18');
-INSERT INTO wordtags
-VALUES
-  ('25', '22');
-INSERT INTO wordtags
-VALUES
-  ('26', '7');
-INSERT INTO wordtags
-VALUES
-  ('26', '17');
-INSERT INTO wordtags
-VALUES
-  ('33', '1');
-INSERT INTO wordtags
-VALUES
-  ('33', '18');
-INSERT INTO wordtags
-VALUES
-  ('45', '19');
-INSERT INTO wordtags
-VALUES
-  ('46', '2');
-INSERT INTO wordtags
-VALUES
-  ('46', '18');
-INSERT INTO wordtags
-VALUES
-  ('50', '1');
-INSERT INTO wordtags
-VALUES
-  ('50', '8');
-INSERT INTO wordtags
-VALUES
-  ('50', '19');
-INSERT INTO wordtags
-VALUES
-  ('51', '11');
-INSERT INTO wordtags
-VALUES
-  ('51', '19');
-INSERT INTO wordtags
-VALUES
-  ('146', '10');
-INSERT INTO wordtags
-VALUES
-  ('146', '19');
-INSERT INTO wordtags
-VALUES
-  ('147', '1');
-INSERT INTO wordtags
-VALUES
-  ('147', '7');
-INSERT INTO wordtags
-VALUES
-  ('147', '8');
-INSERT INTO wordtags
-VALUES
-  ('147', '22');
-INSERT INTO wordtags
-VALUES
-  ('147', '25');
-INSERT INTO wordtags
-VALUES
-  ('148', '2');
-INSERT INTO wordtags
-VALUES
-  ('148', '12');
-INSERT INTO wordtags
-VALUES
-  ('149', '5');
-INSERT INTO wordtags
-VALUES
-  ('149', '7');
-INSERT INTO wordtags
-VALUES
-  ('149', '22');
-INSERT INTO wordtags
-VALUES
-  ('150', '7');
-INSERT INTO wordtags
-VALUES
-  ('150', '10');
-INSERT INTO wordtags
-VALUES
-  ('150', '22');
-INSERT INTO wordtags
-VALUES
-  ('151', '1');
-INSERT INTO wordtags
-VALUES
-  ('151', '19');
-INSERT INTO wordtags
-VALUES
-  ('171', '13');
-INSERT INTO wordtags
-VALUES
-  ('175', '12');
-INSERT INTO wordtags
-VALUES
-  ('175', '16');
-DROP
-  TABLE IF EXISTS feedlinks;
-CREATE TABLE `feedlinks` (
-  `FlID` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-  `FlTitle` varchar(200) NOT NULL,
-  `FlLink` varchar(400) NOT NULL,
-  `FlDescription` text NOT NULL,
-  `FlDate` datetime NOT NULL,
-  `FlAudio` varchar(200) NOT NULL DEFAULT '',
-  `FlText` longtext NOT NULL DEFAULT '',
-  `FlNfID` tinyint(3) unsigned NOT NULL,
-  PRIMARY KEY (`FlID`),
-  KEY `FlLink` (`FlLink`),
-  KEY `FlDate` (`FlDate`),
-  UNIQUE KEY `FlTitle` (`FlNfID`, `FlTitle`)
-) ENGINE=InnoDB DEFAULT CHARSET = utf8;
-DROP TABLE IF EXISTS local_dictionary_entries;
-DROP TABLE IF EXISTS local_dictionaries;
-CREATE TABLE `local_dictionaries` (
-  `LdID` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `LdLgID` TINYINT(3) UNSIGNED NOT NULL,
-  `LdName` VARCHAR(100) NOT NULL,
-  `LdDescription` VARCHAR(500) DEFAULT NULL,
-  `LdSourceFormat` VARCHAR(20) NOT NULL DEFAULT 'csv',
-  `LdEntryCount` INT(10) UNSIGNED NOT NULL DEFAULT 0,
-  `LdPriority` TINYINT(3) UNSIGNED NOT NULL DEFAULT 1,
-  `LdEnabled` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
-  `LdCreated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `LdUsID` INT(10) UNSIGNED DEFAULT NULL,
-  PRIMARY KEY (`LdID`),
-  KEY `LdLgID` (`LdLgID`),
-  KEY `LdUsID` (`LdUsID`),
-  KEY `LdEnabled_LdPriority` (`LdEnabled`, `LdPriority`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-CREATE TABLE `local_dictionary_entries` (
-  `LeID` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `LeLdID` INT(10) UNSIGNED NOT NULL,
-  `LeTerm` VARCHAR(250) NOT NULL,
-  `LeTermLc` VARCHAR(250) NOT NULL,
-  `LeDefinition` TEXT NOT NULL,
-  `LeReading` VARCHAR(250) DEFAULT NULL,
-  `LePartOfSpeech` VARCHAR(50) DEFAULT NULL,
-  PRIMARY KEY (`LeID`),
-  KEY `LeLdID` (`LeLdID`),
-  KEY `LeTermLc` (`LeTermLc`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-SET FOREIGN_KEY_CHECKS = 1;
+  `id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `language_id` tinyint(3) unsigned NOT NULL,
+  `text` varchar(250) NOT NULL,
+  `text_lc` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `lemma` varchar(250) DEFAULT NULL,
+  `lemma_lc` varchar(250) DEFAULT NULL,
+  `status` tinyint(4) NOT NULL,
+  `translation` varchar(500) NOT NULL DEFAULT '*',
+  `romanization` varchar(100) DEFAULT NULL,
+  `sentence` varchar(1000) DEFAULT NULL,
+  `notes` varchar(1000) DEFAULT NULL,
+  `word_count` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status_changed_at` timestamp NOT NULL DEFAULT '1970-01-01 12:00:00',
+  `stability` double NOT NULL DEFAULT 0,
+  `difficulty` double NOT NULL DEFAULT 0,
+  `due_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `last_reviewed_at` datetime DEFAULT NULL,
+  `reps` smallint(5) unsigned NOT NULL DEFAULT 0,
+  `lapses` smallint(5) unsigned NOT NULL DEFAULT 0,
+  `fsrs_state` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `WoTextLCLgID` (`text_lc`,`language_id`),
+  KEY `user_id` (`user_id`),
+  KEY `language_id` (`language_id`),
+  KEY `status` (`status`),
+  KEY `translation` (`translation`(20)),
+  KEY `created_at` (`created_at`),
+  KEY `status_changed_at` (`status_changed_at`),
+  KEY `word_count` (`word_count`),
+  KEY `due_at` (`due_at`),
+  KEY `idx_words_lemma` (`lemma_lc`,`language_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=221 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+INSERT INTO `words` VALUES
+(1,1,1,'Manon','manon',NULL,NULL,98,'(name)',NULL,'Bonjour {Manon}.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(2,1,1,'bonjour','bonjour',NULL,NULL,5,'hello / good morning / good afternoon',NULL,'{Bonjour} Manon.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(3,1,1,'alors','alors',NULL,NULL,5,'then / in that case / at the time / else / if not / my goodness / well',NULL,'{Alors}, je crois qu\'il y a pas longtemps, là, vous avez fait une bonne action ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(4,1,1,'il y a','il y a',NULL,NULL,2,'there is / there are',NULL,'Alors, je crois qu\'{il y a} pas longtemps, là, vous avez fait une bonne action ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(6,1,1,'qu','qu',NULL,NULL,5,'that / how / so that',NULL,'Alors, je crois {qu}\'il y a pas longtemps, là, vous avez fait une bonne action ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(7,1,1,'je','je',NULL,NULL,5,'I',NULL,'Alors, {je} crois qu\'il y a pas longtemps, là, vous avez fait une bonne action ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(8,1,1,'crois','crois',NULL,NULL,4,'believe / think',NULL,'Alors, je {crois} qu\'il y a pas longtemps, là, vous avez fait une bonne action ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(9,1,2,'一','一',NULL,NULL,2,'one / a',NULL,'{一}天，{一}个男人走在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(10,1,2,'天','天',NULL,NULL,2,'sky, day',NULL,'一{天}，一个男人走在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(11,1,2,'一天','一天',NULL,NULL,1,'one day',NULL,'{一天}，一个男人走在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(12,1,2,'个','个',NULL,NULL,2,'(MW)',NULL,'一天，一{个}男人走在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(13,1,2,'男','男',NULL,NULL,2,'male',NULL,'一天，一个{男}人走在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(14,1,2,'人','人',NULL,NULL,2,'human being / person',NULL,'一天，一个男{人}走在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(15,1,2,'男人','男人',NULL,NULL,2,'man',NULL,'一天，一个{男人}走在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(16,1,2,'走','走',NULL,NULL,2,'walk',NULL,'一天，一个男人{走}在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(17,1,2,'在','在',NULL,NULL,2,'be / live/ at',NULL,'一天，一个男人走{在}街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(18,1,2,'街','街',NULL,NULL,1,'street',NULL,'一天，一个男人走在{街}上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(19,1,2,'上','上',NULL,NULL,2,'on / in / go up / upper part / last',NULL,'一天，一个男人走在街{上}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(20,1,2,'街上','街上',NULL,NULL,1,'on the street',NULL,'一天，一个男人走在{街上}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(21,1,2,'突然','突然',NULL,NULL,2,'suddenly',NULL,'{突然}，他看见前面有一只黑色的大狗，看起来很凶。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(22,1,1,'qu\'est-ce que','qu\'est-ce que',NULL,NULL,4,'what',NULL,'{Qu\'est-ce que} vous avez fait, alors ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(23,1,1,'est-ce que','est-ce que',NULL,NULL,4,'is it that',NULL,'Qu\'{est-ce que} vous avez fait, alors ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(24,1,1,'est-ce','est-ce',NULL,NULL,3,'is that / is this',NULL,'Qu\'{est-ce} que vous avez fait, alors ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',15,5,'2020-10-18 18:08:22','2020-10-03 18:08:22',1,0,2),
+(25,1,1,'est','est',NULL,NULL,1,'is / east',NULL,'Qu\'{est}-ce que vous avez fait, alors ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(26,1,1,'dire','dire',NULL,NULL,3,'say / tell',NULL,'On peut {dire} ça comme ça.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',15,5,'2020-10-18 18:08:22','2020-10-03 18:08:22',1,0,2),
+(27,1,3,'wie','wie',NULL,NULL,2,'how',NULL,'{Wie} froh bin ich, daß ich weg bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(28,1,3,'froh','froh',NULL,NULL,2,'happy / glad',NULL,'Wie {froh} bin ich, daß ich weg bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(29,1,3,'bin','bin',NULL,NULL,2,'am',NULL,'Wie froh {bin} ich, daß ich weg {bin}!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(30,1,3,'ich','ich',NULL,NULL,2,'I',NULL,'Wie froh bin {ich}, daß {ich} weg bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(31,1,3,'daß','daß',NULL,NULL,2,'that / so that',NULL,'Wie froh bin ich, {daß} ich weg bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(32,1,3,'weg','weg',NULL,NULL,2,'away / gone / path / way',NULL,'Wie froh bin ich, daß ich {weg} bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(33,1,1,'don du sang','don du sang',NULL,NULL,2,'blood donation',NULL,'Alors, j\'ai fait mon premier {don du sang}.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(34,1,4,'一天','一天',NULL,NULL,1,'one day','yìtiān','{一天}，一个男人走在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(35,1,4,'男人','男人',NULL,NULL,1,'man','nánrén','一天，一个{男人}走在街上。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(36,1,4,'突然','突然',NULL,NULL,1,'suddenly','tūrán','{突然}，他看见前面有一只黑色的大狗，看起来很凶。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(37,1,4,'他','他',NULL,NULL,1,'he','tā','{他}气坏了，大叫：',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(38,1,4,'这时','这时',NULL,NULL,1,'at this moment','zhèshí','{这时}，那只狗咬了男人。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(39,1,4,'狗','狗',NULL,NULL,1,'dog','gǒu','{狗}的旁边站着一个女人，男人问她：',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(40,1,4,'女人','女人',NULL,NULL,1,'woman','nǚrén','{女人}说：',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(41,1,4,'看起来','看起来',NULL,NULL,1,'it seems / it appears / it looks as if','kànqǐlái','突然，他看见前面有一只黑色的大狗，{看起来}很凶。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(42,1,4,'凶','凶',NULL,NULL,1,'ferocious, fierce','xiōng','突然，他看见前面有一只黑色的大狗，看起来很{凶}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(43,1,1,'c\'est','c\'est',NULL,NULL,1,'it\'s / that\'s',NULL,'{C\'est} quoi ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(44,1,1,'c','c',NULL,NULL,5,'that / it',NULL,'{C}\'est quoi ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(45,1,1,'quoi','quoi',NULL,NULL,3,'what',NULL,'C\'est {quoi} ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',15,5,'2020-10-18 18:08:22','2020-10-03 18:08:22',1,0,2),
+(46,1,1,'bonne action','bonne action',NULL,NULL,2,'good deed',NULL,'Alors, je crois qu\'il y a pas longtemps, là, vous avez fait une {bonne action} ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(47,1,4,'你','你',NULL,NULL,1,'you','nǐ','{你}的狗咬人吗？',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(48,1,4,'你的','你的',NULL,NULL,1,'your','nǐde','{你的}狗咬人吗？',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(49,1,4,'的','的',NULL,NULL,5,'of / \'s / (Part.)','de','你{的}狗咬人吗？',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(50,1,1,'il','il',NULL,NULL,1,'he',NULL,'{Il} faut attendre trois mois.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(51,1,1,'ils','ils',NULL,NULL,1,'they',NULL,'A la fin, {ils} vous enlèvent la piqure.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(52,1,5,'フランス','フランス',NULL,NULL,1,'France','ふらんす','私は{フランス}から来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(53,1,5,'はい','はい',NULL,NULL,1,'yes / OK / okay','hai','{はい}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(54,1,5,'は','は',NULL,NULL,5,'(Hiragana: ha) / (topic m.)','ha // わ / wa','私{は}イギリスから来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(55,1,5,'い','い',NULL,NULL,5,'(Hiragana: i)','i','は{い}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(56,1,5,'え','え',NULL,NULL,5,'(Hiragana: e)','e','いい{え}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(57,1,5,'す','す',NULL,NULL,5,'(Hiragana: su)','su','{す}みません。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(58,1,5,'み','み',NULL,NULL,5,'(Hiragana: mi)','mi','す{み}ません。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(59,1,5,'ま','ま',NULL,NULL,5,'(Hiragana: ma)','ma','すみ{ま}せん。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(60,1,5,'せ','せ',NULL,NULL,5,'(Hiragana: se)','se','すみま{せ}ん。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(61,1,5,'ん','ん',NULL,NULL,5,'(Hiragana: n)','n','すみませ{ん}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(62,1,5,'いいえ','いいえ',NULL,NULL,1,'no / nay','iie','{いいえ}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(63,1,5,'すみません','すみません',NULL,NULL,3,'sorry / excuse me','sumimasen','{すみません}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',15,5,'2020-10-18 18:08:22','2020-10-03 18:08:22',1,0,2),
+(64,1,5,'ど','ど',NULL,NULL,5,'(Hiragana: do)','do','{ど}うも。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(65,1,5,'う','う',NULL,NULL,5,'(Hiragana: u)','u','ど{う}も。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(66,1,5,'も','も',NULL,NULL,5,'(Hiragana: mo)','mo','どう{も}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(68,1,5,'あ','あ',NULL,NULL,5,'(Hiragana: a)','a','{あ}りがとうございます。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(69,1,5,'り','り',NULL,NULL,5,'(Hiragana: ri)','ri','あ{り}がとうございます。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(70,1,5,'が','が',NULL,NULL,5,'(Hiragana: ga)','ga','あり{が}とうございます。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(71,1,5,'と','と',NULL,NULL,5,'(Hiragana: to)','to','ありが{と}うございます。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(72,1,5,'ありがとう','ありがとう',NULL,NULL,1,'thank you','arigatou','{ありがとう}ございます。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(73,1,5,'ご','ご',NULL,NULL,5,'(Hiragana: go)','go','ありがとう{ご}ざいます。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(74,1,5,'ざ','ざ',NULL,NULL,5,'(Hiragana: za)','za','ありがとうご{ざ}います。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(75,1,5,'ございます','ございます',NULL,NULL,1,'(polite) be / exist','gozaimasu','ありがとう{ございます}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(77,1,5,'た','た',NULL,NULL,5,'(Hiragana: ta)','ta','どうい{た}しまして。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(78,1,5,'し','し',NULL,NULL,5,'(Hiragana: shi)','shi','どういた{し}ま{し}て。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(79,1,5,'て','て',NULL,NULL,5,'(Hiragana: te)','te','どういたしまし{て}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(83,1,5,'日本','日本',NULL,NULL,1,'Japan','にほん / nihon','{日本}語を話しますか。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(85,1,5,'日本語','日本語',NULL,NULL,1,'Japanese lang.','にほんご / nihongo','{日本語}を話しますか。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(86,1,5,'を','を',NULL,NULL,5,'(Hiragana: wo), (direct object)','wo','日本語{を}話しますか。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(87,1,5,'か','か',NULL,NULL,5,'(Hiragana: ka) / (question)','ka','日本語を話します{か}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(88,1,5,'ます','ます',NULL,NULL,1,'(respect)','masu','日本語を話し{ます}か。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(89,1,5,'話し','話し',NULL,NULL,1,'talk / speech','はなし / hanashi','日本語を{話し}ますか。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(92,1,5,'少し','少し',NULL,NULL,1,'small quantity / little / few','すこし / sukoshi','はい、{少し}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(93,1,5,'少','少',NULL,NULL,1,'few / little','kun: すく.ない、 すこ.し / on: ショウ','はい、{少}し。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(94,1,5,'私','私',NULL,NULL,1,'I / me','あたし / watashi','{私}はイギリスから来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(96,1,5,'ギ','ギ',NULL,NULL,5,'(Katakana: gi)','ぎ / gi','私はイ{ギ}リスから来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(97,1,5,'イギリス','イギリス',NULL,NULL,1,'Great Britain / United Kingdom','igirisu','私は{イギリス}から来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(98,1,5,'イ','イ',NULL,NULL,5,'(Katakana: i)','い / i','私は{イ}ギリスから来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(99,1,5,'リ','リ',NULL,NULL,5,'(Katakana: ri)','ri','私はイギ{リ}スから来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(100,1,5,'ス','ス',NULL,NULL,5,'(Katakana: su)','su','私はイギリ{ス}から来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(101,1,5,'ら','ら',NULL,NULL,5,'(Hiragana: ra)','ra','私はイギリスか{ら}来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(102,1,5,'から','から',NULL,NULL,1,'from','kara','私はイギリス{から}来ています。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(103,1,5,'日','日',NULL,NULL,3,'day / Japan / sun','kun: -か、 ひ、 -び / on: ジツ、 ニチ / names: あ、 あき、 いる、 く、 くさ、 こう、 す、 たち、 に、 にっ、 につ、 へ','{日}本語を話しますか。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',15,5,'2020-10-18 18:08:22','2020-10-03 18:08:22',1,0,2),
+(104,1,5,'本','本',NULL,NULL,3,'book / main / origin / present / real / true','kun: もと / on: ホン / names: まと','日{本}語を話しますか。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',15,5,'2020-10-18 18:08:22','2020-10-03 18:08:22',1,0,2),
+(105,1,5,'語','語',NULL,NULL,4,'language / speech / word','kun: かた.らう、 かた.る / on: ゴ','日本{語}を話しますか。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(106,1,5,'話','話',NULL,NULL,3,'tale / talk','kun: はなし、 はな.す / on: ワ','日本語を{話}しますか。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',15,5,'2020-10-18 18:08:22','2020-10-03 18:08:22',1,0,2),
+(107,1,5,'来','来',NULL,NULL,1,'become / cause / come / due / next','kun: き、 きた.す、 き.たす、 きた.る、 き.たる、 く.る、 こ / on: タイ、 ライ / names: くり、 くる、 ごろ、 さ','イギリスから{来}ました。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(108,1,5,'どうも','どうも',NULL,NULL,1,'thanks','doumo','{どうも}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(109,1,5,'来ました','来ました',NULL,NULL,1,'came','きました / kimashita','イギリスから{来ました}。',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(110,1,3,'wie froh','wie froh',NULL,NULL,1,'how happy',NULL,'{Wie froh} bin ich, daß ich weg bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(111,1,3,'wie froh bin','wie froh bin',NULL,NULL,1,'how happy am',NULL,'{Wie froh bin} ich, daß ich weg bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(112,1,3,'wie froh bin ich','wie froh bin ich',NULL,NULL,1,'how happy I am',NULL,'{Wie froh bin ich}, daß ich weg bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(113,1,3,'wie froh bin ich, daß','wie froh bin ich, daß',NULL,NULL,1,'how happy I am that',NULL,'{Wie froh bin ich, daß} ich weg bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(114,1,3,'wie froh bin ich, daß ich','wie froh bin ich, daß ich',NULL,NULL,1,'how happy I am that I',NULL,'{Wie froh bin ich, daß ich} weg bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(115,1,3,'wie froh bin ich, daß ich weg','wie froh bin ich, daß ich weg',NULL,NULL,1,'how happy I am that I (am) gone',NULL,'{Wie froh bin ich, daß ich weg} bin!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(116,1,3,'wie froh bin ich, daß ich weg bin','wie froh bin ich, daß ich weg bin',NULL,NULL,1,'how happy I am that I am gone',NULL,'{Wie froh bin ich, daß ich weg bin}!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(117,1,3,'waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal','waren nicht meine übrigen verbindungen recht ausgesucht vom schicksal',NULL,NULL,1,'have not other attachments been specially appointed by fate',NULL,'{Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal}, um ein Herz wie das meine zu ängstigen?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(118,1,3,'um ein Herz wie das meine zu ängstigen','um ein herz wie das meine zu ängstigen',NULL,NULL,1,'to torment a head like mine',NULL,'Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, {um ein Herz wie das meine zu ängstigen}?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(119,1,3,'Waren','waren',NULL,NULL,99,'were / goods',NULL,'{Waren} nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das meine zu ängstigen?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(120,1,3,'nicht','nicht',NULL,NULL,99,'not',NULL,'Waren {nicht} meine übrigen Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das meine zu ängstigen?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(121,1,3,'meine','meine',NULL,NULL,99,'my',NULL,'Waren nicht {meine} übrigen Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das {meine} zu ängstigen?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(122,1,3,'übrigen','übrigen',NULL,NULL,99,'others',NULL,'Waren nicht meine {übrigen} Verbindungen recht ausgesucht vom Schicksal, um ein Herz wie das meine zu ängstigen?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(123,1,3,'um','um',NULL,NULL,99,'to',NULL,'Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, {um} ein Herz wie das meine zu ängstigen?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(124,1,3,'ein','ein',NULL,NULL,99,'a / one',NULL,'Waren nicht meine übrigen Verbindungen recht ausgesucht vom Schicksal, um {ein} Herz wie das meine zu ängstigen?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(125,1,3,'Herz','herz',NULL,NULL,99,'heart',NULL,'Bester Freund, was ist das {Herz} des Menschen!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(126,1,3,'Leonore','leonore',NULL,NULL,98,'*',NULL,'Die arme {Leonore}!',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(127,1,6,'좋은','좋은',NULL,NULL,1,'good','joh-eun','{좋은} 아침.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(128,1,6,'아침','아침',NULL,NULL,1,'morning','achim','좋은 {아침}.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(129,1,6,'좋은 아침','좋은 아침',NULL,NULL,1,'good morning','joh-eun achim','{좋은 아침}.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(130,1,6,'안녕하세요','안녕하세요',NULL,NULL,1,'how are you / hello / good day','annyeonghaseyo','{안녕하세요}.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(131,1,6,'잘지냈어요','잘지냈어요',NULL,NULL,1,'how are you','jaljinaess-eoyo','안녕하세요, {잘지냈어요}?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(132,1,6,'잘자요','잘자요',NULL,NULL,1,'good night','jaljayo','{잘자요}.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(133,1,6,'잘가요','잘가요',NULL,NULL,1,'good bye','jalgayo','{잘가요}.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(134,1,6,'네','네',NULL,NULL,1,'four / yes / ok / you(r)','ne','{네}, 잘지냈어요?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(135,1,6,'그럼요','그럼요',NULL,NULL,1,'by all means / without fail / certainly / definitely','geuleom-yo','네 {그럼요}.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(136,1,7,'ดี','ดี',NULL,NULL,1,'good / is good','diː','สวัส{ดี}',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(137,1,7,'สวัส','สวัส',NULL,NULL,1,'blessing / good fortune','sà wàt','{สวัส}ดี',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(139,1,7,'ครับ','ครับ',NULL,NULL,1,'(polite M)','kʰráp','สวัสดี{ครับ}',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(140,1,7,'ค่ะ','ค่ะ',NULL,NULL,1,'(polite, F)','kʰáʔ','สวัสดี{ค่ะ}',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(141,1,7,'สวัสดีครับ','สวัสดีครับ',NULL,NULL,1,'hello (M) / goodbye (M)','sà wàt diː kʰráp','{สวัสดีครับ}',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(142,1,7,'สวัสดีค่ะ','สวัสดีค่ะ',NULL,NULL,1,'hello (F) / goodbye (F)','sà wàt diː kʰáʔ','{สวัสดีค่ะ}',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(145,1,7,'วัสดี','วัสดี',NULL,NULL,1,'hi / hey / (inf. abbrev.)','wàt diː','ส{วัสดี}ครับ',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(146,1,1,'vous','vous',NULL,NULL,5,'you / you all',NULL,'Alors, je crois qu\'il y a pas longtemps, là, {vous} avez fait une bonne action ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(147,1,1,'fait','fait',NULL,NULL,4,'made / done / make / fact / occurrence',NULL,'Alors, je crois qu\'il y a pas longtemps, là, vous avez {fait} une bonne action ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(148,1,1,'bonne','bonne',NULL,NULL,2,'good',NULL,'Alors, je crois qu\'il y a pas longtemps, là, vous avez fait une {bonne} action ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(149,1,1,'ai','ai',NULL,NULL,3,'have',NULL,'Alors, j\'{ai} fait mon premier don du sang.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',15,5,'2020-10-18 18:08:22','2020-10-03 18:08:22',1,0,2),
+(150,1,1,'avez','avez',NULL,NULL,4,'have',NULL,'Qu\'est-ce que vous {avez} fait, alors ?',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(151,1,1,'mon','mon',NULL,NULL,4,'my',NULL,'Alors, j\'ai fait {mon} premier don du sang.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(152,1,8,'טוב','טוב',NULL,NULL,1,'good','tov','בוקר {טוב}',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(153,1,8,'בוקר','בוקר',NULL,NULL,1,'morning','boker','{בוקר} טוב',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(154,1,8,'ערב','ערב',NULL,NULL,1,'evening','erev','{ערב} טוב',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(155,1,8,'לילה','לילה',NULL,NULL,1,'night','laila','{לילה} טוב',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(156,1,8,'להתראות','להתראות',NULL,NULL,1,'good bye','lehitraot','{להתראות}',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(157,1,8,'טובים','טובים',NULL,NULL,1,'good','tovim','אחר צהריים {טובים}',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(158,1,8,'צהריים','צהריים',NULL,NULL,1,'noon','tzahara\'im','אחר {צהריים} טובים',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(159,1,8,'אחר','אחר',NULL,NULL,1,'after / other','achar','{אחר} צהריים טובים',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(160,1,8,'בוקר טוב','בוקר טוב',NULL,NULL,1,'good morning','boker tov','{בוקר טוב}',NULL,1,'2011-09-02 19:00:09','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(161,1,8,'אחר צהריים טובים','אחר צהריים טובים',NULL,NULL,1,'good afternoon','achar tzahara\'im tovim','{אחר צהריים טובים}',NULL,1,'2011-09-02 19:00:50','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(162,1,8,'ערב טוב','ערב טוב',NULL,NULL,1,'good evening','erev tov','{ערב טוב}',NULL,1,'2011-09-02 19:01:21','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(163,1,8,'לילה טוב','לילה טוב',NULL,NULL,1,'good night','laila tov','{לילה טוב}',NULL,1,'2011-09-02 19:01:50','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(164,1,8,'אחר צהריים','אחר צהריים',NULL,NULL,1,'afternoon','achar tzahara\'im','{אחר צהריים} טובים',NULL,1,'2011-09-02 19:21:20','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(165,1,1,'Oui','oui',NULL,NULL,5,'yes',NULL,'{Oui}.',NULL,1,'2013-03-27 12:13:44','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(166,1,1,'On','on',NULL,NULL,4,'someone / somebody / you / one / we',NULL,'{On} peut dire ça comme ça.',NULL,1,'2013-03-27 12:14:40','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(167,1,1,'peut','peut',NULL,NULL,5,'can / may',NULL,'On {peut} dire ça comme ça.',NULL,1,'2013-03-27 12:15:10','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(168,1,1,'ça','ça',NULL,NULL,4,'that / this / it',NULL,'On peut dire {ça} comme {ça}.',NULL,1,'2013-03-27 12:16:08','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(169,1,1,'comme','comme',NULL,NULL,3,'as / just as / like / how',NULL,'On peut dire ça {comme} ça.',NULL,1,'2013-03-27 12:16:47','2020-10-03 18:08:22',15,5,'2020-10-18 18:08:22','2020-10-03 18:08:22',1,0,2),
+(170,1,1,'pas','pas',NULL,NULL,2,'(not) / footstep / step / walk',NULL,'Alors, je crois qu\'il y a {pas} longtemps, là, vous avez fait une bonne action ?',NULL,1,'2013-03-27 12:21:30','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(171,1,1,'longtemps','longtemps',NULL,NULL,5,'long time / long while / long',NULL,'Alors, je crois qu\'il y a pas {longtemps}, là, vous avez fait une bonne action ?',NULL,1,'2013-03-27 12:22:02','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(172,1,1,'là','là',NULL,NULL,1,'there',NULL,'Alors, je crois qu\'il y a pas longtemps, {là}, vous avez fait une bonne action ?',NULL,1,'2013-03-27 12:22:35','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(173,1,1,'une','une',NULL,NULL,5,'a / an / one / front page',NULL,'Alors, je crois qu\'il y a pas longtemps, là, vous avez fait {une} bonne action ?',NULL,1,'2013-03-27 12:24:25','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
+(174,1,1,'j','j',NULL,NULL,99,'I',NULL,'Alors, {j}\'ai fait mon premier don du sang …',NULL,1,'2013-03-27 12:26:34','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(175,1,1,'premier','premier',NULL,NULL,4,'first / primary / prime / initial',NULL,'Alors, j\'ai fait mon {premier} don du sang …',NULL,1,'2013-03-27 12:27:33','2020-10-03 18:08:22',60,5,'2020-12-02 18:08:22','2020-10-03 18:08:22',1,0,2),
+(176,1,1,'y','y',NULL,NULL,2,'there / here / in',NULL,'Alors, je crois qu\'il {y} a pas longtemps, là, vous avez fait une bonne action ?',NULL,1,'2013-03-27 12:32:17','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(177,1,1,'a','a',NULL,NULL,2,'have / has',NULL,'Alors, je crois qu\'il y {a} pas longtemps, là, vous avez fait une bonne action ?',NULL,1,'2013-03-27 12:34:33','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(178,1,1,'action','action',NULL,NULL,2,'action / deed',NULL,'Alors, je crois qu\'il y a pas longtemps, là, vous avez fait une bonne {action} ?',NULL,1,'2013-03-27 12:35:08','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(179,1,1,'don','don',NULL,NULL,1,'donation',NULL,'Alors, j\'ai fait mon premier {don} du sang …',NULL,1,'2013-03-27 12:35:50','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(180,1,1,'du','du',NULL,NULL,1,'of / from / some',NULL,'Alors, j\'ai fait mon premier don {du} sang …',NULL,1,'2013-03-27 12:36:09','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(181,1,1,'sang','sang',NULL,NULL,1,'blood',NULL,'Alors, j\'ai fait mon premier don du {sang} …',NULL,1,'2013-03-27 12:36:17','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(182,1,1,'ce','ce',NULL,NULL,1,'this / that / it',NULL,'Qu\'est-{ce} que vous avez fait, alors ?',NULL,1,'2013-03-27 12:36:32','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(183,1,1,'que','que',NULL,NULL,1,'that / how / so that / so',NULL,'Qu\'est-ce {que} vous avez fait, alors ?',NULL,1,'2013-03-27 12:36:48','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(184,1,2,'他','他',NULL,NULL,1,'he',NULL,'突然，{他}看见前面有一只黑色的大狗，看起来很凶。',NULL,1,'2013-04-18 09:03:32','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(185,1,2,'看见','看见',NULL,NULL,1,'see / catch sight',NULL,'突然，他{看见}前面有一只黑色的大狗，看起来很凶。',NULL,1,'2013-04-18 09:03:53','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(186,1,2,'前面','前面',NULL,NULL,1,'ahead / front',NULL,'突然，他看见{前面}有一只黑色的大狗，看起来很凶。',NULL,1,'2013-04-18 09:04:12','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(187,1,2,'有','有',NULL,NULL,1,'have / occur',NULL,'突然，他看见前面{有}一只黑色的大狗，看起来很凶。',NULL,1,'2013-04-18 09:04:29','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(188,1,2,'只','只',NULL,NULL,1,'(MW) / only',NULL,'突然，他看见前面有一{只}黑色的大狗，看起来很凶。',NULL,1,'2013-04-18 09:04:58','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(189,1,2,'黑色','黑色',NULL,NULL,1,'black color',NULL,'突然，他看见前面有一只{黑色}的大狗，看起来很凶。',NULL,1,'2013-04-18 09:05:13','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(190,1,2,'的','的',NULL,NULL,1,'(Part.) / \'s',NULL,'突然，他看见前面有一只黑色{的}大狗，看起来很凶。',NULL,1,'2013-04-18 09:05:54','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(191,1,2,'大','大',NULL,NULL,1,'big / strong',NULL,'突然，他看见前面有一只黑色的{大}狗，看起来很凶。',NULL,1,'2013-04-18 09:06:02','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(192,1,2,'狗','狗',NULL,NULL,1,'dog',NULL,'突然，他看见前面有一只黑色的大{狗}，看起来很凶。',NULL,1,'2013-04-18 09:06:08','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(193,1,2,'看起来','看起来',NULL,NULL,1,'seems / appears / looks as',NULL,'突然，他看见前面有一只黑色的大狗，{看起来}很凶。',NULL,1,'2013-04-18 09:06:36','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(194,1,2,'很','很',NULL,NULL,1,'very',NULL,'突然，他看见前面有一只黑色的大狗，看起来{很}凶。',NULL,1,'2013-04-18 09:06:42','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(195,1,2,'凶','凶',NULL,NULL,1,'ferocious / terrible',NULL,'突然，他看见前面有一只黑色的大狗，看起来很{凶}。',NULL,1,'2013-04-18 09:07:12','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(196,1,2,'非常','非常',NULL,NULL,1,'exceptional / very',NULL,'男人{非常}害怕，不敢往前走。',NULL,1,'2013-04-18 09:07:24','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(197,1,2,'害怕','害怕',NULL,NULL,1,'be afraid',NULL,'男人非常{害怕}，不敢往前走。',NULL,1,'2013-04-18 09:07:52','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(198,1,2,'不','不',NULL,NULL,1,'not',NULL,'男人非常害怕，{不}敢往前走。',NULL,1,'2013-04-18 09:08:01','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(199,1,2,'敢','敢',NULL,NULL,1,'dare',NULL,'男人非常害怕，不{敢}往前走。',NULL,1,'2013-04-18 09:08:10','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(200,1,2,'往前','往前',NULL,NULL,1,'go forward / move ahead',NULL,'男人非常害怕，不敢{往前}走。',NULL,1,'2013-04-18 09:08:45','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(201,1,2,'旁边','旁边',NULL,NULL,1,'side / near by position/ right by',NULL,'狗的{旁边}站着一个女人，男人问她：',NULL,1,'2013-04-18 09:09:15','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(202,1,2,'站','站',NULL,NULL,1,'stand',NULL,'狗的旁边{站}着一个女人，男人问她：',NULL,1,'2013-04-18 09:09:29','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(203,1,2,'着','着',NULL,NULL,1,'(there) / (cont.)',NULL,'狗的旁边站{着}一个女人，男人问她：',NULL,1,'2013-04-18 09:10:04','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(204,1,2,'女人','女人',NULL,NULL,2,'woman',NULL,'狗的旁边站着一个{女人}，男人问她：',NULL,1,'2013-04-18 09:10:13','2020-10-03 18:08:22',3,5,'2020-10-06 18:08:22','2020-10-03 18:08:22',1,0,2),
+(205,1,2,'问','问',NULL,NULL,1,'ask',NULL,'狗的旁边站着一个女人，男人{问}她：',NULL,1,'2013-04-18 09:10:20','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(206,1,2,'她','她',NULL,NULL,1,'she / her',NULL,'狗的旁边站着一个女人，男人问{她}：',NULL,1,'2013-04-18 09:10:29','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(207,1,2,'你','你',NULL,NULL,1,'you',NULL,'{你}的狗咬人吗？',NULL,1,'2013-04-18 09:10:35','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(208,1,2,'咬','咬',NULL,NULL,1,'bite',NULL,'你的狗{咬}人吗？',NULL,1,'2013-04-18 09:10:44','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(209,1,2,'吗','吗',NULL,NULL,1,'(QW)',NULL,'你的狗咬人{吗}？',NULL,1,'2013-04-18 09:10:59','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(210,1,2,'说','说',NULL,NULL,1,'say',NULL,'女人{说}：',NULL,1,'2013-04-18 09:11:06','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(211,1,2,'我的','我的',NULL,NULL,1,'my',NULL,'{我的}狗不咬人。',NULL,1,'2013-04-18 09:11:16','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(212,1,2,'这时','这时',NULL,NULL,1,'at this time',NULL,'{这时}，那只狗咬了男人。',NULL,1,'2013-04-18 09:12:08','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(213,1,2,'那','那',NULL,NULL,1,'that',NULL,'这时，{那}只狗咬了男人。',NULL,1,'2013-04-18 09:12:19','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(214,1,2,'了','了',NULL,NULL,1,'(compl.) / finish / (change)',NULL,'这时，那只狗咬{了}男人。',NULL,1,'2013-04-18 09:12:48','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(215,1,2,'气坏','气坏',NULL,NULL,1,'furious',NULL,'他{气坏}了，大叫：',NULL,1,'2013-04-18 09:13:54','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(216,1,2,'叫','叫',NULL,NULL,1,'shout',NULL,'他气坏了，大{叫}：',NULL,1,'2013-04-18 09:14:07','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(217,1,2,'回答','回答',NULL,NULL,1,'answer',NULL,'女人{回答}：',NULL,1,'2013-04-18 09:14:18','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(218,1,2,'这','这',NULL,NULL,1,'this',NULL,'{这}不是我的狗。',NULL,1,'2013-04-18 09:14:24','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(219,1,2,'是','是',NULL,NULL,1,'be',NULL,'这不{是}我的狗。',NULL,1,'2013-04-18 09:14:30','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
+(220,1,2,'你的','你的',NULL,NULL,1,'your',NULL,'{你的}狗咬人吗？',NULL,1,'2013-04-18 09:22:32','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0);
+CREATE TABLE `word_occurrences` (
+  `word_id` mediumint(8) unsigned DEFAULT NULL,
+  `language_id` tinyint(3) unsigned NOT NULL,
+  `text_id` smallint(5) unsigned NOT NULL,
+  `sentence_id` mediumint(8) unsigned NOT NULL,
+  `position` smallint(5) unsigned NOT NULL,
+  `word_count` tinyint(3) unsigned NOT NULL,
+  `text` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  PRIMARY KEY (`text_id`,`position`,`word_count`),
+  KEY `word_id` (`word_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+INSERT INTO `word_occurrences` VALUES
+(2,1,1,1,1,1,'Bonjour'),
+(1,1,1,1,2,1,'Manon'),
+(NULL,1,1,1,3,0,'.'),
+(NULL,1,1,1,4,0,'¶'),
+(2,1,1,1,5,1,'Bonjour'),
+(NULL,1,1,1,6,0,'.'),
+(NULL,1,1,1,7,0,'¶'),
+(3,1,1,1,8,1,'Alors'),
+(NULL,1,1,1,9,0,','),
+(7,1,1,1,10,1,'je'),
+(8,1,1,1,11,1,'crois'),
+(6,1,1,1,12,1,'qu'),
+(NULL,1,1,1,13,0,'\''),
+(50,1,1,1,14,1,'il'),
+(176,1,1,1,15,1,'y'),
+(177,1,1,1,16,1,'a'),
+(170,1,1,1,17,1,'pas'),
+(171,1,1,1,18,1,'longtemps'),
+(NULL,1,1,1,19,0,','),
+(172,1,1,1,20,1,'là'),
+(NULL,1,1,1,21,0,','),
+(146,1,1,1,22,1,'vous'),
+(150,1,1,1,23,1,'avez'),
+(147,1,1,1,24,1,'fait'),
+(173,1,1,1,25,1,'une'),
+(148,1,1,1,26,1,'bonne'),
+(178,1,1,1,27,1,'action'),
+(NULL,1,1,1,28,0,' ?'),
+(NULL,1,1,1,29,0,'¶'),
+(165,1,1,1,30,1,'Oui'),
+(NULL,1,1,1,31,0,'.'),
+(NULL,1,1,1,32,0,'¶'),
+(166,1,1,1,33,1,'On'),
+(167,1,1,1,34,1,'peut'),
+(26,1,1,1,35,1,'dire'),
+(168,1,1,1,36,1,'ça'),
+(169,1,1,1,37,1,'comme'),
+(168,1,1,1,38,1,'ça'),
+(NULL,1,1,1,39,0,'.'),
+(6,1,1,1,40,1,'Qu'),
+(NULL,1,1,1,41,0,'\''),
+(25,1,1,1,42,1,'est'),
+(NULL,1,1,1,43,0,'-'),
+(182,1,1,1,44,1,'ce'),
+(183,1,1,1,45,1,'que'),
+(146,1,1,1,46,1,'vous'),
+(150,1,1,1,47,1,'avez'),
+(147,1,1,1,48,1,'fait'),
+(NULL,1,1,1,49,0,','),
+(3,1,1,1,50,1,'alors'),
+(NULL,1,1,1,51,0,' ?'),
+(NULL,1,1,1,52,0,'¶'),
+(3,1,1,1,53,1,'Alors'),
+(NULL,1,1,1,54,0,','),
+(174,1,1,1,55,1,'j'),
+(NULL,1,1,1,56,0,'\''),
+(149,1,1,1,57,1,'ai'),
+(147,1,1,1,58,1,'fait'),
+(151,1,1,1,59,1,'mon'),
+(175,1,1,1,60,1,'premier'),
+(179,1,1,1,61,1,'don'),
+(180,1,1,1,62,1,'du'),
+(181,1,1,1,63,1,'sang'),
+(NULL,1,1,1,64,0,'.'),
+(NULL,1,1,1,65,1,'Donc'),
+(44,1,1,1,66,1,'c'),
+(NULL,1,1,1,67,0,'\''),
+(25,1,1,1,68,1,'est'),
+(NULL,1,1,1,69,1,'à'),
+(26,1,1,1,70,1,'dire'),
+(183,1,1,1,71,1,'que'),
+(166,1,1,1,72,1,'on'),
+(NULL,1,1,1,73,1,'va'),
+(NULL,1,1,1,74,1,'dans'),
+(173,1,1,1,75,1,'une'),
+(NULL,1,1,1,76,0,'…'),
+(NULL,1,1,1,77,1,'Un'),
+(NULL,1,1,1,78,1,'organisme'),
+(NULL,1,1,1,79,1,'spécialisé'),
+(NULL,1,1,1,80,1,'vient'),
+(NULL,1,1,1,81,1,'dans'),
+(NULL,1,1,1,82,1,'l'),
+(NULL,1,1,1,83,0,'\''),
+(NULL,1,1,1,84,1,'IUT'),
+(NULL,1,1,1,85,0,','),
+(NULL,1,1,1,86,1,'dans'),
+(NULL,1,1,1,87,1,'notre'),
+(NULL,1,1,1,88,1,'université'),
+(NULL,1,1,1,89,1,'pour'),
+(NULL,1,1,1,90,0,'…'),
+(NULL,1,1,1,91,1,'pour'),
+(NULL,1,1,1,92,1,'prendre'),
+(NULL,1,1,1,93,1,'notre'),
+(181,1,1,1,94,1,'sang'),
+(NULL,1,1,1,95,1,'pour'),
+(NULL,1,1,1,96,1,'les'),
+(NULL,1,1,1,97,1,'malades'),
+(NULL,1,1,1,98,1,'de'),
+(NULL,1,1,1,99,1,'l'),
+(NULL,1,1,1,100,0,'\''),
+(NULL,1,1,1,101,1,'hôpital'),
+(NULL,1,1,1,102,1,'qui'),
+(NULL,1,1,1,103,1,'en'),
+(NULL,1,1,1,104,1,'ont'),
+(NULL,1,1,1,105,1,'besoin'),
+(NULL,1,1,1,106,0,'…'),
+(NULL,1,1,1,107,0,'¶'),
+(165,1,1,1,108,1,'Oui'),
+(NULL,1,1,1,109,0,','),
+(NULL,1,1,1,110,1,'voilà'),
+(NULL,1,1,1,111,0,','),
+(NULL,1,1,1,112,1,'en'),
+(NULL,1,1,1,113,1,'cas'),
+(NULL,1,1,1,114,1,'d'),
+(NULL,1,1,1,115,0,'\''),
+(NULL,1,1,1,116,1,'accident'),
+(NULL,1,1,1,117,1,'par'),
+(NULL,1,1,1,118,1,'exemple'),
+(NULL,1,1,1,119,0,','),
+(NULL,1,1,1,120,1,'etc'),
+(NULL,1,1,1,121,0,'…'),
+(NULL,1,1,1,122,0,'¶'),
+(NULL,1,1,1,123,1,'En'),
+(NULL,1,1,1,124,1,'cas'),
+(NULL,1,1,1,125,1,'d'),
+(NULL,1,1,1,126,0,'\''),
+(NULL,1,1,1,127,1,'accident'),
+(NULL,1,1,1,128,1,'ou'),
+(NULL,1,1,1,129,1,'en'),
+(NULL,1,1,1,130,1,'cas'),
+(NULL,1,1,1,131,1,'d'),
+(NULL,1,1,1,132,0,'\''),
+(NULL,1,1,1,133,1,'anémie'),
+(NULL,1,1,1,134,0,' …'),
+(NULL,1,1,1,135,0,'¶'),
+(165,1,1,1,136,1,'Oui'),
+(NULL,1,1,1,137,0,','),
+(165,1,1,1,138,1,'oui'),
+(NULL,1,1,1,139,0,'.'),
+(NULL,1,1,1,140,1,'D'),
+(NULL,1,1,1,141,0,'\''),
+(NULL,1,1,1,142,1,'accord'),
+(NULL,1,1,1,143,0,'.'),
+(NULL,1,1,1,144,1,'Et'),
+(3,1,1,1,145,1,'alors'),
+(NULL,1,1,1,146,0,','),
+(NULL,1,1,1,147,1,'donc'),
+(NULL,1,1,1,148,0,','),
+(44,1,1,1,149,1,'c'),
+(NULL,1,1,1,150,0,'\''),
+(NULL,1,1,1,151,1,'était'),
+(NULL,1,1,1,152,1,'la'),
+(NULL,1,1,1,153,1,'première'),
+(NULL,1,1,1,154,1,'fois'),
+(183,1,1,1,155,1,'que'),
+(146,1,1,1,156,1,'vous'),
+(NULL,1,1,1,157,1,'le'),
+(NULL,1,1,1,158,1,'faisiez'),
+(NULL,1,1,1,159,0,' ?'),
+(NULL,1,1,1,160,0,'¶'),
+(44,1,1,1,161,1,'C'),
+(NULL,1,1,1,162,0,'\''),
+(25,1,1,1,163,1,'est'),
+(NULL,1,1,1,164,1,'la'),
+(NULL,1,1,1,165,1,'première'),
+(NULL,1,1,1,166,1,'fois'),
+(NULL,1,1,1,167,1,'et'),
+(168,1,1,1,168,1,'ça'),
+(NULL,1,1,1,169,1,'m'),
+(NULL,1,1,1,170,0,'\''),
+(177,1,1,1,171,1,'a'),
+(NULL,1,1,1,172,1,'marquée'),
+(NULL,1,1,1,173,1,'parce'),
+(183,1,1,1,174,1,'que'),
+(174,1,1,1,175,1,'j'),
+(NULL,1,1,1,176,0,'\''),
+(149,1,1,1,177,1,'ai'),
+(NULL,1,1,1,178,0,'…'),
+(174,1,1,1,179,1,'j'),
+(NULL,1,1,1,180,0,'\''),
+(149,1,1,1,181,1,'ai'),
+(NULL,1,1,1,182,1,'très'),
+(NULL,1,1,1,183,1,'peur'),
+(NULL,1,1,1,184,1,'des'),
+(NULL,1,1,1,185,1,'piqures'),
+(NULL,1,1,1,186,1,'en'),
+(NULL,1,1,1,187,1,'temps'),
+(NULL,1,1,1,188,1,'habituel'),
+(NULL,1,1,1,189,0,'.'),
+(NULL,1,1,1,190,0,'¶'),
+(NULL,1,1,1,191,1,'Ah'),
+(NULL,1,1,1,192,1,'bon'),
+(NULL,1,1,1,193,0,' !'),
+(NULL,1,1,1,194,0,'¶'),
+(NULL,1,1,1,195,1,'Voilà'),
+(NULL,1,1,1,196,0,'.'),
+(174,1,1,1,197,1,'J'),
+(NULL,1,1,1,198,0,'\''),
+(NULL,1,1,1,199,1,'en'),
+(149,1,1,1,200,1,'ai'),
+(NULL,1,1,1,201,0,'…'),
+(174,1,1,1,202,1,'j'),
+(NULL,1,1,1,203,0,'\''),
+(NULL,1,1,1,204,1,'en'),
+(NULL,1,1,1,205,1,'fais'),
+(NULL,1,1,1,206,1,'très'),
+(NULL,1,1,1,207,1,'rarement'),
+(NULL,1,1,1,208,0,','),
+(NULL,1,1,1,209,1,'le'),
+(NULL,1,1,1,210,1,'plus'),
+(NULL,1,1,1,211,1,'rarement'),
+(NULL,1,1,1,212,1,'possible'),
+(NULL,1,1,1,213,0,'…'),
+(NULL,1,1,1,214,0,'¶'),
+(165,1,1,1,215,1,'Oui'),
+(NULL,1,1,1,216,0,' ?'),
+(NULL,1,1,1,217,0,'¶'),
+(NULL,1,1,1,218,0,'…'),
+(NULL,1,1,1,219,1,'pour'),
+(NULL,1,1,1,220,0,'…'),
+(NULL,1,1,1,221,1,'pour'),
+(NULL,1,1,1,222,1,'éviter'),
+(168,1,1,1,223,1,'ça'),
+(NULL,1,1,1,224,1,'au'),
+(NULL,1,1,1,225,1,'maximum'),
+(NULL,1,1,1,226,0,'.'),
+(NULL,1,1,1,227,1,'Et'),
+(NULL,1,1,1,228,1,'puis'),
+(NULL,1,1,1,229,0,'…'),
+(NULL,1,1,1,230,0,'¶'),
+(165,1,1,1,231,1,'Oui'),
+(NULL,1,1,1,232,0,','),
+(NULL,1,1,1,233,1,'et'),
+(172,1,1,1,234,1,'là'),
+(NULL,1,1,1,235,0,','),
+(44,1,1,1,236,1,'c'),
+(NULL,1,1,1,237,0,'\''),
+(25,1,1,1,238,1,'est'),
+(170,1,1,1,239,1,'pas'),
+(173,1,1,1,240,1,'une'),
+(NULL,1,1,1,241,1,'petite'),
+(NULL,1,1,1,242,1,'piqure'),
+(NULL,1,1,1,243,0,' !'),
+(168,1,1,1,244,1,'Ça'),
+(NULL,1,1,1,245,1,'dure'),
+(NULL,1,1,1,246,1,'un'),
+(NULL,1,1,1,247,1,'moment'),
+(NULL,1,1,1,248,0,','),
+(NULL,1,1,1,249,1,'en'),
+(147,1,1,1,250,1,'fait'),
+(NULL,1,1,1,251,0,' !'),
+(NULL,1,1,1,252,0,'¶'),
+(NULL,1,1,1,253,1,'Ah'),
+(NULL,1,1,1,254,1,'non'),
+(NULL,1,1,1,255,0,','),
+(168,1,1,1,256,1,'ça'),
+(NULL,1,1,1,257,1,'dure'),
+(NULL,1,1,1,258,1,'quinze'),
+(NULL,1,1,1,259,0,' –'),
+(NULL,1,1,1,260,1,'vingt'),
+(NULL,1,1,1,261,1,'minutes'),
+(NULL,1,1,1,262,0,'.'),
+(NULL,1,1,1,263,0,'¶'),
+(NULL,1,1,1,264,1,'Ah'),
+(NULL,1,1,1,265,0,','),
+(NULL,1,1,1,266,1,'d'),
+(NULL,1,1,1,267,0,'\''),
+(NULL,1,1,1,268,1,'accord'),
+(NULL,1,1,1,269,0,'.'),
+(NULL,1,1,1,270,0,'¶'),
+(51,1,1,1,271,1,'Ils'),
+(NULL,1,1,1,272,1,'prennent'),
+(NULL,1,1,1,273,0,'…'),
+(7,1,1,1,274,1,'je'),
+(NULL,1,1,1,275,1,'sais'),
+(NULL,1,1,1,276,1,'plus'),
+(NULL,1,1,1,277,1,'combien'),
+(NULL,1,1,1,278,1,'de'),
+(NULL,1,1,1,279,1,'litres'),
+(NULL,1,1,1,280,1,'de'),
+(181,1,1,1,281,1,'sang'),
+(NULL,1,1,1,282,0,'.'),
+(NULL,1,1,1,283,1,'Ah'),
+(NULL,1,1,1,284,0,','),
+(44,1,1,1,285,1,'c'),
+(NULL,1,1,1,286,0,'\''),
+(25,1,1,1,287,1,'est'),
+(NULL,1,1,1,288,1,'beaucoup'),
+(NULL,1,1,1,289,0,'.'),
+(NULL,1,1,1,290,0,'¶'),
+(165,1,1,1,291,1,'Oui'),
+(NULL,1,1,1,292,0,','),
+(165,1,1,1,293,1,'oui'),
+(NULL,1,1,1,294,0,'.'),
+(NULL,1,1,1,295,1,'D'),
+(NULL,1,1,1,296,0,'\''),
+(NULL,1,1,1,297,1,'accord'),
+(NULL,1,1,1,298,0,'.'),
+(NULL,1,1,1,299,0,'¶'),
+(NULL,1,1,1,300,1,'Ouais'),
+(NULL,1,1,1,301,0,','),
+(NULL,1,1,1,302,1,'ouais'),
+(NULL,1,1,1,303,0,','),
+(NULL,1,1,1,304,1,'ouais'),
+(NULL,1,1,1,305,0,'.'),
+(NULL,1,1,1,306,0,'¶'),
+(NULL,1,1,1,307,1,'Et'),
+(NULL,1,1,1,308,1,'donc'),
+(146,1,1,1,309,1,'vous'),
+(150,1,1,1,310,1,'avez'),
+(NULL,1,1,1,311,1,'franchi'),
+(NULL,1,1,1,312,1,'le'),
+(170,1,1,1,313,1,'pas'),
+(NULL,1,1,1,314,0,'.'),
+(NULL,1,1,1,315,0,'¶'),
+(NULL,1,1,1,316,1,'Voilà'),
+(NULL,1,1,1,317,0,'.'),
+(NULL,1,1,1,318,0,'¶'),
+(NULL,1,1,1,319,1,'Mais'),
+(NULL,1,1,1,320,1,'pourquoi'),
+(NULL,1,1,1,321,0,','),
+(3,1,1,1,322,1,'alors'),
+(NULL,1,1,1,323,0,' ?'),
+(NULL,1,1,1,324,0,'¶'),
+(NULL,1,1,1,325,1,'Parce'),
+(183,1,1,1,326,1,'que'),
+(7,1,1,1,327,1,'je'),
+(NULL,1,1,1,328,1,'pense'),
+(183,1,1,1,329,1,'que'),
+(44,1,1,1,330,1,'c'),
+(NULL,1,1,1,331,0,'\''),
+(25,1,1,1,332,1,'est'),
+(NULL,1,1,1,333,1,'important'),
+(NULL,1,1,1,334,1,'d'),
+(NULL,1,1,1,335,0,'\''),
+(NULL,1,1,1,336,1,'aider'),
+(NULL,1,1,1,337,1,'les'),
+(NULL,1,1,1,338,1,'autres'),
+(NULL,1,1,1,339,0,','),
+(NULL,1,1,1,340,1,'surtout'),
+(183,1,1,1,341,1,'que'),
+(174,1,1,1,342,1,'j'),
+(NULL,1,1,1,343,0,'\''),
+(149,1,1,1,344,1,'ai'),
+(NULL,1,1,1,345,1,'appris'),
+(183,1,1,1,346,1,'que'),
+(174,1,1,1,347,1,'j'),
+(NULL,1,1,1,348,0,'\''),
+(149,1,1,1,349,1,'ai'),
+(NULL,1,1,1,350,1,'un'),
+(181,1,1,1,351,1,'sang'),
+(NULL,1,1,1,352,1,'assez'),
+(NULL,1,1,1,353,1,'rare'),
+(NULL,1,1,1,354,0,'.'),
+(NULL,1,1,1,355,0,'¶'),
+(NULL,1,1,1,356,1,'Ah'),
+(165,1,1,1,357,1,'oui'),
+(NULL,1,1,1,358,0,' ?'),
+(44,1,1,1,359,1,'C'),
+(NULL,1,1,1,360,0,'\''),
+(25,1,1,1,361,1,'est'),
+(NULL,1,1,1,362,1,'vrai'),
+(NULL,1,1,1,363,0,' ?'),
+(NULL,1,1,1,364,0,'¶'),
+(NULL,1,1,1,365,1,'Ouais'),
+(NULL,1,1,1,366,0,'.'),
+(NULL,1,1,1,367,0,'¶'),
+(NULL,1,1,1,368,1,'Pourquoi'),
+(NULL,1,1,1,369,0,' ?'),
+(44,1,1,1,370,1,'C'),
+(NULL,1,1,1,371,0,'\''),
+(25,1,1,1,372,1,'est'),
+(45,1,1,1,373,1,'quoi'),
+(NULL,1,1,1,374,0,' ?'),
+(NULL,1,1,1,375,0,'¶'),
+(177,1,1,1,376,1,'A'),
+(NULL,1,1,1,377,1,'négatif'),
+(NULL,1,1,1,378,0,'.'),
+(NULL,1,1,1,379,0,'¶'),
+(NULL,1,1,1,380,1,'Ah'),
+(NULL,1,1,1,381,0,','),
+(NULL,1,1,1,382,1,'d'),
+(NULL,1,1,1,383,0,'\''),
+(NULL,1,1,1,384,1,'accord'),
+(NULL,1,1,1,385,0,'.'),
+(165,1,1,1,386,1,'Oui'),
+(NULL,1,1,1,387,0,','),
+(165,1,1,1,388,1,'oui'),
+(NULL,1,1,1,389,0,'.'),
+(NULL,1,1,1,390,1,'Moi'),
+(NULL,1,1,1,391,0,','),
+(44,1,1,1,392,1,'c'),
+(NULL,1,1,1,393,0,'\''),
+(25,1,1,1,394,1,'est'),
+(NULL,1,1,1,395,1,'pareil'),
+(NULL,1,1,1,396,0,'.'),
+(NULL,1,1,1,397,0,'¶'),
+(44,1,1,1,398,1,'C'),
+(NULL,1,1,1,399,0,'\''),
+(25,1,1,1,400,1,'est'),
+(NULL,1,1,1,401,1,'un'),
+(181,1,1,1,402,1,'sang'),
+(NULL,1,1,1,403,0,'…'),
+(NULL,1,1,1,404,1,'Ah'),
+(NULL,1,1,1,405,0,','),
+(44,1,1,1,406,1,'c'),
+(NULL,1,1,1,407,0,'\''),
+(25,1,1,1,408,1,'est'),
+(NULL,1,1,1,409,1,'vrai'),
+(NULL,1,1,1,410,0,' ?'),
+(NULL,1,1,1,411,0,'¶'),
+(165,1,1,1,412,1,'Oui'),
+(NULL,1,1,1,413,0,','),
+(165,1,1,1,414,1,'oui'),
+(NULL,1,1,1,415,0,'.'),
+(NULL,1,1,1,416,0,'¶'),
+(NULL,1,1,1,417,1,'Assez'),
+(NULL,1,1,1,418,1,'rare'),
+(NULL,1,1,1,419,0,','),
+(NULL,1,1,1,420,1,'donc'),
+(NULL,1,1,1,421,1,'voilà'),
+(NULL,1,1,1,422,0,','),
+(NULL,1,1,1,423,1,'les'),
+(NULL,1,1,1,424,1,'gens'),
+(NULL,1,1,1,425,0,','),
+(NULL,1,1,1,426,1,'si'),
+(51,1,1,1,427,1,'ils'),
+(NULL,1,1,1,428,1,'en'),
+(NULL,1,1,1,429,1,'ont'),
+(NULL,1,1,1,430,1,'besoin'),
+(NULL,1,1,1,431,0,'.'),
+(NULL,1,1,1,432,1,'Et'),
+(NULL,1,1,1,433,1,'puis'),
+(NULL,1,1,1,434,1,'si'),
+(NULL,1,1,1,435,1,'un'),
+(NULL,1,1,1,436,1,'jour'),
+(NULL,1,1,1,437,0,','),
+(NULL,1,1,1,438,1,'moi'),
+(174,1,1,1,439,1,'j'),
+(NULL,1,1,1,440,0,'\''),
+(NULL,1,1,1,441,1,'en'),
+(149,1,1,1,442,1,'ai'),
+(NULL,1,1,1,443,1,'besoin'),
+(NULL,1,1,1,444,0,','),
+(7,1,1,1,445,1,'je'),
+(NULL,1,1,1,446,1,'serai'),
+(NULL,1,1,1,447,1,'contente'),
+(183,1,1,1,448,1,'que'),
+(NULL,1,1,1,449,1,'d'),
+(NULL,1,1,1,450,0,'\''),
+(NULL,1,1,1,451,1,'autres'),
+(NULL,1,1,1,452,1,'en'),
+(NULL,1,1,1,453,1,'donnent'),
+(NULL,1,1,1,454,0,'.'),
+(NULL,1,1,1,455,1,'Donc'),
+(NULL,1,1,1,456,1,'voilà'),
+(NULL,1,1,1,457,0,'.'),
+(NULL,1,1,1,458,0,'¶'),
+(165,1,1,1,459,1,'Oui'),
+(NULL,1,1,1,460,0,','),
+(165,1,1,1,461,1,'oui'),
+(NULL,1,1,1,462,0,'.'),
+(NULL,1,1,1,463,1,'D'),
+(NULL,1,1,1,464,0,'\''),
+(NULL,1,1,1,465,1,'accord'),
+(NULL,1,1,1,466,0,'.'),
+(NULL,1,1,1,467,0,'¶'),
+(NULL,1,1,1,468,1,'En'),
+(NULL,1,1,1,469,1,'attendant'),
+(NULL,1,1,1,470,0,','),
+(7,1,1,1,471,1,'je'),
+(NULL,1,1,1,472,1,'fais'),
+(168,1,1,1,473,1,'ça'),
+(NULL,1,1,1,474,0,'.'),
+(NULL,1,1,1,475,0,'¶'),
+(165,1,1,1,476,1,'Oui'),
+(NULL,1,1,1,477,0,','),
+(165,1,1,1,478,1,'oui'),
+(NULL,1,1,1,479,0,','),
+(NULL,1,1,1,480,1,'bien'),
+(NULL,1,1,1,481,1,'sûr'),
+(NULL,1,1,1,482,0,'.'),
+(NULL,1,1,1,483,1,'Et'),
+(3,1,1,1,484,1,'alors'),
+(NULL,1,1,1,485,0,','),
+(NULL,1,1,1,486,1,'comment'),
+(168,1,1,1,487,1,'ça'),
+(NULL,1,1,1,488,1,'se'),
+(NULL,1,1,1,489,1,'passe'),
+(NULL,1,1,1,490,1,'concrètement'),
+(NULL,1,1,1,491,0,'?'),
+(NULL,1,1,1,492,1,'Donc'),
+(146,1,1,1,493,1,'vous'),
+(NULL,1,1,1,494,1,'êtes'),
+(NULL,1,1,1,495,1,'allée'),
+(NULL,1,1,1,496,0,'…'),
+(NULL,1,1,1,497,1,'Donc'),
+(51,1,1,1,498,1,'ils'),
+(NULL,1,1,1,499,1,'sont'),
+(NULL,1,1,1,500,1,'venus'),
+(NULL,1,1,1,501,1,'à'),
+(NULL,1,1,1,502,1,'l'),
+(NULL,1,1,1,503,0,'\''),
+(NULL,1,1,1,504,1,'IUT'),
+(NULL,1,1,1,505,0,','),
+(172,1,1,1,506,1,'là'),
+(NULL,1,1,1,507,0,'.'),
+(51,1,1,1,508,1,'Ils'),
+(NULL,1,1,1,509,1,'installent'),
+(NULL,1,1,1,510,1,'tout'),
+(NULL,1,1,1,511,1,'bien'),
+(169,1,1,1,512,1,'comme'),
+(50,1,1,1,513,1,'il'),
+(NULL,1,1,1,514,1,'faut'),
+(NULL,1,1,1,515,0,','),
+(NULL,1,1,1,516,1,'et'),
+(3,1,1,1,517,1,'alors'),
+(146,1,1,1,518,1,'vous'),
+(176,1,1,1,519,1,'y'),
+(NULL,1,1,1,520,1,'allez'),
+(NULL,1,1,1,521,1,'et'),
+(NULL,1,1,1,522,1,'puis'),
+(NULL,1,1,1,523,0,'…'),
+(NULL,1,1,1,524,0,'¶'),
+(166,1,1,1,525,1,'On'),
+(176,1,1,1,526,1,'y'),
+(NULL,1,1,1,527,1,'va'),
+(NULL,1,1,1,528,0,','),
+(51,1,1,1,529,1,'ils'),
+(NULL,1,1,1,530,1,'nous'),
+(NULL,1,1,1,531,1,'de'),
+(NULL,1,1,1,532,0,' …'),
+(51,1,1,1,533,1,'Ils'),
+(NULL,1,1,1,534,1,'nous'),
+(NULL,1,1,1,535,1,'posent'),
+(NULL,1,1,1,536,1,'quelques'),
+(NULL,1,1,1,537,1,'questions'),
+(NULL,1,1,1,538,1,'par'),
+(NULL,1,1,1,539,1,'rapport'),
+(NULL,1,1,1,540,1,'à'),
+(NULL,1,1,1,541,1,'notre'),
+(NULL,1,1,1,542,1,'hygiène'),
+(NULL,1,1,1,543,1,'de'),
+(NULL,1,1,1,544,1,'vie'),
+(NULL,1,1,1,545,1,'évidemment'),
+(NULL,1,1,1,546,0,','),
+(NULL,1,1,1,547,1,'pour'),
+(NULL,1,1,1,548,0,'…'),
+(NULL,1,1,1,549,1,'pour'),
+(NULL,1,1,1,550,1,'les'),
+(NULL,1,1,1,551,1,'maladies'),
+(NULL,1,1,1,552,0,','),
+(NULL,1,1,1,553,1,'tout'),
+(168,1,1,1,554,1,'ça'),
+(NULL,1,1,1,555,0,','),
+(NULL,1,1,1,556,1,'si'),
+(166,1,1,1,557,1,'on'),
+(NULL,1,1,1,558,1,'n'),
+(NULL,1,1,1,559,0,'\''),
+(177,1,1,1,560,1,'a'),
+(170,1,1,1,561,1,'pas'),
+(NULL,1,1,1,562,1,'eu'),
+(NULL,1,1,1,563,0,'…'),
+(NULL,1,1,1,564,1,'été'),
+(NULL,1,1,1,565,1,'malades'),
+(NULL,1,1,1,566,0,','),
+(NULL,1,1,1,567,1,'pour'),
+(NULL,1,1,1,568,1,'les'),
+(NULL,1,1,1,569,1,'médicaments'),
+(NULL,1,1,1,570,1,'dans'),
+(NULL,1,1,1,571,1,'le'),
+(181,1,1,1,572,1,'sang'),
+(NULL,1,1,1,573,0,','),
+(NULL,1,1,1,574,1,'tout'),
+(168,1,1,1,575,1,'ça'),
+(NULL,1,1,1,576,0,'.'),
+(NULL,1,1,1,577,1,'Et'),
+(NULL,1,1,1,578,1,'puis'),
+(NULL,1,1,1,579,1,'après'),
+(NULL,1,1,1,580,0,','),
+(51,1,1,1,581,1,'ils'),
+(146,1,1,1,582,1,'vous'),
+(NULL,1,1,1,583,1,'installent'),
+(NULL,1,1,1,584,1,'sur'),
+(173,1,1,1,585,1,'une'),
+(NULL,1,1,1,586,0,'…'),
+(NULL,1,1,1,587,1,'sur'),
+(173,1,1,1,588,1,'une'),
+(NULL,1,1,1,589,1,'table'),
+(NULL,1,1,1,590,0,','),
+(NULL,1,1,1,591,1,'allongé'),
+(NULL,1,1,1,592,0,','),
+(NULL,1,1,1,593,1,'et'),
+(51,1,1,1,594,1,'ils'),
+(146,1,1,1,595,1,'vous'),
+(NULL,1,1,1,596,0,'…'),
+(51,1,1,1,597,1,'ils'),
+(146,1,1,1,598,1,'vous'),
+(NULL,1,1,1,599,1,'piquent'),
+(NULL,1,1,1,600,1,'et'),
+(NULL,1,1,1,601,0,'…'),
+(NULL,1,1,1,602,0,'¶'),
+(NULL,1,1,1,603,1,'Et'),
+(166,1,1,1,604,1,'on'),
+(NULL,1,1,1,605,1,'attend'),
+(NULL,1,1,1,606,0,'.'),
+(NULL,1,1,1,607,0,'¶'),
+(NULL,1,1,1,608,1,'Et'),
+(166,1,1,1,609,1,'on'),
+(NULL,1,1,1,610,1,'attend'),
+(NULL,1,1,1,611,0,', 15'),
+(NULL,1,1,1,612,1,'ou'),
+(NULL,1,1,1,613,0,' 20'),
+(NULL,1,1,1,614,1,'minutes'),
+(NULL,1,1,1,615,0,'.'),
+(NULL,1,1,1,616,0,'¶'),
+(165,1,1,1,617,1,'Oui'),
+(NULL,1,1,1,618,0,','),
+(NULL,1,1,1,619,1,'d'),
+(NULL,1,1,1,620,0,'\''),
+(NULL,1,1,1,621,1,'accord'),
+(NULL,1,1,1,622,0,'.'),
+(NULL,1,1,1,623,1,'Et'),
+(NULL,1,1,1,624,1,'le'),
+(NULL,1,1,1,625,1,'temps'),
+(NULL,1,1,1,626,1,'n'),
+(NULL,1,1,1,627,0,'\''),
+(25,1,1,1,628,1,'est'),
+(170,1,1,1,629,1,'pas'),
+(NULL,1,1,1,630,1,'trop'),
+(NULL,1,1,1,631,1,'long'),
+(NULL,1,1,1,632,0,' ?'),
+(166,1,1,1,633,1,'On'),
+(NULL,1,1,1,634,1,'se'),
+(NULL,1,1,1,635,1,'sent'),
+(170,1,1,1,636,1,'pas'),
+(NULL,1,1,1,637,1,'un'),
+(NULL,1,1,1,638,1,'peu'),
+(NULL,1,1,1,639,1,'bizarre'),
+(NULL,1,1,1,640,1,'ou'),
+(NULL,1,1,1,641,0,'…?'),
+(NULL,1,1,1,642,0,'¶'),
+(166,1,1,1,643,1,'On'),
+(NULL,1,1,1,644,1,'se'),
+(NULL,1,1,1,645,1,'sent'),
+(NULL,1,1,1,646,1,'bizarre'),
+(NULL,1,1,1,647,0,','),
+(NULL,1,1,1,648,1,'mais'),
+(51,1,1,1,649,1,'ils'),
+(NULL,1,1,1,650,1,'sont'),
+(NULL,1,1,1,651,1,'vraiment'),
+(NULL,1,1,1,652,1,'à'),
+(NULL,1,1,1,653,1,'côté'),
+(NULL,1,1,1,654,1,'de'),
+(NULL,1,1,1,655,1,'nous'),
+(NULL,1,1,1,656,1,'pour'),
+(NULL,1,1,1,657,0,'…'),
+(NULL,1,1,1,658,1,'pour'),
+(NULL,1,1,1,659,1,'justement'),
+(6,1,1,1,660,1,'qu'),
+(NULL,1,1,1,661,0,'\''),
+(166,1,1,1,662,1,'on'),
+(NULL,1,1,1,663,0,'…'),
+(6,1,1,1,664,1,'qu'),
+(NULL,1,1,1,665,0,'\''),
+(166,1,1,1,666,1,'on'),
+(NULL,1,1,1,667,1,'reste'),
+(NULL,1,1,1,668,1,'éveillé'),
+(NULL,1,1,1,669,1,'en'),
+(NULL,1,1,1,670,1,'quelque'),
+(NULL,1,1,1,671,1,'sorte'),
+(NULL,1,1,1,672,0,','),
+(NULL,1,1,1,673,1,'et'),
+(6,1,1,1,674,1,'qu'),
+(NULL,1,1,1,675,0,'\''),
+(166,1,1,1,676,1,'on'),
+(NULL,1,1,1,677,1,'reste'),
+(NULL,1,1,1,678,1,'actif'),
+(NULL,1,1,1,679,1,'pour'),
+(170,1,1,1,680,1,'pas'),
+(NULL,1,1,1,681,1,'justement'),
+(6,1,1,1,682,1,'qu'),
+(NULL,1,1,1,683,0,'\''),
+(166,1,1,1,684,1,'on'),
+(NULL,1,1,1,685,1,'parte'),
+(NULL,1,1,1,686,0,'…'),
+(NULL,1,1,1,687,1,'un'),
+(NULL,1,1,1,688,1,'peu'),
+(NULL,1,1,1,689,1,'à'),
+(NULL,1,1,1,690,0,'…'),
+(NULL,1,1,1,691,0,'¶'),
+(165,1,1,1,692,1,'Oui'),
+(NULL,1,1,1,693,0,','),
+(NULL,1,1,1,694,1,'à'),
+(NULL,1,1,1,695,1,'se'),
+(NULL,1,1,1,696,1,'poser'),
+(NULL,1,1,1,697,1,'des'),
+(NULL,1,1,1,698,1,'questions'),
+(NULL,1,1,1,699,0,','),
+(NULL,1,1,1,700,1,'tout'),
+(168,1,1,1,701,1,'ça'),
+(NULL,1,1,1,702,0,','),
+(NULL,1,1,1,703,1,'et'),
+(NULL,1,1,1,704,1,'puis'),
+(NULL,1,1,1,705,1,'se'),
+(NULL,1,1,1,706,1,'sentir'),
+(NULL,1,1,1,707,1,'affaibli'),
+(NULL,1,1,1,708,1,'ou'),
+(NULL,1,1,1,709,1,'quelque'),
+(NULL,1,1,1,710,1,'chose'),
+(NULL,1,1,1,711,0,'.'),
+(NULL,1,1,1,712,0,'¶'),
+(NULL,1,1,1,713,1,'Voilà'),
+(NULL,1,1,1,714,0,'.'),
+(NULL,1,1,1,715,1,'Donc'),
+(51,1,1,1,716,1,'ils'),
+(NULL,1,1,1,717,1,'sont'),
+(NULL,1,1,1,718,1,'vraiment'),
+(NULL,1,1,1,719,1,'à'),
+(NULL,1,1,1,720,1,'côté'),
+(NULL,1,1,1,721,1,'de'),
+(NULL,1,1,1,722,1,'nous'),
+(NULL,1,1,1,723,0,','),
+(NULL,1,1,1,724,1,'à'),
+(NULL,1,1,1,725,1,'nous'),
+(NULL,1,1,1,726,1,'parler'),
+(NULL,1,1,1,727,0,','),
+(NULL,1,1,1,728,1,'à'),
+(NULL,1,1,1,729,1,'nous'),
+(NULL,1,1,1,730,1,'faire'),
+(NULL,1,1,1,731,1,'rigoler'),
+(NULL,1,1,1,732,1,'pour'),
+(NULL,1,1,1,733,1,'voir'),
+(NULL,1,1,1,734,1,'si'),
+(166,1,1,1,735,1,'on'),
+(25,1,1,1,736,1,'est'),
+(NULL,1,1,1,737,1,'toujours'),
+(NULL,1,1,1,738,1,'conscient'),
+(NULL,1,1,1,739,0,','),
+(NULL,1,1,1,740,1,'finalement'),
+(NULL,1,1,1,741,0,'.'),
+(NULL,1,1,1,742,0,'¶'),
+(NULL,1,1,1,743,1,'Ah'),
+(165,1,1,1,744,1,'oui'),
+(NULL,1,1,1,745,0,','),
+(NULL,1,1,1,746,1,'d'),
+(NULL,1,1,1,747,0,'\''),
+(NULL,1,1,1,748,1,'accord'),
+(NULL,1,1,1,749,0,'.'),
+(NULL,1,1,1,750,0,'¶'),
+(165,1,1,1,751,1,'Oui'),
+(NULL,1,1,1,752,0,','),
+(165,1,1,1,753,1,'oui'),
+(NULL,1,1,1,754,0,'.'),
+(NULL,1,1,1,755,1,'Voilà'),
+(NULL,1,1,1,756,0,'.'),
+(NULL,1,1,1,757,0,'¶'),
+(165,1,1,1,758,1,'Oui'),
+(NULL,1,1,1,759,0,','),
+(165,1,1,1,760,1,'oui'),
+(NULL,1,1,1,761,0,','),
+(165,1,1,1,762,1,'oui'),
+(NULL,1,1,1,763,0,'.'),
+(NULL,1,1,1,764,1,'Et'),
+(NULL,1,1,1,765,1,'après'),
+(NULL,1,1,1,766,0,','),
+(3,1,1,1,767,1,'alors'),
+(NULL,1,1,1,768,0,','),
+(NULL,1,1,1,769,1,'à'),
+(NULL,1,1,1,770,1,'la'),
+(NULL,1,1,1,771,1,'fin'),
+(NULL,1,1,1,772,0,','),
+(6,1,1,1,773,1,'qu'),
+(NULL,1,1,1,774,0,'\''),
+(25,1,1,1,775,1,'est'),
+(NULL,1,1,1,776,0,'-'),
+(182,1,1,1,777,1,'ce'),
+(NULL,1,1,1,778,1,'qui'),
+(NULL,1,1,1,779,1,'se'),
+(NULL,1,1,1,780,1,'passe'),
+(NULL,1,1,1,781,0,' ?'),
+(NULL,1,1,1,782,0,'¶'),
+(177,1,1,1,783,1,'A'),
+(NULL,1,1,1,784,1,'la'),
+(NULL,1,1,1,785,1,'fin'),
+(NULL,1,1,1,786,0,','),
+(51,1,1,1,787,1,'ils'),
+(146,1,1,1,788,1,'vous'),
+(NULL,1,1,1,789,1,'enlèvent'),
+(NULL,1,1,1,790,1,'la'),
+(NULL,1,1,1,791,1,'piqure'),
+(NULL,1,1,1,792,0,'.'),
+(NULL,1,1,1,793,1,'Et'),
+(NULL,1,1,1,794,1,'d'),
+(NULL,1,1,1,795,0,'\''),
+(NULL,1,1,1,796,1,'ailleurs'),
+(NULL,1,1,1,797,0,','),
+(44,1,1,1,798,1,'c'),
+(NULL,1,1,1,799,0,'\''),
+(25,1,1,1,800,1,'est'),
+(172,1,1,1,801,1,'là'),
+(183,1,1,1,802,1,'que'),
+(7,1,1,1,803,1,'je'),
+(NULL,1,1,1,804,1,'me'),
+(NULL,1,1,1,805,1,'suis'),
+(NULL,1,1,1,806,1,'évanouie'),
+(NULL,1,1,1,807,0,' !'),
+(NULL,1,1,1,808,0,'¶'),
+(NULL,1,1,1,809,1,'Carrément'),
+(NULL,1,1,1,810,0,' ?'),
+(NULL,1,1,1,811,0,'¶'),
+(NULL,1,1,1,812,1,'Ouais'),
+(NULL,1,1,1,813,0,'.'),
+(NULL,1,1,1,814,0,'¶'),
+(NULL,1,1,1,815,1,'Ah'),
+(NULL,1,1,1,816,1,'bon'),
+(NULL,1,1,1,817,0,','),
+(NULL,1,1,1,818,1,'d'),
+(NULL,1,1,1,819,0,'\''),
+(NULL,1,1,1,820,1,'accord'),
+(NULL,1,1,1,821,0,' !'),
+(NULL,1,1,1,822,0,'¶'),
+(165,1,1,1,823,1,'Oui'),
+(NULL,1,1,1,824,0,','),
+(165,1,1,1,825,1,'oui'),
+(NULL,1,1,1,826,0,'.'),
+(51,1,1,1,827,1,'Ils'),
+(NULL,1,1,1,828,1,'ont'),
+(NULL,1,1,1,829,1,'dû'),
+(NULL,1,1,1,830,0,'…'),
+(51,1,1,1,831,1,'Ils'),
+(NULL,1,1,1,832,1,'ont'),
+(NULL,1,1,1,833,1,'dû'),
+(NULL,1,1,1,834,1,'me'),
+(NULL,1,1,1,835,1,'mettre'),
+(NULL,1,1,1,836,1,'les'),
+(NULL,1,1,1,837,1,'pieds'),
+(NULL,1,1,1,838,1,'en'),
+(NULL,1,1,1,839,1,'l'),
+(NULL,1,1,1,840,0,'\''),
+(NULL,1,1,1,841,1,'air'),
+(NULL,1,1,1,842,0,'.'),
+(51,1,1,1,843,1,'Ils'),
+(NULL,1,1,1,844,1,'ont'),
+(NULL,1,1,1,845,0,'…'),
+(51,1,1,1,846,1,'Ils'),
+(NULL,1,1,1,847,1,'ont'),
+(NULL,1,1,1,848,1,'bien'),
+(NULL,1,1,1,849,1,'rigolé'),
+(NULL,1,1,1,850,1,'parce'),
+(183,1,1,1,851,1,'que'),
+(NULL,1,1,1,852,1,'justement'),
+(NULL,1,1,1,853,0,','),
+(51,1,1,1,854,1,'ils'),
+(NULL,1,1,1,855,0,'…'),
+(51,1,1,1,856,1,'ils'),
+(NULL,1,1,1,857,1,'ont'),
+(NULL,1,1,1,858,1,'vu'),
+(183,1,1,1,859,1,'que'),
+(NULL,1,1,1,860,1,'quand'),
+(7,1,1,1,861,1,'je'),
+(NULL,1,1,1,862,1,'suis'),
+(NULL,1,1,1,863,1,'partie'),
+(NULL,1,1,1,864,0,','),
+(NULL,1,1,1,865,1,'justement'),
+(NULL,1,1,1,866,0,','),
+(44,1,1,1,867,1,'c'),
+(NULL,1,1,1,868,0,'\''),
+(25,1,1,1,869,1,'est'),
+(NULL,1,1,1,870,1,'quand'),
+(51,1,1,1,871,1,'ils'),
+(NULL,1,1,1,872,1,'ont'),
+(NULL,1,1,1,873,1,'enlevé'),
+(NULL,1,1,1,874,1,'la'),
+(NULL,1,1,1,875,1,'piqure'),
+(NULL,1,1,1,876,0,','),
+(7,1,1,1,877,1,'je'),
+(NULL,1,1,1,878,1,'souriais'),
+(NULL,1,1,1,879,1,'et'),
+(NULL,1,1,1,880,1,'quand'),
+(7,1,1,1,881,1,'je'),
+(NULL,1,1,1,882,1,'suis'),
+(NULL,1,1,1,883,0,'…'),
+(NULL,1,1,1,884,1,'quand'),
+(7,1,1,1,885,1,'je'),
+(NULL,1,1,1,886,1,'me'),
+(NULL,1,1,1,887,1,'suis'),
+(NULL,1,1,1,888,0,'…'),
+(NULL,1,1,1,889,1,'quand'),
+(174,1,1,1,890,1,'j'),
+(NULL,1,1,1,891,0,'\''),
+(149,1,1,1,892,1,'ai'),
+(NULL,1,1,1,893,1,'repris'),
+(NULL,1,1,1,894,1,'conscience'),
+(NULL,1,1,1,895,0,','),
+(51,1,1,1,896,1,'ils'),
+(NULL,1,1,1,897,1,'m'),
+(NULL,1,1,1,898,0,'\''),
+(NULL,1,1,1,899,1,'ont'),
+(NULL,1,1,1,900,1,'dit'),
+(183,1,1,1,901,1,'que'),
+(44,1,1,1,902,1,'c'),
+(NULL,1,1,1,903,0,'\''),
+(NULL,1,1,1,904,1,'était'),
+(NULL,1,1,1,905,1,'la'),
+(NULL,1,1,1,906,0,'…'),
+(NULL,1,1,1,907,1,'la'),
+(NULL,1,1,1,908,1,'première'),
+(NULL,1,1,1,909,1,'fois'),
+(6,1,1,1,910,1,'qu'),
+(NULL,1,1,1,911,0,'\''),
+(51,1,1,1,912,1,'ils'),
+(NULL,1,1,1,913,1,'avaient'),
+(NULL,1,1,1,914,1,'vu'),
+(NULL,1,1,1,915,1,'quelqu'),
+(NULL,1,1,1,916,0,'\''),
+(NULL,1,1,1,917,1,'un'),
+(NULL,1,1,1,918,1,'partir'),
+(NULL,1,1,1,919,0,'…'),
+(NULL,1,1,1,920,0,'¶'),
+(NULL,1,1,1,921,1,'En'),
+(NULL,1,1,1,922,1,'souriant'),
+(NULL,1,1,1,923,0,' ?'),
+(NULL,1,1,1,924,0,'¶'),
+(NULL,1,1,1,925,0,'…'),
+(NULL,1,1,1,926,1,'en'),
+(NULL,1,1,1,927,1,'souriant'),
+(NULL,1,1,1,928,0,'.'),
+(NULL,1,1,1,929,0,'¶'),
+(NULL,1,1,1,930,1,'Ah'),
+(NULL,1,1,1,931,1,'bon'),
+(NULL,1,1,1,932,0,','),
+(NULL,1,1,1,933,1,'d'),
+(NULL,1,1,1,934,0,'\''),
+(NULL,1,1,1,935,1,'accord'),
+(NULL,1,1,1,936,0,'.'),
+(3,1,1,1,937,1,'Alors'),
+(146,1,1,1,938,1,'vous'),
+(NULL,1,1,1,939,1,'êtes'),
+(NULL,1,1,1,940,1,'très'),
+(NULL,1,1,1,941,1,'spéciale'),
+(NULL,1,1,1,942,0,' !'),
+(NULL,1,1,1,943,0,'¶'),
+(NULL,1,1,1,944,1,'Voilà'),
+(NULL,1,1,1,945,0,'.'),
+(NULL,1,1,1,946,0,'¶'),
+(NULL,1,1,1,947,1,'Ah'),
+(165,1,1,1,948,1,'oui'),
+(NULL,1,1,1,949,0,' ?'),
+(NULL,1,1,1,950,1,'Et'),
+(3,1,1,1,951,1,'alors'),
+(NULL,1,1,1,952,0,','),
+(NULL,1,1,1,953,1,'donc'),
+(NULL,1,1,1,954,0,'…'),
+(NULL,1,1,1,955,1,'mais'),
+(146,1,1,1,956,1,'vous'),
+(146,1,1,1,957,1,'vous'),
+(NULL,1,1,1,958,1,'êtes'),
+(NULL,1,1,1,959,1,'évanouie'),
+(NULL,1,1,1,960,1,'carrément'),
+(NULL,1,1,1,961,0,' ?'),
+(NULL,1,1,1,962,0,'¶'),
+(NULL,1,1,1,963,1,'Ah'),
+(165,1,1,1,964,1,'oui'),
+(NULL,1,1,1,965,0,','),
+(NULL,1,1,1,966,1,'carrément'),
+(NULL,1,1,1,967,0,' !'),
+(174,1,1,1,968,1,'J'),
+(NULL,1,1,1,969,0,'\''),
+(149,1,1,1,970,1,'ai'),
+(NULL,1,1,1,971,1,'perdu'),
+(NULL,1,1,1,972,1,'conscience'),
+(NULL,1,1,1,973,1,'pendant'),
+(NULL,1,1,1,974,0,'…'),
+(NULL,1,1,1,975,1,'bon'),
+(170,1,1,1,976,1,'pas'),
+(171,1,1,1,977,1,'longtemps'),
+(NULL,1,1,1,978,0,','),
+(NULL,1,1,1,979,1,'hein'),
+(NULL,1,1,1,980,0,','),
+(167,1,1,1,981,1,'peut'),
+(NULL,1,1,1,982,0,'-'),
+(NULL,1,1,1,983,1,'être'),
+(173,1,1,1,984,1,'une'),
+(NULL,1,1,1,985,1,'ou'),
+(NULL,1,1,1,986,1,'deux'),
+(NULL,1,1,1,987,1,'minutes'),
+(NULL,1,1,1,988,0,','),
+(NULL,1,1,1,989,1,'le'),
+(NULL,1,1,1,990,1,'temps'),
+(183,1,1,1,991,1,'que'),
+(NULL,1,1,1,992,0,'…'),
+(183,1,1,1,993,1,'que'),
+(168,1,1,1,994,1,'ça'),
+(NULL,1,1,1,995,1,'revienne'),
+(NULL,1,1,1,996,0,'.'),
+(7,1,1,1,997,1,'Je'),
+(NULL,1,1,1,998,1,'pense'),
+(183,1,1,1,999,1,'que'),
+(44,1,1,1,1000,1,'c'),
+(NULL,1,1,1,1001,0,'\''),
+(NULL,1,1,1,1002,1,'était'),
+(NULL,1,1,1,1003,1,'un'),
+(NULL,1,1,1,1004,0,'…'),
+(NULL,1,1,1,1005,0,'¶'),
+(NULL,1,1,1,1006,1,'Un'),
+(NULL,1,1,1,1007,1,'étourdissement'),
+(NULL,1,1,1,1008,0,' ?'),
+(NULL,1,1,1,1009,0,'¶'),
+(NULL,1,1,1,1010,0,'…'),
+(NULL,1,1,1,1011,1,'un'),
+(NULL,1,1,1,1012,1,'trop'),
+(NULL,1,1,1,1013,0,'-'),
+(NULL,1,1,1,1014,1,'plein'),
+(NULL,1,1,1,1015,0,'…'),
+(NULL,1,1,1,1016,1,'trop'),
+(NULL,1,1,1,1017,0,'-'),
+(NULL,1,1,1,1018,1,'plein'),
+(NULL,1,1,1,1019,1,'d'),
+(NULL,1,1,1,1020,0,'\''),
+(NULL,1,1,1,1021,1,'émotions'),
+(NULL,1,1,1,1022,1,'en'),
+(147,1,1,1,1023,1,'fait'),
+(NULL,1,1,1,1024,0,'.'),
+(NULL,1,1,1,1025,0,'¶'),
+(NULL,1,1,1,1026,1,'Ah'),
+(NULL,1,1,1,1027,1,'d'),
+(NULL,1,1,1,1028,0,'\''),
+(NULL,1,1,1,1029,1,'accord'),
+(NULL,1,1,1,1030,0,' !'),
+(NULL,1,1,1,1031,0,'¶'),
+(NULL,1,1,1,1032,1,'D'),
+(NULL,1,1,1,1033,0,'\''),
+(NULL,1,1,1,1034,1,'être'),
+(NULL,1,1,1,1035,1,'contente'),
+(NULL,1,1,1,1036,1,'et'),
+(NULL,1,1,1,1037,1,'à'),
+(NULL,1,1,1,1038,1,'la'),
+(NULL,1,1,1,1039,1,'fois'),
+(NULL,1,1,1,1040,1,'d'),
+(NULL,1,1,1,1041,0,'\''),
+(NULL,1,1,1,1042,1,'avoir'),
+(NULL,1,1,1,1043,1,'eu'),
+(NULL,1,1,1,1044,1,'peur'),
+(NULL,1,1,1,1045,0,'.'),
+(NULL,1,1,1,1046,0,'¶'),
+(NULL,1,1,1,1047,1,'Ah'),
+(NULL,1,1,1,1048,1,'bon'),
+(NULL,1,1,1,1049,0,' !'),
+(NULL,1,1,1,1050,0,'¶'),
+(NULL,1,1,1,1051,1,'Tout'),
+(168,1,1,1,1052,1,'ça'),
+(NULL,1,1,1,1053,0,','),
+(NULL,1,1,1,1054,1,'ouais'),
+(NULL,1,1,1,1055,0,'.'),
+(NULL,1,1,1,1056,0,'¶'),
+(146,1,1,1,1057,1,'Vous'),
+(NULL,1,1,1,1058,1,'êtes'),
+(NULL,1,1,1,1059,1,'à'),
+(182,1,1,1,1060,1,'ce'),
+(NULL,1,1,1,1061,1,'point'),
+(NULL,1,1,1,1062,1,'sensible'),
+(NULL,1,1,1,1063,0,'…'),
+(NULL,1,1,1,1064,0,'¶'),
+(NULL,1,1,1,1065,1,'Ah'),
+(165,1,1,1,1066,1,'oui'),
+(NULL,1,1,1,1067,0,','),
+(165,1,1,1,1068,1,'oui'),
+(NULL,1,1,1,1069,0,','),
+(NULL,1,1,1,1070,1,'vraiment'),
+(NULL,1,1,1,1071,0,'.'),
+(NULL,1,1,1,1072,0,'¶'),
+(NULL,1,1,1,1073,0,'…'),
+(NULL,1,1,1,1074,1,'émotive'),
+(NULL,1,1,1,1075,0,'.'),
+(NULL,1,1,1,1076,0,'¶'),
+(NULL,1,1,1,1077,1,'Ouais'),
+(NULL,1,1,1,1078,0,'.'),
+(NULL,1,1,1,1079,0,'¶'),
+(NULL,1,1,1,1080,1,'D'),
+(NULL,1,1,1,1081,0,'\''),
+(NULL,1,1,1,1082,1,'accord'),
+(NULL,1,1,1,1083,0,'.'),
+(NULL,1,1,1,1084,1,'Et'),
+(3,1,1,1,1085,1,'alors'),
+(NULL,1,1,1,1086,0,','),
+(6,1,1,1,1087,1,'qu'),
+(NULL,1,1,1,1088,0,'\''),
+(25,1,1,1,1089,1,'est'),
+(NULL,1,1,1,1090,0,'-'),
+(182,1,1,1,1091,1,'ce'),
+(6,1,1,1,1092,1,'qu'),
+(NULL,1,1,1,1093,0,'\''),
+(51,1,1,1,1094,1,'ils'),
+(NULL,1,1,1,1095,1,'ont'),
+(147,1,1,1,1096,1,'fait'),
+(NULL,1,1,1,1097,0,','),
+(NULL,1,1,1,1098,1,'eux'),
+(NULL,1,1,1,1099,0,' ?'),
+(51,1,1,1,1100,1,'Ils'),
+(146,1,1,1,1101,1,'vous'),
+(NULL,1,1,1,1102,1,'ont'),
+(NULL,1,1,1,1103,0,'…'),
+(45,1,1,1,1104,1,'quoi'),
+(NULL,1,1,1,1105,0,' ?'),
+(7,1,1,1,1106,1,'Je'),
+(NULL,1,1,1,1107,1,'sais'),
+(170,1,1,1,1108,1,'pas'),
+(NULL,1,1,1,1109,0,'…'),
+(NULL,1,1,1,1110,1,'tapé'),
+(NULL,1,1,1,1111,1,'sur'),
+(NULL,1,1,1,1112,1,'les'),
+(NULL,1,1,1,1113,1,'joues'),
+(NULL,1,1,1,1114,0,' ?'),
+(NULL,1,1,1,1115,0,'¶'),
+(NULL,1,1,1,1116,1,'Non'),
+(NULL,1,1,1,1117,0,','),
+(NULL,1,1,1,1118,1,'non'),
+(NULL,1,1,1,1119,0,','),
+(51,1,1,1,1120,1,'ils'),
+(NULL,1,1,1,1121,1,'ont'),
+(NULL,1,1,1,1122,1,'été'),
+(NULL,1,1,1,1123,1,'très'),
+(NULL,1,1,1,1124,1,'calmes'),
+(NULL,1,1,1,1125,0,','),
+(NULL,1,1,1,1126,1,'apparemment'),
+(NULL,1,1,1,1127,0,','),
+(NULL,1,1,1,1128,1,'d'),
+(NULL,1,1,1,1129,0,'\''),
+(NULL,1,1,1,1130,1,'après'),
+(182,1,1,1,1131,1,'ce'),
+(183,1,1,1,1132,1,'que'),
+(174,1,1,1,1133,1,'j'),
+(NULL,1,1,1,1134,0,'\''),
+(149,1,1,1,1135,1,'ai'),
+(NULL,1,1,1,1136,1,'entendu'),
+(NULL,1,1,1,1137,0,'.'),
+(NULL,1,1,1,1138,0,'¶'),
+(50,1,1,1,1139,1,'Il'),
+(NULL,1,1,1,1140,1,'faut'),
+(NULL,1,1,1,1141,1,'placer'),
+(NULL,1,1,1,1142,1,'dans'),
+(173,1,1,1,1143,1,'une'),
+(148,1,1,1,1144,1,'bonne'),
+(NULL,1,1,1,1145,1,'position'),
+(NULL,1,1,1,1146,0,','),
+(45,1,1,1,1147,1,'quoi'),
+(NULL,1,1,1,1148,0,'.'),
+(44,1,1,1,1149,1,'C'),
+(NULL,1,1,1,1150,0,'\''),
+(25,1,1,1,1151,1,'est'),
+(168,1,1,1,1152,1,'ça'),
+(NULL,1,1,1,1153,0,' ?'),
+(NULL,1,1,1,1154,0,'¶'),
+(NULL,1,1,1,1155,1,'Voilà'),
+(NULL,1,1,1,1156,0,','),
+(51,1,1,1,1157,1,'ils'),
+(NULL,1,1,1,1158,1,'ont'),
+(NULL,1,1,1,1159,1,'juste'),
+(NULL,1,1,1,1160,1,'relevé'),
+(NULL,1,1,1,1161,1,'mes'),
+(NULL,1,1,1,1162,1,'pieds'),
+(NULL,1,1,1,1163,0,'.'),
+(NULL,1,1,1,1164,1,'Et'),
+(51,1,1,1,1165,1,'ils'),
+(NULL,1,1,1,1166,1,'m'),
+(NULL,1,1,1,1167,0,'\''),
+(NULL,1,1,1,1168,1,'ont'),
+(NULL,1,1,1,1169,0,'…'),
+(51,1,1,1,1170,1,'Ils'),
+(NULL,1,1,1,1171,1,'m'),
+(NULL,1,1,1,1172,0,'\''),
+(NULL,1,1,1,1173,1,'ont'),
+(NULL,1,1,1,1174,1,'mis'),
+(NULL,1,1,1,1175,1,'un'),
+(NULL,1,1,1,1176,0,'…'),
+(NULL,1,1,1,1177,1,'un'),
+(NULL,1,1,1,1178,1,'coton'),
+(NULL,1,1,1,1179,1,'imbibé'),
+(NULL,1,1,1,1180,1,'de'),
+(NULL,1,1,1,1181,0,'…'),
+(NULL,1,1,1,1182,1,'de'),
+(NULL,1,1,1,1183,1,'quelque'),
+(NULL,1,1,1,1184,1,'chose'),
+(NULL,1,1,1,1185,0,'.'),
+(7,1,1,1,1186,1,'Je'),
+(NULL,1,1,1,1187,1,'sais'),
+(170,1,1,1,1188,1,'pas'),
+(182,1,1,1,1189,1,'ce'),
+(183,1,1,1,1190,1,'que'),
+(44,1,1,1,1191,1,'c'),
+(NULL,1,1,1,1192,0,'\''),
+(NULL,1,1,1,1193,1,'était'),
+(NULL,1,1,1,1194,0,'.'),
+(168,1,1,1,1195,1,'Ça'),
+(NULL,1,1,1,1196,0,'…'),
+(168,1,1,1,1197,1,'ça'),
+(NULL,1,1,1,1198,1,'sentait'),
+(NULL,1,1,1,1199,1,'l'),
+(NULL,1,1,1,1200,0,'\''),
+(NULL,1,1,1,1201,1,'eucalyptus'),
+(NULL,1,1,1,1202,0,'.'),
+(NULL,1,1,1,1203,0,'¶'),
+(NULL,1,1,1,1204,1,'Ah'),
+(165,1,1,1,1205,1,'oui'),
+(NULL,1,1,1,1206,0,','),
+(165,1,1,1,1207,1,'oui'),
+(NULL,1,1,1,1208,0,'.'),
+(NULL,1,1,1,1209,1,'Pour'),
+(NULL,1,1,1,1210,1,'un'),
+(NULL,1,1,1,1211,1,'peu'),
+(146,1,1,1,1212,1,'vous'),
+(NULL,1,1,1,1213,0,'…'),
+(NULL,1,1,1,1214,0,'¶'),
+(NULL,1,1,1,1215,1,'Pour'),
+(NULL,1,1,1,1216,1,'un'),
+(NULL,1,1,1,1217,1,'peu'),
+(NULL,1,1,1,1218,0,'…'),
+(NULL,1,1,1,1219,0,'¶'),
+(NULL,1,1,1,1220,0,'…'),
+(NULL,1,1,1,1221,1,'stimuler'),
+(NULL,1,1,1,1222,0,'.'),
+(NULL,1,1,1,1223,0,'¶'),
+(NULL,1,1,1,1224,1,'Ouais'),
+(NULL,1,1,1,1225,0,','),
+(NULL,1,1,1,1226,1,'voilà'),
+(NULL,1,1,1,1227,0,'.'),
+(NULL,1,1,1,1228,0,'¶'),
+(NULL,1,1,1,1229,1,'D'),
+(NULL,1,1,1,1230,0,'\''),
+(NULL,1,1,1,1231,1,'accord'),
+(NULL,1,1,1,1232,0,'.'),
+(NULL,1,1,1,1233,1,'Bon'),
+(NULL,1,1,1,1234,1,'bah'),
+(44,1,1,1,1235,1,'c'),
+(NULL,1,1,1,1236,0,'\''),
+(25,1,1,1,1237,1,'est'),
+(NULL,1,1,1,1238,1,'sympa'),
+(NULL,1,1,1,1239,0,' !'),
+(174,1,1,1,1240,1,'J'),
+(NULL,1,1,1,1241,0,'\''),
+(NULL,1,1,1,1242,1,'espère'),
+(183,1,1,1,1243,1,'que'),
+(NULL,1,1,1,1244,1,'tout'),
+(NULL,1,1,1,1245,1,'le'),
+(NULL,1,1,1,1246,1,'monde'),
+(NULL,1,1,1,1247,1,'se'),
+(NULL,1,1,1,1248,0,'…'),
+(NULL,1,1,1,1249,1,'s'),
+(NULL,1,1,1,1250,0,'\''),
+(NULL,1,1,1,1251,1,'évanouit'),
+(170,1,1,1,1252,1,'pas'),
+(NULL,1,1,1,1253,1,'après'),
+(NULL,1,1,1,1254,1,'les'),
+(NULL,1,1,1,1255,0,'…'),
+(NULL,1,1,1,1256,1,'les'),
+(NULL,1,1,1,1257,1,'prises'),
+(NULL,1,1,1,1258,1,'de'),
+(181,1,1,1,1259,1,'sang'),
+(169,1,1,1,1260,1,'comme'),
+(168,1,1,1,1261,1,'ça'),
+(NULL,1,1,1,1262,0,' !'),
+(NULL,1,1,1,1263,1,'Et'),
+(50,1,1,1,1264,1,'il'),
+(176,1,1,1,1265,1,'y'),
+(177,1,1,1,1266,1,'a'),
+(170,1,1,1,1267,1,'pas'),
+(NULL,1,1,1,1268,1,'à'),
+(NULL,1,1,1,1269,1,'manger'),
+(NULL,1,1,1,1270,1,'aussi'),
+(NULL,1,1,1,1271,1,'un'),
+(NULL,1,1,1,1272,1,'peu'),
+(NULL,1,1,1,1273,0,','),
+(NULL,1,1,1,1274,1,'non'),
+(NULL,1,1,1,1275,0,' ?'),
+(44,1,1,1,1276,1,'C'),
+(NULL,1,1,1,1277,0,'\''),
+(25,1,1,1,1278,1,'est'),
+(168,1,1,1,1279,1,'ça'),
+(NULL,1,1,1,1280,0,' ?'),
+(NULL,1,1,1,1281,0,'¶'),
+(NULL,1,1,1,1282,1,'Voilà'),
+(NULL,1,1,1,1283,0,','),
+(NULL,1,1,1,1284,1,'et'),
+(NULL,1,1,1,1285,1,'après'),
+(51,1,1,1,1286,1,'ils'),
+(NULL,1,1,1,1287,1,'nous'),
+(NULL,1,1,1,1288,0,'…'),
+(51,1,1,1,1289,1,'ils'),
+(NULL,1,1,1,1290,1,'nous'),
+(NULL,1,1,1,1291,1,'donnent'),
+(182,1,1,1,1292,1,'ce'),
+(6,1,1,1,1293,1,'qu'),
+(NULL,1,1,1,1294,0,'\''),
+(166,1,1,1,1295,1,'on'),
+(NULL,1,1,1,1296,1,'veut'),
+(NULL,1,1,1,1297,0,':'),
+(NULL,1,1,1,1298,1,'un'),
+(NULL,1,1,1,1299,0,'…'),
+(NULL,1,1,1,1300,1,'un'),
+(NULL,1,1,1,1301,1,'gâteau'),
+(NULL,1,1,1,1302,1,'ou'),
+(NULL,1,1,1,1303,1,'un'),
+(NULL,1,1,1,1304,1,'verre'),
+(NULL,1,1,1,1305,1,'de'),
+(NULL,1,1,1,1306,0,'…'),
+(NULL,1,1,1,1307,1,'de'),
+(NULL,1,1,1,1308,1,'soda'),
+(NULL,1,1,1,1309,0,'‥'),
+(NULL,1,1,1,1310,0,'¶'),
+(NULL,1,1,1,1311,1,'Ouais'),
+(NULL,1,1,1,1312,0,','),
+(NULL,1,1,1,1313,1,'ouais'),
+(NULL,1,1,1,1314,0,','),
+(NULL,1,1,1,1315,1,'pour'),
+(NULL,1,1,1,1316,1,'reconstituer'),
+(NULL,1,1,1,1317,0,'…'),
+(NULL,1,1,1,1318,0,'¶'),
+(NULL,1,1,1,1319,0,'…'),
+(NULL,1,1,1,1320,1,'un'),
+(NULL,1,1,1,1321,1,'truc'),
+(NULL,1,1,1,1322,1,'bien'),
+(NULL,1,1,1,1323,1,'sucré'),
+(NULL,1,1,1,1324,0,'.'),
+(NULL,1,1,1,1325,0,'¶'),
+(NULL,1,1,1,1326,1,'Ouais'),
+(NULL,1,1,1,1327,1,'d'),
+(NULL,1,1,1,1328,0,'\''),
+(NULL,1,1,1,1329,1,'accord'),
+(NULL,1,1,1,1330,0,','),
+(NULL,1,1,1,1331,1,'pour'),
+(NULL,1,1,1,1332,1,'se'),
+(NULL,1,1,1,1333,1,'reconstituer'),
+(NULL,1,1,1,1334,1,'les'),
+(NULL,1,1,1,1335,1,'forces'),
+(NULL,1,1,1,1336,0,'.'),
+(NULL,1,1,1,1337,0,'¶'),
+(NULL,1,1,1,1338,1,'Pour'),
+(NULL,1,1,1,1339,1,'repartir'),
+(NULL,1,1,1,1340,0,','),
+(NULL,1,1,1,1341,1,'voilà'),
+(NULL,1,1,1,1342,0,'.'),
+(NULL,1,1,1,1343,0,'¶'),
+(NULL,1,1,1,1344,1,'D'),
+(NULL,1,1,1,1345,0,'\''),
+(NULL,1,1,1,1346,1,'accord'),
+(NULL,1,1,1,1347,0,'.'),
+(NULL,1,1,1,1348,1,'Bon'),
+(NULL,1,1,1,1349,1,'bah'),
+(44,1,1,1,1350,1,'c'),
+(NULL,1,1,1,1351,0,'\''),
+(25,1,1,1,1352,1,'est'),
+(NULL,1,1,1,1353,1,'bien'),
+(NULL,1,1,1,1354,0,','),
+(3,1,1,1,1355,1,'alors'),
+(NULL,1,1,1,1356,0,','),
+(NULL,1,1,1,1357,1,'d'),
+(NULL,1,1,1,1358,0,'\''),
+(NULL,1,1,1,1359,1,'avoir'),
+(147,1,1,1,1360,1,'fait'),
+(168,1,1,1,1361,1,'ça'),
+(NULL,1,1,1,1362,0,'.'),
+(25,1,1,1,1363,1,'Est'),
+(NULL,1,1,1,1364,0,'-'),
+(182,1,1,1,1365,1,'ce'),
+(183,1,1,1,1366,1,'que'),
+(146,1,1,1,1367,1,'vous'),
+(NULL,1,1,1,1368,1,'recommencerez'),
+(NULL,1,1,1,1369,0,','),
+(3,1,1,1,1370,1,'alors'),
+(NULL,1,1,1,1371,0,' ?'),
+(NULL,1,1,1,1372,0,'¶'),
+(165,1,1,1,1373,1,'Oui'),
+(NULL,1,1,1,1374,0,','),
+(165,1,1,1,1375,1,'oui'),
+(NULL,1,1,1,1376,0,'.'),
+(50,1,1,1,1377,1,'Il'),
+(NULL,1,1,1,1378,1,'faut'),
+(NULL,1,1,1,1379,1,'attendre'),
+(NULL,1,1,1,1380,1,'trois'),
+(NULL,1,1,1,1381,1,'mois'),
+(NULL,1,1,1,1382,0,'.'),
+(NULL,1,1,1,1383,1,'Donc'),
+(7,1,1,1,1384,1,'je'),
+(NULL,1,1,1,1385,1,'l'),
+(NULL,1,1,1,1386,0,'\''),
+(149,1,1,1,1387,1,'ai'),
+(147,1,1,1,1388,1,'fait'),
+(NULL,1,1,1,1389,1,'en'),
+(NULL,1,1,1,1390,1,'février'),
+(NULL,1,1,1,1391,1,'et'),
+(7,1,1,1,1392,1,'je'),
+(NULL,1,1,1,1393,1,'compte'),
+(NULL,1,1,1,1394,1,'bien'),
+(NULL,1,1,1,1395,1,'le'),
+(NULL,1,1,1,1396,1,'faire'),
+(NULL,1,1,1,1397,1,'en'),
+(NULL,1,1,1,1398,1,'juin'),
+(NULL,1,1,1,1399,0,','),
+(172,1,1,1,1400,1,'là'),
+(NULL,1,1,1,1401,0,','),
+(NULL,1,1,1,1402,1,'ouais'),
+(NULL,1,1,1,1403,0,'.'),
+(NULL,1,1,1,1404,0,'¶'),
+(NULL,1,1,1,1405,1,'Ah'),
+(NULL,1,1,1,1406,1,'bon'),
+(NULL,1,1,1,1407,1,'d'),
+(NULL,1,1,1,1408,0,'\''),
+(NULL,1,1,1,1409,1,'accord'),
+(NULL,1,1,1,1410,0,'.'),
+(NULL,1,1,1,1411,1,'Et'),
+(3,1,1,1,1412,1,'alors'),
+(NULL,1,1,1,1413,0,','),
+(146,1,1,1,1414,1,'vous'),
+(NULL,1,1,1,1415,1,'comptez'),
+(146,1,1,1,1416,1,'vous'),
+(NULL,1,1,1,1417,1,'évanouir'),
+(NULL,1,1,1,1418,1,'à'),
+(NULL,1,1,1,1419,1,'nouveau'),
+(NULL,1,1,1,1420,0,' ?'),
+(NULL,1,1,1,1421,0,'¶'),
+(NULL,1,1,1,1422,1,'Non'),
+(NULL,1,1,1,1423,0,','),
+(7,1,1,1,1424,1,'je'),
+(NULL,1,1,1,1425,1,'vais'),
+(NULL,1,1,1,1426,1,'essayer'),
+(NULL,1,1,1,1427,0,'…'),
+(7,1,1,1,1428,1,'je'),
+(NULL,1,1,1,1429,1,'vais'),
+(NULL,1,1,1,1430,1,'essayer'),
+(NULL,1,1,1,1431,1,'de'),
+(NULL,1,1,1,1432,1,'me'),
+(NULL,1,1,1,1433,1,'retenir'),
+(NULL,1,1,1,1434,0,'.'),
+(NULL,1,1,1,1435,0,'¶'),
+(NULL,1,1,1,1436,1,'D'),
+(NULL,1,1,1,1437,0,'\''),
+(NULL,1,1,1,1438,1,'accord'),
+(NULL,1,1,1,1439,0,'.'),
+(NULL,1,1,1,1440,0,'¶'),
+(7,1,1,1,1441,1,'Je'),
+(NULL,1,1,1,1442,1,'vais'),
+(NULL,1,1,1,1443,1,'leur'),
+(NULL,1,1,1,1444,1,'expliquer'),
+(183,1,1,1,1445,1,'que'),
+(7,1,1,1,1446,1,'je'),
+(NULL,1,1,1,1447,1,'suis'),
+(NULL,1,1,1,1448,1,'un'),
+(NULL,1,1,1,1449,1,'peu'),
+(NULL,1,1,1,1450,1,'émotive'),
+(NULL,1,1,1,1451,0,'.'),
+(NULL,1,1,1,1452,1,'Et'),
+(NULL,1,1,1,1453,0,'…'),
+(NULL,1,1,1,1454,0,'¶'),
+(NULL,1,1,1,1455,1,'Un'),
+(NULL,1,1,1,1456,1,'peu'),
+(NULL,1,1,1,1457,0,','),
+(165,1,1,1,1458,1,'oui'),
+(NULL,1,1,1,1459,0,'.'),
+(NULL,1,1,1,1460,1,'Hm'),
+(NULL,1,1,1,1461,0,','),
+(NULL,1,1,1,1462,1,'hm.'),
+(NULL,1,1,1,1463,1,'Mais'),
+(167,1,1,1,1464,1,'peut'),
+(NULL,1,1,1,1465,0,'-'),
+(NULL,1,1,1,1466,1,'être'),
+(183,1,1,1,1467,1,'que'),
+(NULL,1,1,1,1468,1,'la'),
+(NULL,1,1,1,1469,1,'deuxième'),
+(NULL,1,1,1,1470,1,'fois'),
+(NULL,1,1,1,1471,0,','),
+(169,1,1,1,1472,1,'comme'),
+(146,1,1,1,1473,1,'vous'),
+(NULL,1,1,1,1474,1,'saurez'),
+(NULL,1,1,1,1475,1,'déjà'),
+(NULL,1,1,1,1476,1,'comment'),
+(168,1,1,1,1477,1,'ça'),
+(NULL,1,1,1,1478,1,'se'),
+(NULL,1,1,1,1479,1,'passe'),
+(NULL,1,1,1,1480,0,','),
+(182,1,1,1,1481,1,'ce'),
+(NULL,1,1,1,1482,1,'sera'),
+(NULL,1,1,1,1483,1,'moins'),
+(NULL,1,1,1,1484,0,'…'),
+(NULL,1,1,1,1485,0,'¶'),
+(165,1,1,1,1486,1,'Oui'),
+(NULL,1,1,1,1487,0,','),
+(7,1,1,1,1488,1,'je'),
+(NULL,1,1,1,1489,1,'pense'),
+(NULL,1,1,1,1490,0,'.'),
+(NULL,1,1,1,1491,0,'¶'),
+(NULL,1,1,1,1492,0,'…'),
+(NULL,1,1,1,1493,1,'moins'),
+(NULL,1,1,1,1494,1,'stressant'),
+(NULL,1,1,1,1495,0,'.'),
+(NULL,1,1,1,1496,0,'¶'),
+(7,1,1,1,1497,1,'Je'),
+(NULL,1,1,1,1498,0,'…'),
+(7,1,1,1,1499,1,'je'),
+(NULL,1,1,1,1500,1,'pars'),
+(NULL,1,1,1,1501,1,'avec'),
+(NULL,1,1,1,1502,1,'moins'),
+(NULL,1,1,1,1503,1,'d'),
+(NULL,1,1,1,1504,0,'\''),
+(NULL,1,1,1,1505,1,'appréhension'),
+(NULL,1,1,1,1506,0,','),
+(NULL,1,1,1,1507,1,'en'),
+(NULL,1,1,1,1508,1,'tout'),
+(NULL,1,1,1,1509,1,'cas'),
+(NULL,1,1,1,1510,0,','),
+(NULL,1,1,1,1511,1,'pour'),
+(NULL,1,1,1,1512,1,'la'),
+(NULL,1,1,1,1513,1,'deuxième'),
+(NULL,1,1,1,1514,1,'fois'),
+(NULL,1,1,1,1515,0,'.'),
+(NULL,1,1,1,1516,0,'¶'),
+(165,1,1,1,1517,1,'Oui'),
+(NULL,1,1,1,1518,0,','),
+(NULL,1,1,1,1519,1,'d'),
+(NULL,1,1,1,1520,0,'\''),
+(NULL,1,1,1,1521,1,'accord'),
+(NULL,1,1,1,1522,0,'.'),
+(NULL,1,1,1,1523,1,'Bon'),
+(NULL,1,1,1,1524,0,','),
+(NULL,1,1,1,1525,1,'bah'),
+(NULL,1,1,1,1526,0,','),
+(44,1,1,1,1527,1,'c'),
+(NULL,1,1,1,1528,0,'\''),
+(25,1,1,1,1529,1,'est'),
+(NULL,1,1,1,1530,1,'bien'),
+(NULL,1,1,1,1531,0,','),
+(3,1,1,1,1532,1,'alors'),
+(NULL,1,1,1,1533,0,','),
+(NULL,1,1,1,1534,1,'d'),
+(NULL,1,1,1,1535,0,'\''),
+(NULL,1,1,1,1536,1,'avoir'),
+(147,1,1,1,1537,1,'fait'),
+(168,1,1,1,1538,1,'ça'),
+(NULL,1,1,1,1539,0,'.'),
+(NULL,1,1,1,1540,0,'¶'),
+(165,1,1,1,1541,1,'Oui'),
+(NULL,1,1,1,1542,0,'.'),
+(NULL,1,1,1,1543,0,'¶'),
+(NULL,1,1,1,1544,1,'D'),
+(NULL,1,1,1,1545,0,'\''),
+(NULL,1,1,1,1546,1,'accord'),
+(NULL,1,1,1,1547,0,'.'),
+(NULL,1,1,1,1548,1,'Bah'),
+(NULL,1,1,1,1549,1,'très'),
+(NULL,1,1,1,1550,1,'bien'),
+(NULL,1,1,1,1551,1,'pour'),
+(NULL,1,1,1,1552,1,'les'),
+(NULL,1,1,1,1553,0,'…'),
+(NULL,1,1,1,1554,1,'pour'),
+(NULL,1,1,1,1555,1,'les'),
+(NULL,1,1,1,1556,1,'gens'),
+(NULL,1,1,1,1557,1,'à'),
+(NULL,1,1,1,1558,1,'qui'),
+(168,1,1,1,1559,1,'ça'),
+(NULL,1,1,1,1560,1,'va'),
+(NULL,1,1,1,1561,1,'servir'),
+(NULL,1,1,1,1562,0,'.'),
+(NULL,1,1,1,1563,1,'Merci'),
+(1,1,1,1,1564,1,'Manon'),
+(NULL,1,1,1,1565,0,'.'),
+(9,2,2,4,1,1,'一'),
+(10,2,2,4,2,1,'天'),
+(NULL,2,2,4,3,0,'，'),
+(9,2,2,4,4,1,'一'),
+(12,2,2,4,5,1,'个'),
+(13,2,2,4,6,1,'男'),
+(14,2,2,4,7,1,'人'),
+(16,2,2,4,8,1,'走'),
+(17,2,2,4,9,1,'在'),
+(18,2,2,4,10,1,'街'),
+(19,2,2,4,11,1,'上'),
+(NULL,2,2,4,12,0,'。'),
+(NULL,2,2,4,13,1,'突'),
+(NULL,2,2,4,14,1,'然'),
+(NULL,2,2,4,15,0,'，'),
+(184,2,2,4,16,1,'他'),
+(NULL,2,2,4,17,1,'看'),
+(NULL,2,2,4,18,1,'见'),
+(NULL,2,2,4,19,1,'前'),
+(NULL,2,2,4,20,1,'面'),
+(187,2,2,4,21,1,'有'),
+(9,2,2,4,22,1,'一'),
+(188,2,2,4,23,1,'只'),
+(NULL,2,2,4,24,1,'黑'),
+(NULL,2,2,4,25,1,'色'),
+(190,2,2,4,26,1,'的'),
+(191,2,2,4,27,1,'大'),
+(192,2,2,4,28,1,'狗'),
+(NULL,2,2,4,29,0,'，'),
+(NULL,2,2,4,30,1,'看'),
+(NULL,2,2,4,31,1,'起'),
+(NULL,2,2,4,32,1,'来'),
+(194,2,2,4,33,1,'很'),
+(195,2,2,4,34,1,'凶'),
+(NULL,2,2,4,35,0,'。'),
+(13,2,2,4,36,1,'男'),
+(14,2,2,4,37,1,'人'),
+(NULL,2,2,4,38,1,'非'),
+(NULL,2,2,4,39,1,'常'),
+(NULL,2,2,4,40,1,'害'),
+(NULL,2,2,4,41,1,'怕'),
+(NULL,2,2,4,42,0,'，'),
+(198,2,2,4,43,1,'不'),
+(199,2,2,4,44,1,'敢'),
+(NULL,2,2,4,45,1,'往'),
+(NULL,2,2,4,46,1,'前'),
+(16,2,2,4,47,1,'走'),
+(NULL,2,2,4,48,0,'。'),
+(192,2,2,4,49,1,'狗'),
+(190,2,2,4,50,1,'的'),
+(NULL,2,2,4,51,1,'旁'),
+(NULL,2,2,4,52,1,'边'),
+(202,2,2,4,53,1,'站'),
+(203,2,2,4,54,1,'着'),
+(9,2,2,4,55,1,'一'),
+(12,2,2,4,56,1,'个'),
+(NULL,2,2,4,57,1,'女'),
+(14,2,2,4,58,1,'人'),
+(NULL,2,2,4,59,0,'，'),
+(13,2,2,4,60,1,'男'),
+(14,2,2,4,61,1,'人'),
+(205,2,2,4,62,1,'问'),
+(206,2,2,4,63,1,'她'),
+(NULL,2,2,4,64,0,'：'),
+(207,2,2,4,65,1,'你'),
+(190,2,2,4,66,1,'的'),
+(192,2,2,4,67,1,'狗'),
+(208,2,2,4,68,1,'咬'),
+(14,2,2,4,69,1,'人'),
+(209,2,2,4,70,1,'吗'),
+(NULL,2,2,4,71,0,'？'),
+(NULL,2,2,4,72,1,'女'),
+(14,2,2,4,73,1,'人'),
+(210,2,2,4,74,1,'说'),
+(NULL,2,2,4,75,0,'：'),
+(NULL,2,2,4,76,1,'我'),
+(190,2,2,4,77,1,'的'),
+(192,2,2,4,78,1,'狗'),
+(198,2,2,4,79,1,'不'),
+(208,2,2,4,80,1,'咬'),
+(14,2,2,4,81,1,'人'),
+(NULL,2,2,4,82,0,'。'),
+(218,2,2,4,83,1,'这'),
+(NULL,2,2,4,84,1,'时'),
+(NULL,2,2,4,85,0,'，'),
+(213,2,2,4,86,1,'那'),
+(188,2,2,4,87,1,'只'),
+(192,2,2,4,88,1,'狗'),
+(208,2,2,4,89,1,'咬'),
+(214,2,2,4,90,1,'了'),
+(13,2,2,4,91,1,'男'),
+(14,2,2,4,92,1,'人'),
+(NULL,2,2,4,93,0,'。'),
+(184,2,2,4,94,1,'他'),
+(NULL,2,2,4,95,1,'气'),
+(NULL,2,2,4,96,1,'坏'),
+(214,2,2,4,97,1,'了'),
+(NULL,2,2,4,98,0,'，'),
+(191,2,2,4,99,1,'大'),
+(216,2,2,4,100,1,'叫'),
+(NULL,2,2,4,101,0,'：'),
+(207,2,2,4,102,1,'你'),
+(210,2,2,4,103,1,'说'),
+(207,2,2,4,104,1,'你'),
+(190,2,2,4,105,1,'的'),
+(192,2,2,4,106,1,'狗'),
+(198,2,2,4,107,1,'不'),
+(208,2,2,4,108,1,'咬'),
+(14,2,2,4,109,1,'人'),
+(NULL,2,2,4,110,0,'！'),
+(NULL,2,2,4,111,1,'女'),
+(14,2,2,4,112,1,'人'),
+(NULL,2,2,4,113,1,'回'),
+(NULL,2,2,4,114,1,'答'),
+(NULL,2,2,4,115,0,'：'),
+(218,2,2,4,116,1,'这'),
+(198,2,2,4,117,1,'不'),
+(219,2,2,4,118,1,'是'),
+(NULL,2,2,4,119,1,'我'),
+(190,2,2,4,120,1,'的'),
+(192,2,2,4,121,1,'狗'),
+(NULL,2,2,4,122,0,'。'),
+(27,3,3,5,1,1,'Wie'),
+(28,3,3,5,2,1,'froh'),
+(29,3,3,5,3,1,'bin'),
+(30,3,3,5,4,1,'ich'),
+(NULL,3,3,5,5,0,','),
+(31,3,3,5,6,1,'daß'),
+(30,3,3,5,7,1,'ich'),
+(32,3,3,5,8,1,'weg'),
+(29,3,3,5,9,1,'bin'),
+(NULL,3,3,5,10,0,'!'),
+(NULL,3,3,5,11,1,'Bester'),
+(NULL,3,3,5,12,1,'Freund'),
+(NULL,3,3,5,13,0,','),
+(NULL,3,3,5,14,1,'was'),
+(NULL,3,3,5,15,1,'ist'),
+(NULL,3,3,5,16,1,'das'),
+(125,3,3,5,17,1,'Herz'),
+(NULL,3,3,5,18,1,'des'),
+(NULL,3,3,5,19,1,'Menschen'),
+(NULL,3,3,5,20,0,'!'),
+(NULL,3,3,5,21,1,'Dich'),
+(NULL,3,3,5,22,1,'zu'),
+(NULL,3,3,5,23,1,'verlassen'),
+(NULL,3,3,5,24,0,','),
+(NULL,3,3,5,25,1,'den'),
+(30,3,3,5,26,1,'ich'),
+(NULL,3,3,5,27,1,'so'),
+(NULL,3,3,5,28,1,'liebe'),
+(NULL,3,3,5,29,0,','),
+(NULL,3,3,5,30,1,'von'),
+(NULL,3,3,5,31,1,'dem'),
+(30,3,3,5,32,1,'ich'),
+(NULL,3,3,5,33,1,'unzertrennlich'),
+(NULL,3,3,5,34,1,'war'),
+(NULL,3,3,5,35,0,','),
+(NULL,3,3,5,36,1,'und'),
+(28,3,3,5,37,1,'froh'),
+(NULL,3,3,5,38,1,'zu'),
+(NULL,3,3,5,39,1,'sein'),
+(NULL,3,3,5,40,0,'!'),
+(30,3,3,5,41,1,'Ich'),
+(NULL,3,3,5,42,1,'weiß'),
+(NULL,3,3,5,43,0,','),
+(NULL,3,3,5,44,1,'du'),
+(NULL,3,3,5,45,1,'verzeihst'),
+(NULL,3,3,5,46,1,'mir'),
+(NULL,3,3,5,47,0,'\''),
+(NULL,3,3,5,48,1,'s'),
+(NULL,3,3,5,49,0,'.'),
+(119,3,3,5,50,1,'Waren'),
+(120,3,3,5,51,1,'nicht'),
+(121,3,3,5,52,1,'meine'),
+(122,3,3,5,53,1,'übrigen'),
+(NULL,3,3,5,54,1,'Verbindungen'),
+(NULL,3,3,5,55,1,'recht'),
+(NULL,3,3,5,56,1,'ausgesucht'),
+(NULL,3,3,5,57,1,'vom'),
+(NULL,3,3,5,58,1,'Schicksal'),
+(NULL,3,3,5,59,0,','),
+(123,3,3,5,60,1,'um'),
+(124,3,3,5,61,1,'ein'),
+(125,3,3,5,62,1,'Herz'),
+(27,3,3,5,63,1,'wie'),
+(NULL,3,3,5,64,1,'das'),
+(121,3,3,5,65,1,'meine'),
+(NULL,3,3,5,66,1,'zu'),
+(NULL,3,3,5,67,1,'ängstigen'),
+(NULL,3,3,5,68,0,'?'),
+(NULL,3,3,5,69,1,'Die'),
+(NULL,3,3,5,70,1,'arme'),
+(126,3,3,5,71,1,'Leonore'),
+(NULL,3,3,5,72,0,'!'),
+(NULL,3,3,5,73,1,'Und'),
+(NULL,3,3,5,74,1,'doch'),
+(NULL,3,3,5,75,1,'war'),
+(30,3,3,5,76,1,'ich'),
+(NULL,3,3,5,77,1,'unschuldig'),
+(NULL,3,3,5,78,0,'.'),
+(NULL,3,3,5,79,1,'Konnt'),
+(NULL,3,3,5,80,0,'\''),
+(30,3,3,5,81,1,'ich'),
+(NULL,3,3,5,82,1,'dafür'),
+(NULL,3,3,5,83,0,','),
+(31,3,3,5,84,1,'daß'),
+(NULL,3,3,5,85,0,','),
+(NULL,3,3,5,86,1,'während'),
+(NULL,3,3,5,87,1,'die'),
+(NULL,3,3,5,88,1,'eigensinnigen'),
+(NULL,3,3,5,89,1,'Reize'),
+(NULL,3,3,5,90,1,'ihrer'),
+(NULL,3,3,5,91,1,'Schwester'),
+(NULL,3,3,5,92,1,'mir'),
+(NULL,3,3,5,93,1,'eine'),
+(NULL,3,3,5,94,1,'angenehme'),
+(NULL,3,3,5,95,1,'Unterhaltung'),
+(NULL,3,3,5,96,1,'verschafften'),
+(NULL,3,3,5,97,0,','),
+(31,3,3,5,98,1,'daß'),
+(NULL,3,3,5,99,1,'eine'),
+(NULL,3,3,5,100,1,'Leidenschaft'),
+(NULL,3,3,5,101,1,'in'),
+(NULL,3,3,5,102,1,'dem'),
+(NULL,3,3,5,103,1,'armen'),
+(NULL,3,3,5,104,1,'Herzen'),
+(NULL,3,3,5,105,1,'sich'),
+(NULL,3,3,5,106,1,'bildete'),
+(NULL,3,3,5,107,0,'?'),
+(NULL,3,3,5,108,1,'Und'),
+(NULL,3,3,5,109,1,'doch'),
+(NULL,3,3,5,110,0,' –'),
+(29,3,3,5,111,1,'bin'),
+(30,3,3,5,112,1,'ich'),
+(NULL,3,3,5,113,1,'ganz'),
+(NULL,3,3,5,114,1,'unschuldig'),
+(NULL,3,3,5,115,0,'?'),
+(NULL,3,3,5,116,1,'Hab'),
+(NULL,3,3,5,117,0,'\''),
+(30,3,3,5,118,1,'ich'),
+(120,3,3,5,119,1,'nicht'),
+(NULL,3,3,5,120,1,'ihre'),
+(NULL,3,3,5,121,1,'Empfindungen'),
+(NULL,3,3,5,122,1,'genährt'),
+(NULL,3,3,5,123,0,'?'),
+(NULL,3,3,5,124,1,'Hab'),
+(NULL,3,3,5,125,0,'\''),
+(30,3,3,5,126,1,'ich'),
+(NULL,3,3,5,127,1,'mich'),
+(120,3,3,5,128,1,'nicht'),
+(NULL,3,3,5,129,1,'an'),
+(NULL,3,3,5,130,1,'den'),
+(NULL,3,3,5,131,1,'ganz'),
+(NULL,3,3,5,132,1,'wahren'),
+(NULL,3,3,5,133,1,'Ausdrücken'),
+(NULL,3,3,5,134,1,'der'),
+(NULL,3,3,5,135,1,'Natur'),
+(NULL,3,3,5,136,0,','),
+(NULL,3,3,5,137,1,'die'),
+(NULL,3,3,5,138,1,'uns'),
+(NULL,3,3,5,139,1,'so'),
+(NULL,3,3,5,140,1,'oft'),
+(NULL,3,3,5,141,1,'zu'),
+(NULL,3,3,5,142,1,'lachen'),
+(NULL,3,3,5,143,1,'machten'),
+(NULL,3,3,5,144,0,','),
+(NULL,3,3,5,145,1,'so'),
+(NULL,3,3,5,146,1,'wenig'),
+(NULL,3,3,5,147,1,'lächerlich'),
+(NULL,3,3,5,148,1,'sie'),
+(119,3,3,5,149,1,'waren'),
+(NULL,3,3,5,150,0,','),
+(NULL,3,3,5,151,1,'selbst'),
+(NULL,3,3,5,152,1,'ergetzt'),
+(NULL,3,3,5,153,0,'?'),
+(NULL,3,3,5,154,1,'Hab'),
+(NULL,3,3,5,155,0,'\''),
+(30,3,3,5,156,1,'ich'),
+(120,3,3,5,157,1,'nicht'),
+(NULL,3,3,5,158,0,' –'),
+(NULL,3,3,5,159,1,'o'),
+(NULL,3,3,5,160,1,'was'),
+(NULL,3,3,5,161,1,'ist'),
+(NULL,3,3,5,162,1,'der'),
+(NULL,3,3,5,163,1,'Mensch'),
+(NULL,3,3,5,164,0,','),
+(31,3,3,5,165,1,'daß'),
+(NULL,3,3,5,166,1,'er'),
+(NULL,3,3,5,167,1,'über'),
+(NULL,3,3,5,168,1,'sich'),
+(NULL,3,3,5,169,1,'klagen'),
+(NULL,3,3,5,170,1,'darf'),
+(NULL,3,3,5,171,0,'!'),
+(30,3,3,5,172,1,'Ich'),
+(NULL,3,3,5,173,1,'will'),
+(NULL,3,3,5,174,0,','),
+(NULL,3,3,5,175,1,'lieber'),
+(NULL,3,3,5,176,1,'Freund'),
+(NULL,3,3,5,177,0,','),
+(30,3,3,5,178,1,'ich'),
+(NULL,3,3,5,179,1,'verspreche'),
+(NULL,3,3,5,180,1,'dir'),
+(NULL,3,3,5,181,0,'\''),
+(NULL,3,3,5,182,1,'s'),
+(NULL,3,3,5,183,0,','),
+(30,3,3,5,184,1,'ich'),
+(NULL,3,3,5,185,1,'will'),
+(NULL,3,3,5,186,1,'mich'),
+(NULL,3,3,5,187,1,'bessern'),
+(NULL,3,3,5,188,0,','),
+(NULL,3,3,5,189,1,'will'),
+(120,3,3,5,190,1,'nicht'),
+(NULL,3,3,5,191,1,'mehr'),
+(124,3,3,5,192,1,'ein'),
+(NULL,3,3,5,193,1,'bißchen'),
+(NULL,3,3,5,194,1,'Übel'),
+(NULL,3,3,5,195,0,','),
+(NULL,3,3,5,196,1,'das'),
+(NULL,3,3,5,197,1,'uns'),
+(NULL,3,3,5,198,1,'das'),
+(NULL,3,3,5,199,1,'Schicksal'),
+(NULL,3,3,5,200,1,'vorlegt'),
+(NULL,3,3,5,201,0,','),
+(NULL,3,3,5,202,1,'wiederkäuen'),
+(NULL,3,3,5,203,0,','),
+(27,3,3,5,204,1,'wie'),
+(30,3,3,5,205,1,'ich'),
+(NULL,3,3,5,206,0,'\''),
+(NULL,3,3,5,207,1,'s'),
+(NULL,3,3,5,208,1,'immer'),
+(NULL,3,3,5,209,1,'getan'),
+(NULL,3,3,5,210,1,'habe'),
+(NULL,3,3,5,211,0,';'),
+(30,3,3,5,212,1,'ich'),
+(NULL,3,3,5,213,1,'will'),
+(NULL,3,3,5,214,1,'das'),
+(NULL,3,3,5,215,1,'Gegenwärtige'),
+(NULL,3,3,5,216,1,'genießen'),
+(NULL,3,3,5,217,0,','),
+(NULL,3,3,5,218,1,'und'),
+(NULL,3,3,5,219,1,'das'),
+(NULL,3,3,5,220,1,'Vergangene'),
+(NULL,3,3,5,221,1,'soll'),
+(NULL,3,3,5,222,1,'mir'),
+(NULL,3,3,5,223,1,'vergangen'),
+(NULL,3,3,5,224,1,'sein'),
+(NULL,3,3,5,225,0,'.'),
+(NULL,3,3,5,226,1,'Gewiß'),
+(NULL,3,3,5,227,0,','),
+(NULL,3,3,5,228,1,'du'),
+(NULL,3,3,5,229,1,'hast'),
+(NULL,3,3,5,230,1,'recht'),
+(NULL,3,3,5,231,0,','),
+(NULL,3,3,5,232,1,'Bester'),
+(NULL,3,3,5,233,0,','),
+(NULL,3,3,5,234,1,'der'),
+(NULL,3,3,5,235,1,'Schmerzen'),
+(NULL,3,3,5,236,1,'wären'),
+(NULL,3,3,5,237,1,'minder'),
+(NULL,3,3,5,238,1,'unter'),
+(NULL,3,3,5,239,1,'den'),
+(NULL,3,3,5,240,1,'Menschen'),
+(NULL,3,3,5,241,0,','),
+(NULL,3,3,5,242,1,'wenn'),
+(NULL,3,3,5,243,1,'sie'),
+(120,3,3,5,244,1,'nicht'),
+(NULL,3,3,5,245,0,' –'),
+(NULL,3,3,5,246,1,'Gott'),
+(NULL,3,3,5,247,1,'weiß'),
+(NULL,3,3,5,248,0,','),
+(NULL,3,3,5,249,1,'warum'),
+(NULL,3,3,5,250,1,'sie'),
+(NULL,3,3,5,251,1,'so'),
+(NULL,3,3,5,252,1,'gemacht'),
+(NULL,3,3,5,253,1,'sind'),
+(NULL,3,3,5,254,0,'!'),
+(NULL,3,3,5,255,0,' –'),
+(NULL,3,3,5,256,1,'mit'),
+(NULL,3,3,5,257,1,'so'),
+(NULL,3,3,5,258,1,'viel'),
+(NULL,3,3,5,259,1,'Emsigkeit'),
+(NULL,3,3,5,260,1,'der'),
+(NULL,3,3,5,261,1,'Einbildungskraft'),
+(NULL,3,3,5,262,1,'sich'),
+(NULL,3,3,5,263,1,'beschäftigten'),
+(NULL,3,3,5,264,0,','),
+(NULL,3,3,5,265,1,'die'),
+(NULL,3,3,5,266,1,'Erinnerungen'),
+(NULL,3,3,5,267,1,'des'),
+(NULL,3,3,5,268,1,'vergangenen'),
+(NULL,3,3,5,269,1,'Übels'),
+(NULL,3,3,5,270,1,'zurückzurufen'),
+(NULL,3,3,5,271,0,','),
+(NULL,3,3,5,272,1,'eher'),
+(NULL,3,3,5,273,1,'als'),
+(NULL,3,3,5,274,1,'eine'),
+(NULL,3,3,5,275,1,'gleichgültige'),
+(NULL,3,3,5,276,1,'Gegenwart'),
+(NULL,3,3,5,277,1,'zu'),
+(NULL,3,3,5,278,1,'ertragen'),
+(NULL,3,3,5,279,0,'.'),
+(NULL,3,3,5,280,0,'¶'),
+(NULL,3,3,5,281,1,'Du'),
+(NULL,3,3,5,282,1,'bist'),
+(NULL,3,3,5,283,1,'so'),
+(NULL,3,3,5,284,1,'gut'),
+(NULL,3,3,5,285,0,','),
+(NULL,3,3,5,286,1,'meiner'),
+(NULL,3,3,5,287,1,'Mutter'),
+(NULL,3,3,5,288,1,'zu'),
+(NULL,3,3,5,289,1,'sagen'),
+(NULL,3,3,5,290,0,','),
+(31,3,3,5,291,1,'daß'),
+(30,3,3,5,292,1,'ich'),
+(NULL,3,3,5,293,1,'ihr'),
+(NULL,3,3,5,294,1,'Geschäft'),
+(NULL,3,3,5,295,1,'bestens'),
+(NULL,3,3,5,296,1,'betreiben'),
+(NULL,3,3,5,297,1,'und'),
+(NULL,3,3,5,298,1,'ihr'),
+(NULL,3,3,5,299,1,'ehstens'),
+(NULL,3,3,5,300,1,'Nachricht'),
+(NULL,3,3,5,301,1,'davon'),
+(NULL,3,3,5,302,1,'geben'),
+(NULL,3,3,5,303,1,'werde'),
+(NULL,3,3,5,304,0,'.'),
+(30,3,3,5,305,1,'Ich'),
+(NULL,3,3,5,306,1,'habe'),
+(121,3,3,5,307,1,'meine'),
+(NULL,3,3,5,308,1,'Tante'),
+(NULL,3,3,5,309,1,'gesprochen'),
+(NULL,3,3,5,310,1,'und'),
+(NULL,3,3,5,311,1,'bei'),
+(NULL,3,3,5,312,1,'weitem'),
+(NULL,3,3,5,313,1,'das'),
+(NULL,3,3,5,314,1,'böse'),
+(NULL,3,3,5,315,1,'Weib'),
+(120,3,3,5,316,1,'nicht'),
+(NULL,3,3,5,317,1,'gefunden'),
+(NULL,3,3,5,318,0,','),
+(NULL,3,3,5,319,1,'das'),
+(NULL,3,3,5,320,1,'man'),
+(NULL,3,3,5,321,1,'bei'),
+(NULL,3,3,5,322,1,'uns'),
+(NULL,3,3,5,323,1,'aus'),
+(NULL,3,3,5,324,1,'ihr'),
+(NULL,3,3,5,325,1,'macht'),
+(NULL,3,3,5,326,0,'.'),
+(NULL,3,3,5,327,1,'Sie'),
+(NULL,3,3,5,328,1,'ist'),
+(NULL,3,3,5,329,1,'eine'),
+(NULL,3,3,5,330,1,'muntere'),
+(NULL,3,3,5,331,0,','),
+(NULL,3,3,5,332,1,'heftige'),
+(NULL,3,3,5,333,1,'Frau'),
+(NULL,3,3,5,334,1,'von'),
+(NULL,3,3,5,335,1,'dem'),
+(NULL,3,3,5,336,1,'besten'),
+(NULL,3,3,5,337,1,'Herzen'),
+(NULL,3,3,5,338,0,'.'),
+(30,3,3,5,339,1,'Ich'),
+(NULL,3,3,5,340,1,'erklärte'),
+(NULL,3,3,5,341,1,'ihr'),
+(NULL,3,3,5,342,1,'meiner'),
+(NULL,3,3,5,343,1,'Mutter'),
+(NULL,3,3,5,344,1,'Beschwerden'),
+(NULL,3,3,5,345,1,'über'),
+(NULL,3,3,5,346,1,'den'),
+(NULL,3,3,5,347,1,'zurückgehaltenen'),
+(NULL,3,3,5,348,1,'Erbschaftsanteil'),
+(NULL,3,3,5,349,0,';'),
+(NULL,3,3,5,350,1,'sie'),
+(NULL,3,3,5,351,1,'sagte'),
+(NULL,3,3,5,352,1,'mir'),
+(NULL,3,3,5,353,1,'ihre'),
+(NULL,3,3,5,354,1,'Gründe'),
+(NULL,3,3,5,355,0,','),
+(NULL,3,3,5,356,1,'Ursachen'),
+(NULL,3,3,5,357,1,'und'),
+(NULL,3,3,5,358,1,'die'),
+(NULL,3,3,5,359,1,'Bedingungen'),
+(NULL,3,3,5,360,0,','),
+(NULL,3,3,5,361,1,'unter'),
+(NULL,3,3,5,362,1,'welchen'),
+(NULL,3,3,5,363,1,'sie'),
+(NULL,3,3,5,364,1,'bereit'),
+(NULL,3,3,5,365,1,'wäre'),
+(NULL,3,3,5,366,0,','),
+(NULL,3,3,5,367,1,'alles'),
+(NULL,3,3,5,368,1,'herauszugeben'),
+(NULL,3,3,5,369,0,','),
+(NULL,3,3,5,370,1,'und'),
+(NULL,3,3,5,371,1,'mehr'),
+(NULL,3,3,5,372,1,'als'),
+(NULL,3,3,5,373,1,'wir'),
+(NULL,3,3,5,374,1,'verlangten'),
+(NULL,3,3,5,375,0,' –'),
+(NULL,3,3,5,376,1,'kurz'),
+(NULL,3,3,5,377,0,','),
+(30,3,3,5,378,1,'ich'),
+(NULL,3,3,5,379,1,'mag'),
+(NULL,3,3,5,380,1,'jetzt'),
+(NULL,3,3,5,381,1,'nichts'),
+(NULL,3,3,5,382,1,'davon'),
+(NULL,3,3,5,383,1,'schreiben'),
+(NULL,3,3,5,384,0,','),
+(NULL,3,3,5,385,1,'sage'),
+(NULL,3,3,5,386,1,'meiner'),
+(NULL,3,3,5,387,1,'Mutter'),
+(NULL,3,3,5,388,0,','),
+(NULL,3,3,5,389,1,'es'),
+(NULL,3,3,5,390,1,'werde'),
+(NULL,3,3,5,391,1,'alles'),
+(NULL,3,3,5,392,1,'gut'),
+(NULL,3,3,5,393,1,'gehen'),
+(NULL,3,3,5,394,0,'.'),
+(NULL,3,3,5,395,1,'Und'),
+(30,3,3,5,396,1,'ich'),
+(NULL,3,3,5,397,1,'habe'),
+(NULL,3,3,5,398,0,','),
+(NULL,3,3,5,399,1,'mein'),
+(NULL,3,3,5,400,1,'Lieber'),
+(NULL,3,3,5,401,0,','),
+(NULL,3,3,5,402,1,'wieder'),
+(NULL,3,3,5,403,1,'bei'),
+(NULL,3,3,5,404,1,'diesem'),
+(NULL,3,3,5,405,1,'kleinen'),
+(NULL,3,3,5,406,1,'Geschäft'),
+(NULL,3,3,5,407,1,'gefunden'),
+(NULL,3,3,5,408,0,','),
+(31,3,3,5,409,1,'daß'),
+(NULL,3,3,5,410,1,'Mißverständnisse'),
+(NULL,3,3,5,411,1,'und'),
+(NULL,3,3,5,412,1,'Trägheit'),
+(NULL,3,3,5,413,1,'vielleicht'),
+(NULL,3,3,5,414,1,'mehr'),
+(NULL,3,3,5,415,1,'Irrungen'),
+(NULL,3,3,5,416,1,'in'),
+(NULL,3,3,5,417,1,'der'),
+(NULL,3,3,5,418,1,'Welt'),
+(NULL,3,3,5,419,1,'machen'),
+(NULL,3,3,5,420,1,'als'),
+(NULL,3,3,5,421,1,'List'),
+(NULL,3,3,5,422,1,'und'),
+(NULL,3,3,5,423,1,'Bosheit'),
+(NULL,3,3,5,424,0,'.'),
+(NULL,3,3,5,425,1,'Wenigstens'),
+(NULL,3,3,5,426,1,'sind'),
+(NULL,3,3,5,427,1,'die'),
+(NULL,3,3,5,428,1,'beiden'),
+(NULL,3,3,5,429,1,'letzteren'),
+(NULL,3,3,5,430,1,'gewiß'),
+(NULL,3,3,5,431,1,'seltener'),
+(NULL,3,3,5,432,0,'.'),
+(NULL,3,3,5,433,0,'¶'),
+(NULL,3,3,5,434,1,'Übrigens'),
+(NULL,3,3,5,435,1,'befinde'),
+(30,3,3,5,436,1,'ich'),
+(NULL,3,3,5,437,1,'mich'),
+(NULL,3,3,5,438,1,'hier'),
+(NULL,3,3,5,439,1,'gar'),
+(NULL,3,3,5,440,1,'wohl'),
+(NULL,3,3,5,441,0,'.'),
+(NULL,3,3,5,442,1,'Die'),
+(NULL,3,3,5,443,1,'Einsamkeit'),
+(NULL,3,3,5,444,1,'ist'),
+(NULL,3,3,5,445,1,'meinem'),
+(NULL,3,3,5,446,1,'Herzen'),
+(NULL,3,3,5,447,1,'köstlicher'),
+(NULL,3,3,5,448,1,'Balsam'),
+(NULL,3,3,5,449,1,'in'),
+(NULL,3,3,5,450,1,'dieser'),
+(NULL,3,3,5,451,1,'paradiesischen'),
+(NULL,3,3,5,452,1,'Gegend'),
+(NULL,3,3,5,453,0,','),
+(NULL,3,3,5,454,1,'und'),
+(NULL,3,3,5,455,1,'diese'),
+(NULL,3,3,5,456,1,'Jahreszeit'),
+(NULL,3,3,5,457,1,'der'),
+(NULL,3,3,5,458,1,'Jugend'),
+(NULL,3,3,5,459,1,'wärmt'),
+(NULL,3,3,5,460,1,'mit'),
+(NULL,3,3,5,461,1,'aller'),
+(NULL,3,3,5,462,1,'Fülle'),
+(NULL,3,3,5,463,1,'mein'),
+(NULL,3,3,5,464,1,'oft'),
+(NULL,3,3,5,465,1,'schauderndes'),
+(125,3,3,5,466,1,'Herz'),
+(NULL,3,3,5,467,0,'.'),
+(NULL,3,3,5,468,1,'Jeder'),
+(NULL,3,3,5,469,1,'Baum'),
+(NULL,3,3,5,470,0,','),
+(NULL,3,3,5,471,1,'jede'),
+(NULL,3,3,5,472,1,'Hecke'),
+(NULL,3,3,5,473,1,'ist'),
+(124,3,3,5,474,1,'ein'),
+(NULL,3,3,5,475,1,'Strauß'),
+(NULL,3,3,5,476,1,'von'),
+(NULL,3,3,5,477,1,'Blüten'),
+(NULL,3,3,5,478,0,','),
+(NULL,3,3,5,479,1,'und'),
+(NULL,3,3,5,480,1,'man'),
+(NULL,3,3,5,481,1,'möchte'),
+(NULL,3,3,5,482,1,'zum'),
+(NULL,3,3,5,483,1,'Maienkäfer'),
+(NULL,3,3,5,484,1,'werden'),
+(NULL,3,3,5,485,0,','),
+(123,3,3,5,486,1,'um'),
+(NULL,3,3,5,487,1,'in'),
+(NULL,3,3,5,488,1,'dem'),
+(NULL,3,3,5,489,1,'Meer'),
+(NULL,3,3,5,490,1,'von'),
+(NULL,3,3,5,491,1,'Wohlgerüchen'),
+(NULL,3,3,5,492,1,'herumschweben'),
+(NULL,3,3,5,493,1,'und'),
+(NULL,3,3,5,494,1,'alle'),
+(NULL,3,3,5,495,1,'seine'),
+(NULL,3,3,5,496,1,'Nahrung'),
+(NULL,3,3,5,497,1,'darin'),
+(NULL,3,3,5,498,1,'finden'),
+(NULL,3,3,5,499,1,'zu'),
+(NULL,3,3,5,500,1,'können'),
+(NULL,3,3,5,501,0,'.'),
+(NULL,3,3,5,502,0,'¶'),
+(NULL,3,3,5,503,1,'Die'),
+(NULL,3,3,5,504,1,'Stadt'),
+(NULL,3,3,5,505,1,'selbst'),
+(NULL,3,3,5,506,1,'ist'),
+(NULL,3,3,5,507,1,'unangenehm'),
+(NULL,3,3,5,508,0,','),
+(NULL,3,3,5,509,1,'dagegen'),
+(NULL,3,3,5,510,1,'rings'),
+(NULL,3,3,5,511,1,'umher'),
+(NULL,3,3,5,512,1,'eine'),
+(NULL,3,3,5,513,1,'unaussprechliche'),
+(NULL,3,3,5,514,1,'Schönheit'),
+(NULL,3,3,5,515,1,'der'),
+(NULL,3,3,5,516,1,'Natur'),
+(NULL,3,3,5,517,0,'.'),
+(NULL,3,3,5,518,1,'Das'),
+(NULL,3,3,5,519,1,'bewog'),
+(NULL,3,3,5,520,1,'den'),
+(NULL,3,3,5,521,1,'verstorbenen'),
+(NULL,3,3,5,522,1,'Grafen'),
+(NULL,3,3,5,523,1,'von'),
+(NULL,3,3,5,524,1,'M.'),
+(NULL,3,3,5,525,0,','),
+(NULL,3,3,5,526,1,'einen'),
+(NULL,3,3,5,527,1,'Garten'),
+(NULL,3,3,5,528,1,'auf'),
+(NULL,3,3,5,529,1,'einem'),
+(NULL,3,3,5,530,1,'der'),
+(NULL,3,3,5,531,1,'Hügel'),
+(NULL,3,3,5,532,1,'anzulegen'),
+(NULL,3,3,5,533,0,','),
+(NULL,3,3,5,534,1,'die'),
+(NULL,3,3,5,535,1,'mit'),
+(NULL,3,3,5,536,1,'der'),
+(NULL,3,3,5,537,1,'schönsten'),
+(NULL,3,3,5,538,1,'Mannigfaltigkeit'),
+(NULL,3,3,5,539,1,'sich'),
+(NULL,3,3,5,540,1,'kreuzen'),
+(NULL,3,3,5,541,1,'und'),
+(NULL,3,3,5,542,1,'die'),
+(NULL,3,3,5,543,1,'lieblichsten'),
+(NULL,3,3,5,544,1,'Täler'),
+(NULL,3,3,5,545,1,'bilden'),
+(NULL,3,3,5,546,0,'.'),
+(NULL,3,3,5,547,1,'Der'),
+(NULL,3,3,5,548,1,'Garten'),
+(NULL,3,3,5,549,1,'ist'),
+(NULL,3,3,5,550,1,'einfach'),
+(NULL,3,3,5,551,0,','),
+(NULL,3,3,5,552,1,'und'),
+(NULL,3,3,5,553,1,'man'),
+(NULL,3,3,5,554,1,'fühlt'),
+(NULL,3,3,5,555,1,'gleich'),
+(NULL,3,3,5,556,1,'bei'),
+(NULL,3,3,5,557,1,'dem'),
+(NULL,3,3,5,558,1,'Eintritte'),
+(NULL,3,3,5,559,0,','),
+(31,3,3,5,560,1,'daß'),
+(120,3,3,5,561,1,'nicht'),
+(124,3,3,5,562,1,'ein'),
+(NULL,3,3,5,563,1,'wissenschaftlicher'),
+(NULL,3,3,5,564,1,'Gärtner'),
+(NULL,3,3,5,565,0,','),
+(NULL,3,3,5,566,1,'sondern'),
+(124,3,3,5,567,1,'ein'),
+(NULL,3,3,5,568,1,'fühlendes'),
+(125,3,3,5,569,1,'Herz'),
+(NULL,3,3,5,570,1,'den'),
+(NULL,3,3,5,571,1,'Plan'),
+(NULL,3,3,5,572,1,'gezeichnet'),
+(NULL,3,3,5,573,0,','),
+(NULL,3,3,5,574,1,'das'),
+(NULL,3,3,5,575,1,'seiner'),
+(NULL,3,3,5,576,1,'selbst'),
+(NULL,3,3,5,577,1,'hier'),
+(NULL,3,3,5,578,1,'genießen'),
+(NULL,3,3,5,579,1,'wollte'),
+(NULL,3,3,5,580,0,'.'),
+(NULL,3,3,5,581,1,'Schon'),
+(NULL,3,3,5,582,1,'manche'),
+(NULL,3,3,5,583,1,'Träne'),
+(NULL,3,3,5,584,1,'hab'),
+(NULL,3,3,5,585,0,'\''),
+(30,3,3,5,586,1,'ich'),
+(NULL,3,3,5,587,1,'dem'),
+(NULL,3,3,5,588,1,'Abgeschiedenen'),
+(NULL,3,3,5,589,1,'in'),
+(NULL,3,3,5,590,1,'dem'),
+(NULL,3,3,5,591,1,'verfallenen'),
+(NULL,3,3,5,592,1,'Kabinettchen'),
+(NULL,3,3,5,593,1,'geweint'),
+(NULL,3,3,5,594,0,','),
+(NULL,3,3,5,595,1,'das'),
+(NULL,3,3,5,596,1,'sein'),
+(NULL,3,3,5,597,1,'Lieblingsplätzchen'),
+(NULL,3,3,5,598,1,'war'),
+(NULL,3,3,5,599,1,'und'),
+(NULL,3,3,5,600,1,'auch'),
+(NULL,3,3,5,601,1,'meines'),
+(NULL,3,3,5,602,1,'ist'),
+(NULL,3,3,5,603,0,'.'),
+(NULL,3,3,5,604,1,'Bald'),
+(NULL,3,3,5,605,1,'werde'),
+(30,3,3,5,606,1,'ich'),
+(NULL,3,3,5,607,1,'Herr'),
+(NULL,3,3,5,608,1,'vom'),
+(NULL,3,3,5,609,1,'Garten'),
+(NULL,3,3,5,610,1,'sein'),
+(NULL,3,3,5,611,0,';'),
+(NULL,3,3,5,612,1,'der'),
+(NULL,3,3,5,613,1,'Gärtner'),
+(NULL,3,3,5,614,1,'ist'),
+(NULL,3,3,5,615,1,'mir'),
+(NULL,3,3,5,616,1,'zugetan'),
+(NULL,3,3,5,617,0,','),
+(NULL,3,3,5,618,1,'nur'),
+(NULL,3,3,5,619,1,'seit'),
+(NULL,3,3,5,620,1,'den'),
+(NULL,3,3,5,621,1,'paar'),
+(NULL,3,3,5,622,1,'Tagen'),
+(NULL,3,3,5,623,0,','),
+(NULL,3,3,5,624,1,'und'),
+(NULL,3,3,5,625,1,'er'),
+(NULL,3,3,5,626,1,'wird'),
+(NULL,3,3,5,627,1,'sich'),
+(120,3,3,5,628,1,'nicht'),
+(NULL,3,3,5,629,1,'übel'),
+(NULL,3,3,5,630,1,'dabei'),
+(NULL,3,3,5,631,1,'befinden'),
+(NULL,3,3,5,632,0,'.'),
+(34,4,4,6,1,1,'一天'),
+(NULL,4,4,6,2,0,'，'),
+(NULL,4,4,6,3,1,'一'),
+(NULL,4,4,6,4,1,'个'),
+(35,4,4,6,5,1,'男人'),
+(NULL,4,4,6,6,1,'走'),
+(NULL,4,4,6,7,1,'在'),
+(NULL,4,4,6,8,1,'街上'),
+(NULL,4,4,6,9,0,'。'),
+(36,4,4,6,10,1,'突然'),
+(NULL,4,4,6,11,0,'，'),
+(37,4,4,6,12,1,'他'),
+(NULL,4,4,6,13,1,'看见'),
+(NULL,4,4,6,14,1,'前面'),
+(NULL,4,4,6,15,1,'有'),
+(NULL,4,4,6,16,1,'一'),
+(NULL,4,4,6,17,1,'只'),
+(NULL,4,4,6,18,1,'黑色'),
+(49,4,4,6,19,1,'的'),
+(NULL,4,4,6,20,1,'大'),
+(39,4,4,6,21,1,'狗'),
+(NULL,4,4,6,22,0,'，'),
+(41,4,4,6,23,1,'看起来'),
+(NULL,4,4,6,24,1,'很'),
+(42,4,4,6,25,1,'凶'),
+(NULL,4,4,6,26,0,'。'),
+(35,4,4,6,27,1,'男人'),
+(NULL,4,4,6,28,1,'非常'),
+(NULL,4,4,6,29,1,'害怕'),
+(NULL,4,4,6,30,0,'，'),
+(NULL,4,4,6,31,1,'不敢'),
+(NULL,4,4,6,32,1,'往前'),
+(NULL,4,4,6,33,1,'走'),
+(NULL,4,4,6,34,0,'。'),
+(39,4,4,6,35,1,'狗'),
+(49,4,4,6,36,1,'的'),
+(NULL,4,4,6,37,1,'旁边'),
+(NULL,4,4,6,38,1,'站着'),
+(NULL,4,4,6,39,1,'一'),
+(NULL,4,4,6,40,1,'个'),
+(40,4,4,6,41,1,'女人'),
+(NULL,4,4,6,42,0,'，'),
+(35,4,4,6,43,1,'男人'),
+(NULL,4,4,6,44,1,'问'),
+(NULL,4,4,6,45,1,'她'),
+(NULL,4,4,6,46,0,'：'),
+(47,4,4,6,47,1,'你'),
+(49,4,4,6,48,1,'的'),
+(39,4,4,6,49,1,'狗'),
+(NULL,4,4,6,50,1,'咬'),
+(NULL,4,4,6,51,1,'人'),
+(NULL,4,4,6,52,1,'吗'),
+(NULL,4,4,6,53,0,'？'),
+(40,4,4,6,54,1,'女人'),
+(NULL,4,4,6,55,1,'说'),
+(NULL,4,4,6,56,0,'：'),
+(NULL,4,4,6,57,1,'我'),
+(49,4,4,6,58,1,'的'),
+(39,4,4,6,59,1,'狗'),
+(NULL,4,4,6,60,1,'不'),
+(NULL,4,4,6,61,1,'咬'),
+(NULL,4,4,6,62,1,'人'),
+(NULL,4,4,6,63,0,'。'),
+(38,4,4,6,64,1,'这时'),
+(NULL,4,4,6,65,0,'，'),
+(NULL,4,4,6,66,1,'那'),
+(NULL,4,4,6,67,1,'只'),
+(39,4,4,6,68,1,'狗'),
+(NULL,4,4,6,69,1,'咬'),
+(NULL,4,4,6,70,1,'了'),
+(35,4,4,6,71,1,'男人'),
+(NULL,4,4,6,72,0,'。'),
+(37,4,4,6,73,1,'他'),
+(NULL,4,4,6,74,1,'气坏'),
+(NULL,4,4,6,75,1,'了'),
+(NULL,4,4,6,76,0,'，'),
+(NULL,4,4,6,77,1,'大'),
+(NULL,4,4,6,78,1,'叫'),
+(NULL,4,4,6,79,0,'：'),
+(47,4,4,6,80,1,'你'),
+(NULL,4,4,6,81,1,'说'),
+(47,4,4,6,82,1,'你'),
+(49,4,4,6,83,1,'的'),
+(39,4,4,6,84,1,'狗'),
+(NULL,4,4,6,85,1,'不'),
+(NULL,4,4,6,86,1,'咬'),
+(NULL,4,4,6,87,1,'人'),
+(NULL,4,4,6,88,0,'！'),
+(40,4,4,6,89,1,'女人'),
+(NULL,4,4,6,90,1,'回答'),
+(NULL,4,4,6,91,0,'：'),
+(NULL,4,4,6,92,1,'这'),
+(NULL,4,4,6,93,1,'不是'),
+(NULL,4,4,6,94,1,'我'),
+(49,4,4,6,95,1,'的'),
+(39,4,4,6,96,1,'狗'),
+(NULL,4,4,6,97,0,'。'),
+(54,5,5,7,1,1,'は'),
+(55,5,5,7,2,1,'い'),
+(NULL,5,5,7,3,0,'。'),
+(55,5,5,7,4,1,'い'),
+(55,5,5,7,5,1,'い'),
+(56,5,5,7,6,1,'え'),
+(NULL,5,5,7,7,0,'。'),
+(NULL,5,5,7,8,0,'¶'),
+(57,5,5,7,9,1,'す'),
+(58,5,5,7,10,1,'み'),
+(59,5,5,7,11,1,'ま'),
+(60,5,5,7,12,1,'せ'),
+(61,5,5,7,13,1,'ん'),
+(NULL,5,5,7,14,0,'。'),
+(NULL,5,5,7,15,0,'¶'),
+(64,5,5,7,16,1,'ど'),
+(65,5,5,7,17,1,'う'),
+(66,5,5,7,18,1,'も'),
+(NULL,5,5,7,19,0,'。'),
+(NULL,5,5,7,20,0,'¶'),
+(68,5,5,7,21,1,'あ'),
+(69,5,5,7,22,1,'り'),
+(70,5,5,7,23,1,'が'),
+(71,5,5,7,24,1,'と'),
+(65,5,5,7,25,1,'う'),
+(73,5,5,7,26,1,'ご'),
+(74,5,5,7,27,1,'ざ'),
+(55,5,5,7,28,1,'い'),
+(59,5,5,7,29,1,'ま'),
+(57,5,5,7,30,1,'す'),
+(NULL,5,5,7,31,0,'。'),
+(NULL,5,5,7,32,0,'¶'),
+(103,5,5,7,33,1,'日'),
+(104,5,5,7,34,1,'本'),
+(105,5,5,7,35,1,'語'),
+(86,5,5,7,36,1,'を'),
+(106,5,5,7,37,1,'話'),
+(78,5,5,7,38,1,'し'),
+(59,5,5,7,39,1,'ま'),
+(57,5,5,7,40,1,'す'),
+(87,5,5,7,41,1,'か'),
+(NULL,5,5,7,42,0,'。'),
+(54,5,5,7,43,1,'は'),
+(55,5,5,7,44,1,'い'),
+(NULL,5,5,7,45,0,'、'),
+(93,5,5,7,46,1,'少'),
+(78,5,5,7,47,1,'し'),
+(NULL,5,5,7,48,0,'。'),
+(NULL,5,5,7,49,0,'¶'),
+(98,5,5,7,50,1,'イ'),
+(96,5,5,7,51,1,'ギ'),
+(99,5,5,7,52,1,'リ'),
+(100,5,5,7,53,1,'ス'),
+(87,5,5,7,54,1,'か'),
+(101,5,5,7,55,1,'ら'),
+(107,5,5,7,56,1,'来'),
+(59,5,5,7,57,1,'ま'),
+(78,5,5,7,58,1,'し'),
+(77,5,5,7,59,1,'た'),
+(NULL,5,5,7,60,0,'。'),
+(127,6,6,8,1,1,'좋은'),
+(128,6,6,8,2,1,'아침'),
+(NULL,6,6,8,3,0,'.'),
+(NULL,6,6,8,4,0,'¶'),
+(130,6,6,8,5,1,'안녕하세요'),
+(NULL,6,6,8,6,0,'.'),
+(NULL,6,6,8,7,0,'¶'),
+(132,6,6,8,8,1,'잘자요'),
+(NULL,6,6,8,9,0,'.'),
+(NULL,6,6,8,10,0,'¶'),
+(133,6,6,8,11,1,'잘가요'),
+(NULL,6,6,8,12,0,'.'),
+(NULL,6,6,8,13,0,'¶'),
+(130,6,6,8,14,1,'안녕하세요'),
+(NULL,6,6,8,15,0,','),
+(131,6,6,8,16,1,'잘지냈어요'),
+(NULL,6,6,8,17,0,'?'),
+(NULL,6,6,8,18,0,'¶'),
+(134,6,6,8,19,1,'네'),
+(NULL,6,6,8,20,0,','),
+(131,6,6,8,21,1,'잘지냈어요'),
+(NULL,6,6,8,22,0,'?'),
+(NULL,6,6,8,23,0,'¶'),
+(134,6,6,8,24,1,'네'),
+(135,6,6,8,25,1,'그럼요'),
+(NULL,6,6,8,26,0,'.'),
+(NULL,6,6,8,27,0,'¶'),
+(NULL,6,6,8,28,1,'이름이'),
+(NULL,6,6,8,29,1,'뭐에요'),
+(NULL,6,6,8,30,0,'?'),
+(NULL,6,6,8,31,0,'¶'),
+(NULL,6,6,8,32,1,'제'),
+(NULL,6,6,8,33,1,'이름은'),
+(NULL,6,6,8,34,1,'존이에요'),
+(NULL,6,6,8,35,0,','),
+(NULL,6,6,8,36,1,'이름이'),
+(NULL,6,6,8,37,1,'뭐에요'),
+(NULL,6,6,8,38,0,'?'),
+(NULL,6,6,8,39,0,'¶'),
+(NULL,6,6,8,40,1,'제'),
+(NULL,6,6,8,41,1,'이름은'),
+(NULL,6,6,8,42,1,'메리에요'),
+(NULL,6,6,8,43,0,'.'),
+(NULL,7,7,9,1,1,'ส'),
+(NULL,7,7,9,2,1,'วัส'),
+(136,7,7,9,3,1,'ดี'),
+(139,7,7,9,4,1,'ครับ'),
+(NULL,7,7,9,5,0,'¶'),
+(NULL,7,7,9,6,1,'ส'),
+(NULL,7,7,9,7,1,'วัส'),
+(136,7,7,9,8,1,'ดี'),
+(140,7,7,9,9,1,'ค่ะ'),
+(153,8,8,10,1,1,'בוקר'),
+(152,8,8,10,2,1,'טוב'),
+(NULL,8,8,10,3,0,'¶'),
+(159,8,8,10,4,1,'אחר'),
+(158,8,8,10,5,1,'צהריים'),
+(157,8,8,10,6,1,'טובים'),
+(NULL,8,8,10,7,0,'¶'),
+(154,8,8,10,8,1,'ערב'),
+(152,8,8,10,9,1,'טוב'),
+(NULL,8,8,10,10,0,'¶'),
+(155,8,8,10,11,1,'לילה'),
+(152,8,8,10,12,1,'טוב'),
+(NULL,8,8,10,13,0,'¶'),
+(156,8,8,10,14,1,'להתראות'),
+(2,1,9,2,1,1,'Bonjour'),
+(1,1,9,2,2,1,'Manon'),
+(NULL,1,9,2,3,0,'.'),
+(NULL,1,9,2,4,0,'¶'),
+(2,1,9,2,5,1,'Bonjour'),
+(NULL,1,9,2,6,0,'.'),
+(NULL,1,9,2,7,0,'¶'),
+(3,1,9,2,8,1,'Alors'),
+(NULL,1,9,2,9,0,','),
+(7,1,9,2,10,1,'je'),
+(8,1,9,2,11,1,'crois'),
+(6,1,9,2,12,1,'qu'),
+(NULL,1,9,2,13,0,'\''),
+(50,1,9,2,14,1,'il'),
+(176,1,9,2,15,1,'y'),
+(177,1,9,2,16,1,'a'),
+(170,1,9,2,17,1,'pas'),
+(171,1,9,2,18,1,'longtemps'),
+(NULL,1,9,2,19,0,','),
+(172,1,9,2,20,1,'là'),
+(NULL,1,9,2,21,0,','),
+(146,1,9,2,22,1,'vous'),
+(150,1,9,2,23,1,'avez'),
+(147,1,9,2,24,1,'fait'),
+(173,1,9,2,25,1,'une'),
+(148,1,9,2,26,1,'bonne'),
+(178,1,9,2,27,1,'action'),
+(NULL,1,9,2,28,0,' ?'),
+(NULL,1,9,2,29,0,'¶'),
+(165,1,9,2,30,1,'Oui'),
+(NULL,1,9,2,31,0,'.'),
+(NULL,1,9,2,32,0,'¶'),
+(166,1,9,2,33,1,'On'),
+(167,1,9,2,34,1,'peut'),
+(26,1,9,2,35,1,'dire'),
+(168,1,9,2,36,1,'ça'),
+(169,1,9,2,37,1,'comme'),
+(168,1,9,2,38,1,'ça'),
+(NULL,1,9,2,39,0,'.'),
+(6,1,9,2,40,1,'Qu'),
+(NULL,1,9,2,41,0,'\''),
+(25,1,9,2,42,1,'est'),
+(NULL,1,9,2,43,0,'-'),
+(182,1,9,2,44,1,'ce'),
+(183,1,9,2,45,1,'que'),
+(146,1,9,2,46,1,'vous'),
+(150,1,9,2,47,1,'avez'),
+(147,1,9,2,48,1,'fait'),
+(NULL,1,9,2,49,0,','),
+(3,1,9,2,50,1,'alors'),
+(NULL,1,9,2,51,0,' ?'),
+(NULL,1,9,2,52,0,'¶'),
+(3,1,9,2,53,1,'Alors'),
+(NULL,1,9,2,54,0,','),
+(174,1,9,2,55,1,'j'),
+(NULL,1,9,2,56,0,'\''),
+(149,1,9,2,57,1,'ai'),
+(147,1,9,2,58,1,'fait'),
+(151,1,9,2,59,1,'mon'),
+(175,1,9,2,60,1,'premier'),
+(179,1,9,2,61,1,'don'),
+(180,1,9,2,62,1,'du'),
+(181,1,9,2,63,1,'sang'),
+(NULL,1,9,2,64,0,'.'),
+(2,1,10,3,1,1,'Bonjour'),
+(1,1,10,3,2,1,'Manon'),
+(NULL,1,10,3,3,0,'.'),
+(NULL,1,10,3,4,0,'¶'),
+(2,1,10,3,5,1,'Bonjour'),
+(NULL,1,10,3,6,0,'.'),
+(NULL,1,10,3,7,0,'¶'),
+(3,1,10,3,8,1,'Alors'),
+(NULL,1,10,3,9,0,','),
+(7,1,10,3,10,1,'je'),
+(8,1,10,3,11,1,'crois'),
+(6,1,10,3,12,1,'qu'),
+(NULL,1,10,3,13,0,'\''),
+(50,1,10,3,14,1,'il'),
+(176,1,10,3,15,1,'y'),
+(177,1,10,3,16,1,'a'),
+(170,1,10,3,17,1,'pas'),
+(171,1,10,3,18,1,'longtemps'),
+(NULL,1,10,3,19,0,','),
+(172,1,10,3,20,1,'là'),
+(NULL,1,10,3,21,0,','),
+(146,1,10,3,22,1,'vous'),
+(150,1,10,3,23,1,'avez'),
+(147,1,10,3,24,1,'fait'),
+(173,1,10,3,25,1,'une'),
+(148,1,10,3,26,1,'bonne'),
+(178,1,10,3,27,1,'action'),
+(NULL,1,10,3,28,0,' ?'),
+(NULL,1,10,3,29,0,'¶'),
+(165,1,10,3,30,1,'Oui'),
+(NULL,1,10,3,31,0,'.');

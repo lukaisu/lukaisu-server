@@ -194,12 +194,12 @@ class Migrations
     /**
      * Record every migration file as applied without running it.
      *
-     * Used on a fresh install, where baseline.sql plus self::applyForeignKeys()
-     * already produce the current schema. The historical migration chain only
-     * exists to upgrade a legacy LWT database, so on a fresh install it must not
-     * run: seeding it as applied keeps the bookkeeping correct and stops
-     * self::update() from replaying ~60 migrations that would all fail-and-continue
-     * against the already-modern schema (filling the log with noise on first boot).
+     * Used whenever the schema is already modern and the chain has nothing to do:
+     * a fresh install, or a restored backup whose dump is already snake_case. The
+     * historical migration chain only exists to upgrade a legacy LWT database, so
+     * seeding it as applied keeps the bookkeeping correct and stops self::update()
+     * from replaying ~60 migrations that would all fail-and-continue against the
+     * modern schema (filling the log with noise).
      *
      * @return void
      */
@@ -213,14 +213,14 @@ class Migrations
     }
 
     /**
-     * Apply the inter-table foreign keys from db/schema/foreign_keys.sql.
+     * Apply every foreign key from db/schema/foreign_keys.sql.
      *
-     * baseline.sql creates every table with its user-scope FK inline but defers the
-     * inter-table content FKs to that file, because a CREATE TABLE cannot reference
-     * a table defined later in the same file. This is called once on a fresh install
-     * (right after baseline.sql); a legacy upgrade gets the equivalent FKs from the
-     * rename migrations instead, so this is not part of the per-boot rebuild. Each
-     * statement is best-effort so a single failure does not abort the rest.
+     * baseline.sql defines tables and indexes only; all foreign keys live in
+     * foreign_keys.sql so they can be (re)applied once every table exists. Called
+     * after the schema is (re)built — a fresh install, a backup restore (which
+     * drops all FKs first), or a legacy upgrade — so it is the single point that
+     * establishes referential integrity. Each statement is idempotent (DROP IF
+     * EXISTS + ADD) and best-effort, so one failure does not abort the rest.
      *
      * @return void
      */
@@ -234,6 +234,39 @@ class Migrations
                 error_log('Migrations::applyForeignKeys: ' . $e->getMessage());
             }
         }
+    }
+
+    /**
+     * Whether any migration file has not yet been recorded as applied.
+     *
+     * @return bool
+     */
+    public static function hasPendingMigrations(): bool
+    {
+        return array_diff(self::getMigrationFiles(), self::getAppliedMigrations()) !== [];
+    }
+
+    /**
+     * Whether the current schema is already fully modern (snake_case).
+     *
+     * True when no column name carries a legacy Hungarian prefix — i.e. every
+     * column name is lower-case. A restored modern backup is "modern" and needs no
+     * migration replay; a legacy LWT backup still has columns like WoText/TxTitle
+     * and must be transformed by the migration chain. The BINARY comparison makes
+     * the test case-sensitive regardless of the column-name collation.
+     *
+     * @param string $dbname Current database name
+     *
+     * @return bool
+     */
+    public static function schemaIsModern(string $dbname): bool
+    {
+        return (int) Connection::preparedFetchValue(
+            "SELECT COUNT(*) AS legacy_columns FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = ? AND BINARY COLUMN_NAME <> LOWER(COLUMN_NAME)",
+            [$dbname],
+            'legacy_columns'
+        ) === 0;
     }
 
     /**
@@ -521,12 +554,10 @@ class Migrations
         }
 
         // A fresh install is an empty database: none of the core tables exist yet,
-        // captured here BEFORE baseline.sql runs below. In that case the historical
-        // migration chain (which only upgrades a legacy LWT/Hungarian schema) has
-        // nothing to do, so the fresh-install branch further down seeds it as
-        // already-applied instead of replaying every migration. A legacy or restored
-        // database already has its tables, so it is not "fresh" and the migrations
-        // still run to transform it.
+        // captured here BEFORE baseline.sql runs below (which would populate it).
+        // The decision block after baseline uses this together with the modern-schema
+        // check to seed the migration chain as already-applied instead of replaying
+        // it. A restored backup already has its tables, so it is not "fresh".
         $isFreshInstall = ($tables === []);
 
         /// counter for cache rebuild
@@ -556,18 +587,30 @@ class Migrations
         // Ensure _migrations table has the new schema with applied_at column
         self::upgradeMigrationsTable();
 
-        // Fresh install: baseline.sql just created the complete modern schema.
-        // Apply the inter-table foreign keys (baseline defers them so they can be
-        // added once every table exists) and record every migration as applied so
-        // update() skips the legacy chain entirely. This keeps first boot quiet
-        // instead of logging ~60 expected "Migration failed" lines.
-        if ($isFreshInstall) {
-            self::applyForeignKeys();
+        // Decide whether to replay the historical migration chain. It exists only
+        // to upgrade a legacy LWT/Hungarian schema, so it must not run when the
+        // schema is already modern. Two cases skip it: a fresh install (empty DB
+        // baseline just populated), and a restored backup whose dump is already
+        // snake_case (Restore clears _migrations, so the whole chain looks pending).
+        // Seeding the chain as applied stops update() from replaying ~60 migrations
+        // that would all fail-and-continue, spamming the log.
+        $hadPendingMigrations = self::hasPendingMigrations();
+        if ($isFreshInstall || ($hadPendingMigrations && self::schemaIsModern($dbname))) {
             self::markAllMigrationsApplied();
         }
 
-        // Update the database (if necessary)
+        // Update the database; runs the migration chain only on a legacy schema.
         self::update();
+
+        // Re-establish foreign keys whenever the schema was just (re)built: a fresh
+        // install, a backup restore (Restore drops all FKs first), or a legacy
+        // upgrade. baseline.sql carries no FKs, so this is the single point that
+        // applies foreign_keys.sql. Run after update() so a legacy upgrade has
+        // already renamed columns to their modern names. A normal boot is neither
+        // fresh nor has pending migrations, so the live FKs are left untouched.
+        if ($isFreshInstall || $hadPendingMigrations) {
+            self::applyForeignKeys();
+        }
 
         if (!in_array("word_occurrences", $tables) && !in_array("word_occurrences", $tables)) {
             // Add data from the old database system

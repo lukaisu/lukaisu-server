@@ -55,7 +55,8 @@ class SqlValidator
         'text_tag_map',
         'words',
         'word_tag_map',
-        // Legacy table names (for demo database and old backups)
+        // Legacy table names (for restoring pre-modernization LWT backups; the
+        // bundled demo is now modern, but old user backups still use these names)
         'archivedtexts',
         'archtexttags',
         'books',

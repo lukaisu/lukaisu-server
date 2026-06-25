@@ -108,6 +108,30 @@ foreach ($tables as $name => $t) {
     $out[] = '';
 }
 
+// Foreign keys live in db/schema/foreign_keys.sql (baseline.sql defines tables
+// and indexes only), applied after every table exists. Render them so the doc
+// stays a complete schema reference.
+$fkSql = file_get_contents($root . '/db/schema/foreign_keys.sql');
+if (is_string($fkSql)) {
+    $fkLines = [];
+    foreach (explode("\n", $fkSql) as $fkLine) {
+        if (str_starts_with(ltrim($fkLine), '--')) {
+            continue;
+        }
+        $fkLines[] = rtrim($fkLine);
+    }
+    $out[] = '## Foreign keys';
+    $out[] = '';
+    $out[] = 'Defined in `db/schema/foreign_keys.sql` (baseline tables carry no'
+        . ' inline foreign keys) and applied after every table exists — on a fresh'
+        . ' install, a backup restore, or a legacy upgrade.';
+    $out[] = '';
+    $out[] = '```sql';
+    $out[] = trim(implode("\n", $fkLines), "\n");
+    $out[] = '```';
+    $out[] = '';
+}
+
 $generated = implode("\n", $out);
 if (!str_ends_with($generated, "\n")) {
     $generated .= "\n";
