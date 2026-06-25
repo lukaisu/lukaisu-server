@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS languages (
     KEY user_id (user_id),
     UNIQUE KEY name (name)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS sentences (
     id mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
@@ -93,15 +93,15 @@ CREATE TABLE IF NOT EXISTS sentences (
     KEY text_id (text_id),
     KEY position (position)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS settings (
     name varchar(40) NOT NULL,
     user_id int(10) unsigned NOT NULL DEFAULT 0,
-    value varchar(40) DEFAULT NULL,
+    value varchar(255) DEFAULT NULL,
     PRIMARY KEY (name, user_id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS word_occurrences (
     word_id mediumint(8) unsigned DEFAULT NULL,
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS word_occurrences (
     text varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
     PRIMARY KEY (text_id,position,word_count), KEY word_id (word_id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS temp_word_occurrences (
     char_position smallint(5) unsigned NOT NULL,
@@ -187,7 +187,7 @@ CREATE TABLE IF NOT EXISTS words (
     KEY due_at (due_at),
     KEY idx_words_lemma (lemma_lc, language_id)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- FSRS review log (issue #238): one row per graded answer, for stats and a
 -- future per-user parameter optimiser. The scheduler itself runs client-side.
@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS review_log (
     KEY user_id (user_id),
     KEY reviewed_at (reviewed_at)
 )
-ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS tags (
     id smallint(5) unsigned NOT NULL AUTO_INCREMENT,

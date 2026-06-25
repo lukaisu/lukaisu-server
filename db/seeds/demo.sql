@@ -33,7 +33,7 @@ CREATE TABLE `languages` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO `languages` VALUES
 (1,1,'French','http://www.wordreference.com/fren/lukaisu_term',NULL,'https://translate.google.com/?ie=UTF-8&sl=fr&tl=en&text=lukaisu_term',0,0,0,'fr','en',0,'$y\\t$t\\n',100,'´=\'|`=\'|’=\'|‘=\'|...=…|..=‥','.!?:;','[A-Z].|Dr.','a-zA-ZÀ-ÖØ-öø-ȳ',NULL,0,0,0,'',NULL,1),
 (2,1,'Chinese','https://ce.linedict.com/dict.html#/cnen/search?query=lukaisu_term','http://chinesedictionary.mobi/?handler=QueryWorddict&mwdqb=lukaisu_term','https://translate.google.com/?ie=UTF-8&sl=zh&tl=en&text=lukaisu_term',0,0,0,'zh','en',0,'$y\\t$t\\n',200,'','.!?:;。！？：；','','一-龥','character',1,1,0,'',NULL,1),
@@ -54,7 +54,7 @@ CREATE TABLE `sentences` (
   KEY `language_id` (`language_id`),
   KEY `text_id` (`text_id`),
   KEY `position` (`position`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO `sentences` VALUES
 (1,1,1,1,'BonjourManon.¶Bonjour.¶Alors,jecroisqu\'ilyapaslongtemps,là,vousavezfaitunebonneaction ?¶Oui.¶Onpeutdireçacommeça.Qu\'est-cequevousavezfait,alors ?¶Alors,j\'aifaitmonpremierdondusang.Doncc\'estàdirequeonvadansune…Unorganismespécialisévientdansl\'IUT,dansnotreuniversitépour…pourprendrenotresangpourlesmaladesdel\'hôpitalquienontbesoin…¶Oui,voilà,encasd\'accidentparexemple,etc…¶Encasd\'accidentouencasd\'anémie …¶Oui,oui.D\'accord.Etalors,donc,c\'étaitlapremièrefoisquevouslefaisiez ?¶C\'estlapremièrefoisetçam\'amarquéeparcequej\'ai…j\'aitrèspeurdespiquresentempshabituel.¶Ahbon !¶Voilà.J\'enai…j\'enfaistrèsrarement,leplusrarementpossible…¶Oui ?¶…pour…pouréviterçaaumaximum.Etpuis…¶Oui,etlà,c\'estpasunepetitepiqure !Çadureunmoment,enfait !¶Ahnon,çadurequinze –vingtminutes.¶Ah,d\'accord.¶Ilsprennent…jesaispluscombiendelitresdesang.Ah,c\'estbeaucoup.¶Oui,oui.D\'accord.¶Ouais,ouais,ouais.¶Etdoncvousavezfranchilepas.¶Voilà.¶Maispourquoi,alors ?¶Parcequejepensequec\'estimportantd\'aiderlesautres,surtoutquej\'aiapprisquej\'aiunsangassezrare.¶Ahoui ?C\'estvrai ?¶Ouais.¶Pourquoi ?C\'estquoi ?¶Anégatif.¶Ah,d\'accord.Oui,oui.Moi,c\'estpareil.¶C\'estunsang…Ah,c\'estvrai ?¶Oui,oui.¶Assezrare,doncvoilà,lesgens,siilsenontbesoin.Etpuissiunjour,moij\'enaibesoin,jeseraicontentequed\'autresendonnent.Doncvoilà.¶Oui,oui.D\'accord.¶Enattendant,jefaisça.¶Oui,oui,biensûr.Etalors,commentçasepasseconcrètement?Doncvousêtesallée…Doncilssontvenusàl\'IUT,là.Ilsinstallenttoutbiencommeilfaut,etalorsvousyallezetpuis…¶Onyva,ilsnousde …Ilsnousposentquelquesquestionsparrapportànotrehygiènedevieévidemment,pour…pourlesmaladies,toutça,sionn\'apaseu…étémalades,pourlesmédicamentsdanslesang,toutça.Etpuisaprès,ilsvousinstallentsurune…surunetable,allongé,etilsvous…ilsvouspiquentet…¶Etonattend.¶Etonattend, 15ou 20minutes.¶Oui,d\'accord.Etletempsn\'estpastroplong ?Onsesentpasunpeubizarreou…?¶Onsesentbizarre,maisilssontvraimentàcôtédenouspour…pourjustementqu\'on…qu\'onresteéveilléenquelquesorte,etqu\'onresteactifpourpasjustementqu\'onparte…unpeuà…¶Oui,àseposerdesquestions,toutça,etpuissesentiraffaibliouquelquechose.¶Voilà.Doncilssontvraimentàcôtédenous,ànousparler,ànousfairerigolerpourvoirsionesttoujoursconscient,finalement.¶Ahoui,d\'accord.¶Oui,oui.Voilà.¶Oui,oui,oui.Etaprès,alors,àlafin,qu\'est-cequisepasse ?¶Alafin,ilsvousenlèventlapiqure.Etd\'ailleurs,c\'estlàquejemesuisévanouie !¶Carrément ?¶Ouais.¶Ahbon,d\'accord !¶Oui,oui.Ilsontdû…Ilsontdûmemettrelespiedsenl\'air.Ilsont…Ilsontbienrigoléparcequejustement,ils…ilsontvuquequandjesuispartie,justement,c\'estquandilsontenlevélapiqure,jesouriaisetquandjesuis…quandjemesuis…quandj\'aireprisconscience,ilsm\'ontditquec\'étaitla…lapremièrefoisqu\'ilsavaientvuquelqu\'unpartir…¶Ensouriant ?¶…ensouriant.¶Ahbon,d\'accord.Alorsvousêtestrèsspéciale !¶Voilà.¶Ahoui ?Etalors,donc…maisvousvousêtesévanouiecarrément ?¶Ahoui,carrément !J\'aiperduconsciencependant…bonpaslongtemps,hein,peut-êtreuneoudeuxminutes,letempsque…queçarevienne.Jepensequec\'étaitun…¶Unétourdissement ?¶…untrop-plein…trop-pleind\'émotionsenfait.¶Ahd\'accord !¶D\'êtrecontenteetàlafoisd\'avoireupeur.¶Ahbon !¶Toutça,ouais.¶Vousêtesàcepointsensible…¶Ahoui,oui,vraiment.¶…émotive.¶Ouais.¶D\'accord.Etalors,qu\'est-cequ\'ilsontfait,eux ?Ilsvousont…quoi ?Jesaispas…tapésurlesjoues ?¶Non,non,ilsontététrèscalmes,apparemment,d\'aprèscequej\'aientendu.¶Ilfautplacerdansunebonneposition,quoi.C\'estça ?¶Voilà,ilsontjusterelevémespieds.Etilsm\'ont…Ilsm\'ontmisun…uncotonimbibéde…dequelquechose.Jesaispascequec\'était.Ça…çasentaitl\'eucalyptus.¶Ahoui,oui.Pourunpeuvous…¶Pourunpeu…¶…stimuler.¶Ouais,voilà.¶D\'accord.Bonbahc\'estsympa !J\'espèrequetoutlemondese…s\'évanouitpasaprèsles…lesprisesdesangcommeça !Etilyapasàmangeraussiunpeu,non ?C\'estça ?¶Voilà,etaprèsilsnous…ilsnousdonnentcequ\'onveut:un…ungâteauouunverrede…desoda‥¶Ouais,ouais,pourreconstituer…¶…untrucbiensucré.¶Ouaisd\'accord,poursereconstituerlesforces.¶Pourrepartir,voilà.¶D\'accord.Bonbahc\'estbien,alors,d\'avoirfaitça.Est-cequevousrecommencerez,alors ?¶Oui,oui.Ilfautattendretroismois.Doncjel\'aifaitenfévrieretjecomptebienlefaireenjuin,là,ouais.¶Ahbond\'accord.Etalors,vouscomptezvousévanouirànouveau ?¶Non,jevaisessayer…jevaisessayerdemeretenir.¶D\'accord.¶Jevaisleurexpliquerquejesuisunpeuémotive.Et…¶Unpeu,oui.Hm,hm.Maispeut-êtrequeladeuxièmefois,commevoussaurezdéjàcommentçasepasse,ceseramoins…¶Oui,jepense.¶…moinsstressant.¶Je…jeparsavecmoinsd\'appréhension,entoutcas,pourladeuxièmefois.¶Oui,d\'accord.Bon,bah,c\'estbien,alors,d\'avoirfaitça.¶Oui.¶D\'accord.Bahtrèsbienpourles…pourlesgensàquiçavaservir.MerciManon.',1),
 (2,1,9,1,'BonjourManon.¶Bonjour.¶Alors,jecroisqu\'ilyapaslongtemps,là,vousavezfaitunebonneaction ?¶Oui.¶Onpeutdireçacommeça.Qu\'est-cequevousavezfait,alors ?¶Alors,j\'aifaitmonpremierdondusang.',1),
@@ -69,9 +69,9 @@ INSERT INTO `sentences` VALUES
 CREATE TABLE `settings` (
   `name` varchar(40) NOT NULL,
   `user_id` int(10) unsigned NOT NULL DEFAULT 0,
-  `value` varchar(40) DEFAULT NULL,
+  `value` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`name`,`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO `settings` VALUES
 ('currentlanguage',1,'1'),
 ('currenttext',1,'1'),
@@ -190,7 +190,7 @@ CREATE TABLE `words` (
   KEY `word_count` (`word_count`),
   KEY `due_at` (`due_at`),
   KEY `idx_words_lemma` (`lemma_lc`,`language_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=221 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=221 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO `words` VALUES
 (1,1,1,'Manon','manon',NULL,NULL,98,'(name)',NULL,'Bonjour {Manon}.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',0,0,'2020-10-03 18:08:22',NULL,0,0,0),
 (2,1,1,'bonjour','bonjour',NULL,NULL,5,'hello / good morning / good afternoon',NULL,'{Bonjour} Manon.',NULL,1,'2011-08-30 12:00:00','2020-10-03 18:08:22',120,5,'2021-01-31 18:08:22','2020-10-03 18:08:22',1,0,2),
@@ -409,7 +409,7 @@ CREATE TABLE `word_occurrences` (
   `text` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`text_id`,`position`,`word_count`),
   KEY `word_id` (`word_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 INSERT INTO `word_occurrences` VALUES
 (2,1,1,1,1,1,'Bonjour'),
 (1,1,1,1,2,1,'Manon'),

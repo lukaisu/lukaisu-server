@@ -105,7 +105,7 @@ KEY position (position)
 ```sql
 name varchar(40) NOT NULL,
 user_id int(10) unsigned NOT NULL DEFAULT 0,
-value varchar(40) DEFAULT NULL,
+value varchar(255) DEFAULT NULL,
 PRIMARY KEY (name, user_id)
 ```
 
