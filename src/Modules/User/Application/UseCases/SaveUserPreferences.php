@@ -26,7 +26,7 @@ use Lukaisu\Modules\Admin\Domain\SettingDefinitions;
  * Use case for saving user-scoped preferences from form data.
  *
  * In multi-user mode, saves with the current user's ID.
- * In single-user mode, saves to the global row (StUsID=0).
+ * In single-user mode, saves to the global row (user_id=0).
  *
  * @since 3.0.0
  */

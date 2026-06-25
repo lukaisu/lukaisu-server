@@ -55,7 +55,7 @@ class AdminApiHandler implements ApiRoutableInterface
     {
         $key = (string) ($params['key'] ?? '');
 
-        // Admin-scoped keys persist at StUsID=0 and are read back by every
+        // Admin-scoped keys persist at user_id=0 and are read back by every
         // user. Non-admins writing them would clobber a global default for
         // everyone, so the boundary must be enforced at the API edge.
         if (
@@ -98,8 +98,8 @@ class AdminApiHandler implements ApiRoutableInterface
     {
         try {
             // USER-scoped settings must persist under the current user's
-            // StUsID so Settings::getWithDefault() can read them back —
-            // it deliberately skips the StUsID=0 row for USER keys to
+            // user_id so Settings::getWithDefault() can read them back —
+            // it deliberately skips the user_id=0 row for USER keys to
             // avoid leaking another user's choice into a fresh session.
             $userId = Globals::getCurrentUserId();
             $isUserScope = SettingDefinitions::getScope($key) === SettingDefinitions::SCOPE_USER;

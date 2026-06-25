@@ -57,7 +57,7 @@ class UserRepositoryTest extends TestCase
 
         // Clean up test users
         $prefix = '';
-        Connection::query("DELETE FROM {$prefix}users WHERE UsUsername LIKE 'UserRepoTest_%'");
+        Connection::query("DELETE FROM {$prefix}users WHERE username LIKE 'UserRepoTest_%'");
     }
 
     protected function setUp(): void
@@ -73,7 +73,7 @@ class UserRepositoryTest extends TestCase
 
         // Clean up users created during this test
         $prefix = '';
-        Connection::query("DELETE FROM {$prefix}users WHERE UsUsername LIKE 'UserRepoTest_%'");
+        Connection::query("DELETE FROM {$prefix}users WHERE username LIKE 'UserRepoTest_%'");
         self::$testUserIds = [];
     }
 
@@ -107,8 +107,8 @@ class UserRepositoryTest extends TestCase
 
         Connection::query(
             "INSERT INTO {$prefix}users (
-                UsUsername, UsEmail, UsPasswordHash, UsApiToken, UsApiTokenExpires,
-                UsWordPressId, UsCreated, UsLastLogin, UsIsActive, UsRole
+                username, email, password_hash, api_token, api_token_expires,
+                wordpress_id, created_at, last_login_at, is_active, role
             ) VALUES (
                 '$escapedUsername', '$escapedEmail', 'hash123', $escapedApiToken, NULL,
                 $wpIdValue, NOW(), NULL, $isActiveInt, '$escapedRole'
@@ -577,7 +577,7 @@ class UserRepositoryTest extends TestCase
             $this->createTestUserInDb("UserRepoTest_Paginated$i");
         }
 
-        $result = $this->repository->findPaginated(1, 3, 'UsUsername', 'ASC');
+        $result = $this->repository->findPaginated(1, 3, 'username', 'ASC');
 
         $this->assertArrayHasKey('items', $result);
         $this->assertArrayHasKey('total', $result);

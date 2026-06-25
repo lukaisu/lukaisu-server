@@ -3,7 +3,7 @@
  *
  * This mirrors the server's MySQL schema (`db/schema/baseline.sql`) closely
  * enough that the same rendering code can read it, but is single-user: the
- * `*UsID` ownership columns are dropped. Every row carries `createdAt` /
+ * `*user_id` ownership columns are dropped. Every row carries `createdAt` /
  * `updatedAt` (epoch ms) and a `deletedAt` tombstone so a sync layer can be
  * added later without a migration; a `pendingOps` queue is reserved for the
  * same purpose. Sync itself is out of scope for the offline milestone.

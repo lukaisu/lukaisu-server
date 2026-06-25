@@ -89,7 +89,7 @@ class BulkActionUserScopeTest extends TestCase
 
     /**
      * `deleteByIdList` deletes from both `words` and `word_occurrences`.
-     * The latter has no UsID column, so this method pre-filters the IDs
+     * The latter has no user_id column, so this method pre-filters the IDs
      * to those owned by the current user via the `filterOwnedWordIds`
      * helper. Assert that helper is used.
      */
@@ -103,7 +103,7 @@ class BulkActionUserScopeTest extends TestCase
             $source,
             'deleteByIdList must restrict the id list to the caller\'s'
             . ' rows before issuing the word_occurrences and words DELETEs.'
-            . ' word_occurrences has no UsID column, so without this gate'
+            . ' word_occurrences has no user_id column, so without this gate'
             . ' an intruder can wipe another user\'s multi-word occurrences.'
         );
 

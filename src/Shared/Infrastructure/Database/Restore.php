@@ -251,7 +251,7 @@ class Restore
             // The old backup might have a different version or no version at all
             try {
                 QueryBuilder::table('settings')
-                    ->where('StKey', '=', 'dbversion')
+                    ->where('name', '=', 'dbversion')
                     ->delete();
             } catch (\RuntimeException $e) {
                 // Settings table might not exist yet or have different schema
@@ -272,7 +272,7 @@ class Restore
                 Connection::execute("SET FOREIGN_KEY_CHECKS = 1");
             }
             Migrations::reparseAllTexts();
-            // Cross-install or legacy backups may carry UsID column values
+            // Cross-install or legacy backups may carry user_id column values
             // that don't match the local users table — without this step
             // the restored rows would be invisible to every account on
             // the new install.
@@ -350,20 +350,20 @@ class Restore
         Connection::execute('DELETE FROM ' . Globals::table('languages'));
 
         QueryBuilder::table('settings')
-            ->where('StKey', '=', 'currenttext')
+            ->where('name', '=', 'currenttext')
             ->delete();
     }
 
     /**
      * Delete every content row owned by `$userId`.
      *
-     * The link/map/derived tables don't carry a UsID column of their own,
+     * The link/map/derived tables don't carry a user_id column of their own,
      * so they're scoped via a subquery on the parent table (texts /
      * words / news_feeds). FK CASCADE would handle most of these
      * implicitly — explicit deletes guarantee the same result on
      * schemas where the cascade is missing or disabled.
      *
-     * @param int $userId Owner UsID
+     * @param int $userId Owner user_id
      *
      * @return void
      */
@@ -401,7 +401,7 @@ class Restore
 
         // Level 3: Per-user settings entry (keep admin/global settings).
         Connection::preparedExecute(
-            'DELETE FROM settings WHERE StKey = ? AND StUsID = ?',
+            'DELETE FROM settings WHERE name = ? AND user_id = ?',
             ['currenttext', $userId]
         );
     }
@@ -470,7 +470,7 @@ class Restore
      *
      * `restoreFile` runs after the multi-user guard above, so when this
      * fires we know the install has at most one real account. Rewrite
-     * every UsID column on the user-scoped tables to that account so
+     * every user_id column on the user-scoped tables to that account so
      * the freshly-loaded rows are visible — backups from a different
      * install or made before multi-user mode existed otherwise carry
      * UsIDs that don't correspond to any local user. Safe to no-op
@@ -489,7 +489,7 @@ class Restore
             return;
         }
 
-        // Only the directly-scoped tables carry UsID columns. Link/map
+        // Only the directly-scoped tables carry user_id columns. Link/map
         // and derived tables inherit ownership through their parent
         // (text_id → texts, word_id → words, etc.) and don't need rewriting.
         foreach (
@@ -500,7 +500,7 @@ class Restore
                 'tags'                => 'user_id',
                 'text_tags'          => 'user_id',
                 'news_feeds'         => 'user_id',
-                'settings'           => 'StUsID',
+                'settings'           => 'user_id',
                 'local_dictionaries' => 'LdUsID',
             ] as $table => $column
         ) {
@@ -512,7 +512,7 @@ class Restore
             } catch (\RuntimeException $e) {
                 // Older schemas may not have every table/column yet;
                 // skip silently — the restored data still loaded, just
-                // without the UsID rewrite for this one table.
+                // without the user_id rewrite for this one table.
                 continue;
             }
         }

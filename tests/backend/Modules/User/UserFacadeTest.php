@@ -103,7 +103,7 @@ class UserFacadeTest extends TestCase
         // Also clean up any users with test prefix
         if (self::$dbConnected && self::$usersTableExists) {
             QueryBuilder::table('users')
-                ->where('UsUsername', 'LIKE', 'testuser_%')
+                ->where('username', 'LIKE', 'testuser_%')
                 ->delete();
         }
     }

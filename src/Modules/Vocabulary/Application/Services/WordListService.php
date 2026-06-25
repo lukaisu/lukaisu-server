@@ -319,7 +319,7 @@ class WordListService
     {
         // Restrict to IDs the current user actually owns. Without this gate
         // an intruder can pass another user's WoIDs and wipe their words and
-        // multi-word occurrences (word_occurrences has no UsID column).
+        // multi-word occurrences (word_occurrences has no user_id column).
         $ownedIds = $this->filterOwnedWordIds($ids);
         if (empty($ownedIds)) {
             return "Deleted";
@@ -364,7 +364,7 @@ class WordListService
      * mode this issues a single SELECT scoped via {@see UserScopedQuery} and
      * keeps only the matching rows; foreign IDs are silently dropped so
      * downstream bulk SQL can run without a separate WHERE clause for the
-     * UsID column (the IN clause shape stays simple).
+     * user_id column (the IN clause shape stays simple).
      *
      * @param int[] $ids Word IDs from the request
      *

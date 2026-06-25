@@ -52,7 +52,7 @@ class ConnectionTest extends TestCase
         }
 
         // Clean up test data after each test
-        Connection::query("DELETE FROM settings WHERE StKey LIKE 'test_conn_%'");
+        Connection::query("DELETE FROM settings WHERE name LIKE 'test_conn_%'");
         Connection::query("DELETE FROM tags WHERE text LIKE 'test_conn_%'");
     }
 
@@ -151,7 +151,7 @@ class ConnectionTest extends TestCase
 
         if (count($rows) > 0) {
             $this->assertIsArray($rows[0]);
-            $this->assertArrayHasKey('StKey', $rows[0]);
+            $this->assertArrayHasKey('name', $rows[0]);
         }
     }
 
@@ -161,7 +161,7 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $rows = Connection::fetchAll("SELECT * FROM settings WHERE StKey = 'nonexistent_key_xyz'");
+        $rows = Connection::fetchAll("SELECT * FROM settings WHERE name = 'nonexistent_key_xyz'");
 
         $this->assertIsArray($rows);
         $this->assertEmpty($rows);
@@ -192,16 +192,16 @@ class ConnectionTest extends TestCase
         }
 
         // Insert a test setting
-        Connection::query("INSERT INTO settings (StKey, StValue) VALUES ('test_conn_one', 'value1')");
+        Connection::query("INSERT INTO settings (name, value) VALUES ('test_conn_one', 'value1')");
 
-        $row = Connection::fetchOne("SELECT * FROM settings WHERE StKey = 'test_conn_one'");
+        $row = Connection::fetchOne("SELECT * FROM settings WHERE name = 'test_conn_one'");
 
         $this->assertIsArray($row);
-        $this->assertEquals('test_conn_one', $row['StKey']);
-        $this->assertEquals('value1', $row['StValue']);
+        $this->assertEquals('test_conn_one', $row['name']);
+        $this->assertEquals('value1', $row['value']);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey = 'test_conn_one'");
+        Connection::query("DELETE FROM settings WHERE name = 'test_conn_one'");
     }
 
     public function testFetchOneReturnsNullWhenNoResults(): void
@@ -210,7 +210,7 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $row = Connection::fetchOne("SELECT * FROM settings WHERE StKey = 'nonexistent_key_xyz'");
+        $row = Connection::fetchOne("SELECT * FROM settings WHERE name = 'nonexistent_key_xyz'");
 
         $this->assertNull($row);
     }
@@ -247,14 +247,14 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        Connection::query("INSERT INTO settings (StKey, StValue) VALUES ('test_conn_value', 'myvalue')");
+        Connection::query("INSERT INTO settings (name, value) VALUES ('test_conn_value', 'myvalue')");
 
-        $value = Connection::fetchValue("SELECT StValue as value FROM settings WHERE StKey = 'test_conn_value'");
+        $value = Connection::fetchValue("SELECT value as value FROM settings WHERE name = 'test_conn_value'");
 
         $this->assertEquals('myvalue', $value);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey = 'test_conn_value'");
+        Connection::query("DELETE FROM settings WHERE name = 'test_conn_value'");
     }
 
     public function testFetchValueWithCustomColumn(): void
@@ -263,14 +263,14 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        Connection::query("INSERT INTO settings (StKey, StValue) VALUES ('test_conn_custom', 'customvalue')");
+        Connection::query("INSERT INTO settings (name, value) VALUES ('test_conn_custom', 'customvalue')");
 
-        $value = Connection::fetchValue("SELECT StValue FROM settings WHERE StKey = 'test_conn_custom'", 'StValue');
+        $value = Connection::fetchValue("SELECT value FROM settings WHERE name = 'test_conn_custom'", 'value');
 
         $this->assertEquals('customvalue', $value);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey = 'test_conn_custom'");
+        Connection::query("DELETE FROM settings WHERE name = 'test_conn_custom'");
     }
 
     public function testFetchValueReturnsNullWhenNoResults(): void
@@ -279,7 +279,7 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $value = Connection::fetchValue("SELECT StValue as value FROM settings WHERE StKey = 'nonexistent_xyz'");
+        $value = Connection::fetchValue("SELECT value as value FROM settings WHERE name = 'nonexistent_xyz'");
 
         $this->assertNull($value);
     }
@@ -290,7 +290,7 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $value = Connection::fetchValue("SELECT StKey FROM settings LIMIT 1", 'nonexistent_column');
+        $value = Connection::fetchValue("SELECT name FROM settings LIMIT 1", 'nonexistent_column');
 
         $this->assertNull($value);
     }
@@ -316,14 +316,14 @@ class ConnectionTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        Connection::execute("INSERT INTO settings (StKey, StValue) VALUES ('test_conn_update', 'old')");
+        Connection::execute("INSERT INTO settings (name, value) VALUES ('test_conn_update', 'old')");
 
-        $affected = Connection::execute("UPDATE settings SET StValue = 'new' WHERE StKey = 'test_conn_update'");
+        $affected = Connection::execute("UPDATE settings SET value = 'new' WHERE name = 'test_conn_update'");
 
         $this->assertEquals(1, $affected);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey = 'test_conn_update'");
+        Connection::query("DELETE FROM settings WHERE name = 'test_conn_update'");
     }
 
     // ===== lastInsertId() tests =====
@@ -490,15 +490,15 @@ class ConnectionTest extends TestCase
         $testValue = "test's \"special\" \\ value";
 
         $escaped = Connection::escapeString($testValue);
-        Connection::execute("INSERT INTO settings (StKey, StValue) VALUES ('test_conn_escape', $escaped)");
+        Connection::execute("INSERT INTO settings (name, value) VALUES ('test_conn_escape', $escaped)");
 
-        $retrieved = Connection::fetchValue("SELECT StValue as value FROM settings WHERE StKey = 'test_conn_escape'");
+        $retrieved = Connection::fetchValue("SELECT value as value FROM settings WHERE name = 'test_conn_escape'");
 
         // The value should be retrieved exactly as it was inserted (after unescaping by MySQL)
         $this->assertEquals($testValue, $retrieved);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey = 'test_conn_escape'");
+        Connection::query("DELETE FROM settings WHERE name = 'test_conn_escape'");
     }
 
     public function testQueryChaining(): void
@@ -508,21 +508,21 @@ class ConnectionTest extends TestCase
         }
 
         // Insert
-        Connection::execute("INSERT INTO settings (StKey, StValue) VALUES ('test_conn_chain', 'chain_val')");
+        Connection::execute("INSERT INTO settings (name, value) VALUES ('test_conn_chain', 'chain_val')");
 
         // Fetch
-        $value = Connection::fetchValue("SELECT StValue as value FROM settings WHERE StKey = 'test_conn_chain'");
+        $value = Connection::fetchValue("SELECT value as value FROM settings WHERE name = 'test_conn_chain'");
         $this->assertEquals('chain_val', $value);
 
         // Update
-        Connection::execute("UPDATE settings SET StValue = 'chain_val_2' WHERE StKey = 'test_conn_chain'");
+        Connection::execute("UPDATE settings SET value = 'chain_val_2' WHERE name = 'test_conn_chain'");
 
         // Fetch again
-        $value = Connection::fetchValue("SELECT StValue as value FROM settings WHERE StKey = 'test_conn_chain'");
+        $value = Connection::fetchValue("SELECT value as value FROM settings WHERE name = 'test_conn_chain'");
         $this->assertEquals('chain_val_2', $value);
 
         // Delete
-        $affected = Connection::execute("DELETE FROM settings WHERE StKey = 'test_conn_chain'");
+        $affected = Connection::execute("DELETE FROM settings WHERE name = 'test_conn_chain'");
         $this->assertEquals(1, $affected);
     }
 

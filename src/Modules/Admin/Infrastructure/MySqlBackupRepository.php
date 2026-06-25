@@ -110,7 +110,7 @@ class MySqlBackupRepository implements BackupRepositoryInterface
      *
      * In single-user mode (or when no user is authenticated) the SELECT is
      * unfiltered, matching legacy behaviour. In multi-user mode it returns
-     * only rows owned by the caller — directly via the table's UsID column
+     * only rows owned by the caller — directly via the table's user_id column
      * for user-scoped tables, or via a subquery on the parent table for
      * link/map tables that don't carry their own owner column.
      *
@@ -128,7 +128,7 @@ class MySqlBackupRepository implements BackupRepositoryInterface
             return 'SELECT * FROM ' . $table;
         }
 
-        // Direct user-scoped tables: filter by their UsID column.
+        // Direct user-scoped tables: filter by their user_id column.
         if (UserScopedQuery::isUserScopedTable($table)) {
             $column = UserScopedQuery::getUserIdColumn($table);
             return 'SELECT * FROM ' . $table . ' WHERE ' . $column . ' = ' . $userId;
@@ -317,9 +317,9 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 KEY `position` (`position`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'settings' => "CREATE TABLE `settings` (
-                `StKey` varchar(40) NOT NULL,
-                `StValue` varchar(40) DEFAULT NULL,
-                PRIMARY KEY (`StKey`)
+                `name` varchar(40) NOT NULL,
+                `value` varchar(40) DEFAULT NULL,
+                PRIMARY KEY (`name`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'tags' => "CREATE TABLE `tags` (
                 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,

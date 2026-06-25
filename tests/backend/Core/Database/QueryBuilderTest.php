@@ -41,7 +41,7 @@ class QueryBuilderTest extends TestCase
         // Clean up test data
         $prefix = '';
         Connection::query("DELETE FROM {$prefix}tags WHERE text LIKE 'test_qb_%'");
-        Connection::query("DELETE FROM {$prefix}settings WHERE StKey LIKE 'test_qb_%'");
+        Connection::query("DELETE FROM {$prefix}settings WHERE name LIKE 'test_qb_%'");
     }
 
     // ===== table() and constructor tests =====

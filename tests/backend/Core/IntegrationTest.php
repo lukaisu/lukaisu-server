@@ -733,8 +733,8 @@ class IntegrationTest extends TestCase
     public function testRestoreFileBasic(): void
     {
         // Create a simple SQL dump
-        $sql_content = "INSERT INTO settings (StKey, StValue) VALUES ('test_restore', 'value1');\n";
-        $sql_content .= "INSERT INTO settings (StKey, StValue) VALUES ('test_restore2', 'value2');";
+        $sql_content = "INSERT INTO settings (name, value) VALUES ('test_restore', 'value1');\n";
+        $sql_content .= "INSERT INTO settings (name, value) VALUES ('test_restore2', 'value2');";
 
         // Create temporary file
         $temp_file = tmpfile();
@@ -753,7 +753,7 @@ class IntegrationTest extends TestCase
 
         // Clean up - fclose is automatic for tmpfile when it goes out of scope
         // Don't call fclose() as the resource may already be closed by restore_file
-        Connection::query("DELETE FROM settings WHERE StKey IN ('test_restore', 'test_restore2')");
+        Connection::query("DELETE FROM settings WHERE name IN ('test_restore', 'test_restore2')");
 
         // Assertions (may vary based on restore success)
         $this->assertTrue(
@@ -769,12 +769,12 @@ class IntegrationTest extends TestCase
     {
         // Insert test data
         Connection::query(
-            "INSERT INTO settings (StKey, StValue) VALUES ('test_truncate', 'value1')"
+            "INSERT INTO settings (name, value) VALUES ('test_truncate', 'value1')"
         );
 
         // Get initial count
         $count_before = (int)Connection::fetchValue(
-            "SELECT COUNT(*) as value FROM settings WHERE StKey = 'test_truncate'"
+            "SELECT COUNT(*) as value FROM settings WHERE name = 'test_truncate'"
         );
         $this->assertEquals(1, $count_before);
 
@@ -783,7 +783,7 @@ class IntegrationTest extends TestCase
         $this->assertTrue(method_exists(Restore::class, 'truncateUserDatabase'));
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey='test_truncate'");
+        Connection::query("DELETE FROM settings WHERE name='test_truncate'");
     }
 
     /**

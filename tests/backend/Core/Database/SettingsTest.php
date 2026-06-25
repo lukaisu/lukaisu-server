@@ -52,7 +52,7 @@ class SettingsTest extends TestCase
         }
 
         // Clean up test settings after each test
-        Connection::query("DELETE FROM " . Globals::table('settings') . " WHERE StKey LIKE 'test_%'");
+        Connection::query("DELETE FROM " . Globals::table('settings') . " WHERE name LIKE 'test_%'");
     }
 
     // ===== getZeroOrOne() tests =====
@@ -161,9 +161,9 @@ class SettingsTest extends TestCase
 
         // Directly insert value with whitespace to test trimming
         $table = Globals::table('settings');
-        Connection::query("DELETE FROM " . $table . " WHERE StKey = 'test_whitespace'");
+        Connection::query("DELETE FROM " . $table . " WHERE name = 'test_whitespace'");
         Connection::query(
-            "INSERT INTO " . $table . " (StKey, StValue) VALUES ('test_whitespace', '  value  ')"
+            "INSERT INTO " . $table . " (name, value) VALUES ('test_whitespace', '  value  ')"
         );
 
         $result = Settings::get('test_whitespace');
@@ -180,7 +180,7 @@ class SettingsTest extends TestCase
         $injectionKey = "key'; DROP TABLE settings; --";
         $table = Globals::table('settings');
         Connection::query(
-            "DELETE FROM " . $table . " WHERE StKey = " . Escaping::toSqlSyntax($injectionKey)
+            "DELETE FROM " . $table . " WHERE name = " . Escaping::toSqlSyntax($injectionKey)
         );
 
         // The SQL injection key should return empty (not found)
@@ -250,7 +250,7 @@ class SettingsTest extends TestCase
         $injectionKey = "newkey'; DROP TABLE settings; --";
         $table = Globals::table('settings');
         Connection::query(
-            "DELETE FROM " . $table . " WHERE StKey = " . Escaping::toSqlSyntax($injectionKey)
+            "DELETE FROM " . $table . " WHERE name = " . Escaping::toSqlSyntax($injectionKey)
         );
 
         $result = Settings::getWithDefault($injectionKey);

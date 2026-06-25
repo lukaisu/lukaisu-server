@@ -289,6 +289,27 @@ class Migrations
     }
 
     /**
+     * Whether the settings table exists in the current database.
+     *
+     * Used by the migration bootstrap to tell a pre-rename backup (settings present
+     * but still on the legacy StKey/StValue columns, so the dbversion read throws)
+     * apart from a genuinely broken install (settings missing entirely).
+     *
+     * @param string $dbname Current database name
+     *
+     * @return bool
+     */
+    private static function settingsTableExists(string $dbname): bool
+    {
+        $rows = Connection::preparedFetchAll(
+            "SELECT 1 FROM INFORMATION_SCHEMA.TABLES
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'settings'",
+            [$dbname]
+        );
+        return $rows !== [];
+    }
+
+    /**
      * Update the database if it is using an outdate version.
      *
      * @return void
@@ -304,17 +325,27 @@ class Migrations
         try {
             /** @var string|null $dbversion */
             $dbversion = QueryBuilder::table('settings')
-                ->where('StKey', '=', 'dbversion')
-                ->valuePrepared('StValue');
+                ->where('name', '=', 'dbversion')
+                ->valuePrepared('value');
             if ($dbversion === null) {
                 $dbversion = 'v001000000';
                 $dbversionMissing = true;
             }
         } catch (\RuntimeException $e) {
-            ErrorHandler::die(
-                'There is something wrong with your database ' . $dbname .
-                '. Please reinstall.'
-            );
+            // The read fails when settings still carries the legacy StKey/StValue
+            // columns — the state right after restoring a pre-rename backup, before
+            // the settings-rename migration below has run. That is not a broken
+            // database: treat it as the oldest version so every pending migration
+            // (the rename included) runs and brings the schema up to date. A settings
+            // table that is missing entirely is still fatal.
+            if (!self::settingsTableExists($dbname)) {
+                ErrorHandler::die(
+                    'There is something wrong with your database ' . $dbname .
+                    '. Please reinstall.'
+                );
+            }
+            $dbversion = 'v001000000';
+            $dbversionMissing = true;
         }
 
         // Always check for pending migrations, even if dbversion is current.

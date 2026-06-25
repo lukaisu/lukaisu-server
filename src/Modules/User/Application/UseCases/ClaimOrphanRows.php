@@ -26,7 +26,7 @@ use RuntimeException;
  * When an existing single-user install is migrated to multi-user mode by
  * flipping `MULTI_USER_ENABLED=true` in `.env`, the
  * `add_user_id_columns.sql` migration's backfill is a no-op (it looks for
- * a `users.UsUsername='admin'` row that doesn't exist on a fresh users
+ * a `users.username='admin'` row that doesn't exist on a fresh users
  * table). Every legacy row stays at `user_id/user_id/user_id = NULL`, and
  * once user-scope filters kick in those rows become invisible to
  * everyone — looks like total data loss.
@@ -34,7 +34,7 @@ use RuntimeException;
  * The first user to register on such an install is auto-promoted to
  * admin (see {@see Register::execute()}). At that exact moment we know
  * there is exactly one operator in charge and that the orphan rows
- * belong to them, so we re-run the backfill against their UsID. On
+ * belong to them, so we re-run the backfill against their user_id. On
  * already-migrated installs the UPDATEs match zero rows and cost
  * nothing.
  *
@@ -63,7 +63,7 @@ class ClaimOrphanRows
      * Reassign every NULL-owner row in the multi-user data tables to
      * `$userId`.
      *
-     * @param int $userId UsID of the new owner (must already exist in
+     * @param int $userId user_id of the new owner (must already exist in
      *                    `users`).
      *
      * @return array<string, int> Per-table count of rows reassigned.

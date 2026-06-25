@@ -133,7 +133,7 @@ class User
         self::validateUsername($trimmedUsername);
         // Email is optional (username is the unique identity). Validate only
         // when one is supplied; an empty email is stored as NULL so multiple
-        // email-less accounts don't collide on the UsEmail unique key.
+        // email-less accounts don't collide on the email unique key.
         if ($trimmedEmail !== '') {
             self::validateEmail($trimmedEmail);
         }

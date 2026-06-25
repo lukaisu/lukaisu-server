@@ -150,7 +150,7 @@ class QueryBuilderUserScopeTest extends TestCase
         // 'sentences' is not a user-scoped table
         $sql = QueryBuilder::table('sentences')->toSql();
 
-        $this->assertStringNotContainsString('UsID', $sql);
+        $this->assertStringNotContainsString('user_id', $sql);
     }
 
     public function testUserScopeAppliedToWordsTable(): void
@@ -226,7 +226,7 @@ class QueryBuilderUserScopeTest extends TestCase
     public function testUserScopeAppliedToSettingsTable(): void
     {
         $this->assertTrue(UserScopedQuery::isUserScopedTable('settings'));
-        $this->assertEquals('StUsID', UserScopedQuery::getUserIdColumn('settings'));
+        $this->assertEquals('user_id', UserScopedQuery::getUserIdColumn('settings'));
     }
 
     public function testUserScopeAppliedToBooksTable(): void
@@ -391,7 +391,7 @@ class QueryBuilderUserScopeTest extends TestCase
         $this->assertEquals('user_id', $tables['tags']);
         $this->assertEquals('user_id', $tables['text_tags']);
         $this->assertEquals('user_id', $tables['news_feeds']);
-        $this->assertEquals('StUsID', $tables['settings']);
+        $this->assertEquals('user_id', $tables['settings']);
     }
 
     // =========================================================================

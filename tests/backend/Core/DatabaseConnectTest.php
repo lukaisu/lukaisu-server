@@ -597,7 +597,7 @@ class DatabaseConnectTest extends TestCase
 
         // SQL injection in key - first clean up any previously saved value
         $injectionKey = "key'; DROP TABLE settings; --";
-        Connection::query("DELETE FROM settings WHERE StKey = " . Escaping::toSqlSyntax($injectionKey));
+        Connection::query("DELETE FROM settings WHERE name = " . Escaping::toSqlSyntax($injectionKey));
 
         $result = Settings::get($injectionKey);
         $this->assertEquals('', $result, 'SQL injection key should return empty when not present');
@@ -651,7 +651,7 @@ class DatabaseConnectTest extends TestCase
 
         // SQL injection attempt - first clean up any previously saved value
         $injectionKey = "injectkey'; DROP TABLE settings; --";
-        Connection::query("DELETE FROM settings WHERE StKey = " . Escaping::toSqlSyntax($injectionKey));
+        Connection::query("DELETE FROM settings WHERE name = " . Escaping::toSqlSyntax($injectionKey));
 
         $result = Settings::getWithDefault($injectionKey);
         $this->assertEquals('', $result, 'SQL injection key should return empty when not present');
@@ -727,9 +727,9 @@ class DatabaseConnectTest extends TestCase
         $this->assertTrue(true, 'Valid numeric value should save');
 
         // Clean up test keys (including SQL injection test keys)
-        Connection::query("DELETE FROM settings WHERE StKey LIKE 'test_%'");
-        Connection::query("DELETE FROM settings WHERE StKey LIKE 'key%'");
-        Connection::query("DELETE FROM settings WHERE StKey = 'safe_key'");
+        Connection::query("DELETE FROM settings WHERE name LIKE 'test_%'");
+        Connection::query("DELETE FROM settings WHERE name LIKE 'key%'");
+        Connection::query("DELETE FROM settings WHERE name = 'safe_key'");
     }
 
     /**
@@ -771,7 +771,7 @@ class DatabaseConnectTest extends TestCase
         $this->assertEquals(1, $result, 'Non-existent setting should return default');
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey LIKE 'test_bool_%'");
+        Connection::query("DELETE FROM settings WHERE name LIKE 'test_bool_%'");
     }
 
     /**
@@ -898,9 +898,9 @@ class DatabaseConnectTest extends TestCase
 
         // Valid INSERT query - returns affected rows
         $result = DB::execute(
-            "INSERT INTO settings (StKey, StValue)
+            "INSERT INTO settings (name, value)
              VALUES ('test_runsql_1', 'value1')
-             ON DUPLICATE KEY UPDATE StValue='value1'"
+             ON DUPLICATE KEY UPDATE value='value1'"
         );
         $this->assertIsInt($result);
         $this->assertGreaterThanOrEqual(0, $result);
@@ -908,13 +908,13 @@ class DatabaseConnectTest extends TestCase
         // UPDATE query - returns affected rows
         $result = DB::execute(
             "UPDATE settings
-             SET StValue='value2' WHERE StKey='test_runsql_1'"
+             SET value='value2' WHERE name='test_runsql_1'"
         );
         $this->assertIsInt($result);
         $this->assertEquals(1, $result);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey='test_runsql_1'");
+        Connection::query("DELETE FROM settings WHERE name='test_runsql_1'");
     }
 
     /**
@@ -939,7 +939,7 @@ class DatabaseConnectTest extends TestCase
         // This function adjusts AUTO_INCREMENT values
         // We'll test with the settings table (though it doesn't have auto-increment, it should not crash)
         // The function should execute without errors
-        Maintenance::adjustAutoIncrement('settings', 'StKey');
+        Maintenance::adjustAutoIncrement('settings', 'name');
         $this->assertTrue(true, 'adjust_autoincr should complete without error');
 
         // Test with a table that has auto-increment (languages table has id)
@@ -996,13 +996,13 @@ class DatabaseConnectTest extends TestCase
 
         // Query that returns a value
         $result = Connection::fetchValue(
-            "SELECT StValue as value FROM settings WHERE StKey='test_first_value'"
+            "SELECT value as value FROM settings WHERE name='test_first_value'"
         );
         $this->assertEquals('42', $result);
 
         // Query that returns nothing should return null
         $result = Connection::fetchValue(
-            "SELECT StValue as value FROM settings WHERE StKey='nonexistent_key_xyz123'"
+            "SELECT value as value FROM settings WHERE name='nonexistent_key_xyz123'"
         );
         $this->assertNull($result);
 
@@ -1014,7 +1014,7 @@ class DatabaseConnectTest extends TestCase
         $this->assertTrue($result >= 0);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey='test_first_value'");
+        Connection::query("DELETE FROM settings WHERE name='test_first_value'");
     }
 
     /**
@@ -1076,14 +1076,14 @@ class DatabaseConnectTest extends TestCase
 
         // Valid INSERT query
         $result = Connection::query(
-            "INSERT INTO settings (StKey, StValue)
+            "INSERT INTO settings (name, value)
              VALUES ('test_mysqli_query', 'test')
-             ON DUPLICATE KEY UPDATE StValue='test'"
+             ON DUPLICATE KEY UPDATE value='test'"
         );
         $this->assertNotFalse($result, 'Valid INSERT should return true');
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey='test_mysqli_query'");
+        Connection::query("DELETE FROM settings WHERE name='test_mysqli_query'");
     }
 
     /**
@@ -1141,7 +1141,7 @@ class DatabaseConnectTest extends TestCase
 
         // Test with empty result set
         $result = Connection::fetchValue(
-            "SELECT 'value' FROM settings WHERE StKey='nonexistent_key_xyz123'"
+            "SELECT 'value' FROM settings WHERE name='nonexistent_key_xyz123'"
         );
         $this->assertEquals('', $result, 'Empty result set should return empty string');
 
@@ -1532,7 +1532,7 @@ class DatabaseConnectTest extends TestCase
 
         // Insert test data
         Connection::query(
-            "INSERT INTO settings (StKey, StValue)
+            "INSERT INTO settings (name, value)
              VALUES ('test_transaction', 'value1')"
         );
 
@@ -1550,12 +1550,12 @@ class DatabaseConnectTest extends TestCase
         }
 
         // Clean up first insert if it exists
-        Connection::query("DELETE FROM settings WHERE StKey='test_transaction'");
+        Connection::query("DELETE FROM settings WHERE name='test_transaction'");
 
         // Test commit
         \mysqli_begin_transaction(Globals::getDbConnection());
         Connection::query(
-            "INSERT INTO settings (StKey, StValue)
+            "INSERT INTO settings (name, value)
              VALUES ('test_transaction', 'value2')"
         );
         \mysqli_commit(Globals::getDbConnection());
@@ -1565,6 +1565,6 @@ class DatabaseConnectTest extends TestCase
         $this->assertEquals('value2', $result);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey='test_transaction'");
+        Connection::query("DELETE FROM settings WHERE name='test_transaction'");
     }
 }

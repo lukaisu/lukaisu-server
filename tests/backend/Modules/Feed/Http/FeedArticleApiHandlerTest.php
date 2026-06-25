@@ -506,7 +506,7 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         // Multi-user defence: getFeedById is user-scoped via QueryBuilder,
         // so a foreign feedId returns null. The handler must bail out
-        // before touching feed_links — feed_links has no UsID column,
+        // before touching feed_links — feed_links has no user_id column,
         // so without this gate any logged-in user could wipe any other
         // user's articles by guessing their id.
         $this->feedFacade->method('getFeedById')->willReturn(null);

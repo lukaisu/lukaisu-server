@@ -131,9 +131,9 @@ class MigrationsTest extends TestCase
                 "ALTER TABLE `test_users` DROP COLUMN email;"
             ],
             'ALTER TABLE with empty prefix' => [
-                "ALTER TABLE settings MODIFY StValue TEXT;",
+                "ALTER TABLE settings MODIFY value TEXT;",
                 "",
-                "ALTER TABLE settings MODIFY StValue TEXT;"
+                "ALTER TABLE settings MODIFY value TEXT;"
             ],
         ];
     }
@@ -346,13 +346,13 @@ class MigrationsTest extends TestCase
         }
 
         // Clear lastscorecalc to force recalculation
-        Connection::query("DELETE FROM settings WHERE StKey = 'lastscorecalc'");
+        Connection::query("DELETE FROM settings WHERE name = 'lastscorecalc'");
 
         Migrations::checkAndUpdate();
 
         // Verify lastscorecalc was set
         $result = Connection::fetchValue(
-            "SELECT StValue as value FROM settings WHERE StKey = 'lastscorecalc'"
+            "SELECT value as value FROM settings WHERE name = 'lastscorecalc'"
         );
 
         $this->assertNotEmpty($result, 'lastscorecalc should be set after checkAndUpdate');
@@ -387,7 +387,7 @@ class MigrationsTest extends TestCase
 
         // Verify dbversion is set
         $result = Connection::fetchValue(
-            "SELECT StValue as value FROM settings WHERE StKey = 'dbversion'"
+            "SELECT value as value FROM settings WHERE name = 'dbversion'"
         );
 
         $this->assertNotEmpty($result, 'dbversion should be set after update');

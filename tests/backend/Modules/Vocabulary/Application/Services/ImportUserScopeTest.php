@@ -4,7 +4,7 @@
  * Source-inspection tests for `CompleteImportService` user-scoping (F15).
  *
  * The complete import path runs three raw INSERT/UPDATE sites that
- * write to user-scoped tables. Pre-fix none of them stamped UsID, so
+ * write to user-scoped tables. Pre-fix none of them stamped user_id, so
  * in multi-user mode imported rows landed with a NULL owner and were
  * invisible to every user (the per-user composite uniques on
  * `tags`/`text_tags` and the auto-injected `user_id = ?` filter on the

@@ -496,7 +496,7 @@ class TextTagService
         $html .= '[Filter off]</option>';
 
         // text_tag_map / text_tags / texts are joined; only `texts` and
-        // `text_tags` carry an UsID column, so scope both. (text_tag_map
+        // `text_tags` carry a user_id column, so scope both. (text_tag_map
         // rows inherit scope via id and id.)
         if ($langId) {
             $bindings = [$langId];

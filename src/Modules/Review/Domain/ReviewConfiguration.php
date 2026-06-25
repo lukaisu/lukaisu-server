@@ -257,7 +257,8 @@ final readonly class ReviewConfiguration
         foreach ($ids as $id) {
             $params[] = (int) $id;
         }
-        return " words, word_occurrences WHERE language_id = language_id AND word_id = id AND text_id IN ($placeholders) "
+        return " words, word_occurrences WHERE language_id = language_id AND word_id = id "
+            . "AND text_id IN ($placeholders) "
             . self::appendUserScope($params) . " ";
     }
 
@@ -345,7 +346,7 @@ final readonly class ReviewConfiguration
         // `int|string` element type of $params (UserScopedQuery's
         // by-reference signature uses `array<int, mixed>`, which would
         // pollute the type otherwise). The appended value is always an
-        // int (the current UsID).
+        // int (the current user_id).
         if (!\Lukaisu\Shared\Infrastructure\Globals::isMultiUserEnabled()) {
             return '';
         }

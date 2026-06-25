@@ -190,7 +190,7 @@ class FeedArticleApiHandler
         // Verify the caller owns the target feed before doing any deletes.
         // getFeedById is user-scoped (news_feeds is in USER_SCOPED_TABLES),
         // so a foreign feedId returns null and we bail out before touching
-        // feed_links — which has no UsID column of its own and would
+        // feed_links — which has no user_id column of its own and would
         // otherwise let any logged-in user wipe any other user's articles.
         $feed = $this->feedFacade->getFeedById($feedId);
         if ($feed === null) {
@@ -204,7 +204,7 @@ class FeedArticleApiHandler
             $deleted = $this->feedFacade->deleteArticles((string)$feedId);
         } else {
             // Delete specific articles. The whereIn on feed_id alone
-            // doesn't gate ownership because feed_links has no UsID
+            // doesn't gate ownership because feed_links has no user_id
             // column; the getFeedById check above is what makes it safe.
             $ids = array_map('intval', $articleIds);
             $deleted = QueryBuilder::table('feed_links')

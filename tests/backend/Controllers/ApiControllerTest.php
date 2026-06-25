@@ -307,7 +307,7 @@ class ApiControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT StKey, StValue FROM " . Globals::table('settings') . " LIMIT 10";
+        $sql = "SELECT name, value FROM " . Globals::table('settings') . " LIMIT 10";
         $result = Connection::query($sql);
 
         $this->assertInstanceOf(\mysqli_result::class, $result);

@@ -55,7 +55,7 @@ class SentenceService
 
     /**
      * Build a parent-row user-scope clause for queries that touch the
-     * `sentences` table. The `sentences` table has no UsID column of its
+     * `sentences` table. The `sentences` table has no user_id column of its
      * own — ownership is derived from the parent `texts` row via text_id.
      *
      * Returns an SQL fragment like
@@ -87,7 +87,7 @@ class SentenceService
      * current user. In single-user mode this is always true. Used as
      * a guard before {@see formatSentence} runs its content-fetching
      * SQL — that SQL joins `word_occurrences` and `languages` with no
-     * UsID column to filter on, so an arbitrary id would otherwise
+     * user_id column to filter on, so an arbitrary id would otherwise
      * return another user's sentence text.
      */
     private function ownsSentence(int $seid): bool
@@ -170,7 +170,8 @@ class SentenceService
                 ) val
                 FROM sentences, word_occurrences
                 WHERE lower(sentences.text) LIKE ?
-                AND sentences.id = word_occurrences.sentence_id AND sentences.language_id = ? AND word_occurrences.word_count<2
+                AND sentences.id = word_occurrences.sentence_id
+                AND sentences.language_id = ? AND word_occurrences.word_count<2
                 GROUP BY sentences.id HAVING val LIKE ?
                 ORDER BY CHAR_LENGTH(sentences.text), sentences.text";
             $params = ["%$wordlc%", $lid, "%$mecab_str%"];
@@ -219,7 +220,8 @@ class SentenceService
             $sql = "SELECT DISTINCT sentences.id, sentences.text
                 FROM sentences, word_occurrences
                 WHERE LOWER(word_occurrences.text) = ?
-                AND word_occurrences.word_id IS NULL AND sentences.id = word_occurrences.sentence_id AND sentences.language_id = ?{$userScope}
+                AND word_occurrences.word_id IS NULL AND sentences.id = word_occurrences.sentence_id
+                AND sentences.language_id = ?{$userScope}
                 ORDER BY CHAR_LENGTH(sentences.text), sentences.text";
         } elseif ($wid == -1) {
             // For complex search, build the query dynamically
@@ -229,7 +231,8 @@ class SentenceService
             $userScope = $this->parentTextUserScope($params);
             $sql = "SELECT DISTINCT sentences.id, sentences.text
                 FROM sentences, word_occurrences
-                WHERE word_occurrences.word_id = ? AND sentences.id = word_occurrences.sentence_id AND sentences.language_id = ?{$userScope}
+                WHERE word_occurrences.word_id = ? AND sentences.id = word_occurrences.sentence_id
+                AND sentences.language_id = ?{$userScope}
                 ORDER BY CHAR_LENGTH(sentences.text), sentences.text";
         }
         if ($limit > 0) {
@@ -257,7 +260,7 @@ class SentenceService
     {
         // Verify the caller owns the parent text before pulling sentence
         // content. The main query below joins word_occurrences and
-        // languages without a UsID column on either, so without this
+        // languages without a user_id column on either, so without this
         // gate a foreign id returns the foreign user's sentence text
         // verbatim. Defense in depth — find* paths now scope the SeIDs
         // they return, but formatSentence is also reachable directly.

@@ -66,8 +66,8 @@ class Settings
             return '';
         }
         $val = QueryBuilder::table('settings')
-            ->where('StKey', '=', $key)
-            ->valuePrepared('StValue');
+            ->where('name', '=', $key)
+            ->valuePrepared('value');
         if (isset($val)) {
             $val = trim((string) $val);
             if ($key == 'currentlanguage') {
@@ -86,10 +86,10 @@ class Settings
      *
      * In multi-user mode, user-scoped settings are checked for the current user
      * first, then fall through to the hardcoded default — never to the global
-     * `StUsID=0` row, since that would leak the prior user's choice into a fresh
-     * account. Admin-scoped settings still fall back to `StUsID=0` (that row is
+     * `user_id=0` row, since that would leak the prior user's choice into a fresh
+     * account. Admin-scoped settings still fall back to `user_id=0` (that row is
      * how admins set system-wide values), and single-user mode (no current
-     * user) keeps the original `StUsID=0` → hardcoded-default chain.
+     * user) keeps the original `user_id=0` → hardcoded-default chain.
      *
      * @param string $key Settings key
      *
@@ -108,9 +108,9 @@ class Settings
         if ($userId !== null && $isUserScope) {
             try {
                 $val = (string) Connection::preparedFetchValue(
-                    "SELECT StValue FROM settings WHERE StKey = ? AND StUsID = ?",
+                    "SELECT value FROM settings WHERE name = ? AND user_id = ?",
                     [$key, $userId],
-                    'StValue'
+                    'value'
                 );
                 if ($val !== '') {
                     return trim($val);
@@ -119,18 +119,18 @@ class Settings
                 // DB not available — fall through
             }
 
-            // Skip the StUsID=0 fallback for SCOPE_USER keys when a user is
+            // Skip the user_id=0 fallback for SCOPE_USER keys when a user is
             // logged in: that row is the previous user's saved value, not a
             // legitimate default for this account.
             return SettingDefinitions::getDefault($key) ?? '';
         }
 
-        // Fall back to global row (StUsID=0)
+        // Fall back to global row (user_id=0)
         try {
             $val = (string) QueryBuilder::table('settings')
-                ->where('StKey', '=', $key)
-                ->where('StUsID', '=', 0)
-                ->valuePrepared('StValue');
+                ->where('name', '=', $key)
+                ->where('user_id', '=', 0)
+                ->valuePrepared('value');
             if ($val != '') {
                 return trim($val);
             }
@@ -167,11 +167,11 @@ class Settings
             }
         }
         // Use INSERT ... ON DUPLICATE KEY UPDATE for atomic upsert
-        // Settings table has composite primary key (StKey, StUsID)
-        // StUsID defaults to 0 for single-user mode
+        // Settings table has composite primary key (name, user_id)
+        // user_id defaults to 0 for single-user mode
         Connection::preparedExecute(
-            "INSERT INTO settings (StKey, StUsID, StValue) VALUES (?, 0, ?)
-             ON DUPLICATE KEY UPDATE StValue = ?",
+            "INSERT INTO settings (name, user_id, value) VALUES (?, 0, ?)
+             ON DUPLICATE KEY UPDATE value = ?",
             [$k, (string)$v, (string)$v]
         );
     }
@@ -182,7 +182,7 @@ class Settings
      *
      * `Settings::get()` already reads through QueryBuilder, which auto-scopes
      * the `settings` table; in multi-user mode that means a `Settings::save`
-     * to `StUsID=0` is invisible to the reader and the value is silently lost
+     * to `user_id=0` is invisible to the reader and the value is silently lost
      * (or worse, overwrites the global default seen by users with no
      * per-user row). This helper picks the matching write path so reads find
      * the value the current request just stored.
@@ -203,7 +203,7 @@ class Settings
     /**
      * Save a user-scoped setting for a specific user.
      *
-     * Uses StUsID = $userId for per-user storage.
+     * Uses user_id = $userId for per-user storage.
      *
      * @param string $k      Setting key
      * @param mixed  $v      Setting value
@@ -228,8 +228,8 @@ class Settings
             }
         }
         Connection::preparedExecute(
-            "INSERT INTO settings (StKey, StUsID, StValue) VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE StValue = ?",
+            "INSERT INTO settings (name, user_id, value) VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE value = ?",
             [$k, $userId, (string)$v, (string)$v]
         );
     }

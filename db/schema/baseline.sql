@@ -14,36 +14,36 @@ CREATE TABLE IF NOT EXISTS _migrations (
 
 -- Users table for multi-user authentication
 CREATE TABLE IF NOT EXISTS users (
-    UsID int(10) unsigned NOT NULL AUTO_INCREMENT,
-    UsUsername varchar(100) NOT NULL,
-    UsEmail varchar(255) DEFAULT NULL,
-    UsEmailVerifiedAt datetime DEFAULT NULL,
-    UsEmailVerificationToken varchar(255) DEFAULT NULL,
-    UsEmailVerificationTokenExpires datetime DEFAULT NULL,
-    UsPasswordHash varchar(255) DEFAULT NULL,
-    UsApiToken varchar(64) DEFAULT NULL,
-    UsApiTokenExpires datetime DEFAULT NULL,
-    UsRememberToken varchar(64) DEFAULT NULL,
-    UsRememberTokenExpires datetime DEFAULT NULL,
-    UsPasswordResetToken varchar(64) DEFAULT NULL,
-    UsPasswordResetTokenExpires datetime DEFAULT NULL,
-    UsRecoveryCodeHash varchar(255) DEFAULT NULL,
-    UsWordPressId int(10) unsigned DEFAULT NULL,
-    UsGoogleId varchar(255) DEFAULT NULL,
-    UsMicrosoftId varchar(255) DEFAULT NULL,
-    UsCreated timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UsLastLogin timestamp NULL DEFAULT NULL,
-    UsIsActive tinyint(1) unsigned NOT NULL DEFAULT 1,
-    UsRole enum('user','admin') NOT NULL DEFAULT 'user',
-    PRIMARY KEY (UsID),
-    UNIQUE KEY UsUsername (UsUsername),
-    UNIQUE KEY UsEmail (UsEmail),
-    UNIQUE KEY UsApiToken (UsApiToken),
-    UNIQUE KEY UsRememberToken (UsRememberToken),
-    UNIQUE KEY UsPasswordResetToken (UsPasswordResetToken),
-    KEY UsWordPressId (UsWordPressId),
-    UNIQUE KEY UsGoogleId (UsGoogleId),
-    UNIQUE KEY UsMicrosoftId (UsMicrosoftId)
+    id int(10) unsigned NOT NULL AUTO_INCREMENT,
+    username varchar(100) NOT NULL,
+    email varchar(255) DEFAULT NULL,
+    email_verified_at datetime DEFAULT NULL,
+    email_verification_token varchar(255) DEFAULT NULL,
+    email_verification_token_expires datetime DEFAULT NULL,
+    password_hash varchar(255) DEFAULT NULL,
+    api_token varchar(64) DEFAULT NULL,
+    api_token_expires datetime DEFAULT NULL,
+    remember_token varchar(64) DEFAULT NULL,
+    remember_token_expires datetime DEFAULT NULL,
+    password_reset_token varchar(64) DEFAULT NULL,
+    password_reset_token_expires datetime DEFAULT NULL,
+    recovery_code_hash varchar(255) DEFAULT NULL,
+    wordpress_id int(10) unsigned DEFAULT NULL,
+    google_id varchar(255) DEFAULT NULL,
+    microsoft_id varchar(255) DEFAULT NULL,
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_login_at timestamp NULL DEFAULT NULL,
+    is_active tinyint(1) unsigned NOT NULL DEFAULT 1,
+    role enum('user','admin') NOT NULL DEFAULT 'user',
+    PRIMARY KEY (id),
+    UNIQUE KEY username (username),
+    UNIQUE KEY email (email),
+    UNIQUE KEY api_token (api_token),
+    UNIQUE KEY remember_token (remember_token),
+    UNIQUE KEY password_reset_token (password_reset_token),
+    KEY wordpress_id (wordpress_id),
+    UNIQUE KEY google_id (google_id),
+    UNIQUE KEY microsoft_id (microsoft_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- NOTE: Admin user should be created through the setup wizard or registration page.
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS languages (
     PRIMARY KEY (id),
     KEY user_id (user_id),
     UNIQUE KEY name (name),
-    CONSTRAINT fk_languages_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
+    CONSTRAINT fk_languages_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -96,10 +96,10 @@ CREATE TABLE IF NOT EXISTS sentences (
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS settings (
-    StKey varchar(40) NOT NULL,
-    StUsID int(10) unsigned NOT NULL DEFAULT 0,
-    StValue varchar(40) DEFAULT NULL,
-    PRIMARY KEY (StKey, StUsID)
+    name varchar(40) NOT NULL,
+    user_id int(10) unsigned NOT NULL DEFAULT 0,
+    value varchar(40) DEFAULT NULL,
+    PRIMARY KEY (name, user_id)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS texts (
     KEY language_id (language_id),
     KEY source_uri_language_id (source_uri(20),language_id),
     KEY archived_at (archived_at),
-    CONSTRAINT fk_texts_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
+    CONSTRAINT fk_texts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS words (
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS words (
     KEY random (random),
     KEY due_at (due_at),
     KEY idx_words_lemma (lemma_lc, language_id),
-    CONSTRAINT fk_words_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
+    CONSTRAINT fk_words_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS review_log (
     KEY user_id (user_id),
     KEY reviewed_at (reviewed_at),
     CONSTRAINT fk_review_log_word FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE,
-    CONSTRAINT fk_review_log_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
+    CONSTRAINT fk_review_log_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -227,7 +227,7 @@ CREATE TABLE IF NOT EXISTS tags (
     PRIMARY KEY (id),
     KEY user_id (user_id),
     UNIQUE KEY text (text),
-    CONSTRAINT fk_tags_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
+    CONSTRAINT fk_tags_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS text_tags (
     PRIMARY KEY (id),
     KEY user_id (user_id),
     UNIQUE KEY text (text),
-    CONSTRAINT fk_text_tags_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
+    CONSTRAINT fk_text_tags_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS text_tag_map (
@@ -269,7 +269,7 @@ CREATE TABLE IF NOT EXISTS news_feeds (
     KEY user_id (user_id),
     KEY language_id (language_id),
     KEY update_interval (update_interval),
-    CONSTRAINT fk_news_feeds_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
+    CONSTRAINT fk_news_feeds_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS feed_links (
@@ -297,7 +297,7 @@ CREATE TABLE IF NOT EXISTS whisper_jobs (
     PRIMARY KEY (job_id),
     KEY idx_whisper_jobs_user (user_id),
     CONSTRAINT fk_whisper_jobs_user FOREIGN KEY (user_id)
-        REFERENCES users(UsID) ON DELETE CASCADE
+        REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Daily learning-activity counters (one row per user per calendar date).

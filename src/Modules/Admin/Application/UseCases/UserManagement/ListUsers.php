@@ -9,15 +9,15 @@ use Lukaisu\Modules\User\Infrastructure\MySqlUserRepository;
 class ListUsers
 {
     private const ALLOWED_SORT_COLUMNS = [
-        'username' => 'UsUsername',
-        'email' => 'UsEmail',
-        'role' => 'UsRole',
-        'active' => 'UsIsActive',
-        'created' => 'UsCreated',
-        'last_login' => 'UsLastLogin',
+        'username' => 'username',
+        'email' => 'email',
+        'role' => 'role',
+        'active' => 'is_active',
+        'created' => 'created_at',
+        'last_login' => 'last_login_at',
     ];
 
-    private const DEFAULT_SORT = 'UsUsername';
+    private const DEFAULT_SORT = 'username';
     private const DEFAULT_DIRECTION = 'ASC';
 
     private MySqlUserRepository $userRepository;

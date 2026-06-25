@@ -44,7 +44,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     /**
      * @var string Primary key column
      */
-    private string $primaryKey = 'UsID';
+    private string $primaryKey = 'id';
 
     /**
      * Get a query builder for this repository's table.
@@ -66,32 +66,32 @@ class MySqlUserRepository implements UserRepositoryInterface
     private function mapToEntity(array $row): User
     {
         $user = User::reconstitute(
-            (int) $row['UsID'],
-            (string) $row['UsUsername'],
-            ($row['UsEmail'] ?? null) !== null ? (string) $row['UsEmail'] : null,
-            $row['UsPasswordHash'] !== null ? (string) $row['UsPasswordHash'] : null,
-            $row['UsApiToken'] !== null ? (string) $row['UsApiToken'] : null,
-            $this->parseNullableDateTime($this->getNullableString($row['UsApiTokenExpires'] ?? null)),
-            ($row['UsRememberToken'] ?? null) !== null ? (string) $row['UsRememberToken'] : null,
-            $this->parseNullableDateTime($this->getNullableString($row['UsRememberTokenExpires'] ?? null)),
-            ($row['UsPasswordResetToken'] ?? null) !== null ? (string) $row['UsPasswordResetToken'] : null,
-            $this->parseNullableDateTime($this->getNullableString($row['UsPasswordResetTokenExpires'] ?? null)),
-            $this->parseNullableDateTime($this->getNullableString($row['UsEmailVerifiedAt'] ?? null)),
-            ($row['UsEmailVerificationToken'] ?? null) !== null ? (string) $row['UsEmailVerificationToken'] : null,
-            $this->parseNullableDateTime($this->getNullableString($row['UsEmailVerificationTokenExpires'] ?? null)),
-            $row['UsWordPressId'] !== null ? (int) $row['UsWordPressId'] : null,
-            ($row['UsGoogleId'] ?? null) !== null ? (string) $row['UsGoogleId'] : null,
-            ($row['UsMicrosoftId'] ?? null) !== null ? (string) $row['UsMicrosoftId'] : null,
-            $this->parseDateTime($this->getNullableString($row['UsCreated'] ?? null)),
-            $this->parseNullableDateTime($this->getNullableString($row['UsLastLogin'] ?? null)),
-            (bool) ($row['UsIsActive'] ?? true),
-            (string) ($row['UsRole'] ?? User::ROLE_USER)
+            (int) $row['id'],
+            (string) $row['username'],
+            ($row['email'] ?? null) !== null ? (string) $row['email'] : null,
+            $row['password_hash'] !== null ? (string) $row['password_hash'] : null,
+            $row['api_token'] !== null ? (string) $row['api_token'] : null,
+            $this->parseNullableDateTime($this->getNullableString($row['api_token_expires'] ?? null)),
+            ($row['remember_token'] ?? null) !== null ? (string) $row['remember_token'] : null,
+            $this->parseNullableDateTime($this->getNullableString($row['remember_token_expires'] ?? null)),
+            ($row['password_reset_token'] ?? null) !== null ? (string) $row['password_reset_token'] : null,
+            $this->parseNullableDateTime($this->getNullableString($row['password_reset_token_expires'] ?? null)),
+            $this->parseNullableDateTime($this->getNullableString($row['email_verified_at'] ?? null)),
+            ($row['email_verification_token'] ?? null) !== null ? (string) $row['email_verification_token'] : null,
+            $this->parseNullableDateTime($this->getNullableString($row['email_verification_token_expires'] ?? null)),
+            $row['wordpress_id'] !== null ? (int) $row['wordpress_id'] : null,
+            ($row['google_id'] ?? null) !== null ? (string) $row['google_id'] : null,
+            ($row['microsoft_id'] ?? null) !== null ? (string) $row['microsoft_id'] : null,
+            $this->parseDateTime($this->getNullableString($row['created_at'] ?? null)),
+            $this->parseNullableDateTime($this->getNullableString($row['last_login_at'] ?? null)),
+            (bool) ($row['is_active'] ?? true),
+            (string) ($row['role'] ?? User::ROLE_USER)
         );
 
         // Recovery code is hydrated separately so it stays out of the (already
         // long) reconstitute() signature.
         $user->setRecoveryCodeHash(
-            ($row['UsRecoveryCodeHash'] ?? null) !== null ? (string) $row['UsRecoveryCodeHash'] : null
+            ($row['recovery_code_hash'] ?? null) !== null ? (string) $row['recovery_code_hash'] : null
         );
 
         return $user;
@@ -107,27 +107,27 @@ class MySqlUserRepository implements UserRepositoryInterface
     private function mapToRow(User $entity): array
     {
         return [
-            'UsID' => $entity->id()->toInt(),
-            'UsUsername' => $entity->username(),
-            'UsEmail' => $entity->email(),
-            'UsPasswordHash' => $entity->passwordHash(),
-            'UsApiToken' => $entity->apiToken(),
-            'UsApiTokenExpires' => $entity->apiTokenExpires()?->format('Y-m-d H:i:s'),
-            'UsRememberToken' => $entity->rememberToken(),
-            'UsRememberTokenExpires' => $entity->rememberTokenExpires()?->format('Y-m-d H:i:s'),
-            'UsPasswordResetToken' => $entity->passwordResetToken(),
-            'UsPasswordResetTokenExpires' => $entity->passwordResetTokenExpires()?->format('Y-m-d H:i:s'),
-            'UsEmailVerifiedAt' => $entity->emailVerifiedAt()?->format('Y-m-d H:i:s'),
-            'UsEmailVerificationToken' => $entity->emailVerificationToken(),
-            'UsEmailVerificationTokenExpires' => $entity->emailVerificationTokenExpires()?->format('Y-m-d H:i:s'),
-            'UsWordPressId' => $entity->wordPressId(),
-            'UsGoogleId' => $entity->googleId(),
-            'UsMicrosoftId' => $entity->microsoftId(),
-            'UsCreated' => $entity->created()->format('Y-m-d H:i:s'),
-            'UsLastLogin' => $entity->lastLogin()?->format('Y-m-d H:i:s'),
-            'UsIsActive' => $entity->isActive() ? 1 : 0,
-            'UsRole' => $entity->role(),
-            'UsRecoveryCodeHash' => $entity->recoveryCodeHash(),
+            'id' => $entity->id()->toInt(),
+            'username' => $entity->username(),
+            'email' => $entity->email(),
+            'password_hash' => $entity->passwordHash(),
+            'api_token' => $entity->apiToken(),
+            'api_token_expires' => $entity->apiTokenExpires()?->format('Y-m-d H:i:s'),
+            'remember_token' => $entity->rememberToken(),
+            'remember_token_expires' => $entity->rememberTokenExpires()?->format('Y-m-d H:i:s'),
+            'password_reset_token' => $entity->passwordResetToken(),
+            'password_reset_token_expires' => $entity->passwordResetTokenExpires()?->format('Y-m-d H:i:s'),
+            'email_verified_at' => $entity->emailVerifiedAt()?->format('Y-m-d H:i:s'),
+            'email_verification_token' => $entity->emailVerificationToken(),
+            'email_verification_token_expires' => $entity->emailVerificationTokenExpires()?->format('Y-m-d H:i:s'),
+            'wordpress_id' => $entity->wordPressId(),
+            'google_id' => $entity->googleId(),
+            'microsoft_id' => $entity->microsoftId(),
+            'created_at' => $entity->created()->format('Y-m-d H:i:s'),
+            'last_login_at' => $entity->lastLogin()?->format('Y-m-d H:i:s'),
+            'is_active' => $entity->isActive() ? 1 : 0,
+            'role' => $entity->role(),
+            'recovery_code_hash' => $entity->recoveryCodeHash(),
         ];
     }
 
@@ -247,7 +247,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findByUsername(string $username): ?User
     {
         $row = $this->query()
-            ->where('UsUsername', '=', $username)
+            ->where('username', '=', $username)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -259,7 +259,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findByEmail(string $email): ?User
     {
         $row = $this->query()
-            ->where('UsEmail', '=', strtolower($email))
+            ->where('email', '=', strtolower($email))
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -271,7 +271,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findByApiToken(string $token): ?User
     {
         $row = $this->query()
-            ->where('UsApiToken', '=', $token)
+            ->where('api_token', '=', $token)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -283,7 +283,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findByRememberToken(string $token): ?User
     {
         $row = $this->query()
-            ->where('UsRememberToken', '=', $token)
+            ->where('remember_token', '=', $token)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -295,7 +295,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findByWordPressId(int $wordPressId): ?User
     {
         $row = $this->query()
-            ->where('UsWordPressId', '=', $wordPressId)
+            ->where('wordpress_id', '=', $wordPressId)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -307,7 +307,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findByGoogleId(string $googleId): ?User
     {
         $row = $this->query()
-            ->where('UsGoogleId', '=', $googleId)
+            ->where('google_id', '=', $googleId)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -319,7 +319,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findByMicrosoftId(string $microsoftId): ?User
     {
         $row = $this->query()
-            ->where('UsMicrosoftId', '=', $microsoftId)
+            ->where('microsoft_id', '=', $microsoftId)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -331,10 +331,10 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function usernameExists(string $username, ?int $excludeId = null): bool
     {
         $query = $this->query()
-            ->where('UsUsername', '=', $username);
+            ->where('username', '=', $username);
 
         if ($excludeId !== null) {
-            $query->where('UsID', '!=', $excludeId);
+            $query->where('id', '!=', $excludeId);
         }
 
         return $query->existsPrepared();
@@ -346,10 +346,10 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function emailExists(string $email, ?int $excludeId = null): bool
     {
         $query = $this->query()
-            ->where('UsEmail', '=', strtolower($email));
+            ->where('email', '=', strtolower($email));
 
         if ($excludeId !== null) {
-            $query->where('UsID', '!=', $excludeId);
+            $query->where('id', '!=', $excludeId);
         }
 
         return $query->existsPrepared();
@@ -361,8 +361,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findActive(): array
     {
         $rows = $this->query()
-            ->where('UsIsActive', '=', 1)
-            ->orderBy('UsUsername')
+            ->where('is_active', '=', 1)
+            ->orderBy('username')
             ->getPrepared();
 
         return array_map(
@@ -379,8 +379,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findInactive(): array
     {
         $rows = $this->query()
-            ->where('UsIsActive', '=', 0)
-            ->orderBy('UsUsername')
+            ->where('is_active', '=', 0)
+            ->orderBy('username')
             ->getPrepared();
 
         return array_map(
@@ -397,8 +397,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findAdmins(): array
     {
         $rows = $this->query()
-            ->where('UsRole', '=', User::ROLE_ADMIN)
-            ->orderBy('UsUsername')
+            ->where('role', '=', User::ROLE_ADMIN)
+            ->orderBy('username')
             ->getPrepared();
 
         return array_map(
@@ -415,8 +415,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findWordPressUsers(): array
     {
         $rows = $this->query()
-            ->whereNotNull('UsWordPressId')
-            ->orderBy('UsUsername')
+            ->whereNotNull('wordpress_id')
+            ->orderBy('username')
             ->getPrepared();
 
         return array_map(
@@ -433,8 +433,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findGoogleUsers(): array
     {
         $rows = $this->query()
-            ->whereNotNull('UsGoogleId')
-            ->orderBy('UsUsername')
+            ->whereNotNull('google_id')
+            ->orderBy('username')
             ->getPrepared();
 
         return array_map(
@@ -451,8 +451,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findMicrosoftUsers(): array
     {
         $rows = $this->query()
-            ->whereNotNull('UsMicrosoftId')
-            ->orderBy('UsUsername')
+            ->whereNotNull('microsoft_id')
+            ->orderBy('username')
             ->getPrepared();
 
         return array_map(
@@ -467,8 +467,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function updateLastLogin(int $userId): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsLastLogin' => date('Y-m-d H:i:s')]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['last_login_at' => date('Y-m-d H:i:s')]);
 
         return $affected > 0;
     }
@@ -479,8 +479,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function updatePassword(int $userId, string $passwordHash): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsPasswordHash' => $passwordHash]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['password_hash' => $passwordHash]);
 
         return $affected > 0;
     }
@@ -491,10 +491,10 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function updateApiToken(int $userId, ?string $token, ?DateTimeImmutable $expires): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
+            ->where('id', '=', $userId)
             ->updatePrepared([
-                'UsApiToken' => $token,
-                'UsApiTokenExpires' => $expires?->format('Y-m-d H:i:s'),
+                'api_token' => $token,
+                'api_token_expires' => $expires?->format('Y-m-d H:i:s'),
             ]);
 
         return $affected > 0;
@@ -506,10 +506,10 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function updateRememberToken(int $userId, ?string $token, ?DateTimeImmutable $expires): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
+            ->where('id', '=', $userId)
             ->updatePrepared([
-                'UsRememberToken' => $token,
-                'UsRememberTokenExpires' => $expires?->format('Y-m-d H:i:s'),
+                'remember_token' => $token,
+                'remember_token_expires' => $expires?->format('Y-m-d H:i:s'),
             ]);
 
         return $affected > 0;
@@ -521,7 +521,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findByPasswordResetToken(string $token): ?User
     {
         $row = $this->query()
-            ->where('UsPasswordResetToken', '=', $token)
+            ->where('password_reset_token', '=', $token)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -533,10 +533,10 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function updatePasswordResetToken(int $userId, ?string $token, ?DateTimeImmutable $expires): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
+            ->where('id', '=', $userId)
             ->updatePrepared([
-                'UsPasswordResetToken' => $token,
-                'UsPasswordResetTokenExpires' => $expires?->format('Y-m-d H:i:s'),
+                'password_reset_token' => $token,
+                'password_reset_token_expires' => $expires?->format('Y-m-d H:i:s'),
             ]);
 
         return $affected > 0;
@@ -548,7 +548,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findByEmailVerificationToken(string $token): ?User
     {
         $row = $this->query()
-            ->where('UsEmailVerificationToken', '=', $token)
+            ->where('email_verification_token', '=', $token)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -560,8 +560,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function activate(int $userId): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsIsActive' => 1]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['is_active' => 1]);
 
         return $affected > 0;
     }
@@ -572,8 +572,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function deactivate(int $userId): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsIsActive' => 0]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['is_active' => 0]);
 
         return $affected > 0;
     }
@@ -589,8 +589,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function updateRole(int $userId, string $role): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsRole' => $role]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['role' => $role]);
 
         return $affected > 0;
     }
@@ -606,8 +606,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function linkWordPress(int $userId, int $wordPressId): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsWordPressId' => $wordPressId]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['wordpress_id' => $wordPressId]);
 
         return $affected > 0;
     }
@@ -622,8 +622,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function unlinkWordPress(int $userId): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsWordPressId' => null]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['wordpress_id' => null]);
 
         return $affected > 0;
     }
@@ -639,8 +639,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function linkGoogle(int $userId, string $googleId): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsGoogleId' => $googleId]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['google_id' => $googleId]);
 
         return $affected > 0;
     }
@@ -655,8 +655,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function unlinkGoogle(int $userId): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsGoogleId' => null]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['google_id' => null]);
 
         return $affected > 0;
     }
@@ -672,8 +672,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function linkMicrosoft(int $userId, string $microsoftId): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsMicrosoftId' => $microsoftId]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['microsoft_id' => $microsoftId]);
 
         return $affected > 0;
     }
@@ -688,8 +688,8 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function unlinkMicrosoft(int $userId): bool
     {
         $affected = $this->query()
-            ->where('UsID', '=', $userId)
-            ->updatePrepared(['UsMicrosoftId' => null]);
+            ->where('id', '=', $userId)
+            ->updatePrepared(['microsoft_id' => null]);
 
         return $affected > 0;
     }
@@ -700,22 +700,22 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function getForSelect(int $maxNameLength = 40): array
     {
         $rows = $this->query()
-            ->select(['UsID', 'UsUsername', 'UsEmail'])
-            ->where('UsIsActive', '=', 1)
-            ->orderBy('UsUsername')
+            ->select(['id', 'username', 'email'])
+            ->where('is_active', '=', 1)
+            ->orderBy('username')
             ->getPrepared();
 
         $result = [];
 
         foreach ($rows as $row) {
-            $username = (string) $row['UsUsername'];
+            $username = (string) $row['username'];
             if (mb_strlen($username, 'UTF-8') > $maxNameLength) {
                 $username = mb_substr($username, 0, $maxNameLength, 'UTF-8') . '...';
             }
             $result[] = [
-                'id' => (int) $row['UsID'],
+                'id' => (int) $row['id'],
                 'username' => $username,
-                'email' => (string) $row['UsEmail'],
+                'email' => (string) $row['email'],
             ];
         }
 
@@ -729,13 +729,13 @@ class MySqlUserRepository implements UserRepositoryInterface
     {
         $row = $this->query()
             ->select([
-                'UsID',
-                'UsUsername',
-                'UsEmail',
-                'UsIsActive',
-                'UsRole',
+                'id',
+                'username',
+                'email',
+                'is_active',
+                'role',
             ])
-            ->where('UsID', '=', $userId)
+            ->where('id', '=', $userId)
             ->firstPrepared();
 
         if ($row === null) {
@@ -743,11 +743,11 @@ class MySqlUserRepository implements UserRepositoryInterface
         }
 
         return [
-            'id' => (int) $row['UsID'],
-            'username' => (string) $row['UsUsername'],
-            'email' => (string) $row['UsEmail'],
-            'is_active' => (bool) $row['UsIsActive'],
-            'is_admin' => $row['UsRole'] === User::ROLE_ADMIN,
+            'id' => (int) $row['id'],
+            'username' => (string) $row['username'],
+            'email' => (string) $row['email'],
+            'is_active' => (bool) $row['is_active'],
+            'is_admin' => $row['role'] === User::ROLE_ADMIN,
         ];
     }
 
@@ -764,7 +764,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function findPaginated(
         int $page = 1,
         int $perPage = 20,
-        string $orderBy = 'UsUsername',
+        string $orderBy = 'username',
         string $direction = 'ASC'
     ): array {
         $query = $this->query();
@@ -807,7 +807,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     {
         $searchPattern = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $query) . '%';
 
-        $sql = "SELECT * FROM users WHERE (UsUsername LIKE ? OR UsEmail LIKE ?) ORDER BY UsUsername LIMIT ?";
+        $sql = "SELECT * FROM users WHERE (username LIKE ? OR email LIKE ?) ORDER BY username LIMIT ?";
         $rows = Connection::preparedFetchAll($sql, [$searchPattern, $searchPattern, $limit]);
 
         return array_map(
@@ -830,8 +830,8 @@ class MySqlUserRepository implements UserRepositoryInterface
         $sinceDate = date('Y-m-d H:i:s', $timestamp !== false ? $timestamp : time());
 
         $rows = $this->query()
-            ->where('UsLastLogin', '>=', $sinceDate)
-            ->orderBy('UsLastLogin', 'DESC')
+            ->where('last_login_at', '>=', $sinceDate)
+            ->orderBy('last_login_at', 'DESC')
             ->limit($limit)
             ->getPrepared();
 
@@ -855,8 +855,8 @@ class MySqlUserRepository implements UserRepositoryInterface
         $sinceDate = date('Y-m-d H:i:s', $timestamp !== false ? $timestamp : time());
 
         $rows = $this->query()
-            ->where('UsCreated', '>=', $sinceDate)
-            ->orderBy('UsCreated', 'DESC')
+            ->where('created_at', '>=', $sinceDate)
+            ->orderBy('created_at', 'DESC')
             ->limit($limit)
             ->getPrepared();
 
@@ -879,27 +879,27 @@ class MySqlUserRepository implements UserRepositoryInterface
         $total = (clone $baseQuery)->countPrepared();
 
         $active = (clone $baseQuery)
-            ->where('UsIsActive', '=', 1)
+            ->where('is_active', '=', 1)
             ->countPrepared();
 
         $inactive = (clone $baseQuery)
-            ->where('UsIsActive', '=', 0)
+            ->where('is_active', '=', 0)
             ->countPrepared();
 
         $admins = (clone $baseQuery)
-            ->where('UsRole', '=', User::ROLE_ADMIN)
+            ->where('role', '=', User::ROLE_ADMIN)
             ->countPrepared();
 
         $wordPressLinked = (clone $baseQuery)
-            ->whereNotNull('UsWordPressId')
+            ->whereNotNull('wordpress_id')
             ->countPrepared();
 
         $googleLinked = (clone $baseQuery)
-            ->whereNotNull('UsGoogleId')
+            ->whereNotNull('google_id')
             ->countPrepared();
 
         $microsoftLinked = (clone $baseQuery)
-            ->whereNotNull('UsMicrosoftId')
+            ->whereNotNull('microsoft_id')
             ->countPrepared();
 
         return [
@@ -923,8 +923,8 @@ class MySqlUserRepository implements UserRepositoryInterface
         $now = date('Y-m-d H:i:s');
 
         $rows = $this->query()
-            ->whereNotNull('UsApiToken')
-            ->where('UsApiTokenExpires', '<', $now)
+            ->whereNotNull('api_token')
+            ->where('api_token_expires', '<', $now)
             ->getPrepared();
 
         return array_map(
@@ -943,11 +943,11 @@ class MySqlUserRepository implements UserRepositoryInterface
         $now = date('Y-m-d H:i:s');
 
         return $this->query()
-            ->whereNotNull('UsApiToken')
-            ->where('UsApiTokenExpires', '<', $now)
+            ->whereNotNull('api_token')
+            ->where('api_token_expires', '<', $now)
             ->updatePrepared([
-                'UsApiToken' => null,
-                'UsApiTokenExpires' => null,
+                'api_token' => null,
+                'api_token_expires' => null,
             ]);
     }
 
@@ -965,7 +965,7 @@ class MySqlUserRepository implements UserRepositoryInterface
         }
 
         return $this->query()
-            ->whereIn('UsID', array_map('intval', $userIds))
+            ->whereIn('id', array_map('intval', $userIds))
             ->deletePrepared();
     }
 
@@ -975,7 +975,7 @@ class MySqlUserRepository implements UserRepositoryInterface
     public function countAdmins(): int
     {
         $sql = "SELECT COUNT(*) as cnt FROM users "
-             . "WHERE UsRole = ? AND UsPasswordHash IS NOT NULL";
+             . "WHERE role = ? AND password_hash IS NOT NULL";
         $rows = Connection::preparedFetchAll($sql, [User::ROLE_ADMIN]);
 
         return (int) ($rows[0]['cnt'] ?? 0);
@@ -988,12 +988,12 @@ class MySqlUserRepository implements UserRepositoryInterface
      */
     public function countByRole(): array
     {
-        $sql = "SELECT UsRole, COUNT(*) as cnt FROM users GROUP BY UsRole";
+        $sql = "SELECT role, COUNT(*) as cnt FROM users GROUP BY role";
         $rows = Connection::preparedFetchAll($sql, []);
 
         $counts = [];
         foreach ($rows as $row) {
-            $counts[(string) $row['UsRole']] = (int) $row['cnt'];
+            $counts[(string) $row['role']] = (int) $row['cnt'];
         }
 
         return $counts;

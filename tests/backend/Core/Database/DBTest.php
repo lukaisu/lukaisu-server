@@ -52,7 +52,7 @@ class DBTest extends TestCase
         }
 
         // Clean up test data
-        Connection::query("DELETE FROM settings WHERE StKey LIKE 'test_db_%'");
+        Connection::query("DELETE FROM settings WHERE name LIKE 'test_db_%'");
         Connection::query("DELETE FROM tags WHERE text LIKE 'test_db_%'");
     }
 
@@ -127,7 +127,7 @@ class DBTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $rows = DB::fetchAll("SELECT * FROM settings WHERE StKey = 'nonexistent_xyz'");
+        $rows = DB::fetchAll("SELECT * FROM settings WHERE name = 'nonexistent_xyz'");
 
         $this->assertIsArray($rows);
         $this->assertEmpty($rows);
@@ -141,15 +141,15 @@ class DBTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        DB::execute("INSERT INTO settings (StKey, StValue) VALUES ('test_db_one', 'value1')");
+        DB::execute("INSERT INTO settings (name, value) VALUES ('test_db_one', 'value1')");
 
-        $row = DB::fetchOne("SELECT * FROM settings WHERE StKey = 'test_db_one'");
+        $row = DB::fetchOne("SELECT * FROM settings WHERE name = 'test_db_one'");
 
         $this->assertIsArray($row);
-        $this->assertEquals('test_db_one', $row['StKey']);
+        $this->assertEquals('test_db_one', $row['name']);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey = 'test_db_one'");
+        Connection::query("DELETE FROM settings WHERE name = 'test_db_one'");
     }
 
     public function testFetchOneReturnsNull(): void
@@ -158,7 +158,7 @@ class DBTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $row = DB::fetchOne("SELECT * FROM settings WHERE StKey = 'nonexistent_xyz'");
+        $row = DB::fetchOne("SELECT * FROM settings WHERE name = 'nonexistent_xyz'");
 
         $this->assertNull($row);
     }
@@ -171,14 +171,14 @@ class DBTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        DB::execute("INSERT INTO settings (StKey, StValue) VALUES ('test_db_value', 'myvalue')");
+        DB::execute("INSERT INTO settings (name, value) VALUES ('test_db_value', 'myvalue')");
 
-        $value = DB::fetchValue("SELECT StValue as value FROM settings WHERE StKey = 'test_db_value'");
+        $value = DB::fetchValue("SELECT value as value FROM settings WHERE name = 'test_db_value'");
 
         $this->assertEquals('myvalue', $value);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey = 'test_db_value'");
+        Connection::query("DELETE FROM settings WHERE name = 'test_db_value'");
     }
 
     public function testFetchValueWithCustomColumn(): void
@@ -187,14 +187,14 @@ class DBTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        DB::execute("INSERT INTO settings (StKey, StValue) VALUES ('test_db_custom', 'customval')");
+        DB::execute("INSERT INTO settings (name, value) VALUES ('test_db_custom', 'customval')");
 
-        $value = DB::fetchValue("SELECT StKey as mykey FROM settings WHERE StKey = 'test_db_custom'", 'mykey');
+        $value = DB::fetchValue("SELECT name as mykey FROM settings WHERE name = 'test_db_custom'", 'mykey');
 
         $this->assertEquals('test_db_custom', $value);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey = 'test_db_custom'");
+        Connection::query("DELETE FROM settings WHERE name = 'test_db_custom'");
     }
 
     // ===== execute() tests =====
@@ -205,9 +205,9 @@ class DBTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        DB::execute("INSERT INTO settings (StKey, StValue) VALUES ('test_db_exec', 'value')");
+        DB::execute("INSERT INTO settings (name, value) VALUES ('test_db_exec', 'value')");
 
-        $affected = DB::execute("DELETE FROM settings WHERE StKey = 'test_db_exec'");
+        $affected = DB::execute("DELETE FROM settings WHERE name = 'test_db_exec'");
 
         $this->assertGreaterThanOrEqual(1, $affected);
     }
@@ -218,18 +218,18 @@ class DBTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        DB::execute("INSERT INTO settings (StKey, StValue) VALUES ('test_db_update', 'old')");
+        DB::execute("INSERT INTO settings (name, value) VALUES ('test_db_update', 'old')");
 
-        $affected = DB::execute("UPDATE settings SET StValue = 'new' WHERE StKey = 'test_db_update'");
+        $affected = DB::execute("UPDATE settings SET value = 'new' WHERE name = 'test_db_update'");
 
         $this->assertEquals(1, $affected);
 
         // Verify update
-        $value = DB::fetchValue("SELECT StValue as value FROM settings WHERE StKey = 'test_db_update'");
+        $value = DB::fetchValue("SELECT value as value FROM settings WHERE name = 'test_db_update'");
         $this->assertEquals('new', $value);
 
         // Clean up
-        Connection::query("DELETE FROM settings WHERE StKey = 'test_db_update'");
+        Connection::query("DELETE FROM settings WHERE name = 'test_db_update'");
     }
 
     // ===== lastInsertId() tests =====
@@ -390,23 +390,23 @@ class DBTest extends TestCase
         }
 
         // Create
-        DB::execute("INSERT INTO settings (StKey, StValue) VALUES ('test_db_crud', 'initial')");
+        DB::execute("INSERT INTO settings (name, value) VALUES ('test_db_crud', 'initial')");
 
         // Read
-        $value = DB::fetchValue("SELECT StValue as value FROM settings WHERE StKey = 'test_db_crud'");
+        $value = DB::fetchValue("SELECT value as value FROM settings WHERE name = 'test_db_crud'");
         $this->assertEquals('initial', $value);
 
         // Update
-        DB::execute("UPDATE settings SET StValue = 'updated' WHERE StKey = 'test_db_crud'");
-        $value = DB::fetchValue("SELECT StValue as value FROM settings WHERE StKey = 'test_db_crud'");
+        DB::execute("UPDATE settings SET value = 'updated' WHERE name = 'test_db_crud'");
+        $value = DB::fetchValue("SELECT value as value FROM settings WHERE name = 'test_db_crud'");
         $this->assertEquals('updated', $value);
 
         // Delete
-        $affected = DB::execute("DELETE FROM settings WHERE StKey = 'test_db_crud'");
+        $affected = DB::execute("DELETE FROM settings WHERE name = 'test_db_crud'");
         $this->assertEquals(1, $affected);
 
         // Verify deleted
-        $row = DB::fetchOne("SELECT * FROM settings WHERE StKey = 'test_db_crud'");
+        $row = DB::fetchOne("SELECT * FROM settings WHERE name = 'test_db_crud'");
         $this->assertNull($row);
     }
 

@@ -112,7 +112,7 @@ class MySqlBackupRepositoryTest extends TestCase
     }
 
     // =========================================================================
-    // Multi-user mode: direct user-scoped tables filter by their UsID column
+    // Multi-user mode: direct user-scoped tables filter by their user_id column
     // =========================================================================
 
     #[Test]
@@ -128,7 +128,7 @@ class MySqlBackupRepositoryTest extends TestCase
             'tags'      => 'user_id',
             'text_tags' => 'user_id',
             'news_feeds' => 'user_id',
-            'settings'  => 'StUsID',
+            'settings'  => 'user_id',
         ];
 
         foreach ($cases as $table => $column) {

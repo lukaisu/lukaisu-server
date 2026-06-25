@@ -90,7 +90,7 @@ class TextScoringService
         }
 
         // Silently drop any TxIDs the caller does not own. word_occurrences
-        // has no UsID column, so without this filter a caller could mix
+        // has no user_id column, so without this filter a caller could mix
         // owned + unowned IDs and get back stats for the unowned ones too.
         $textIds = $this->filterOwnedTextIds($textIds);
         if (empty($textIds)) {

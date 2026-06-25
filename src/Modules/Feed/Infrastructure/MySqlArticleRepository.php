@@ -122,7 +122,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
      * fragment to $bindings when multi-user mode is on with an
      * authenticated user.
      *
-     * `feed_links` doesn't carry its own `UsID` column, so QueryBuilder's
+     * `feed_links` doesn't carry its own `user_id` column, so QueryBuilder's
      * auto-scoping doesn't fire. Every code path that takes a
      * caller-supplied id/feed_id must run through this scope or
      * accept the full multi-tenant blast radius (read-foreign-articles,

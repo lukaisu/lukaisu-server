@@ -100,7 +100,7 @@ class LemmaStatisticsService
      */
     public function getUnmatchedStatistics(int $languageId): array
     {
-        // word_occurrences has no UsID column — inherit user scope by joining
+        // word_occurrences has no user_id column — inherit user scope by joining
         // through `texts` (via text_id) and filtering on user_id. Without this,
         // aggregations across word_occurrences silently combine every user's
         // data sharing the language.

@@ -69,7 +69,7 @@ class UserManagementUseCaseTest extends TestCase
     {
         $this->mysqlUserRepository->expects($this->once())
             ->method('findPaginated')
-            ->with(1, 20, 'UsUsername', 'ASC')
+            ->with(1, 20, 'username', 'ASC')
             ->willReturn([
                 'items' => [],
                 'total' => 0,
@@ -93,7 +93,7 @@ class UserManagementUseCaseTest extends TestCase
     {
         $this->mysqlUserRepository->expects($this->once())
             ->method('findPaginated')
-            ->with(1, 20, 'UsUsername', 'ASC')
+            ->with(1, 20, 'username', 'ASC')
             ->willReturn([
                 'items' => [],
                 'total' => 0,
@@ -135,7 +135,7 @@ class UserManagementUseCaseTest extends TestCase
     {
         $this->mysqlUserRepository->expects($this->once())
             ->method('findPaginated')
-            ->with(1, 20, 'UsEmail', 'DESC')
+            ->with(1, 20, 'email', 'DESC')
             ->willReturn([
                 'items' => [],
                 'total' => 0,

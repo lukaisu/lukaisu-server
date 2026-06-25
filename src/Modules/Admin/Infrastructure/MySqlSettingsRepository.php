@@ -52,7 +52,7 @@ class MySqlSettingsRepository implements SettingsRepositoryInterface
     public function deleteByPattern(string $pattern): int
     {
         return QueryBuilder::table('settings')
-            ->where('StKey', 'LIKE', $pattern)
+            ->where('name', 'LIKE', $pattern)
             ->delete();
     }
 
@@ -62,14 +62,14 @@ class MySqlSettingsRepository implements SettingsRepositoryInterface
     public function getAll(): array
     {
         $rows = QueryBuilder::table('settings')
-            ->select(['StKey', 'StValue'])
+            ->select(['name', 'value'])
             ->getPrepared();
 
         /** @var array<string, string> $settings */
         $settings = [];
         foreach ($rows as $row) {
-            $key = (string) ($row['StKey'] ?? '');
-            $settings[$key] = (string) ($row['StValue'] ?? '');
+            $key = (string) ($row['name'] ?? '');
+            $settings[$key] = (string) ($row['value'] ?? '');
         }
 
         return $settings;
@@ -81,7 +81,7 @@ class MySqlSettingsRepository implements SettingsRepositoryInterface
     public function exists(string $key): bool
     {
         return QueryBuilder::table('settings')
-            ->where('StKey', '=', $key)
+            ->where('name', '=', $key)
             ->existsPrepared();
     }
 }

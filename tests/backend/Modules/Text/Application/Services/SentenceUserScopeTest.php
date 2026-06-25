@@ -5,7 +5,7 @@
  *
  * `findSentencesFromWord` and `formatSentence` back the
  * `GET /api/v1/sentences-with-term` endpoint. Both join `sentences` and
- * `word_occurrences` raw — neither table carries a UsID column of its
+ * `word_occurrences` raw — neither table carries a user_id column of its
  * own. Without an explicit parent-text scope, an authenticated user
  * could request sentences (or sentence content) belonging to another
  * user simply by passing that user's `language_id` / id.
@@ -78,7 +78,7 @@ class SentenceUserScopeTest extends TestCase
             'text_id IN (SELECT id FROM texts WHERE user_id = ?)',
             $source,
             'parentTextUserScope must scope sentences via the parent'
-            . ' texts row — text_id has no UsID of its own.'
+            . ' texts row — text_id has no user_id of its own.'
         );
     }
 
@@ -92,7 +92,7 @@ class SentenceUserScopeTest extends TestCase
             $source,
             'formatSentence must short-circuit on ownsSentence() before'
             . ' running the word_occurrences/languages content query —'
-            . ' that query has no UsID filter and would otherwise return'
+            . ' that query has no user_id filter and would otherwise return'
             . ' the foreign user\'s sentence text verbatim.'
         );
     }
