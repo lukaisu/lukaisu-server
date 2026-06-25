@@ -123,7 +123,7 @@ class MySqlBackupRepositoryTest extends TestCase
 
         $cases = [
             'languages' => 'LgUsID',
-            'texts'     => 'TxUsID',
+            'texts'     => 'user_id',
             'words'     => 'user_id',
             'tags'      => 'user_id',
             'text_tags' => 'user_id',
@@ -153,7 +153,7 @@ class MySqlBackupRepositoryTest extends TestCase
 
         $sql = $this->callBuildScopedSelectAll('text_tag_map');
         $this->assertSame(
-            'SELECT * FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = 11)',
+            'SELECT * FROM text_tag_map WHERE text_id IN (SELECT id FROM texts WHERE user_id = 11)',
             $sql
         );
     }
@@ -200,12 +200,12 @@ class MySqlBackupRepositoryTest extends TestCase
         // user filter must extend that clause with AND, not start a new
         // WHERE.
         $this->assertSame(' AND LgUsID = 42', $scope['languages']);
-        $this->assertSame(' WHERE TxUsID = 42', $scope['texts']);
+        $this->assertSame(' WHERE user_id = 42', $scope['texts']);
         $this->assertSame(' WHERE user_id = 42', $scope['words']);
         $this->assertSame(' WHERE user_id = 42', $scope['tags']);
         $this->assertSame(' WHERE user_id = 42', $scope['text_tags']);
         $this->assertSame(
-            ' WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = 42)',
+            ' WHERE text_id IN (SELECT id FROM texts WHERE user_id = 42)',
             $scope['text_tag_map']
         );
         $this->assertSame(

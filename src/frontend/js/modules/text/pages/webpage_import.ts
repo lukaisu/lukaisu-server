@@ -82,7 +82,7 @@ async function fetchWebpage(): Promise<void> {
 
   try {
     // Send the current title as a hint (e.g. pre-filled by Gutenberg/Feed import)
-    const titleInput = document.querySelector<HTMLInputElement>('[name="TxTitle"]');
+    const titleInput = document.querySelector<HTMLInputElement>('[name="title"]');
     const titleHint = titleInput?.value.trim() || '';
 
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -110,9 +110,9 @@ async function fetchWebpage(): Promise<void> {
     const data = result as ExtractUrlResponse;
 
     // Populate form fields
-    setInputByName('TxTitle', data.title);
-    setInputByName('TxText', data.text);
-    setInputByName('TxSourceURI', data.sourceUri);
+    setInputByName('title', data.title);
+    setInputByName('text', data.text);
+    setInputByName('source_uri', data.sourceUri);
 
     // Switch to manual/paste mode so the user can see the populated fields
     const formEl = document.querySelector<HTMLFormElement>('form[x-data]');
@@ -174,9 +174,9 @@ async function importEpubUrl(epubUrl: string, titleHint: string): Promise<void> 
     }
 
     const data = result as ExtractUrlResponse;
-    setInputByName('TxTitle', data.title || titleHint);
-    setInputByName('TxText', data.text);
-    setInputByName('TxSourceURI', data.sourceUri);
+    setInputByName('title', data.title || titleHint);
+    setInputByName('text', data.text);
+    setInputByName('source_uri', data.sourceUri);
 
     const formEl = document.querySelector<HTMLFormElement>('form[x-data]');
     if (formEl) {
@@ -237,7 +237,7 @@ function checkAutoImport(): void {
     // Also pre-fill title if provided (as fallback)
     const importTitle = params.get('import_title');
     if (importTitle) {
-      setInputByName('TxTitle', importTitle);
+      setInputByName('title', importTitle);
     }
 
     // Switch the form to URL mode

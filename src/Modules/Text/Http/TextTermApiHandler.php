@@ -51,15 +51,15 @@ class TextTermApiHandler
     public function getWords(int $textId): array
     {
         $textInfo = QueryBuilder::table('texts')
-            ->select(['TxID', 'TxLgID', 'TxTitle', 'TxAudioURI', 'TxSourceURI', 'TxAudioPosition'])
-            ->where('TxID', '=', $textId)
+            ->select(['id', 'language_id', 'title', 'audio_uri', 'source_uri', 'audio_position'])
+            ->where('id', '=', $textId)
             ->firstPrepared();
 
         if ($textInfo === null) {
             return ['error' => 'Text not found'];
         }
 
-        $langId = (int)$textInfo['TxLgID'];
+        $langId = (int)$textInfo['language_id'];
 
         $langInfo = QueryBuilder::table('languages')
             ->select(
@@ -199,10 +199,10 @@ class TextTermApiHandler
         $config = [
             'textId' => $textId,
             'langId' => $langId,
-            'title' => $textInfo['TxTitle'],
-            'audioUri' => $textInfo['TxAudioURI'],
-            'sourceUri' => $textInfo['TxSourceURI'],
-            'audioPosition' => (int)$textInfo['TxAudioPosition'],
+            'title' => $textInfo['title'],
+            'audioUri' => $textInfo['audio_uri'],
+            'sourceUri' => $textInfo['source_uri'],
+            'audioPosition' => (int)$textInfo['audio_position'],
             'rightToLeft' => (int)$langInfo['LgRightToLeft'] === 1,
             'textSize' => $textSize,
             'removeSpaces' => (int)$langInfo['LgRemoveSpaces'] === 1,
@@ -317,14 +317,14 @@ class TextTermApiHandler
     public function getTermTranslations(string $wordlc, int $textid): array
     {
         $record = QueryBuilder::table('texts')
-            ->select(['TxLgID', 'TxAnnotatedText'])
-            ->where('TxID', '=', $textid)
+            ->select(['language_id', 'annotated_text'])
+            ->where('id', '=', $textid)
             ->firstPrepared();
         if ($record === null) {
             return ['error' => 'Text not found'];
         }
-        $langid = (int)$record['TxLgID'];
-        $ann = (string)$record['TxAnnotatedText'];
+        $langid = (int)$record['language_id'];
+        $ann = (string)$record['annotated_text'];
         if (strlen($ann) > 0) {
             $annotationService = new AnnotationService();
             $ann = $annotationService->recreateSaveAnnotation($textid, $ann);
@@ -461,12 +461,12 @@ class TextTermApiHandler
             $scoreArray = $score->toArray();
 
             $text = QueryBuilder::table('texts')
-                ->select(['TxTitle'])
-                ->where('TxID', '=', $score->textId)
+                ->select(['title'])
+                ->where('id', '=', $score->textId)
                 ->firstPrepared();
 
             if ($text !== null) {
-                $scoreArray['title'] = (string)$text['TxTitle'];
+                $scoreArray['title'] = (string)$text['title'];
             }
 
             $result[] = $scoreArray;

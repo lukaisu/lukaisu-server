@@ -71,10 +71,10 @@ class GetTextForEdit
     {
         $bindings = [$textId];
         return Connection::preparedFetchOne(
-            "SELECT TxLgID, TxTitle, TxText, TxAudioURI, TxSourceURI,
-            LENGTH(TxAnnotatedText) AS annotlen
+            "SELECT language_id, title, text, audio_uri, source_uri,
+            LENGTH(annotated_text) AS annotlen
             FROM texts
-            WHERE TxID = ? AND TxArchivedAt IS NOT NULL"
+            WHERE id = ? AND archived_at IS NOT NULL"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings
         );
@@ -91,10 +91,10 @@ class GetTextForEdit
     {
         $bindings = [$textId];
         return Connection::preparedFetchOne(
-            "SELECT TxID, TxLgID, TxTitle, TxText, TxAudioURI, TxSourceURI,
-                LENGTH(TxAnnotatedText) AS annot_exists
+            "SELECT id, language_id, title, text, audio_uri, source_uri,
+                LENGTH(annotated_text) AS annot_exists
             FROM texts
-            WHERE TxID = ?"
+            WHERE id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings
         );
@@ -144,12 +144,12 @@ class GetTextForEdit
     private function textEntityToArray(Text $text): array
     {
         return [
-            'TxID' => $text->id()->toInt(),
-            'TxLgID' => $text->languageId()->toInt(),
-            'TxTitle' => $text->title(),
-            'TxText' => $text->text(),
-            'TxAudioURI' => $text->mediaUri(),
-            'TxSourceURI' => $text->sourceUri(),
+            'id' => $text->id()->toInt(),
+            'language_id' => $text->languageId()->toInt(),
+            'title' => $text->title(),
+            'text' => $text->text(),
+            'audio_uri' => $text->mediaUri(),
+            'source_uri' => $text->sourceUri(),
             'annot_exists' => $text->isAnnotated() ? 1 : 0,
         ];
     }

@@ -68,7 +68,7 @@ class TextParsingTest extends TestCase
             "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
         );
         Connection::query(
-            "DELETE FROM $texts WHERE TxLgID IN " .
+            "DELETE FROM $texts WHERE language_id IN " .
             "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
         );
         Connection::query(
@@ -109,7 +109,7 @@ class TextParsingTest extends TestCase
             // Clean up any test texts and associated data
             Connection::query("DELETE FROM $word_occurrences WHERE language_id = " . self::$testLanguageId);
             Connection::query("DELETE FROM $sentences WHERE language_id = " . self::$testLanguageId);
-            Connection::query("DELETE FROM $texts WHERE TxLgID = " . self::$testLanguageId);
+            Connection::query("DELETE FROM $texts WHERE language_id = " . self::$testLanguageId);
             Connection::query("DELETE FROM $words WHERE language_id = " . self::$testLanguageId);
             Connection::query("DELETE FROM $languages WHERE LgID = " . self::$testLanguageId);
         }
@@ -349,7 +349,7 @@ class TextParsingTest extends TestCase
         $word_occurrences = Globals::table('word_occurrences');
 
         // Create a test text
-        $sql = "INSERT INTO $texts (TxLgID, TxTitle, TxText, TxAudioURI)
+        $sql = "INSERT INTO $texts (language_id, title, text, audio_uri)
                 VALUES (" . self::$testLanguageId . ", 'Register Test', 'Hello world.', '')";
         Connection::query($sql);
         $textId = mysqli_insert_id(Globals::getDbConnection());
@@ -372,7 +372,7 @@ class TextParsingTest extends TestCase
         // Clean up
         Connection::query("DELETE FROM $word_occurrences WHERE text_id = $textId");
         Connection::query("DELETE FROM $sentences WHERE text_id = $textId");
-        Connection::query("DELETE FROM $texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM $texts WHERE id = $textId");
     }
 
     // ===== Edge cases =====
@@ -455,7 +455,7 @@ class TextParsingTest extends TestCase
         $word_occurrences = Globals::table('word_occurrences');
 
         // Test text WITHOUT punctuation
-        $sql = "INSERT INTO $texts (TxLgID, TxTitle, TxText, TxAudioURI)
+        $sql = "INSERT INTO $texts (language_id, title, text, audio_uri)
                 VALUES (" . self::$testLanguageId . ", 'Issue 114 Test NoPunct', 'Hello world', '')";
         Connection::query($sql);
         $textIdNoPunct = mysqli_insert_id(Globals::getDbConnection());
@@ -484,7 +484,7 @@ class TextParsingTest extends TestCase
         );
 
         // Test text WITH punctuation for comparison
-        $sql = "INSERT INTO $texts (TxLgID, TxTitle, TxText, TxAudioURI)
+        $sql = "INSERT INTO $texts (language_id, title, text, audio_uri)
                 VALUES (" . self::$testLanguageId . ", 'Issue 114 Test WithPunct', 'Hello world.', '')";
         Connection::query($sql);
         $textIdWithPunct = mysqli_insert_id(Globals::getDbConnection());
@@ -516,7 +516,7 @@ class TextParsingTest extends TestCase
         // Clean up
         Connection::query("DELETE FROM $word_occurrences WHERE text_id IN ($textIdNoPunct, $textIdWithPunct)");
         Connection::query("DELETE FROM $sentences WHERE text_id IN ($textIdNoPunct, $textIdWithPunct)");
-        Connection::query("DELETE FROM $texts WHERE TxID IN ($textIdNoPunct, $textIdWithPunct)");
+        Connection::query("DELETE FROM $texts WHERE id IN ($textIdNoPunct, $textIdWithPunct)");
     }
 
     // ===== Character substitution tests =====
@@ -809,7 +809,7 @@ class TextParsingTest extends TestCase
         $wordId = mysqli_insert_id(Globals::getDbConnection());
 
         // Create a test text
-        $sql = "INSERT INTO $texts (TxLgID, TxTitle, TxText, TxAudioURI)
+        $sql = "INSERT INTO $texts (language_id, title, text, audio_uri)
                 VALUES (" . self::$testLanguageId . ", 'MW Test', 'This is a test word example.', '')";
         Connection::query($sql);
         $textId = mysqli_insert_id(Globals::getDbConnection());
@@ -826,7 +826,7 @@ class TextParsingTest extends TestCase
         // Clean up
         Connection::query("DELETE FROM $word_occurrences WHERE text_id = $textId");
         Connection::query("DELETE FROM $sentences WHERE text_id = $textId");
-        Connection::query("DELETE FROM $texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM $texts WHERE id = $textId");
         Connection::query("DELETE FROM $words WHERE id = $wordId");
     }
 
@@ -910,7 +910,7 @@ class TextParsingTest extends TestCase
         $word_occurrences = Globals::table('word_occurrences');
 
         // Create a test text with multiple sentences
-        $sql = "INSERT INTO $texts (TxLgID, TxTitle, TxText, TxAudioURI)
+        $sql = "INSERT INTO $texts (language_id, title, text, audio_uri)
                 VALUES (" . self::$testLanguageId .
                 ", 'Multi Sentence Test', " .
                 "'Sentence one. Sentence two. Sentence three.', '')";
@@ -928,7 +928,7 @@ class TextParsingTest extends TestCase
         // Clean up
         Connection::query("DELETE FROM $word_occurrences WHERE text_id = $textId");
         Connection::query("DELETE FROM $sentences WHERE text_id = $textId");
-        Connection::query("DELETE FROM $texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM $texts WHERE id = $textId");
     }
 
     public function testParseAndDisplayPreviewOutputsHtml(): void

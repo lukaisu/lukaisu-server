@@ -4,8 +4,8 @@
  * Archived Text Edit Form View
  *
  * Variables expected:
- * - $textId: int - Archived text ID (same as TxID, but with TxArchivedAt IS NOT NULL)
- * - $record: array - Archived text record with keys: TxLgID, TxTitle, TxText, TxAudioURI, TxSourceURI, annotlen
+ * - $textId: int - Archived text ID (same as id, but with archived_at IS NOT NULL)
+ * - $record: array - Archived text record with keys: language_id, title, text, audio_uri, source_uri, annotlen
  *
  * PHP version 8.1
  *
@@ -34,12 +34,12 @@ use Lukaisu\Shared\UI\Helpers\SearchableSelectHelper;
 */
 $textIdTyped = $textId;
 assert(is_array($record));
-$recordLgId = (int)$record['TxLgID'];
-$recordTitle = (string)$record['TxTitle'];
-$recordText = (string)$record['TxText'];
+$recordLgId = (int)$record['language_id'];
+$recordTitle = (string)$record['title'];
+$recordText = (string)$record['text'];
 $recordAnnotLen = (int)$record['annotlen'];
-$recordSourceUri = (string)$record['TxSourceURI'];
-$recordAudioUri = (string)$record['TxAudioURI'];
+$recordSourceUri = (string)$record['source_uri'];
+$recordAudioUri = (string)$record['audio_uri'];
 assert(is_array($languages));
 assert(is_string($mediaPathSelectorHtml));
 assert(is_string($archivedTextTagsHtml));
@@ -55,13 +55,13 @@ $languagesTyped = $languages;
     action="/text/archived/<?php echo $textIdTyped; ?>/edit#rec<?php echo $textIdTyped; ?>"
     method="post">
     <?php echo \Lukaisu\Shared\UI\Helpers\FormHelper::csrfField(); ?>
-    <input type="hidden" name="TxID" value="<?php echo $textIdTyped; ?>" />
+    <input type="hidden" name="id" value="<?php echo $textIdTyped; ?>" />
 
     <div class="box">
         <!-- Language -->
         <div class="field is-horizontal">
             <div class="field-label is-normal">
-                <label class="label" for="TxLgID"><?= __e('text.common.language') ?></label>
+                <label class="label" for="language_id"><?= __e('text.common.language') ?></label>
             </div>
             <div class="field-body">
                 <div class="field has-addons">
@@ -71,8 +71,8 @@ $languagesTyped = $languages;
                             $languagesTyped,
                             $recordLgId,
                             [
-                                'name' => 'TxLgID',
-                                'id' => 'TxLgID',
+                                'name' => 'language_id',
+                                'id' => 'language_id',
                                 'placeholder' => __('text.common.choose'),
                                 'required' => true
                             ]
@@ -91,7 +91,7 @@ $languagesTyped = $languages;
         <!-- Title -->
         <div class="field is-horizontal">
             <div class="field-label is-normal">
-                <label class="label" for="TxTitle"><?= __e('text.common.title') ?></label>
+                <label class="label" for="title"><?= __e('text.common.title') ?></label>
             </div>
             <div class="field-body">
                 <div class="field has-addons">
@@ -99,8 +99,8 @@ $languagesTyped = $languages;
                         <input type="text"
                                class="input notempty checkoutsidebmp"
                                data_info="Title"
-                               name="TxTitle"
-                               id="TxTitle"
+                               name="title"
+                               id="title"
                                value="<?php echo htmlspecialchars($recordTitle, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="200"
                                required />
@@ -117,13 +117,13 @@ $languagesTyped = $languages;
         <!-- Text Content -->
         <div class="field is-horizontal">
             <div class="field-label is-normal">
-                <label class="label" for="TxText"><?= __e('text.common.text') ?></label>
+                <label class="label" for="text"><?= __e('text.common.text') ?></label>
             </div>
             <div class="field-body">
                 <div class="field has-addons">
                     <div class="control is-expanded">
-                        <textarea name="TxText"
-                                  id="TxText"
+                        <textarea name="text"
+                                  id="text"
                                   class="textarea notempty checkbytes checkoutsidebmp"
                                   data_maxlength="65000"
                                   data_info="Text"
@@ -174,7 +174,7 @@ $languagesTyped = $languages;
         <!-- Source URI -->
         <div class="field is-horizontal">
             <div class="field-label is-normal">
-                <label class="label" for="TxSourceURI"><?= __e('text.common.source_uri') ?></label>
+                <label class="label" for="source_uri"><?= __e('text.common.source_uri') ?></label>
             </div>
             <div class="field-body">
                 <div class="field">
@@ -182,8 +182,8 @@ $languagesTyped = $languages;
                         <input type="url"
                                class="input checkurl checkoutsidebmp"
                                data_info="Source URI"
-                               name="TxSourceURI"
-                               id="TxSourceURI"
+                               name="source_uri"
+                               id="source_uri"
                                value="<?php echo htmlspecialchars($recordSourceUri, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="1000"
                                placeholder="https://..." />
@@ -209,7 +209,7 @@ $languagesTyped = $languages;
         <!-- Audio URI -->
         <div class="field is-horizontal">
             <div class="field-label is-normal">
-                <label class="label" for="TxAudioURI"><?= __e('text.common.audio_uri') ?></label>
+                <label class="label" for="audio_uri"><?= __e('text.common.audio_uri') ?></label>
             </div>
             <div class="field-body">
                 <div class="field has-addons">
@@ -217,8 +217,8 @@ $languagesTyped = $languages;
                         <input type="text"
                                class="input checkoutsidebmp"
                                data_info="Audio-URI"
-                               name="TxAudioURI"
-                               id="TxAudioURI"
+                               name="audio_uri"
+                               id="audio_uri"
                                value="<?php echo htmlspecialchars($recordAudioUri, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="200"
                                placeholder="Path to audio file or URL" />

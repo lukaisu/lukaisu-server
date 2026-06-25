@@ -106,8 +106,8 @@ class ListLanguages
     public function getLanguagesWithTextCounts(): array
     {
         $records = QueryBuilder::table('languages')
-            ->select(['languages.LgID', 'languages.LgName', 'COUNT(texts.TxID) AS text_count'])
-            ->join('texts', 'texts.TxLgID', '=', 'languages.LgID')
+            ->select(['languages.LgID', 'languages.LgName', 'COUNT(texts.id) AS text_count'])
+            ->join('texts', 'texts.language_id', '=', 'languages.LgID')
             ->where('languages.LgName', '<>', '')
             ->groupBy(['languages.LgID', 'languages.LgName'])
             ->orderBy('languages.LgName')
@@ -132,10 +132,10 @@ class ListLanguages
     public function getLanguagesWithArchivedTextCounts(): array
     {
         $records = QueryBuilder::table('languages')
-            ->select(['languages.LgID', 'languages.LgName', 'COUNT(texts.TxID) AS text_count'])
-            ->join('texts', 'texts.TxLgID', '=', 'languages.LgID')
+            ->select(['languages.LgID', 'languages.LgName', 'COUNT(texts.id) AS text_count'])
+            ->join('texts', 'texts.language_id', '=', 'languages.LgID')
             ->where('languages.LgName', '<>', '')
-            ->whereNotNull('texts.TxArchivedAt')
+            ->whereNotNull('texts.archived_at')
             ->groupBy(['languages.LgID', 'languages.LgName'])
             ->orderBy('languages.LgName')
             ->getPrepared();
@@ -162,12 +162,12 @@ class ListLanguages
     {
         return [
             'texts' => QueryBuilder::table('texts')
-                ->where('TxLgID', '=', $lid)
-                ->whereNull('TxArchivedAt')
+                ->where('language_id', '=', $lid)
+                ->whereNull('archived_at')
                 ->count(),
             'archivedTexts' => QueryBuilder::table('texts')
-                ->where('TxLgID', '=', $lid)
-                ->whereNotNull('TxArchivedAt')
+                ->where('language_id', '=', $lid)
+                ->whereNotNull('archived_at')
                 ->count(),
             'words' => QueryBuilder::table('words')
                 ->where('language_id', '=', $lid)

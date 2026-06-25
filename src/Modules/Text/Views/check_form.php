@@ -46,13 +46,13 @@ $languagesOptionTyped = $languagesOption;
         <!-- Language -->
         <div class="field is-horizontal">
             <div class="field-label is-normal">
-                <label class="label" for="TxLgID"><?= __e('text.common.language') ?></label>
+                <label class="label" for="language_id"><?= __e('text.common.language') ?></label>
             </div>
             <div class="field-body">
                 <div class="field has-addons">
                     <div class="control is-expanded">
                         <div class="select is-fullwidth">
-                            <select name="TxLgID" id="TxLgID" class="notempty setfocus" required>
+                            <select name="language_id" id="language_id" class="notempty setfocus" required>
                                 <?php echo $languagesOptionTyped; ?>
                             </select>
                         </div>
@@ -69,7 +69,7 @@ $languagesOptionTyped = $languagesOption;
         <!-- Text Content -->
         <div class="field is-horizontal">
             <div class="field-label is-normal">
-                <label class="label" for="TxText">
+                <label class="label" for="text">
                     <?= __e('text.common.text') ?>
                     <span class="has-text-grey is-size-7"><?= __e('text.check.text_max') ?></span>
                 </label>
@@ -77,8 +77,8 @@ $languagesOptionTyped = $languagesOption;
             <div class="field-body">
                 <div class="field has-addons">
                     <div class="control is-expanded">
-                        <textarea name="TxText"
-                                  id="TxText"
+                        <textarea name="text"
+                                  id="text"
                                   class="textarea notempty checkbytes checkoutsidebmp"
                                   data_maxlength="65000"
                                   data_info="Text"

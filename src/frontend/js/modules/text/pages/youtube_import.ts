@@ -57,9 +57,9 @@ function handleFetchSuccess(data: YouTubeProxyResponse['data']): void {
     return;
   }
   setYtDataStatus('Success!');
-  setInputByName('TxTitle', data.title);
-  setInputByName('TxText', data.description);
-  setInputByName('TxSourceURI', data.source_url);
+  setInputByName('title', data.title);
+  setInputByName('text', data.description);
+  setInputByName('source_uri', data.source_url);
 }
 
 /**

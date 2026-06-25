@@ -49,10 +49,10 @@ class DeleteText
             ->where('text_id', '=', $textId)
             ->delete();
         $count1 = QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
+            ->where('id', '=', $textId)
             ->delete();
 
-        Maintenance::adjustAutoIncrement('texts', 'TxID');
+        Maintenance::adjustAutoIncrement('texts', 'id');
         Maintenance::adjustAutoIncrement('sentences', 'id');
         $this->cleanupTextTags();
 
@@ -88,10 +88,10 @@ class DeleteText
 
             // Delete texts
             $affectedRows = QueryBuilder::table('texts')
-                ->whereIn('TxID', $ids)
+                ->whereIn('id', $ids)
                 ->delete();
 
-            Maintenance::adjustAutoIncrement('texts', 'TxID');
+            Maintenance::adjustAutoIncrement('texts', 'id');
             Maintenance::adjustAutoIncrement('sentences', 'id');
             $this->cleanupTextTags();
 
@@ -115,11 +115,11 @@ class DeleteText
     {
         $bindings = [$textId];
         $deleted = Connection::preparedExecute(
-            "DELETE FROM texts WHERE TxID = ? AND TxArchivedAt IS NOT NULL"
+            "DELETE FROM texts WHERE id = ? AND archived_at IS NOT NULL"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings
         );
-        Maintenance::adjustAutoIncrement('texts', 'TxID');
+        Maintenance::adjustAutoIncrement('texts', 'id');
         $this->cleanupTextTags();
         return ['count' => $deleted];
     }
@@ -143,11 +143,11 @@ class DeleteText
         $ids = array_values(array_map('intval', $textIds));
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $deleted = Connection::preparedExecute(
-            "DELETE FROM texts WHERE TxID IN ({$placeholders}) AND TxArchivedAt IS NOT NULL"
+            "DELETE FROM texts WHERE id IN ({$placeholders}) AND archived_at IS NOT NULL"
             . UserScopedQuery::forTablePrepared('texts', $ids),
             $ids
         );
-        Maintenance::adjustAutoIncrement('texts', 'TxID');
+        Maintenance::adjustAutoIncrement('texts', 'id');
         $this->cleanupTextTags();
         return ['count' => $deleted];
     }
@@ -164,9 +164,9 @@ class DeleteText
             "DELETE text_tag_map
             FROM (
                 text_tag_map
-                LEFT JOIN texts ON text_id = TxID
+                LEFT JOIN texts ON text_id = id
             )
-            WHERE TxID IS NULL"
+            WHERE id IS NULL"
             . UserScopedQuery::forTablePrepared('text_tag_map', $bindings, '', 'texts'),
             $bindings
         );

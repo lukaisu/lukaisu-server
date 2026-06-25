@@ -10,8 +10,8 @@
  * could request sentences (or sentence content) belonging to another
  * user simply by passing that user's `language_id` / id.
  *
- * The fix scopes via the parent `texts.TxUsID` column: `find*` rewrites
- * its WHERE to `AND text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)`,
+ * The fix scopes via the parent `texts.user_id` column: `find*` rewrites
+ * its WHERE to `AND text_id IN (SELECT id FROM texts WHERE user_id = ?)`,
  * and `formatSentence` short-circuits when `ownsSentence()` reports the
  * id's parent text isn't owned by the caller. This test reads each
  * method's source via reflection and asserts those gates are present.
@@ -63,7 +63,7 @@ class SentenceUserScopeTest extends TestCase
             $source,
             'findSentencesFromWord must call parentTextUserScope() so'
             . ' the sentences/word_occurrences raw SQL filters by'
-            . ' TxUsID via the parent text. Otherwise an authenticated'
+            . ' user_id via the parent text. Otherwise an authenticated'
             . ' user can pass another user\'s language_id and read'
             . ' their sentences.'
         );
@@ -75,7 +75,7 @@ class SentenceUserScopeTest extends TestCase
         $source = $this->getMethodSource(SentenceService::class, 'parentTextUserScope');
 
         $this->assertStringContainsString(
-            'text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
+            'text_id IN (SELECT id FROM texts WHERE user_id = ?)',
             $source,
             'parentTextUserScope must scope sentences via the parent'
             . ' texts row — text_id has no UsID of its own.'
@@ -103,9 +103,9 @@ class SentenceUserScopeTest extends TestCase
         $source = $this->getMethodSource(SentenceService::class, 'ownsSentence');
 
         $this->assertStringContainsString(
-            'TxUsID = ?',
+            'user_id = ?',
             $source,
-            'ownsSentence must compare the sentence\'s parent TxUsID'
+            'ownsSentence must compare the sentence\'s parent user_id'
             . ' against the current user.'
         );
     }

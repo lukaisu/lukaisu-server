@@ -67,19 +67,19 @@ interface GutenbergBrowserData {
 }
 
 function getSelectedLanguageId(): number {
-  const input = document.getElementById('TxLgID') as HTMLInputElement | null;
+  const input = document.getElementById('language_id') as HTMLInputElement | null;
   if (!input) return 0;
   return parseInt(input.value, 10) || 0;
 }
 
 /**
- * Listen for language changes on the TxLgID hidden input.
+ * Listen for language changes on the language_id hidden input.
  * Uses event delegation on document to avoid timing issues with Alpine init.
  */
 function onLanguageChange(callback: (langId: number) => void): void {
   document.addEventListener('change', (e) => {
     const target = e.target as HTMLElement;
-    if (target.id === 'TxLgID') {
+    if (target.id === 'language_id') {
       const langId = parseInt((target as HTMLInputElement).value, 10) || 0;
       callback(langId);
     }
@@ -224,7 +224,7 @@ export function gutenbergBrowserData(): GutenbergBrowserData {
       }
 
       // Pre-fill title
-      const titleInput = document.querySelector<HTMLInputElement>('input[name="TxTitle"]');
+      const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
       if (titleInput) {
         titleInput.value = book.title;
       }
@@ -467,9 +467,9 @@ export function gdlBrowserData(): GdlBrowserData {
           );
           if (el) el.value = value;
         };
-        set('TxTitle', data.title || book.title);
-        set('TxText', data.text || '');
-        set('TxSourceURI', data.sourceUri || book.sourceUri);
+        set('title', data.title || book.title);
+        set('text', data.text || '');
+        set('source_uri', data.sourceUri || book.sourceUri);
 
         const formEl = document.querySelector<HTMLFormElement>('form[x-data]');
         if (formEl) {
@@ -680,21 +680,21 @@ export function feedBrowserData(): FeedBrowserData {
         }
 
         // Pre-fill title
-        const titleInput = document.querySelector<HTMLInputElement>('input[name="TxTitle"]');
+        const titleInput = document.querySelector<HTMLInputElement>('input[name="title"]');
         if (titleInput) {
           titleInput.value = article.title;
         }
 
         // Pre-fill audio if available
         if (article.audio) {
-          const audioInput = document.getElementById('TxAudioURI') as HTMLInputElement | null;
+          const audioInput = document.getElementById('audio_uri') as HTMLInputElement | null;
           if (audioInput) {
             audioInput.value = article.audio;
           }
         }
 
         // Pre-fill source URI
-        const sourceInput = document.getElementById('TxSourceURI') as HTMLInputElement | null;
+        const sourceInput = document.getElementById('source_uri') as HTMLInputElement | null;
         if (sourceInput) {
           sourceInput.value = article.link;
         }

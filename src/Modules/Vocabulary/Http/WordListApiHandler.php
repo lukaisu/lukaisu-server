@@ -415,14 +415,14 @@ class WordListApiHandler
         $texts = [];
         if ($langId !== null && $langId > 0) {
             $textResult = QueryBuilder::table('texts')
-                ->select(['TxID', 'TxTitle'])
-                ->where('TxLgID', '=', $langId)
-                ->orderBy('TxTitle')
+                ->select(['id', 'title'])
+                ->where('language_id', '=', $langId)
+                ->orderBy('title')
                 ->getPrepared();
             foreach ($textResult as $row) {
                 $texts[] = [
-                    'id' => (int) $row['TxID'],
-                    'title' => (string) $row['TxTitle']
+                    'id' => (int) $row['id'],
+                    'title' => (string) $row['title']
                 ];
             }
         }

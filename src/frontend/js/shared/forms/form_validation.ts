@@ -106,7 +106,7 @@ export function check(): boolean {
   let count = 0;
 
   // Check non-empty fields. Skip elements whose ancestor chain is hidden via
-  // x-show / display:none — e.g. on /texts/new the TxText textarea is hidden
+  // x-show / display:none — e.g. on /texts/new the text textarea is hidden
   // when the user is importing a file, so requiring text content there is a
   // false positive.
   document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('.notempty').forEach(el => {

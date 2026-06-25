@@ -279,7 +279,7 @@ class ApiControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT TxID, TxLgID, TxTitle, TxSourceURI
+        $sql = "SELECT id, language_id, title, source_uri
                 FROM " . Globals::table('texts') . " LIMIT 10";
         $result = Connection::query($sql);
 

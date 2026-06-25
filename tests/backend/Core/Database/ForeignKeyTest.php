@@ -109,7 +109,7 @@ class ForeignKeyTest extends TestCase
         // Clean up test data after each test
         Connection::query("DELETE FROM word_occurrences WHERE text LIKE 'fktest_%'");
         Connection::query("DELETE FROM sentences WHERE text LIKE 'FK Test%'");
-        Connection::query("DELETE FROM texts WHERE TxTitle LIKE 'FK_Test_%'");
+        Connection::query("DELETE FROM texts WHERE title LIKE 'FK_Test_%'");
         Connection::query("DELETE FROM words WHERE text LIKE 'fktest_%'");
         Connection::query("DELETE FROM word_tag_map WHERE word_id NOT IN (SELECT id FROM words)");
         Connection::query("DELETE FROM tags WHERE text LIKE 'fktest_%'");
@@ -184,7 +184,7 @@ class ForeignKeyTest extends TestCase
         $this->assertEquals(1, $beforeCount, 'Sentence should exist before delete');
 
         // Delete text
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
 
         // Verify sentence was cascaded
         $afterCount = (int) Connection::fetchValue(
@@ -216,7 +216,7 @@ class ForeignKeyTest extends TestCase
         $this->assertEquals(1, $beforeCount, 'TextItem should exist before delete');
 
         // Delete text
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
 
         // Verify text item was cascaded
         $afterCount = (int) Connection::fetchValue(
@@ -363,7 +363,7 @@ class ForeignKeyTest extends TestCase
         $this->assertEquals(1, $beforeCount, 'Texttag should exist before delete');
 
         // Delete text
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
 
         // Verify texttag was cascaded
         $afterCount = (int) Connection::fetchValue(
@@ -391,12 +391,12 @@ class ForeignKeyTest extends TestCase
         );
 
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+            "INSERT INTO texts (language_id, title, text, annotated_text)
              VALUES ($langId, 'FK_Test_FullCascade', 'Test', '')"
         );
         $textId = (int) Connection::fetchValue(
-            "SELECT TxID FROM texts WHERE TxTitle = 'FK_Test_FullCascade'",
-            'TxID'
+            "SELECT id FROM texts WHERE title = 'FK_Test_FullCascade'",
+            'id'
         );
 
         Connection::query(
@@ -415,7 +415,7 @@ class ForeignKeyTest extends TestCase
 
         // Verify all exist
         $this->assertEquals(1, (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM texts WHERE TxID = $textId",
+            "SELECT COUNT(*) AS cnt FROM texts WHERE id = $textId",
             'cnt'
         ));
         $this->assertEquals(1, (int) Connection::fetchValue(
@@ -432,7 +432,7 @@ class ForeignKeyTest extends TestCase
 
         // Verify all were deleted
         $this->assertEquals(0, (int) Connection::fetchValue(
-            "SELECT COUNT(*) AS cnt FROM texts WHERE TxID = $textId",
+            "SELECT COUNT(*) AS cnt FROM texts WHERE id = $textId",
             'cnt'
         ), 'Text should be deleted via CASCADE');
         $this->assertEquals(0, (int) Connection::fetchValue(
@@ -492,7 +492,7 @@ class ForeignKeyTest extends TestCase
     /**
      * Test that deleting an archived text (soft delete) preserves tags.
      *
-     * Note: Archived texts are now in the texts table with TxArchivedAt set.
+     * Note: Archived texts are now in the texts table with archived_at set.
      * Tags remain associated since the text still exists.
      */
     public function testArchivedTextPreservesTags(): void
@@ -501,12 +501,12 @@ class ForeignKeyTest extends TestCase
 
         // Create a text with a tag
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+            "INSERT INTO texts (language_id, title, text, annotated_text)
              VALUES (" . self::$testLangId . ", 'FK_Test_Archived', 'Archived content', '')"
         );
         $textId = (int) Connection::fetchValue(
-            "SELECT TxID FROM texts WHERE TxTitle = 'FK_Test_Archived'",
-            'TxID'
+            "SELECT id FROM texts WHERE title = 'FK_Test_Archived'",
+            'id'
         );
 
         Connection::query(
@@ -520,7 +520,7 @@ class ForeignKeyTest extends TestCase
         Connection::query("INSERT INTO text_tag_map (text_id, text_tag_id) VALUES ($textId, $tagId)");
 
         // Archive the text (soft delete)
-        Connection::query("UPDATE texts SET TxArchivedAt = NOW() WHERE TxID = $textId");
+        Connection::query("UPDATE texts SET archived_at = NOW() WHERE id = $textId");
 
         // Verify tag association still exists (text is archived, not deleted)
         $afterCount = (int) Connection::fetchValue(
@@ -530,7 +530,7 @@ class ForeignKeyTest extends TestCase
         $this->assertEquals(1, $afterCount, 'TextTag should still exist after archiving');
 
         // Clean up
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
     }
 
     // ===== FK Constraint Enforcement Tests =====
@@ -545,7 +545,7 @@ class ForeignKeyTest extends TestCase
         $this->expectExceptionMessageMatches('/foreign key constraint fails/i');
 
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+            "INSERT INTO texts (language_id, title, text, annotated_text)
              VALUES (255, 'FK_Test_Invalid', 'Test', '')"
         );
     }
@@ -591,12 +591,12 @@ class ForeignKeyTest extends TestCase
     private function createTestText(string $title): int
     {
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+            "INSERT INTO texts (language_id, title, text, annotated_text)
              VALUES (" . self::$testLangId . ", '$title', 'Test content', '')"
         );
         return (int) Connection::fetchValue(
-            "SELECT TxID FROM texts WHERE TxTitle = '$title'",
-            'TxID'
+            "SELECT id FROM texts WHERE title = '$title'",
+            'id'
         );
     }
 

@@ -131,23 +131,23 @@ CREATE TABLE IF NOT EXISTS temp_words (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS texts (
-    TxID smallint(5) unsigned NOT NULL AUTO_INCREMENT,
-    TxUsID int(10) unsigned DEFAULT NULL,
-    TxLgID tinyint(3) unsigned NOT NULL,
-    TxTitle varchar(200) NOT NULL,
-    TxText text NOT NULL,
-    TxAnnotatedText longtext NOT NULL DEFAULT '',
-    TxAudioURI varchar(2048) DEFAULT NULL,
-    TxSourceURI varchar(1000) DEFAULT NULL,
-    TxPosition smallint(5) DEFAULT 0,
-    TxAudioPosition float DEFAULT 0,
-    TxArchivedAt DATETIME DEFAULT NULL,
-    PRIMARY KEY (TxID),
-    KEY TxUsID (TxUsID),
-    KEY TxLgID (TxLgID),
-    KEY TxLgIDSourceURI (TxSourceURI(20),TxLgID),
-    KEY TxArchivedAt (TxArchivedAt),
-    CONSTRAINT fk_texts_user FOREIGN KEY (TxUsID) REFERENCES users(UsID) ON DELETE CASCADE
+    id smallint(5) unsigned NOT NULL AUTO_INCREMENT,
+    user_id int(10) unsigned DEFAULT NULL,
+    language_id tinyint(3) unsigned NOT NULL,
+    title varchar(200) NOT NULL,
+    text text NOT NULL,
+    annotated_text longtext NOT NULL DEFAULT '',
+    audio_uri varchar(2048) DEFAULT NULL,
+    source_uri varchar(1000) DEFAULT NULL,
+    position smallint(5) DEFAULT 0,
+    audio_position float DEFAULT 0,
+    archived_at DATETIME DEFAULT NULL,
+    PRIMARY KEY (id),
+    KEY user_id (user_id),
+    KEY language_id (language_id),
+    KEY source_uri_language_id (source_uri(20),language_id),
+    KEY archived_at (archived_at),
+    CONSTRAINT fk_texts_user FOREIGN KEY (user_id) REFERENCES users(UsID) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS words (

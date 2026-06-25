@@ -250,10 +250,10 @@ class FeedIndexControllerTest extends TestCase
         $this->feedFacade->method('extractTextFromArticle')
             ->willReturn([
                 [
-                    'TxTitle' => 'Article 1',
-                    'TxText' => 'Content',
-                    'TxAudioURI' => '',
-                    'TxSourceURI' => 'http://example.com/1',
+                    'title' => 'Article 1',
+                    'text' => 'Content',
+                    'audio_uri' => '',
+                    'source_uri' => 'http://example.com/1',
                 ]
             ]);
         $this->feedFacade->expects($this->once())
@@ -341,7 +341,7 @@ class FeedIndexControllerTest extends TestCase
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$feedLink]);
         $this->feedFacade->method('getNfOption')->willReturn(null);
         $this->feedFacade->method('extractTextFromArticle')
-            ->willReturn([['TxTitle' => 'Test', 'TxText' => 'Text']]);
+            ->willReturn([['title' => 'Test', 'text' => 'Text']]);
         $this->feedFacade->method('createTextFromFeed')->willReturn(1);
         $this->feedFacade->method('archiveOldTexts')
             ->willReturn(['archived' => 2, 'sentences' => 5, 'textitems' => 10]);
@@ -391,7 +391,7 @@ class FeedIndexControllerTest extends TestCase
                 return null;
             });
         $this->feedFacade->method('extractTextFromArticle')
-            ->willReturn([['TxTitle' => 'Test', 'TxText' => 'Content']]);
+            ->willReturn([['title' => 'Test', 'text' => 'Content']]);
 
         $this->feedFacade->expects($this->once())
             ->method('createTextFromFeed')
@@ -420,16 +420,16 @@ class FeedIndexControllerTest extends TestCase
 
         $texts = [
             [
-                'TxTitle' => 'Article One',
-                'TxText' => 'Content 1',
-                'TxAudioURI' => '',
-                'TxSourceURI' => 'http://example.com/1',
+                'title' => 'Article One',
+                'text' => 'Content 1',
+                'audio_uri' => '',
+                'source_uri' => 'http://example.com/1',
             ],
             [
-                'TxTitle' => 'Article Two',
-                'TxText' => 'Content 2',
-                'TxAudioURI' => '',
-                'TxSourceURI' => 'http://example.com/2',
+                'title' => 'Article Two',
+                'text' => 'Content 2',
+                'audio_uri' => '',
+                'source_uri' => 'http://example.com/2',
             ],
         ];
 
@@ -465,7 +465,7 @@ class FeedIndexControllerTest extends TestCase
         }
 
         $texts = [
-            ['TxTitle' => '<script>alert("xss")</script>', 'TxText' => 'Content'],
+            ['title' => '<script>alert("xss")</script>', 'text' => 'Content'],
         ];
         $row = ['language_id' => 1];
 
@@ -492,10 +492,10 @@ class FeedIndexControllerTest extends TestCase
 
         $texts = [
             [
-                'TxTitle' => 'My Article',
-                'TxText' => 'Article body text',
-                'TxAudioURI' => 'http://example.com/audio.mp3',
-                'TxSourceURI' => 'http://example.com/article'
+                'title' => 'My Article',
+                'text' => 'Article body text',
+                'audio_uri' => 'http://example.com/audio.mp3',
+                'source_uri' => 'http://example.com/article'
             ],
         ];
         $row = ['language_id' => 5];
@@ -504,11 +504,11 @@ class FeedIndexControllerTest extends TestCase
             ->method('createTextFromFeed')
             ->with(
                 $this->callback(function (array $data) {
-                    return $data['TxLgID'] === 5
-                        && $data['TxTitle'] === 'My Article'
-                        && $data['TxText'] === 'Article body text'
-                        && $data['TxAudioURI'] === 'http://example.com/audio.mp3'
-                        && $data['TxSourceURI'] === 'http://example.com/article';
+                    return $data['language_id'] === 5
+                        && $data['title'] === 'My Article'
+                        && $data['text'] === 'Article body text'
+                        && $data['audio_uri'] === 'http://example.com/audio.mp3'
+                        && $data['source_uri'] === 'http://example.com/article';
                 }),
                 'my_tag'
             );
@@ -575,11 +575,11 @@ class FeedIndexControllerTest extends TestCase
                     'Nf_ID' => 1,
                     'TagList' => ['tag1'],
                     'Nf_Max_Texts' => 10,
-                    'TxLgID' => 1,
-                    'TxTitle' => 'Title',
-                    'TxText' => 'Text',
-                    'TxAudioURI' => '',
-                    'TxSourceURI' => '',
+                    'language_id' => 1,
+                    'title' => 'Title',
+                    'text' => 'Text',
+                    'audio_uri' => '',
+                    'source_uri' => '',
                 ]
             ],
         ];
@@ -707,7 +707,7 @@ class FeedIndexControllerTest extends TestCase
         $this->feedFacade->method('getNfOption')->willReturn(null);
 
         $this->feedFacade->method('extractTextFromArticle')
-            ->willReturn([['TxTitle' => 'Test', 'TxText' => 'Text']]);
+            ->willReturn([['title' => 'Test', 'text' => 'Text']]);
 
         $expectedTag = mb_substr('A Very Long Feed Name That Is More Than Twenty Characters', 0, 20, 'utf-8');
         $this->feedFacade->expects($this->once())
@@ -749,7 +749,7 @@ class FeedIndexControllerTest extends TestCase
         $this->feedFacade->method('getMarkedFeedLinks')->willReturn([$feedLink]);
         $this->feedFacade->method('getNfOption')->willReturn(null);
         $this->feedFacade->method('extractTextFromArticle')
-            ->willReturn([['TxTitle' => 'Test', 'TxText' => 'Text']]);
+            ->willReturn([['title' => 'Test', 'text' => 'Text']]);
         $this->feedFacade->method('createTextFromFeed')->willReturn(1);
         $this->feedFacade->method('archiveOldTexts')
             ->willReturn(['archived' => 0, 'sentences' => 0, 'textitems' => 0]);

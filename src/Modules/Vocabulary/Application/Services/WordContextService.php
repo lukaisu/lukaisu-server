@@ -61,10 +61,10 @@ class WordContextService
         $bindings = [$textId];
         /** @var int|null $langId */
         $langId = Connection::preparedFetchValue(
-            "SELECT TxLgID FROM texts WHERE TxID = ?"
+            "SELECT language_id FROM texts WHERE id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings,
-            'TxLgID'
+            'language_id'
         );
         return $langId;
     }
@@ -106,7 +106,7 @@ class WordContextService
         $record = Connection::preparedFetchOne(
             "SELECT LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI
              FROM languages, texts
-             WHERE LgID = TxLgID AND TxID = ?"
+             WHERE LgID = language_id AND id = ?"
              . UserScopedQuery::forTablePrepared('languages', $bindings, 'languages')
              . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts'),
             $bindings
@@ -132,8 +132,8 @@ class WordContextService
         $bindings = [$textId];
         return (bool) Connection::preparedFetchValue(
             "SELECT LgShowRomanization
-             FROM languages JOIN texts ON TxLgID = LgID
-             WHERE TxID = ?"
+             FROM languages JOIN texts ON language_id = LgID
+             WHERE id = ?"
              . UserScopedQuery::forTablePrepared('languages', $bindings, 'languages')
              . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts'),
             $bindings,

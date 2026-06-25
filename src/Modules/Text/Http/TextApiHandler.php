@@ -454,8 +454,8 @@ class TextApiHandler implements ApiRoutableInterface
         $rate = Settings::get('currentplaybackrate');
 
         return Response::success([
-            'uri' => trim((string) ($header['TxAudioURI'] ?? '')),
-            'position' => (float) ($header['TxAudioPosition'] ?? 0),
+            'uri' => trim((string) ($header['audio_uri'] ?? '')),
+            'position' => (float) ($header['audio_position'] ?? 0),
             'playerSettings' => [
                 'repeatMode' => (bool) Settings::getZeroOrOne('currentplayerrepeatmode', 0),
                 'skipSeconds' => $skip === '' ? 5 : (int) $skip,

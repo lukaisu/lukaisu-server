@@ -46,8 +46,8 @@ class TextDisplayService
     public function getHeaderData(int $textId): ?array
     {
         $record = QueryBuilder::table('texts')
-            ->select(['TxTitle', 'TxAudioURI', 'TxSourceURI'])
-            ->where('TxID', '=', $textId)
+            ->select(['title', 'audio_uri', 'source_uri'])
+            ->where('id', '=', $textId)
             ->firstPrepared();
 
         if ($record === null) {
@@ -55,16 +55,16 @@ class TextDisplayService
         }
 
         $audio = '';
-        if (isset($record['TxAudioURI'])) {
-            $audio = trim((string) $record['TxAudioURI']);
+        if (isset($record['audio_uri'])) {
+            $audio = trim((string) $record['audio_uri']);
         }
 
         Settings::savePerUser('currenttext', $textId);
 
         return [
-            'title' => (string) $record['TxTitle'],
+            'title' => (string) $record['title'],
             'audio' => $audio,
-            'sourceUri' => $record['TxSourceURI'] !== null ? (string) $record['TxSourceURI'] : null
+            'sourceUri' => $record['source_uri'] !== null ? (string) $record['source_uri'] : null
         ];
     }
 
@@ -79,8 +79,8 @@ class TextDisplayService
     {
         $record = QueryBuilder::table('texts')
             ->select(['LgTextSize', 'LgRightToLeft'])
-            ->join('languages', 'LgID', '=', 'TxLgID')
-            ->where('TxID', '=', $textId)
+            ->join('languages', 'LgID', '=', 'language_id')
+            ->where('id', '=', $textId)
             ->firstPrepared();
 
         if ($record === null) {
@@ -103,11 +103,11 @@ class TextDisplayService
     public function getAnnotatedText(int $textId): string
     {
         $record = QueryBuilder::table('texts')
-            ->select(['TxAnnotatedText'])
-            ->where('TxID', '=', $textId)
+            ->select(['annotated_text'])
+            ->where('id', '=', $textId)
             ->firstPrepared();
 
-        return $record !== null ? (string) $record['TxAnnotatedText'] : '';
+        return $record !== null ? (string) $record['annotated_text'] : '';
     }
 
     /**
@@ -120,12 +120,12 @@ class TextDisplayService
     public function getAudioUri(int $textId): ?string
     {
         $record = QueryBuilder::table('texts')
-            ->select(['TxAudioURI'])
-            ->where('TxID', '=', $textId)
+            ->select(['audio_uri'])
+            ->where('id', '=', $textId)
             ->firstPrepared();
 
-        return $record !== null && $record['TxAudioURI'] !== null
-            ? (string) $record['TxAudioURI']
+        return $record !== null && $record['audio_uri'] !== null
+            ? (string) $record['audio_uri']
             : null;
     }
 

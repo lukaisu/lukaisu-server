@@ -230,7 +230,7 @@ class ExpressionServiceTest extends TestCase
     public function testMecabExpressionReturnsExpectedStructure(): void
     {
         // Document expected return structure for findMecabExpression
-        $expectedKeys = ['id', 'TxID', 'position', 'term'];
+        $expectedKeys = ['id', 'id', 'position', 'term'];
 
         // This is a documentation test - actual array structure validation
         // would require MeCab and database integration testing

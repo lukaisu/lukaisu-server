@@ -49,7 +49,7 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
  * @var int $pages Total pages
  * @var array<int, array{id: int|null, feed_id: int, title: string, link: string,
  *     description: string, published_at: string, audio: string, text: string,
- *     TxID: int|null, TxArchivedAt: string|null}> $articles Array of feed article records
+ *     text_id: int|null, archived_at: string|null}> $articles Array of feed article records
  * @var int|null $feedTime Last update timestamp
  */
 
@@ -187,12 +187,12 @@ endif; ?>
   </tr>
     <?php foreach ($articles as $row) : ?>
         <tr>
-        <?php if ($row['TxID'] !== null && $row['TxArchivedAt'] === null) : ?>
+        <?php if ($row['text_id'] !== null && $row['archived_at'] === null) : ?>
             <td class="has-text-centered">
-                <a href="/text/<?php echo $row['TxID']; ?>/read">
+                <a href="/text/<?php echo $row['text_id']; ?>/read">
                 <?php echo IconHelper::render('book-open', ['title' => __('feed.browse_read_alt'), 'alt' => '-']); ?>
                 </a>
-        <?php elseif ($row['TxID'] !== null && $row['TxArchivedAt'] !== null) : ?>
+        <?php elseif ($row['text_id'] !== null && $row['archived_at'] !== null) : ?>
             <td class="has-text-centered">
                 <span title="<?php echo __e('feed.browse_archived_title'); ?>">
                     <?php echo IconHelper::render('circle-x', ['alt' => '-']); ?>

@@ -69,13 +69,15 @@ class FeedArticleApiHandler
             return ['error' => 'Feed not found'];
         }
 
-        // Build WHERE clause with parameters
-        $whereConditions = ["feed_id = ?"];
+        // Build WHERE clause with parameters. feed_links is aliased `fl` in both the
+        // count and the article query below; the texts LEFT JOIN there makes bare
+        // title/description ambiguous, so qualify them here.
+        $whereConditions = ["fl.feed_id = ?"];
         $queryParams = [$feedId];
 
         if (is_string($query) && $query !== '') {
             $pattern = '%' . str_replace('*', '%', $query) . '%';
-            $whereConditions[] = "(title LIKE ? OR description LIKE ?)";
+            $whereConditions[] = "(fl.title LIKE ? OR fl.description LIKE ?)";
             $queryParams[] = $pattern;
             $queryParams[] = $pattern;
         }
@@ -84,7 +86,7 @@ class FeedArticleApiHandler
 
         // Count total using raw SQL with fixed table name
         $total = (int)Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS cnt FROM feed_links WHERE $where",
+            "SELECT COUNT(*) AS cnt FROM feed_links fl WHERE $where",
             $queryParams,
             'cnt'
         );
@@ -96,14 +98,15 @@ class FeedArticleApiHandler
         }
         $offset = ($page - 1) * $perPage;
 
-        // Sort order
-        $sorts = ['published_at DESC', 'published_at ASC', 'title ASC'];
-        $orderBy = $sorts[$sort - 1] ?? 'published_at DESC';
+        // Sort order (qualified: the article query LEFT JOINs texts, so bare
+        // title would be ambiguous)
+        $sorts = ['fl.published_at DESC', 'fl.published_at ASC', 'fl.title ASC'];
+        $orderBy = $sorts[$sort - 1] ?? 'fl.published_at DESC';
 
-        // Get articles with import status (archived texts are in texts table with TxArchivedAt)
-        $sql = "SELECT fl.*, tx.TxID, tx.TxArchivedAt
+        // Get articles with import status (archived texts are in texts table with archived_at)
+        $sql = "SELECT fl.*, tx.id AS text_id, tx.archived_at
                 FROM feed_links fl
-                LEFT JOIN texts tx ON tx.TxSourceURI = TRIM(fl.link)
+                LEFT JOIN texts tx ON tx.source_uri = TRIM(fl.link)
                 WHERE $where
                 ORDER BY $orderBy
                 LIMIT ?, ?";
@@ -143,9 +146,9 @@ class FeedArticleApiHandler
      */
     public function formatArticleRecord(array $row): array
     {
-        $textId = isset($row['TxID']) && $row['TxID'] !== null && $row['TxID'] !== ''
-            ? (int)$row['TxID'] : null;
-        $isArchived = $textId !== null && !empty($row['TxArchivedAt']);
+        $textId = isset($row['text_id']) && $row['text_id'] !== null && $row['text_id'] !== ''
+            ? (int)$row['text_id'] : null;
+        $isArchived = $textId !== null && !empty($row['archived_at']);
 
         $status = 'new';
         if ($textId !== null && !$isArchived) {
@@ -156,7 +159,7 @@ class FeedArticleApiHandler
             $status = 'error';
         }
 
-        // For archived texts, report the same TxID as archivedTextId
+        // For archived texts, report the same id as archivedTextId
         $archivedTextId = $isArchived ? $textId : null;
         $activeTextId = ($textId !== null && !$isArchived) ? $textId : null;
 
@@ -281,13 +284,13 @@ class FeedArticleApiHandler
 
             if (is_array($texts)) {
                 foreach ($texts as $text) {
-                    /** @var array{TxTitle?: mixed, TxText?: mixed, TxAudioURI?: mixed, TxSourceURI?: mixed} $text */
+                    /** @var array{title?: mixed, text?: mixed, audio_uri?: mixed, source_uri?: mixed} $text */
                     $this->feedFacade->createTextFromFeed([
-                        'TxLgID' => (int)($row['language_id'] ?? 0),
-                        'TxTitle' => (string)($text['TxTitle'] ?? ''),
-                        'TxText' => (string)($text['TxText'] ?? ''),
-                        'TxAudioURI' => (string)($text['TxAudioURI'] ?? ''),
-                        'TxSourceURI' => (string)($text['TxSourceURI'] ?? '')
+                        'language_id' => (int)($row['language_id'] ?? 0),
+                        'title' => (string)($text['title'] ?? ''),
+                        'text' => (string)($text['text'] ?? ''),
+                        'audio_uri' => (string)($text['audio_uri'] ?? ''),
+                        'source_uri' => (string)($text['source_uri'] ?? '')
                     ], $tagName);
                     $imported++;
                 }

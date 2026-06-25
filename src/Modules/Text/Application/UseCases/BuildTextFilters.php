@@ -41,7 +41,7 @@ class BuildTextFilters
         if ($langId === '' || $langId === 0) {
             return ['clause' => '', 'params' => []];
         }
-        return ['clause' => ' AND TxLgID = ?', 'params' => [(int)$langId]];
+        return ['clause' => ' AND texts.language_id = ?', 'params' => [(int)$langId]];
     }
 
     /**
@@ -50,7 +50,8 @@ class BuildTextFilters
      * @param string $query       Search query string
      * @param string $queryMode   Query mode ('title,text', 'title', 'text')
      * @param string $regexMode   Regex mode ('' for LIKE, 'r' for RLIKE)
-     * @param string $tablePrefix Column prefix ('Tx' for texts, 'At' for archived)
+     * @param string $tableAlias Table qualifier for the columns ('texts.'); active
+     *                           and archived texts now share the texts table
      *
      * @return array{clause: string, params: array} SQL WHERE clause and parameters
      */
@@ -58,14 +59,14 @@ class BuildTextFilters
         string $query,
         string $queryMode,
         string $regexMode,
-        string $tablePrefix = 'Tx'
+        string $tableAlias = 'texts.'
     ): array {
         if ($query === '') {
             return ['clause' => '', 'params' => []];
         }
 
-        $titleCol = $tablePrefix . 'Title';
-        $textCol = $tablePrefix . 'Text';
+        $titleCol = $tableAlias . 'title';
+        $textCol = $tableAlias . 'text';
 
         $searchValue = $regexMode === ''
             ? str_replace("*", "%", mb_strtolower($query, 'UTF-8'))
@@ -99,7 +100,7 @@ class BuildTextFilters
     /**
      * Build WHERE clause for archived text query filtering.
      *
-     * Note: Archived texts are now stored in the texts table with TxArchivedAt set,
+     * Note: Archived texts are now stored in the texts table with archived_at set,
      * so they use the same Tx column prefix as active texts.
      *
      * @param string $query     Search query string
@@ -113,7 +114,7 @@ class BuildTextFilters
         string $queryMode,
         string $regexMode
     ): array {
-        return $this->buildQueryWhereClause($query, $queryMode, $regexMode, 'Tx');
+        return $this->buildQueryWhereClause($query, $queryMode, $regexMode, 'texts.');
     }
 
     /**

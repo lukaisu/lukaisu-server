@@ -54,7 +54,7 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         // Clean up test data
-        Connection::query("DELETE FROM texts WHERE TxTitle LIKE 'test_export_%'");
+        Connection::query("DELETE FROM texts WHERE title LIKE 'test_export_%'");
         Connection::query("DELETE FROM languages WHERE LgName LIKE 'test_export_%'");
     }
 
@@ -72,7 +72,7 @@ class ExportAndAnnotationTest extends TestCase
         $lgId = (int)Connection::lastInsertId();
 
         // Create test text
-        Connection::query("INSERT INTO texts (TxTitle, TxText, TxLgID)
+        Connection::query("INSERT INTO texts (title, text, language_id)
                          VALUES ('test_export_text', 'Test content', $lgId)");
         $textId = (int)Connection::lastInsertId();
 
@@ -82,7 +82,7 @@ class ExportAndAnnotationTest extends TestCase
         // Even with no word_occurrences, should return some annotation structure
 
         // Clean up
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
         Connection::query("DELETE FROM languages WHERE LgID = $lgId");
     }
 
@@ -112,7 +112,7 @@ class ExportAndAnnotationTest extends TestCase
         $lgId = (int)Connection::lastInsertId();
 
         // Create test text
-        Connection::query("INSERT INTO texts (TxTitle, TxText, TxLgID)
+        Connection::query("INSERT INTO texts (title, text, language_id)
                          VALUES ('test_export_recreate_text', 'Test content', $lgId)");
         $textId = (int)Connection::lastInsertId();
 
@@ -122,7 +122,7 @@ class ExportAndAnnotationTest extends TestCase
         $this->assertIsString($newAnn);
 
         // Clean up
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
         Connection::query("DELETE FROM languages WHERE LgID = $lgId");
     }
 
@@ -138,7 +138,7 @@ class ExportAndAnnotationTest extends TestCase
         $lgId = (int)Connection::lastInsertId();
 
         // Create test text
-        Connection::query("INSERT INTO texts (TxTitle, TxText, TxLgID)
+        Connection::query("INSERT INTO texts (title, text, language_id)
                          VALUES ('test_export_empty_text', 'Test content', $lgId)");
         $textId = (int)Connection::lastInsertId();
 
@@ -147,7 +147,7 @@ class ExportAndAnnotationTest extends TestCase
         $this->assertIsString($newAnn);
 
         // Clean up
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
         Connection::query("DELETE FROM languages WHERE LgID = $lgId");
     }
 
@@ -163,7 +163,7 @@ class ExportAndAnnotationTest extends TestCase
         $lgId = (int)Connection::lastInsertId();
 
         // Create test text
-        Connection::query("INSERT INTO texts (TxTitle, TxText, TxLgID, TxAnnotatedText)
+        Connection::query("INSERT INTO texts (title, text, language_id, annotated_text)
                          VALUES ('test_export_update_text', 'Test content', $lgId, '')");
         $textId = (int)Connection::lastInsertId();
 
@@ -171,11 +171,11 @@ class ExportAndAnnotationTest extends TestCase
         (new AnnotationService())->recreateSaveAnnotation($textId, $oldAnn);
 
         // Verify database was updated
-        $saved = Connection::fetchValue("SELECT TxAnnotatedText AS value FROM texts WHERE TxID = $textId");
+        $saved = Connection::fetchValue("SELECT annotated_text AS value FROM texts WHERE id = $textId");
         $this->assertNotNull($saved);
 
         // Clean up
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
         Connection::query("DELETE FROM languages WHERE LgID = $lgId");
     }
 
@@ -223,7 +223,7 @@ class ExportAndAnnotationTest extends TestCase
         $lgId = (int)Connection::lastInsertId();
 
         // Create test text
-        Connection::query("INSERT INTO texts (TxTitle, TxText, TxLgID)
+        Connection::query("INSERT INTO texts (title, text, language_id)
                          VALUES ('test_export_struct_text', 'Test content', $lgId)");
         $textId = (int)Connection::lastInsertId();
 
@@ -234,7 +234,7 @@ class ExportAndAnnotationTest extends TestCase
         $this->assertIsArray($lines);
 
         // Clean up
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
         Connection::query("DELETE FROM languages WHERE LgID = $lgId");
     }
 
@@ -268,7 +268,7 @@ class ExportAndAnnotationTest extends TestCase
         $lgId = (int)Connection::lastInsertId();
 
         // Create test text
-        Connection::query("INSERT INTO texts (TxTitle, TxText, TxLgID)
+        Connection::query("INSERT INTO texts (title, text, language_id)
                          VALUES ('test_export_workflow_text', 'Test content for workflow', $lgId)");
         $textId = (int)Connection::lastInsertId();
 
@@ -281,12 +281,12 @@ class ExportAndAnnotationTest extends TestCase
         $this->assertIsString($ann2);
 
         // Step 3: Verify annotation was saved
-        $saved = Connection::fetchValue("SELECT TxAnnotatedText AS value FROM texts WHERE TxID = $textId");
+        $saved = Connection::fetchValue("SELECT annotated_text AS value FROM texts WHERE id = $textId");
         $this->assertNotNull($saved);
         $this->assertIsString($saved);
 
         // Clean up
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
         Connection::query("DELETE FROM languages WHERE LgID = $lgId");
     }
 
@@ -302,7 +302,7 @@ class ExportAndAnnotationTest extends TestCase
         $lgId = (int)Connection::lastInsertId();
 
         // Create test text
-        Connection::query("INSERT INTO texts (TxTitle, TxText, TxLgID)
+        Connection::query("INSERT INTO texts (title, text, language_id)
                          VALUES ('test_export_preserve_text', 'Test', $lgId)");
         $textId = (int)Connection::lastInsertId();
 
@@ -314,7 +314,7 @@ class ExportAndAnnotationTest extends TestCase
         $this->assertIsString($newAnn);
 
         // Clean up
-        Connection::query("DELETE FROM texts WHERE TxID = $textId");
+        Connection::query("DELETE FROM texts WHERE id = $textId");
         Connection::query("DELETE FROM languages WHERE LgID = $lgId");
     }
 

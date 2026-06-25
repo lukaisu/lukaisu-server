@@ -353,19 +353,19 @@ async function fetchResult(): Promise<void> {
     const result: TranscriptionResult = data;
 
     // Populate form fields
-    setInputByName('TxText', result.text);
+    setInputByName('text', result.text);
 
     // Auto-set title from filename if empty
     const fileInput = document.getElementById('importFile') as HTMLInputElement;
-    if (!getInputByName('TxTitle') && fileInput?.files?.[0]) {
+    if (!getInputByName('title') && fileInput?.files?.[0]) {
       const filename = fileInput.files[0].name;
       const title = filename.replace(/\.[^/.]+$/, ''); // Remove extension
-      setInputByName('TxTitle', title);
+      setInputByName('title', title);
     }
 
     // Auto-fill media URI if empty
     const fileExtensions = ['mp3', 'mp4', 'wav', 'webm', 'ogg', 'm4a'];
-    if (!getInputByName('TxAudioURI') && fileInput?.files?.[0]) {
+    if (!getInputByName('audio_uri') && fileInput?.files?.[0]) {
       const ext = fileInput.files[0].name.split('.').pop()?.toLowerCase() ?? '';
       if (fileExtensions.includes(ext)) {
         // Suggest saving to media folder

@@ -113,11 +113,11 @@ class ListTexts
         $bindings = $params;
         $textScope = UserScopedQuery::forTablePrepared('texts', $bindings);
         $sql = "SELECT COUNT(*) AS cnt FROM (
-            SELECT TxID FROM (
+            SELECT id FROM (
                 texts
-                LEFT JOIN text_tag_map ON TxID = text_id
-            ) WHERE TxArchivedAt IS NULL {$whLang}{$whQuery}{$textScope}
-            GROUP BY TxID {$whTag}
+                LEFT JOIN text_tag_map ON id = text_id
+            ) WHERE archived_at IS NULL {$whLang}{$whQuery}{$textScope}
+            GROUP BY id {$whTag}
         ) AS dummy";
         return (int) Connection::preparedFetchValue($sql, $bindings, 'cnt');
     }
@@ -144,7 +144,7 @@ class ListTexts
         int $perPage,
         array $params = []
     ): array {
-        $sorts = ['TxTitle', 'TxID desc', 'TxID'];
+        $sorts = ['texts.title', 'texts.id desc', 'texts.id'];
         $sortColumn = $sorts[max(0, min($sort - 1, count($sorts) - 1))];
         $offset = ($page - 1) * $perPage;
 
@@ -152,25 +152,25 @@ class ListTexts
         // untagged texts survive the join. Its binding therefore comes first
         // in the SQL and must be at the head of $bindings.
         $tagJoinBindings = [];
-        $tagJoinScope = UserScopedQuery::forTablePrepared('text_tags', $tagJoinBindings);
+        $tagJoinScope = UserScopedQuery::forTablePrepared('text_tags', $tagJoinBindings, 'text_tags');
 
         $bindings = array_merge($tagJoinBindings, $params);
-        $textScope = UserScopedQuery::forTablePrepared('texts', $bindings);
+        $textScope = UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
         $langScope = UserScopedQuery::forTablePrepared('languages', $bindings);
         $bindings[] = $offset;
         $bindings[] = $perPage;
 
-        $sql = "SELECT TxID, TxTitle, LgName, TxAudioURI, TxSourceURI,
-            LENGTH(TxAnnotatedText) AS annotlen,
-            (SELECT COUNT(*) FROM sentences WHERE text_id = TxID) AS sentnum,
-            IFNULL(GROUP_CONCAT(DISTINCT text ORDER BY text SEPARATOR ','), '') AS taglist
+        $sql = "SELECT texts.id, texts.title, LgName, texts.audio_uri, texts.source_uri,
+            LENGTH(texts.annotated_text) AS annotlen,
+            (SELECT COUNT(*) FROM sentences WHERE sentences.text_id = texts.id) AS sentnum,
+            IFNULL(GROUP_CONCAT(DISTINCT text_tags.text ORDER BY text_tags.text SEPARATOR ','), '') AS taglist
             FROM (
                 (texts
-                LEFT JOIN text_tag_map ON TxID = text_id)
-                LEFT JOIN text_tags ON id = text_tag_id{$tagJoinScope}
+                LEFT JOIN text_tag_map ON texts.id = text_tag_map.text_id)
+                LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id{$tagJoinScope}
             ), languages
-            WHERE LgID=TxLgID AND TxArchivedAt IS NULL {$whLang}{$whQuery}{$textScope}{$langScope}
-            GROUP BY TxID {$whTag}
+            WHERE LgID=texts.language_id AND texts.archived_at IS NULL {$whLang}{$whQuery}{$textScope}{$langScope}
+            GROUP BY texts.id {$whTag}
             ORDER BY {$sortColumn}
             LIMIT ?, ?";
 
@@ -196,11 +196,11 @@ class ListTexts
         $bindings = $params;
         $textScope = UserScopedQuery::forTablePrepared('texts', $bindings);
         $sql = "SELECT COUNT(*) AS cnt FROM (
-            SELECT TxID FROM (
+            SELECT id FROM (
                 texts
-                LEFT JOIN text_tag_map ON TxID = text_id
-            ) WHERE TxArchivedAt IS NOT NULL {$whLang}{$whQuery}{$textScope}
-            GROUP BY TxID {$whTag}
+                LEFT JOIN text_tag_map ON id = text_id
+            ) WHERE archived_at IS NOT NULL {$whLang}{$whQuery}{$textScope}
+            GROUP BY id {$whTag}
         ) AS dummy";
         return (int) Connection::preparedFetchValue($sql, $bindings, 'cnt');
     }
@@ -227,30 +227,30 @@ class ListTexts
         int $perPage,
         array $params = []
     ): array {
-        $sorts = ['TxTitle', 'TxID desc', 'TxID'];
+        $sorts = ['texts.title', 'texts.id desc', 'texts.id'];
         $sortColumn = $sorts[max(0, min($sort - 1, count($sorts) - 1))];
         $offset = ($page - 1) * $perPage;
 
         // See getTextsList for the binding-order rationale.
         $tagJoinBindings = [];
-        $tagJoinScope = UserScopedQuery::forTablePrepared('text_tags', $tagJoinBindings);
+        $tagJoinScope = UserScopedQuery::forTablePrepared('text_tags', $tagJoinBindings, 'text_tags');
 
         $bindings = array_merge($tagJoinBindings, $params);
-        $textScope = UserScopedQuery::forTablePrepared('texts', $bindings);
+        $textScope = UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
         $langScope = UserScopedQuery::forTablePrepared('languages', $bindings);
         $bindings[] = $offset;
         $bindings[] = $perPage;
 
-        $sql = "SELECT TxID, TxTitle, LgName, TxAudioURI, TxSourceURI,
-            LENGTH(TxAnnotatedText) AS annotlen,
-            IFNULL(GROUP_CONCAT(DISTINCT text ORDER BY text SEPARATOR ','), '') AS taglist
+        $sql = "SELECT texts.id, texts.title, LgName, texts.audio_uri, texts.source_uri,
+            LENGTH(texts.annotated_text) AS annotlen,
+            IFNULL(GROUP_CONCAT(DISTINCT text_tags.text ORDER BY text_tags.text SEPARATOR ','), '') AS taglist
             FROM (
                 (texts
-                LEFT JOIN text_tag_map ON TxID = text_id)
-                LEFT JOIN text_tags ON id = text_tag_id{$tagJoinScope}
+                LEFT JOIN text_tag_map ON texts.id = text_tag_map.text_id)
+                LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id{$tagJoinScope}
             ), languages
-            WHERE LgID=TxLgID AND TxArchivedAt IS NOT NULL {$whLang}{$whQuery}{$textScope}{$langScope}
-            GROUP BY TxID {$whTag}
+            WHERE LgID=texts.language_id AND texts.archived_at IS NOT NULL {$whLang}{$whQuery}{$textScope}{$langScope}
+            GROUP BY texts.id {$whTag}
             ORDER BY {$sortColumn}
             LIMIT ?, ?";
 

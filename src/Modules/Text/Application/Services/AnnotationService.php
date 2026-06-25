@@ -105,12 +105,12 @@ class AnnotationService
         }
 
         QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
-            ->updatePrepared(['TxAnnotatedText' => $ann]);
+            ->where('id', '=', $textId)
+            ->updatePrepared(['annotated_text' => $ann]);
 
         return (string)QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
-            ->valuePrepared('TxAnnotatedText');
+            ->where('id', '=', $textId)
+            ->valuePrepared('annotated_text');
     }
 
     /**
@@ -189,11 +189,11 @@ class AnnotationService
     {
         $ann = $this->createAnnotation($textId);
         QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
-            ->updatePrepared(['TxAnnotatedText' => $ann]);
+            ->where('id', '=', $textId)
+            ->updatePrepared(['annotated_text' => $ann]);
         return (string)QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
-            ->valuePrepared('TxAnnotatedText');
+            ->where('id', '=', $textId)
+            ->valuePrepared('annotated_text');
     }
 
     /**
@@ -250,8 +250,8 @@ class AnnotationService
     public function getAnnotationLink(int $textId): string
     {
         $row = QueryBuilder::table('texts')
-            ->selectRaw('LENGTH(TxAnnotatedText) AS text_length')
-            ->where('TxID', '=', $textId)
+            ->selectRaw('LENGTH(annotated_text) AS text_length')
+            ->where('id', '=', $textId)
             ->firstPrepared();
         $length = (int)($row['text_length'] ?? 0);
         if ($length > 0) {

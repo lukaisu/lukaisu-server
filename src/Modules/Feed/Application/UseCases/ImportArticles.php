@@ -166,9 +166,9 @@ class ImportArticles
                 continue;
             }
 
-            /** @var array{TxSourceURI: string, TxTitle: string, TxText: string, TxAudioURI?: string} $data */
+            /** @var array{source_uri: string, title: string, text: string, audio_uri?: string} $data */
             // Skip if already imported
-            if ($this->textCreation->sourceUriExists($data['TxSourceURI'])) {
+            if ($this->textCreation->sourceUriExists($data['source_uri'])) {
                 continue;
             }
 
@@ -176,16 +176,16 @@ class ImportArticles
             try {
                 $this->textCreation->createText(
                     $feed->languageId(),
-                    $data['TxTitle'],
-                    $data['TxText'],
-                    $data['TxAudioURI'] ?? '',
-                    $data['TxSourceURI'],
+                    $data['title'],
+                    $data['text'],
+                    $data['audio_uri'] ?? '',
+                    $data['source_uri'],
                     $tagName
                 );
                 $result['imported']++;
             } catch (\Exception $e) {
                 $result['failed']++;
-                $result['errors'][] = $data['TxSourceURI'];
+                $result['errors'][] = $data['source_uri'];
             }
         }
 

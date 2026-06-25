@@ -97,12 +97,12 @@ class DeleteLanguage
     {
         return [
             'texts' => QueryBuilder::table('texts')
-                ->where('TxLgID', '=', $id)
-                ->whereNull('TxArchivedAt')
+                ->where('language_id', '=', $id)
+                ->whereNull('archived_at')
                 ->count(),
             'archivedTexts' => QueryBuilder::table('texts')
-                ->where('TxLgID', '=', $id)
-                ->whereNotNull('TxArchivedAt')
+                ->where('language_id', '=', $id)
+                ->whereNotNull('archived_at')
                 ->count(),
             'words' => QueryBuilder::table('words')
                 ->where('language_id', '=', $id)

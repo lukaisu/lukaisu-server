@@ -94,14 +94,14 @@ class ArchivedTextController extends BaseController
                 $message = $result['error'] ?? 'Failed to unarchive text';
             }
         } elseif ($op == 'Change') {
-            $txId = $this->paramInt('TxID', 0) ?? 0;
+            $txId = $this->paramInt('id', 0) ?? 0;
             $affected = $this->textService->updateArchivedText(
                 $txId,
-                $this->paramInt('TxLgID', 0) ?? 0,
-                $this->param('TxTitle'),
-                $this->param('TxText'),
-                $this->param('TxAudioURI'),
-                $this->param('TxSourceURI')
+                $this->paramInt('language_id', 0) ?? 0,
+                $this->param('title'),
+                $this->param('text'),
+                $this->param('audio_uri'),
+                $this->param('source_uri')
             );
             $message = "Updated: {$affected}";
             TagsFacade::saveArchivedTextTagsFromForm($txId);
@@ -114,7 +114,7 @@ class ArchivedTextController extends BaseController
             if ($record !== null) {
                 $languages = $this->languageService->getLanguagesForSelect();
                 $mediaPathSelectorHtml = (new \Lukaisu\Modules\Admin\Application\Services\MediaService())
-                    ->getMediaPathSelector('TxAudioURI');
+                    ->getMediaPathSelector('audio_uri');
                 $archivedTextTagsHtml = TagsFacade::getArchivedTextTagsHtml($textId);
                 include self::MODULE_VIEWS . '/archived_form.php';
             }
@@ -145,14 +145,14 @@ class ArchivedTextController extends BaseController
 
         $op = $this->param('op');
         if ($op == 'Change') {
-            $txId = $this->paramInt('TxID', 0) ?? 0;
+            $txId = $this->paramInt('id', 0) ?? 0;
             $affected = $this->textService->updateArchivedText(
                 $txId,
-                $this->paramInt('TxLgID', 0) ?? 0,
-                $this->param('TxTitle'),
-                $this->param('TxText'),
-                $this->param('TxAudioURI'),
-                $this->param('TxSourceURI')
+                $this->paramInt('language_id', 0) ?? 0,
+                $this->param('title'),
+                $this->param('text'),
+                $this->param('audio_uri'),
+                $this->param('source_uri')
             );
             $message = "Updated: {$affected}";
             TagsFacade::saveArchivedTextTagsFromForm($txId);
@@ -164,7 +164,7 @@ class ArchivedTextController extends BaseController
         if ($record !== null) {
             $languages = $this->languageService->getLanguagesForSelect();
             $mediaPathSelectorHtml = (new \Lukaisu\Modules\Admin\Application\Services\MediaService())
-                ->getMediaPathSelector('TxAudioURI');
+                ->getMediaPathSelector('audio_uri');
             $archivedTextTagsHtml = TagsFacade::getArchivedTextTagsHtml($textId);
             include self::MODULE_VIEWS . '/archived_form.php';
         } else {

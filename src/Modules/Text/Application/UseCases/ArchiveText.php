@@ -27,8 +27,8 @@ use Lukaisu\Shared\Infrastructure\Database\UserScopedQuery;
 /**
  * Use case for archiving and unarchiving texts.
  *
- * Texts are archived by setting TxArchivedAt to the current timestamp.
- * Unarchiving sets TxArchivedAt back to NULL.
+ * Texts are archived by setting archived_at to the current timestamp.
+ * Unarchiving sets archived_at back to NULL.
  *
  * @since 3.0.0
  */
@@ -37,7 +37,7 @@ class ArchiveText
     /**
      * Archive an active text.
      *
-     * Sets TxArchivedAt to current timestamp and deletes parsed data.
+     * Sets archived_at to current timestamp and deletes parsed data.
      *
      * @param int $textId Text ID
      *
@@ -56,8 +56,8 @@ class ArchiveText
         // Mark as archived
         $bindings = [$textId];
         $archived = Connection::preparedExecute(
-            "UPDATE texts SET TxArchivedAt = NOW(), TxPosition = 0, TxAudioPosition = 0
-            WHERE TxID = ? AND TxArchivedAt IS NULL"
+            "UPDATE texts SET archived_at = NOW(), position = 0, audio_position = 0
+            WHERE id = ? AND archived_at IS NULL"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings
         );
@@ -97,8 +97,8 @@ class ArchiveText
                 // Mark as archived
                 $bindings = [$textId];
                 $count += Connection::preparedExecute(
-                    "UPDATE texts SET TxArchivedAt = NOW(), TxPosition = 0, TxAudioPosition = 0
-                    WHERE TxID = ? AND TxArchivedAt IS NULL"
+                    "UPDATE texts SET archived_at = NOW(), position = 0, audio_position = 0
+                    WHERE id = ? AND archived_at IS NULL"
                     . UserScopedQuery::forTablePrepared('texts', $bindings),
                     $bindings
                 );
@@ -117,7 +117,7 @@ class ArchiveText
     /**
      * Unarchive a text (restore from archived state).
      *
-     * Sets TxArchivedAt to NULL and re-parses the text.
+     * Sets archived_at to NULL and re-parses the text.
      *
      * @param int $textId Text ID (archived)
      *
@@ -128,8 +128,8 @@ class ArchiveText
         // Get language ID first
         $bindings = [$textId];
         $text = Connection::preparedFetchOne(
-            "SELECT TxLgID, TxText FROM texts
-            WHERE TxID = ? AND TxArchivedAt IS NOT NULL"
+            "SELECT language_id, text FROM texts
+            WHERE id = ? AND archived_at IS NOT NULL"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings
         );
@@ -148,14 +148,14 @@ class ArchiveText
         // Unarchive
         $bindings2 = [$textId];
         $unarchived = Connection::preparedExecute(
-            "UPDATE texts SET TxArchivedAt = NULL
-            WHERE TxID = ? AND TxArchivedAt IS NOT NULL"
+            "UPDATE texts SET archived_at = NULL
+            WHERE id = ? AND archived_at IS NOT NULL"
             . UserScopedQuery::forTablePrepared('texts', $bindings2),
             $bindings2
         );
 
         // Re-parse the text
-        TextParsing::parseAndSave((string)($text['TxText'] ?? ''), (int) $text['TxLgID'], $textId);
+        TextParsing::parseAndSave((string)($text['text'] ?? ''), (int) $text['language_id'], $textId);
 
         // Get statistics
         $bindings3 = [$textId];

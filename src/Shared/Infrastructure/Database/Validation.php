@@ -70,7 +70,7 @@ class Validation
         // Cast to integer for safety against SQL injection
         $currenttext_int = (int)$currenttext;
         $count = QueryBuilder::table('texts')
-            ->where('TxID', '=', $currenttext_int)
+            ->where('id', '=', $currenttext_int)
             ->count();
         if ($count == 0) {
             return '';
@@ -146,15 +146,17 @@ class Validation
             if ($currentlang == '') {
                 $sql = "select (
                     ? in (
-                        select id
+                        select text_tags.id
                         from texts,
                         text_tags,
                         text_tag_map
-                        where id = text_tag_id and text_id = TxID and TxArchivedAt IS NOT NULL
-                        group by id order by text
+                        where text_tags.id = text_tag_map.text_tag_id
+                            and text_tag_map.text_id = texts.id
+                            and texts.archived_at IS NOT NULL
+                        group by text_tags.id order by text_tags.text
                     )
                 ) as value"
-                    . UserScopedQuery::forTablePrepared('texts', $bindings);
+                    . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
             } else {
                 if (!is_numeric($currentlang)) {
                     return '';
@@ -163,16 +165,18 @@ class Validation
                 $bindings[] = $currentlang_int;
                 $sql = "select (
                     ? in (
-                        select id
+                        select text_tags.id
                         from texts,
                         text_tags,
                         text_tag_map
-                        where id = text_tag_id and text_id = TxID and TxArchivedAt IS NOT NULL
-                            and TxLgID = ?
-                        group by id order by text
+                        where text_tags.id = text_tag_map.text_tag_id
+                            and text_tag_map.text_id = texts.id
+                            and texts.archived_at IS NOT NULL
+                            and texts.language_id = ?
+                        group by text_tags.id order by text_tags.text
                     )
                 ) as value"
-                    . UserScopedQuery::forTablePrepared('texts', $bindings);
+                    . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
             }
             /** @var int|string|null $r */
             $r = Connection::preparedFetchValue($sql, $bindings);
@@ -204,14 +208,14 @@ class Validation
             if ($currentlang == '') {
                 $sql = "select (
                     ? in (
-                        select id
+                        select text_tags.id
                         from texts, text_tags, text_tag_map
-                        where id = text_tag_id and text_id = TxID
-                        group by id
-                        order by text
+                        where text_tags.id = text_tag_map.text_tag_id and text_tag_map.text_id = texts.id
+                        group by text_tags.id
+                        order by text_tags.text
                     )
                 ) as value"
-                    . UserScopedQuery::forTablePrepared('texts', $bindings);
+                    . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
             } else {
                 if (!is_numeric($currentlang)) {
                     return '';
@@ -220,13 +224,14 @@ class Validation
                 $bindings[] = $currentlang_int;
                 $sql = "select (
                     ? in (
-                        select id
+                        select text_tags.id
                         from texts, text_tags, text_tag_map
-                        where id = text_tag_id and text_id = TxID and TxLgID = ?
-                        group by id order by text
+                        where text_tags.id = text_tag_map.text_tag_id and text_tag_map.text_id = texts.id
+                            and texts.language_id = ?
+                        group by text_tags.id order by text_tags.text
                     )
                 ) as value"
-                    . UserScopedQuery::forTablePrepared('texts', $bindings);
+                    . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
             }
             /** @var int|string|null $r */
             $r = Connection::preparedFetchValue($sql, $bindings);

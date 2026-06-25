@@ -58,7 +58,7 @@ class UserScopedQuery
      */
     private const USER_SCOPED_TABLES = [
         'languages' => 'LgUsID',
-        'texts' => 'TxUsID',
+        'texts' => 'user_id',
         'words' => 'user_id',
         'tags' => 'user_id',
         'text_tags' => 'user_id',

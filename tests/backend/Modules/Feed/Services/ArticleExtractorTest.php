@@ -126,8 +126,8 @@ class ArticleExtractorTest extends TestCase
         );
 
         $this->assertArrayHasKey(0, $result);
-        $this->assertEquals('Test Article', $result[0]['TxTitle']);
-        $this->assertStringContainsString('This is inline article text content', $result[0]['TxText']);
+        $this->assertEquals('Test Article', $result[0]['title']);
+        $this->assertStringContainsString('This is inline article text content', $result[0]['text']);
     }
 
     public function testExtractPreservesAudioUri(): void
@@ -144,7 +144,7 @@ class ArticleExtractorTest extends TestCase
 
         $result = $this->extractor->extract($feedData, '//p', '');
 
-        $this->assertEquals('http://example.com/audio/ep1.mp3', $result[0]['TxAudioURI']);
+        $this->assertEquals('http://example.com/audio/ep1.mp3', $result[0]['audio_uri']);
     }
 
     public function testExtractReturnsErrorForFailedExtraction(): void
@@ -189,8 +189,8 @@ class ArticleExtractorTest extends TestCase
         $result = $this->extractor->extract($feedData, '//p', '');
 
         $this->assertCount(2, array_filter($result, fn($k) => is_int($k), ARRAY_FILTER_USE_KEY));
-        $this->assertEquals('Article 1', $result[0]['TxTitle']);
-        $this->assertEquals('Article 2', $result[1]['TxTitle']);
+        $this->assertEquals('Article 1', $result[0]['title']);
+        $this->assertEquals('Article 2', $result[1]['title']);
     }
 
     public function testExtractFiltersUnwantedTags(): void
@@ -208,8 +208,8 @@ class ArticleExtractorTest extends TestCase
         $result = $this->extractor->extract($feedData, '//div', '');
 
         // Script content should be filtered out by default
-        $this->assertStringNotContainsString('alert', $result[0]['TxText']);
-        $this->assertStringContainsString('Real content', $result[0]['TxText']);
+        $this->assertStringNotContainsString('alert', $result[0]['text']);
+        $this->assertStringContainsString('Real content', $result[0]['text']);
     }
 
     public function testExtractWithCustomFilterTags(): void
@@ -231,8 +231,8 @@ class ArticleExtractorTest extends TestCase
             '//div[@class="ads"]'
         );
 
-        $this->assertStringContainsString('Article text', $result[0]['TxText']);
-        $this->assertStringNotContainsString('Advertisement', $result[0]['TxText']);
+        $this->assertStringContainsString('Article text', $result[0]['text']);
+        $this->assertStringNotContainsString('Advertisement', $result[0]['text']);
     }
 
     public function testExtractHandlesMultipleArticleSections(): void
@@ -254,8 +254,8 @@ class ArticleExtractorTest extends TestCase
             ''
         );
 
-        $this->assertStringContainsString('Title', $result[0]['TxText']);
-        $this->assertStringContainsString('Paragraph 1', $result[0]['TxText']);
+        $this->assertStringContainsString('Title', $result[0]['text']);
+        $this->assertStringContainsString('Paragraph 1', $result[0]['text']);
     }
 
     // ============================
@@ -277,7 +277,7 @@ class ArticleExtractorTest extends TestCase
         $result = $this->extractor->extract($feedData, '//p', '');
 
         // Multiple spaces should be collapsed
-        $this->assertStringNotContainsString('    ', $result[0]['TxText']);
+        $this->assertStringNotContainsString('    ', $result[0]['text']);
     }
 
     public function testExtractHandlesLineBreakConversion(): void
@@ -295,8 +295,8 @@ class ArticleExtractorTest extends TestCase
         $result = $this->extractor->extract($feedData, '//p', '');
 
         // BR tags should be converted to newlines (then cleaned)
-        $this->assertStringContainsString('First line', $result[0]['TxText']);
-        $this->assertStringContainsString('Second line', $result[0]['TxText']);
+        $this->assertStringContainsString('First line', $result[0]['text']);
+        $this->assertStringContainsString('Second line', $result[0]['text']);
     }
 
     // ============================
@@ -317,7 +317,7 @@ class ArticleExtractorTest extends TestCase
 
         $result = $this->extractor->extract($feedData, '//p', '');
 
-        $this->assertStringContainsString('日本語', $result[0]['TxText']);
+        $this->assertStringContainsString('日本語', $result[0]['text']);
     }
 
     public function testExtractHandlesArabicContent(): void
@@ -334,7 +334,7 @@ class ArticleExtractorTest extends TestCase
 
         $result = $this->extractor->extract($feedData, '//p', '');
 
-        $this->assertStringContainsString('مرحبا', $result[0]['TxText']);
+        $this->assertStringContainsString('مرحبا', $result[0]['text']);
     }
 
     // ============================
@@ -355,7 +355,7 @@ class ArticleExtractorTest extends TestCase
 
         $result = $this->extractor->extract($feedData, '//p', '');
 
-        $this->assertEquals('http://example.com/source-test', $result[0]['TxSourceURI']);
+        $this->assertEquals('http://example.com/source-test', $result[0]['source_uri']);
     }
 
     // ============================
@@ -402,7 +402,7 @@ class ArticleExtractorTest extends TestCase
 
         $result = $this->extractor->extract($feedData, '//p', '');
 
-        $this->assertStringContainsString('Deeply nested content', $result[0]['TxText']);
+        $this->assertStringContainsString('Deeply nested content', $result[0]['text']);
     }
 
     public function testExtractHandlesSpecialHtmlEntities(): void
@@ -420,7 +420,7 @@ class ArticleExtractorTest extends TestCase
         $result = $this->extractor->extract($feedData, '//p', '');
 
         // Entities should be decoded
-        $this->assertStringContainsString('&', $result[0]['TxText']);
-        $this->assertStringContainsString('<', $result[0]['TxText']);
+        $this->assertStringContainsString('&', $result[0]['text']);
+        $this->assertStringContainsString('<', $result[0]['text']);
     }
 }

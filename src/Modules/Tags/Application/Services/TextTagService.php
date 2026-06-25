@@ -266,9 +266,9 @@ class TextTagService
 
         $bindings = [$tagId];
         $inClause = Connection::buildPreparedInClause($ids, $bindings);
-        $sql = 'SELECT TxID FROM texts
-            LEFT JOIN text_tag_map ON TxID = text_id AND text_tag_id = ?
-            WHERE text_tag_id IS NULL AND TxID IN ' . $inClause
+        $sql = 'SELECT id FROM texts
+            LEFT JOIN text_tag_map ON id = text_id AND text_tag_id = ?
+            WHERE text_tag_id IS NULL AND id IN ' . $inClause
             . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
         $rows = Connection::preparedFetchAll($sql, $bindings);
 
@@ -276,7 +276,7 @@ class TextTagService
         foreach ($rows as $record) {
             Connection::preparedExecute(
                 'INSERT IGNORE INTO text_tag_map (text_id, text_tag_id) VALUES(?, ?)',
-                [(int)$record['TxID'], $tagId]
+                [(int)$record['id'], $tagId]
             );
             $count++;
         }
@@ -314,7 +314,7 @@ class TextTagService
 
         $bindings = [];
         $inClause = Connection::buildPreparedInClause($ids, $bindings);
-        $sql = 'SELECT TxID FROM texts WHERE TxID IN ' . $inClause
+        $sql = 'SELECT id FROM texts WHERE id IN ' . $inClause
             . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
         $rows = Connection::preparedFetchAll($sql, $bindings);
 
@@ -322,7 +322,7 @@ class TextTagService
         foreach ($rows as $record) {
             $count++;
             QueryBuilder::table('text_tag_map')
-                ->where('text_id', '=', (int)$record['TxID'])
+                ->where('text_id', '=', (int)$record['id'])
                 ->where('text_tag_id', '=', $tagId)
                 ->delete();
         }
@@ -351,9 +351,9 @@ class TextTagService
 
         $bindings = [$tagId];
         $inClause = Connection::buildPreparedInClause($ids, $bindings);
-        $sql = 'SELECT TxID FROM texts
-            LEFT JOIN text_tag_map ON TxID = text_id AND text_tag_id = ?
-            WHERE text_tag_id IS NULL AND TxArchivedAt IS NOT NULL AND TxID IN ' . $inClause
+        $sql = 'SELECT id FROM texts
+            LEFT JOIN text_tag_map ON id = text_id AND text_tag_id = ?
+            WHERE text_tag_id IS NULL AND archived_at IS NOT NULL AND id IN ' . $inClause
             . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
         $rows = Connection::preparedFetchAll($sql, $bindings);
 
@@ -361,7 +361,7 @@ class TextTagService
         foreach ($rows as $record) {
             Connection::preparedExecute(
                 'INSERT IGNORE INTO text_tag_map (text_id, text_tag_id) VALUES(?, ?)',
-                [(int)$record['TxID'], $tagId]
+                [(int)$record['id'], $tagId]
             );
             $count++;
         }
@@ -401,7 +401,7 @@ class TextTagService
 
         $bindings = [];
         $inClause = Connection::buildPreparedInClause($ids, $bindings);
-        $sql = 'SELECT TxID FROM texts WHERE TxArchivedAt IS NOT NULL AND TxID IN ' . $inClause
+        $sql = 'SELECT id FROM texts WHERE archived_at IS NOT NULL AND id IN ' . $inClause
             . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
         $rows = Connection::preparedFetchAll($sql, $bindings);
 
@@ -409,7 +409,7 @@ class TextTagService
         foreach ($rows as $record) {
             $count++;
             QueryBuilder::table('text_tag_map')
-                ->where('text_id', '=', (int)$record['TxID'])
+                ->where('text_id', '=', (int)$record['id'])
                 ->where('text_tag_id', '=', $tagId)
                 ->delete();
         }
@@ -440,20 +440,21 @@ class TextTagService
 
         if ($langId === '') {
             $rows = Connection::preparedFetchAll(
-                "SELECT id, text
+                "SELECT text_tags.id, text_tags.text
                 FROM texts, text_tags, text_tag_map
-                WHERE id = text_tag_id AND text_id = TxID
-                GROUP BY id
-                ORDER BY UPPER(text)",
+                WHERE text_tags.id = text_tag_map.text_tag_id AND text_tag_map.text_id = texts.id
+                GROUP BY text_tags.id
+                ORDER BY UPPER(text_tags.text)",
                 []
             );
         } else {
             $rows = Connection::preparedFetchAll(
-                "SELECT id, text
+                "SELECT text_tags.id, text_tags.text
                 FROM texts, text_tags, text_tag_map
-                WHERE id = text_tag_id AND text_id = TxID AND TxLgID = ?
-                GROUP BY id
-                ORDER BY UPPER(text)",
+                WHERE text_tags.id = text_tag_map.text_tag_id AND text_tag_map.text_id = texts.id
+                    AND texts.language_id = ?
+                GROUP BY text_tags.id
+                ORDER BY UPPER(text_tags.text)",
                 [$langId]
             );
         }
@@ -496,24 +497,24 @@ class TextTagService
 
         // text_tag_map / text_tags / texts are joined; only `texts` and
         // `text_tags` carry an UsID column, so scope both. (text_tag_map
-        // rows inherit scope via TxID and id.)
+        // rows inherit scope via id and id.)
         if ($langId) {
             $bindings = [$langId];
-            $where = 'WHERE TxLgID = ?'
-                . UserScopedQuery::forTablePrepared('texts', $bindings)
-                . UserScopedQuery::forTablePrepared('text_tags', $bindings);
+            $where = 'WHERE texts.language_id = ?'
+                . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts')
+                . UserScopedQuery::forTablePrepared('text_tags', $bindings, 'text_tags');
         } else {
             $bindings = [];
-            $userScope = UserScopedQuery::forTablePrepared('texts', $bindings)
-                . UserScopedQuery::forTablePrepared('text_tags', $bindings);
+            $userScope = UserScopedQuery::forTablePrepared('texts', $bindings, 'texts')
+                . UserScopedQuery::forTablePrepared('text_tags', $bindings, 'text_tags');
             $where = $userScope === '' ? '' : 'WHERE 1=1' . $userScope;
         }
         $rows = Connection::preparedFetchAll(
-            'SELECT IFNULL(text, 1) AS TagName, text_tag_id AS TagID,
-            GROUP_CONCAT(TxID ORDER BY TxID) AS TextID
+            'SELECT IFNULL(text_tags.text, 1) AS TagName, text_tag_map.text_tag_id AS TagID,
+            GROUP_CONCAT(texts.id ORDER BY texts.id) AS TextID
             FROM texts
-            LEFT JOIN text_tag_map ON TxID = text_id
-            LEFT JOIN text_tags ON text_tag_id = id
+            LEFT JOIN text_tag_map ON texts.id = text_tag_map.text_id
+            LEFT JOIN text_tags ON text_tag_map.text_tag_id = text_tags.id
             ' . $where . '
             GROUP BY UPPER(TagName)',
             $bindings
@@ -556,22 +557,24 @@ class TextTagService
 
         if ($langId === '') {
             $bindings = [];
-            $sql = "SELECT id, text
+            $sql = "SELECT text_tags.id, text_tags.text
                 FROM texts, text_tags, text_tag_map
-                WHERE id = text_tag_id AND text_id = TxID AND TxArchivedAt IS NOT NULL"
-                . UserScopedQuery::forTablePrepared('texts', $bindings)
-                . UserScopedQuery::forTablePrepared('text_tags', $bindings)
-                . " GROUP BY id
-                ORDER BY UPPER(text)";
+                WHERE text_tags.id = text_tag_map.text_tag_id AND text_tag_map.text_id = texts.id
+                    AND texts.archived_at IS NOT NULL"
+                . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts')
+                . UserScopedQuery::forTablePrepared('text_tags', $bindings, 'text_tags')
+                . " GROUP BY text_tags.id
+                ORDER BY UPPER(text_tags.text)";
         } else {
             $bindings = [$langId];
-            $sql = "SELECT id, text
+            $sql = "SELECT text_tags.id, text_tags.text
                 FROM texts, text_tags, text_tag_map
-                WHERE id = text_tag_id AND text_id = TxID AND TxArchivedAt IS NOT NULL AND TxLgID = ?"
-                . UserScopedQuery::forTablePrepared('texts', $bindings)
-                . UserScopedQuery::forTablePrepared('text_tags', $bindings)
-                . " GROUP BY id
-                ORDER BY UPPER(text)";
+                WHERE text_tags.id = text_tag_map.text_tag_id AND text_tag_map.text_id = texts.id
+                    AND texts.archived_at IS NOT NULL AND texts.language_id = ?"
+                . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts')
+                . UserScopedQuery::forTablePrepared('text_tags', $bindings, 'text_tags')
+                . " GROUP BY text_tags.id
+                ORDER BY UPPER(text_tags.text)";
         }
         $rows = Connection::preparedFetchAll($sql, $bindings);
 

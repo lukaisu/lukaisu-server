@@ -101,7 +101,7 @@ class LemmaStatisticsService
     public function getUnmatchedStatistics(int $languageId): array
     {
         // word_occurrences has no UsID column — inherit user scope by joining
-        // through `texts` (via text_id) and filtering on TxUsID. Without this,
+        // through `texts` (via text_id) and filtering on user_id. Without this,
         // aggregations across word_occurrences silently combine every user's
         // data sharing the language.
         $bindings = [$languageId];
@@ -109,9 +109,10 @@ class LemmaStatisticsService
         // Count unmatched items
         $unmatchedCount = (int) Connection::preparedFetchValue(
             "SELECT COUNT(*) as cnt FROM word_occurrences
-             JOIN texts ON text_id = TxID
-             WHERE language_id = ? AND word_id IS NULL AND word_count = 1"
-            . UserScopedQuery::forTablePrepared('texts', $bindings),
+             JOIN texts ON word_occurrences.text_id = texts.id
+             WHERE word_occurrences.language_id = ? AND word_occurrences.word_id IS NULL
+               AND word_occurrences.word_count = 1"
+            . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts'),
             $bindings,
             'cnt'
         );
@@ -119,10 +120,11 @@ class LemmaStatisticsService
         // Count unique unmatched words
         $bindings = [$languageId];
         $uniqueWords = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(DISTINCT LOWER(text)) as cnt FROM word_occurrences
-             JOIN texts ON text_id = TxID
-             WHERE language_id = ? AND word_id IS NULL AND word_count = 1"
-            . UserScopedQuery::forTablePrepared('texts', $bindings),
+            "SELECT COUNT(DISTINCT LOWER(word_occurrences.text)) as cnt FROM word_occurrences
+             JOIN texts ON word_occurrences.text_id = texts.id
+             WHERE word_occurrences.language_id = ? AND word_occurrences.word_id IS NULL
+               AND word_occurrences.word_count = 1"
+            . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts'),
             $bindings,
             'cnt'
         );
@@ -132,13 +134,13 @@ class LemmaStatisticsService
         $matchableByLemma = (int) Connection::preparedFetchValue(
             "SELECT COUNT(DISTINCT LOWER(ti.text)) as cnt
              FROM word_occurrences ti
-             JOIN texts ON ti.text_id = TxID
+             JOIN texts ON ti.text_id = texts.id
              JOIN words w ON w.language_id = ? AND LOWER(ti.text) = w.lemma_lc
              WHERE ti.language_id = ?
                AND ti.word_id IS NULL
                AND ti.word_count = 1
                AND w.word_count = 1"
-            . UserScopedQuery::forTablePrepared('texts', $bindings)
+            . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts')
             . UserScopedQuery::forTablePrepared('words', $bindings, 'w'),
             $bindings,
             'cnt'

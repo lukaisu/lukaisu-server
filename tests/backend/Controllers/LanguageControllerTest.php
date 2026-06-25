@@ -287,7 +287,7 @@ class LanguageControllerTest extends TestCase
         $id = $this->createTestLanguage('TestLang_ControllerDelete');
 
         // Clean up any related data that might exist for this language
-        Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE TxLgID = $id");
+        Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE language_id = $id");
         Connection::query("DELETE FROM " . Globals::table('words') . " WHERE language_id = $id");
         Connection::query("DELETE FROM " . Globals::table('news_feeds') . " WHERE language_id = $id");
 

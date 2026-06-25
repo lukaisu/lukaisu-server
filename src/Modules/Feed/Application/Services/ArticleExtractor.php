@@ -95,7 +95,7 @@ class ArticleExtractor
      * @param string      $filterTags     Filter selectors
      * @param string|null $charset        Override charset
      *
-     * @return array{TxTitle: string, TxAudioURI: string, TxText: string, TxSourceURI: string}|null
+     * @return array{title: string, audio_uri: string, text: string, source_uri: string}|null
      *     Extracted data or null on failure
      */
     private function extractSingle(
@@ -105,10 +105,10 @@ class ArticleExtractor
         ?string $charset
     ): ?array {
         $data = [
-            'TxTitle' => $item['title'],
-            'TxAudioURI' => $item['audio'] ?? '',
-            'TxText' => '',
-            'TxSourceURI' => '',
+            'title' => $item['title'],
+            'audio_uri' => $item['audio'] ?? '',
+            'text' => '',
+            'source_uri' => '',
         ];
 
         // Handle redirect article sections
@@ -123,10 +123,10 @@ class ArticleExtractor
         $hasInlineText = isset($item['text']) && $item['text'] !== '';
 
         if ($hasInlineText) {
-            $data['TxSourceURI'] = $this->processInlineLink($link);
+            $data['source_uri'] = $this->processInlineLink($link);
             $htmlString = $this->prepareInlineHtml($item['text']);
         } else {
-            $data['TxSourceURI'] = $link;
+            $data['source_uri'] = $link;
             $htmlString = $this->fetchArticleContent($link, $charset);
         }
 
@@ -170,9 +170,9 @@ class ArticleExtractor
             return null;
         }
 
-        $data['TxText'] = $this->cleanExtractedText($text);
+        $data['text'] = $this->cleanExtractedText($text);
 
-        return $data['TxText'] !== '' ? $data : null;
+        return $data['text'] !== '' ? $data : null;
     }
 
     /**
@@ -601,8 +601,8 @@ class ArticleExtractor
      * @param \DOMDocument  $dom        DOM document
      * @param array<string> $filterTags Tags to filter out
      *
-     * @return array{TxTitle: string, TxText: string, TxSourceURI: string, TxAudioURI: string}
-     *     Result with TxText containing cleaned HTML
+     * @return array{title: string, text: string, source_uri: string, audio_uri: string}
+     *     Result with text containing cleaned HTML
      */
     private function extractNewArticleHtml(\DOMDocument $dom, array $filterTags): array
     {
@@ -643,10 +643,10 @@ class ArticleExtractor
         ) ?? '';
 
         return [
-            'TxTitle' => '',
-            'TxText' => $html,
-            'TxSourceURI' => '',
-            'TxAudioURI' => '',
+            'title' => '',
+            'text' => $html,
+            'source_uri' => '',
+            'audio_uri' => '',
         ];
     }
 

@@ -112,9 +112,9 @@ class TextReadController extends BaseController
 
         (new MySqlActivityRepository())->incrementTextsRead();
 
-        $title = (string) $headerData['TxTitle'];
-        $langId = (int) $headerData['TxLgID'];
-        $sourceUri = (string) ($headerData['TxSourceURI'] ?? '');
+        $title = (string) $headerData['title'];
+        $langId = (int) $headerData['language_id'];
+        $sourceUri = (string) ($headerData['source_uri'] ?? '');
 
         // The reader's chrome is now fetched client-side from the API: the audio
         // player from /texts/{id}/audio (audio_player.php + audioPlayer) and the
@@ -206,8 +206,8 @@ class TextReadController extends BaseController
         if ($op === 'Check') {
             echo '<p><input type="button" value="&lt;&lt; Back" data-action="history-back" /></p>';
             $this->textService->checkText(
-                $this->param('TxText'),
-                $this->paramInt('TxLgID', 0) ?? 0
+                $this->param('text'),
+                $this->paramInt('language_id', 0) ?? 0
             );
             echo '<p><input type="button" value="&lt;&lt; Back" data-action="history-back" /></p>';
         } else {

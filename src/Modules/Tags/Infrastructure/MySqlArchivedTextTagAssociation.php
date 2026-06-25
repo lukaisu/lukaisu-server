@@ -5,7 +5,7 @@
  *
  * Infrastructure adapter for archived text-tag associations using MySQL.
  * Archived texts now share the text_tag_map table with active texts,
- * differentiated by TxArchivedAt IS NOT NULL.
+ * differentiated by archived_at IS NOT NULL.
  *
  * PHP version 8.1
  *
@@ -31,7 +31,7 @@ use Lukaisu\Modules\Tags\Domain\TagRepositoryInterface;
  * MySQL implementation of TagAssociationInterface for archived text-tag links.
  *
  * Operates on the 'text_tag_map' junction table for archived texts
- * (texts where TxArchivedAt IS NOT NULL).
+ * (texts where archived_at IS NOT NULL).
  *
  * @since 3.0.0
  */
@@ -248,15 +248,15 @@ class MySqlArchivedTextTagAssociation implements TagAssociationInterface
     /**
      * {@inheritdoc}
      *
-     * Returns count of archived texts with this tag (TxArchivedAt IS NOT NULL).
+     * Returns count of archived texts with this tag (archived_at IS NOT NULL).
      */
     public function getItemCount(int $tagId): int
     {
         // Count only archived texts with this tag
         $row = Connection::preparedFetchOne(
             'SELECT COUNT(*) as cnt FROM text_tag_map
-             JOIN texts ON text_id = TxID
-             WHERE text_tag_id = ? AND TxArchivedAt IS NOT NULL',
+             JOIN texts ON text_id = id
+             WHERE text_tag_id = ? AND archived_at IS NOT NULL',
             [$tagId]
         );
         return (int) ($row['cnt'] ?? 0);

@@ -338,11 +338,11 @@ class TextCrudController extends BaseController
         bool $noPagestart,
         string|int $currentLang
     ): array|RedirectResponse {
-        $txText = $this->param('TxText');
-        $txLgId = $this->paramInt('TxLgID', 0) ?? 0;
-        $txTitle = $this->param('TxTitle');
-        $txAudioUri = $this->param('TxAudioURI');
-        $txSourceUri = $this->param('TxSourceURI');
+        $txText = $this->param('text');
+        $txLgId = $this->paramInt('language_id', 0) ?? 0;
+        $txTitle = $this->param('title');
+        $txAudioUri = $this->param('audio_uri');
+        $txSourceUri = $this->param('source_uri');
 
         $importFile = InputValidator::getUploadedFile('importFile');
         if ($importFile !== null) {
@@ -409,7 +409,7 @@ class TextCrudController extends BaseController
             return ['message' => '', 'redirect' => true];
         }
 
-        $textId = $this->paramInt('TxID', 0) ?? 0;
+        $textId = $this->paramInt('id', 0) ?? 0;
         $isNew = str_starts_with($op, 'Save');
 
         if ($needsAutoSplit && $isNew) {
@@ -536,7 +536,7 @@ class TextCrudController extends BaseController
 
         $mediaService = new \Lukaisu\Modules\Admin\Application\Services\MediaService();
         $mediaPaths = $mediaService->getMediaPaths();
-        $mediaPathSelectorHtml = $mediaService->getMediaPathSelector('TxAudioURI');
+        $mediaPathSelectorHtml = $mediaService->getMediaPathSelector('audio_uri');
         $youtubeConfigured = (new YouTubeApiHandler())->formatIsConfigured()['configured'];
         $textTagsHtml = TagsFacade::getTextTagsHtml($textId);
 
@@ -562,14 +562,14 @@ class TextCrudController extends BaseController
         }
 
         $text = new \stdClass();
-        $text->id = $record['TxID'];
-        $text->lgid = $record['TxLgID'];
-        $text->title = $record['TxTitle'];
-        $text->text = $record['TxText'];
-        $text->source = $record['TxSourceURI'] ?? '';
-        $text->media_uri = $record['TxAudioURI'] ?? '';
+        $text->id = $record['id'];
+        $text->lgid = $record['language_id'];
+        $text->title = $record['title'];
+        $text->text = $record['text'];
+        $text->source = $record['source_uri'] ?? '';
+        $text->media_uri = $record['audio_uri'] ?? '';
 
-        $textId = (int) $record['TxID'];
+        $textId = (int) $record['id'];
         $annotated = (bool) $record['annot_exists'];
         $isNew = false;
         $languageData = $this->textService->getLanguageDataForForm();
@@ -578,7 +578,7 @@ class TextCrudController extends BaseController
 
         $mediaService = new \Lukaisu\Modules\Admin\Application\Services\MediaService();
         $mediaPaths = $mediaService->getMediaPaths();
-        $mediaPathSelectorHtml = $mediaService->getMediaPathSelector('TxAudioURI');
+        $mediaPathSelectorHtml = $mediaService->getMediaPathSelector('audio_uri');
         $youtubeConfigured = (new YouTubeApiHandler())->formatIsConfigured()['configured'];
         $textTagsHtml = TagsFacade::getTextTagsHtml($textId);
 

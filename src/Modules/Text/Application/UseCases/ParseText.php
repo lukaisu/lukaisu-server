@@ -132,21 +132,21 @@ class ParseText
             FROM word_occurrences, sentences, texts
             WHERE word_occurrences.text_id IN ({$placeholders})
             AND word_occurrences.sentence_id = sentences.id
-            AND word_occurrences.text_id = TxID
+            AND word_occurrences.text_id = texts.id
             AND word_occurrences.word_id > 0"
-            . UserScopedQuery::forTablePrepared('texts', $ids);
+            . UserScopedQuery::forTablePrepared('texts', $ids, 'texts');
 
         if ($activeOnly) {
             $sql = "SELECT DISTINCT word_occurrences.word_id, word_occurrences.sentence_id
                 FROM word_occurrences, sentences, texts, words
                 WHERE word_occurrences.text_id IN ({$placeholders})
                 AND word_occurrences.sentence_id = sentences.id
-                AND word_occurrences.text_id = TxID
+                AND word_occurrences.text_id = texts.id
                 AND word_occurrences.word_id = words.id
                 AND words.status < 98
                 AND word_occurrences.word_id > 0"
-                . UserScopedQuery::forTablePrepared('texts', $ids)
-                . UserScopedQuery::forTablePrepared('words', $ids);
+                . UserScopedQuery::forTablePrepared('texts', $ids, 'texts')
+                . UserScopedQuery::forTablePrepared('words', $ids, 'words');
         }
 
         $rows = Connection::preparedFetchAll($sql, $ids);

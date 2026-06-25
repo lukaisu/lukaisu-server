@@ -79,7 +79,7 @@ class TextRepositoryTest extends TestCase
 
         $prefix = '';
         // Clean up test texts
-        Connection::query("DELETE FROM {$prefix}texts WHERE TxTitle LIKE 'TextRepoTest_%'");
+        Connection::query("DELETE FROM {$prefix}texts WHERE title LIKE 'TextRepoTest_%'");
         // Clean up test language
         if (self::$testLanguageId > 0) {
             Connection::query("DELETE FROM {$prefix}languages WHERE LgID = " . self::$testLanguageId);
@@ -99,7 +99,7 @@ class TextRepositoryTest extends TestCase
 
         // Clean up texts created during this test
         $prefix = '';
-        Connection::query("DELETE FROM {$prefix}texts WHERE TxTitle LIKE 'TextRepoTest_%'");
+        Connection::query("DELETE FROM {$prefix}texts WHERE title LIKE 'TextRepoTest_%'");
         self::$testTextIds = [];
     }
 
@@ -124,7 +124,7 @@ class TextRepositoryTest extends TestCase
 
         Connection::query(
             "INSERT INTO {$prefix}texts (
-                TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxPosition, TxAudioPosition
+                language_id, title, text, annotated_text, audio_uri, source_uri, position, audio_position
             ) VALUES (
                 " . self::$testLanguageId . ", '$escapedTitle', '$escapedContent', '',
                 '$escapedAudioUri', '$escapedSourceUri', 0, 0
@@ -259,7 +259,7 @@ class TextRepositoryTest extends TestCase
         $this->createTestTextInDb('TextRepoTest_Count1');
         $this->createTestTextInDb('TextRepoTest_Count2');
 
-        $count = $this->repository->count(['TxLgID' => self::$testLanguageId]);
+        $count = $this->repository->count(['language_id' => self::$testLanguageId]);
 
         $this->assertGreaterThanOrEqual(2, $count);
     }
@@ -523,7 +523,7 @@ class TextRepositoryTest extends TestCase
             self::$testLanguageId,
             1,
             3,
-            'TxTitle',
+            'title',
             'ASC'
         );
 

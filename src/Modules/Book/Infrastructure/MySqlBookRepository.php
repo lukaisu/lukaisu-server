@@ -331,9 +331,9 @@ class MySqlBookRepository implements BookRepositoryInterface
     public function getChapters(int $bookId): array
     {
         $rows = QueryBuilder::table('texts')
-            ->select(['TxID', 'TxChapterNum', 'TxChapterTitle', 'TxTitle'])
-            ->where('TxBkID', '=', $bookId)
-            ->orderBy('TxChapterNum', 'ASC')
+            ->select(['id', 'chapter_num', 'chapter_title', 'title'])
+            ->where('book_id', '=', $bookId)
+            ->orderBy('chapter_num', 'ASC')
             ->getPrepared();
 
         return array_map(
@@ -342,9 +342,9 @@ class MySqlBookRepository implements BookRepositoryInterface
              * @return array{id: int, num: int, title: string}
              */
             fn(array $row) => [
-                'id' => (int) $row['TxID'],
-                'num' => (int) $row['TxChapterNum'],
-                'title' => (string) ($row['TxChapterTitle'] ?? $row['TxTitle']),
+                'id' => (int) $row['id'],
+                'num' => (int) $row['chapter_num'],
+                'title' => (string) ($row['chapter_title'] ?? $row['title']),
             ],
             $rows
         );
@@ -356,12 +356,12 @@ class MySqlBookRepository implements BookRepositoryInterface
     public function getChapterTextId(int $bookId, int $chapterNum): ?int
     {
         $row = QueryBuilder::table('texts')
-            ->select(['TxID'])
-            ->where('TxBkID', '=', $bookId)
-            ->where('TxChapterNum', '=', $chapterNum)
+            ->select(['id'])
+            ->where('book_id', '=', $bookId)
+            ->where('chapter_num', '=', $chapterNum)
             ->firstPrepared();
 
-        return $row !== null ? (int) $row['TxID'] : null;
+        return $row !== null ? (int) $row['id'] : null;
     }
 
     /**
@@ -371,16 +371,16 @@ class MySqlBookRepository implements BookRepositoryInterface
     {
         // Get text with book info
         $textRow = QueryBuilder::table('texts')
-            ->select(['TxBkID', 'TxChapterNum', 'TxChapterTitle'])
-            ->where('TxID', '=', $textId)
+            ->select(['book_id', 'chapter_num', 'chapter_title'])
+            ->where('id', '=', $textId)
             ->firstPrepared();
 
-        if ($textRow === null || !isset($textRow['TxBkID'])) {
+        if ($textRow === null || !isset($textRow['book_id'])) {
             return null;
         }
 
-        $bookId = (int) $textRow['TxBkID'];
-        $chapterNum = (int) $textRow['TxChapterNum'];
+        $bookId = (int) $textRow['book_id'];
+        $chapterNum = (int) $textRow['chapter_num'];
 
         // Get book info
         $bookRow = $this->query()
@@ -394,18 +394,18 @@ class MySqlBookRepository implements BookRepositoryInterface
 
         // Get prev/next chapter text IDs
         $prevRow = QueryBuilder::table('texts')
-            ->select(['TxID'])
-            ->where('TxBkID', '=', $bookId)
-            ->where('TxChapterNum', '<', $chapterNum)
-            ->orderBy('TxChapterNum', 'DESC')
+            ->select(['id'])
+            ->where('book_id', '=', $bookId)
+            ->where('chapter_num', '<', $chapterNum)
+            ->orderBy('chapter_num', 'DESC')
             ->limit(1)
             ->firstPrepared();
 
         $nextRow = QueryBuilder::table('texts')
-            ->select(['TxID'])
-            ->where('TxBkID', '=', $bookId)
-            ->where('TxChapterNum', '>', $chapterNum)
-            ->orderBy('TxChapterNum', 'ASC')
+            ->select(['id'])
+            ->where('book_id', '=', $bookId)
+            ->where('chapter_num', '>', $chapterNum)
+            ->orderBy('chapter_num', 'ASC')
             ->limit(1)
             ->firstPrepared();
 
@@ -413,10 +413,10 @@ class MySqlBookRepository implements BookRepositoryInterface
             'bookId' => $bookId,
             'bookTitle' => (string) $bookRow['title'],
             'chapterNum' => $chapterNum,
-            'chapterTitle' => isset($textRow['TxChapterTitle']) ? (string) $textRow['TxChapterTitle'] : null,
+            'chapterTitle' => isset($textRow['chapter_title']) ? (string) $textRow['chapter_title'] : null,
             'totalChapters' => (int) $bookRow['total_chapters'],
-            'prevTextId' => $prevRow !== null ? (int) $prevRow['TxID'] : null,
-            'nextTextId' => $nextRow !== null ? (int) $nextRow['TxID'] : null,
+            'prevTextId' => $prevRow !== null ? (int) $prevRow['id'] : null,
+            'nextTextId' => $nextRow !== null ? (int) $nextRow['id'] : null,
         ];
     }
 }

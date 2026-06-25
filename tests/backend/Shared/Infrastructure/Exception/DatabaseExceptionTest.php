@@ -133,14 +133,14 @@ class DatabaseExceptionTest extends TestCase
 
     public function testRecordNotFound(): void
     {
-        $exception = DatabaseException::recordNotFound('texts', 'TxID', 999);
+        $exception = DatabaseException::recordNotFound('texts', 'id', 999);
 
-        $this->assertStringContainsString('Record with TxID=999', $exception->getMessage());
+        $this->assertStringContainsString('Record with id=999', $exception->getMessage());
         $this->assertSame(404, $exception->getHttpStatusCode());
 
         $context = $exception->getContext();
         $this->assertSame('texts', $context['table']);
-        $this->assertSame('TxID', $context['key']);
+        $this->assertSame('id', $context['key']);
         $this->assertSame(999, $context['id']);
     }
 

@@ -12,10 +12,10 @@
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- Clean up any previous test data
-DELETE FROM word_occurrences WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM sentences WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
+DELETE FROM word_occurrences WHERE text_id IN (SELECT id FROM texts WHERE title LIKE 'FK_TEST_%');
+DELETE FROM sentences WHERE text_id IN (SELECT id FROM texts WHERE title LIKE 'FK_TEST_%');
+DELETE FROM text_tag_map WHERE text_id IN (SELECT id FROM texts WHERE title LIKE 'FK_TEST_%');
+DELETE FROM texts WHERE title LIKE 'FK_TEST_%';
 DELETE FROM word_tag_map WHERE word_id IN (SELECT id FROM words WHERE text LIKE 'fktest_%');
 DELETE FROM words WHERE text LIKE 'fktest_%';
 -- Note: archivedtexts merged into texts table, cleanup already handled by texts DELETE above
@@ -40,7 +40,7 @@ VALUES ('FK_TEST_Lang', 'https://test.com/###', '', '.!?', '', 'a-zA-Z');
 SET @test_lang_id = LAST_INSERT_ID();
 
 -- Create test text
-INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+INSERT INTO texts (language_id, title, text, annotated_text)
 VALUES (@test_lang_id, 'FK_TEST_Text1', 'Test text content', '');
 
 SET @test_text_id = LAST_INSERT_ID();
@@ -70,21 +70,21 @@ VALUES ('FK_TEST_Lang_Cascade', 'https://test.com/###', '', '.!?', '', 'a-zA-Z')
 
 SET @cascade_lang_id = LAST_INSERT_ID();
 
-INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+INSERT INTO texts (language_id, title, text, annotated_text)
 VALUES (@cascade_lang_id, 'FK_TEST_Cascade_Text', 'Cascade test', '');
 
 SET @cascade_text_id = LAST_INSERT_ID();
 
 -- Verify text exists
 SELECT IF(COUNT(*) = 1, 'SETUP: Text created', 'SETUP FAIL: Text not created') AS result
-FROM texts WHERE TxID = @cascade_text_id;
+FROM texts WHERE id = @cascade_text_id;
 
 -- Delete language - should cascade to texts
 DELETE FROM languages WHERE LgID = @cascade_lang_id;
 
 -- Verify text was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Text deleted via CASCADE', 'FAIL: Text not deleted') AS result
-FROM texts WHERE TxID = @cascade_text_id;
+FROM texts WHERE id = @cascade_text_id;
 
 -- ============================================================================
 -- Test 3: FK sentences -> texts (ON DELETE CASCADE)
@@ -93,7 +93,7 @@ FROM texts WHERE TxID = @cascade_text_id;
 SELECT '--- Test 3: sentences -> texts CASCADE ---' AS test;
 
 -- Create test text
-INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+INSERT INTO texts (language_id, title, text, annotated_text)
 VALUES (@test_lang_id, 'FK_TEST_Sentence_Cascade', 'Test', '');
 
 SET @sent_test_text_id = LAST_INSERT_ID();
@@ -108,7 +108,7 @@ SELECT IF(COUNT(*) = 1, 'SETUP: Sentence created', 'SETUP FAIL') AS result
 FROM sentences WHERE id = @sent_test_sentence_id;
 
 -- Delete text - should cascade to sentences
-DELETE FROM texts WHERE TxID = @sent_test_text_id;
+DELETE FROM texts WHERE id = @sent_test_text_id;
 
 -- Verify sentence was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Sentence deleted via CASCADE', 'FAIL: Sentence not deleted') AS result
@@ -120,7 +120,7 @@ FROM sentences WHERE id = @sent_test_sentence_id;
 
 SELECT '--- Test 4: word_occurrences -> texts CASCADE ---' AS test;
 
-INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+INSERT INTO texts (language_id, title, text, annotated_text)
 VALUES (@test_lang_id, 'FK_TEST_TextItems_Cascade', 'Test', '');
 
 SET @ti_test_text_id = LAST_INSERT_ID();
@@ -138,7 +138,7 @@ SELECT IF(COUNT(*) = 1, 'SETUP: TextItem created', 'SETUP FAIL') AS result
 FROM word_occurrences WHERE text_id = @ti_test_text_id;
 
 -- Delete text - should cascade to word_occurrences (via sentences cascade)
-DELETE FROM texts WHERE TxID = @ti_test_text_id;
+DELETE FROM texts WHERE id = @ti_test_text_id;
 
 -- Verify text item was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: TextItem deleted via CASCADE', 'FAIL: TextItem not deleted') AS result
@@ -150,7 +150,7 @@ FROM word_occurrences WHERE text_id = @ti_test_text_id;
 
 SELECT '--- Test 5: word_occurrences -> words SET NULL ---' AS test;
 
-INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+INSERT INTO texts (language_id, title, text, annotated_text)
 VALUES (@test_lang_id, 'FK_TEST_SetNull', 'Test', '');
 
 SET @sn_test_text_id = LAST_INSERT_ID();
@@ -247,7 +247,7 @@ FROM word_tag_map WHERE tag_id = @wt2_test_tag_id;
 
 SELECT '--- Test 8: text_tag_map -> texts CASCADE ---' AS test;
 
-INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+INSERT INTO texts (language_id, title, text, annotated_text)
 VALUES (@test_lang_id, 'FK_TEST_TextTag', 'Test', '');
 
 SET @tt_test_text_id = LAST_INSERT_ID();
@@ -262,7 +262,7 @@ SELECT IF(COUNT(*) = 1, 'SETUP: Texttag created', 'SETUP FAIL') AS result
 FROM text_tag_map WHERE text_id = @tt_test_text_id;
 
 -- Delete text - should cascade to text_tag_map
-DELETE FROM texts WHERE TxID = @tt_test_text_id;
+DELETE FROM texts WHERE id = @tt_test_text_id;
 
 -- Verify texttag was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Texttag deleted via CASCADE', 'FAIL: Texttag not deleted') AS result
@@ -270,7 +270,7 @@ FROM text_tag_map WHERE text_id = @tt_test_text_id;
 
 -- ============================================================================
 -- Test 9: FK archived texts (in texts table) -> languages (ON DELETE CASCADE)
--- Note: Archived texts are now stored in the texts table with TxArchivedAt set
+-- Note: Archived texts are now stored in the texts table with archived_at set
 -- ============================================================================
 
 SELECT '--- Test 9: archived texts -> languages CASCADE ---' AS test;
@@ -280,22 +280,22 @@ VALUES ('FK_TEST_Archive_Lang', 'https://test.com/###', '', '.!?', '', 'a-zA-Z')
 
 SET @arch_lang_id = LAST_INSERT_ID();
 
--- Insert archived text (texts with TxArchivedAt set)
-INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxArchivedAt)
+-- Insert archived text (texts with archived_at set)
+INSERT INTO texts (language_id, title, text, annotated_text, archived_at)
 VALUES (@arch_lang_id, 'FK_TEST_Archived', 'Archived content', '', NOW());
 
 SET @arch_text_id = LAST_INSERT_ID();
 
 -- Verify archived text exists
 SELECT IF(COUNT(*) = 1, 'SETUP: ArchivedText created', 'SETUP FAIL') AS result
-FROM texts WHERE TxID = @arch_text_id AND TxArchivedAt IS NOT NULL;
+FROM texts WHERE id = @arch_text_id AND archived_at IS NOT NULL;
 
 -- Delete language - should cascade to archived texts
 DELETE FROM languages WHERE LgID = @arch_lang_id;
 
 -- Verify archived text was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: ArchivedText deleted via CASCADE', 'FAIL: ArchivedText not deleted') AS result
-FROM texts WHERE TxID = @arch_text_id;
+FROM texts WHERE id = @arch_text_id;
 
 -- ============================================================================
 -- Test 10: FK text_tag_map -> texts (archived texts) (ON DELETE CASCADE)
@@ -305,7 +305,7 @@ FROM texts WHERE TxID = @arch_text_id;
 SELECT '--- Test 10: text_tag_map -> archived texts CASCADE ---' AS test;
 
 -- Insert archived text
-INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxArchivedAt)
+INSERT INTO texts (language_id, title, text, annotated_text, archived_at)
 VALUES (@test_lang_id, 'FK_TEST_ArchTag', 'Archived', '', NOW());
 
 SET @att_arch_id = LAST_INSERT_ID();
@@ -320,7 +320,7 @@ SELECT IF(COUNT(*) = 1, 'SETUP: ArchTextTag created', 'SETUP FAIL') AS result
 FROM text_tag_map WHERE text_id = @att_arch_id;
 
 -- Delete archived text - should cascade to text_tag_map
-DELETE FROM texts WHERE TxID = @att_arch_id;
+DELETE FROM texts WHERE id = @att_arch_id;
 
 -- Verify text_tag_map entry was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: ArchTextTag deleted via CASCADE', 'FAIL: ArchTextTag not deleted') AS result
@@ -399,7 +399,7 @@ BEGIN
         SELECT 'PASS: FK constraint prevented invalid insert' AS result;
     END;
 
-    INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+    INSERT INTO texts (language_id, title, text, annotated_text)
     VALUES (255, 'FK_TEST_Invalid', 'Test', '');
 
     SELECT 'FAIL: Invalid insert was allowed' AS result;
@@ -420,7 +420,7 @@ VALUES ('FK_TEST_FullCascade', 'https://test.com/###', '', '.!?', '', 'a-zA-Z');
 
 SET @fc_lang_id = LAST_INSERT_ID();
 
-INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText)
+INSERT INTO texts (language_id, title, text, annotated_text)
 VALUES (@fc_lang_id, 'FK_TEST_FullCascade_Text', 'Test', '');
 
 SET @fc_text_id = LAST_INSERT_ID();
@@ -435,7 +435,7 @@ VALUES (NULL, @fc_lang_id, @fc_text_id, @fc_sentence_id, 1, 1, 'cascadeword', ''
 
 -- Verify all exist
 SELECT IF(
-    (SELECT COUNT(*) FROM texts WHERE TxID = @fc_text_id) = 1 AND
+    (SELECT COUNT(*) FROM texts WHERE id = @fc_text_id) = 1 AND
     (SELECT COUNT(*) FROM sentences WHERE id = @fc_sentence_id) = 1 AND
     (SELECT COUNT(*) FROM word_occurrences WHERE text_id = @fc_text_id) = 1,
     'SETUP: Full chain created', 'SETUP FAIL'
@@ -446,7 +446,7 @@ DELETE FROM languages WHERE LgID = @fc_lang_id;
 
 -- Verify all were deleted
 SELECT IF(
-    (SELECT COUNT(*) FROM texts WHERE TxID = @fc_text_id) = 0 AND
+    (SELECT COUNT(*) FROM texts WHERE id = @fc_text_id) = 0 AND
     (SELECT COUNT(*) FROM sentences WHERE id = @fc_sentence_id) = 0 AND
     (SELECT COUNT(*) FROM word_occurrences WHERE text_id = @fc_text_id) = 0,
     'PASS: Full chain deleted via CASCADE', 'FAIL: Some records remain'
@@ -459,10 +459,10 @@ SELECT IF(
 SELECT '--- Cleanup ---' AS status;
 
 -- Clean up remaining test data
-DELETE FROM word_occurrences WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM sentences WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxTitle LIKE 'FK_TEST_%');
-DELETE FROM texts WHERE TxTitle LIKE 'FK_TEST_%';
+DELETE FROM word_occurrences WHERE text_id IN (SELECT id FROM texts WHERE title LIKE 'FK_TEST_%');
+DELETE FROM sentences WHERE text_id IN (SELECT id FROM texts WHERE title LIKE 'FK_TEST_%');
+DELETE FROM text_tag_map WHERE text_id IN (SELECT id FROM texts WHERE title LIKE 'FK_TEST_%');
+DELETE FROM texts WHERE title LIKE 'FK_TEST_%';
 DELETE FROM word_tag_map WHERE word_id IN (SELECT id FROM words WHERE text LIKE 'fktest_%');
 DELETE FROM words WHERE text LIKE 'fktest_%';
 -- Note: archivedtexts merged into texts table, cleanup already handled by texts DELETE above

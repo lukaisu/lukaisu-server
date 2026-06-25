@@ -53,7 +53,7 @@ class ExpressionService
      * @param string     $text Text to insert
      * @param string|int $lid  Language ID
      *
-     * @return array<int, array{id: int, TxID: int, position: int, term: string}>
+     * @return array<int, array{id: int, text_id: int, position: int, term: string}>
      */
     public function findMecabExpression(string $text, string|int $lid): array
     {
@@ -142,7 +142,7 @@ class ExpressionService
                     (int) $record['first_pos'];
                     $occurrences[] = [
                         "id" => (int) $record['id'],
-                        "TxID" => (int) $record['text_id'],
+                        "text_id" => (int) $record['text_id'],
                         "position" => $pos,
                         "term" => $text
                     ];
@@ -304,7 +304,7 @@ class ExpressionService
             /** @var array<int, array<int, string>> $appendtext */
             $appendtext = [];
             foreach ($occurrences as $occ) {
-                $txId = $occ['text_id'] ?? $occ['TxID'] ?? 0;
+                $txId = $occ['text_id'] ?? $occ['id'] ?? 0;
                 $appendtext[$txId] = [];
                 if (Settings::getZeroOrOne('showallwords', 1)) {
                     $appendtext[$txId][$occ['position']] = "&nbsp;$len&nbsp";
@@ -323,7 +323,7 @@ class ExpressionService
             $placeholders = [];
             $params = [];
             foreach ($occurrences as $occ) {
-                $txId = $occ["text_id"] ?? $occ["TxID"] ?? 0;
+                $txId = $occ["text_id"] ?? $occ["id"] ?? 0;
                 $placeholders[] = "(?, ?, ?, ?, ?, ?, ?)";
                 $params[] = $wid;
                 $params[] = $lid;

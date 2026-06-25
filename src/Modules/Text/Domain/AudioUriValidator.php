@@ -20,14 +20,14 @@ namespace Lukaisu\Modules\Text\Domain;
 use Lukaisu\Shared\Infrastructure\Globals;
 
 /**
- * Validates user-supplied TxAudioURI values before persisting them.
+ * Validates user-supplied audio_uri values before persisting them.
  *
  * Three layers of defense:
  *
  * 1. **Always reject:** path traversal (`..`), null bytes, control
  *    characters, absolute filesystem paths (`/foo`), and dangerous
  *    URI schemes (`javascript:`, `data:`, `file:`, `vbscript:`).
- *    These never have a legitimate use in TxAudioURI and they enable
+ *    These never have a legitimate use in audio_uri and they enable
  *    stored XSS or unbounded filesystem reads when echoed into the
  *    media player.
  *
@@ -49,7 +49,7 @@ use Lukaisu\Shared\Infrastructure\Globals;
 final class AudioUriValidator
 {
     /**
-     * Validate a TxAudioURI value. Returns the (unchanged) value on
+     * Validate a audio_uri value. Returns the (unchanged) value on
      * success; throws \InvalidArgumentException with a user-facing
      * message on failure.
      *

@@ -141,10 +141,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'My Article',
-                'TxText' => 'Some text content',
-                'TxSourceURI' => 'https://example.com/a1',
-                'TxAudioURI' => '',
+                'title' => 'My Article',
+                'text' => 'Some text content',
+                'source_uri' => 'https://example.com/a1',
+                'audio_uri' => '',
             ],
         ]);
 
@@ -176,10 +176,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'Title',
-                'TxText' => 'Text',
-                'TxSourceURI' => 'https://example.com/existing',
-                'TxAudioURI' => '',
+                'title' => 'Title',
+                'text' => 'Text',
+                'source_uri' => 'https://example.com/existing',
+                'audio_uri' => '',
             ],
         ]);
 
@@ -255,10 +255,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'Title',
-                'TxText' => 'Text',
-                'TxSourceURI' => 'https://example.com/a1',
-                'TxAudioURI' => '',
+                'title' => 'Title',
+                'text' => 'Text',
+                'source_uri' => 'https://example.com/a1',
+                'audio_uri' => '',
             ],
         ]);
 
@@ -284,10 +284,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'Title',
-                'TxText' => 'Text',
-                'TxSourceURI' => 'https://example.com/a1',
-                'TxAudioURI' => '',
+                'title' => 'Title',
+                'text' => 'Text',
+                'source_uri' => 'https://example.com/a1',
+                'audio_uri' => '',
             ],
         ]);
 
@@ -317,10 +317,10 @@ class ImportArticlesTest extends TestCase
         // All extracted articles are duplicates
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'Title',
-                'TxText' => 'Text',
-                'TxSourceURI' => 'https://example.com/dup',
-                'TxAudioURI' => '',
+                'title' => 'Title',
+                'text' => 'Text',
+                'source_uri' => 'https://example.com/dup',
+                'audio_uri' => '',
             ],
         ]);
         $this->textCreation->method('sourceUriExists')->willReturn(true);
@@ -344,10 +344,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'Title',
-                'TxText' => 'Text',
-                'TxSourceURI' => 'https://example.com/a1',
-                'TxAudioURI' => '',
+                'title' => 'Title',
+                'text' => 'Text',
+                'source_uri' => 'https://example.com/a1',
+                'audio_uri' => '',
             ],
         ]);
 
@@ -382,10 +382,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'Title',
-                'TxText' => 'Text',
-                'TxSourceURI' => 'https://example.com/a1',
-                'TxAudioURI' => '',
+                'title' => 'Title',
+                'text' => 'Text',
+                'source_uri' => 'https://example.com/a1',
+                'audio_uri' => '',
             ],
         ]);
 
@@ -423,10 +423,10 @@ class ImportArticlesTest extends TestCase
         $this->articleExtractor->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Title',
-                    'TxText' => 'Text',
-                    'TxSourceURI' => 'https://example.com/x',
-                    'TxAudioURI' => '',
+                    'title' => 'Title',
+                    'text' => 'Text',
+                    'source_uri' => 'https://example.com/x',
+                    'audio_uri' => '',
                 ],
             ]);
 
@@ -453,10 +453,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'Podcast Episode',
-                'TxText' => 'Episode content',
-                'TxSourceURI' => 'https://example.com/ep1',
-                'TxAudioURI' => 'https://example.com/audio.mp3',
+                'title' => 'Podcast Episode',
+                'text' => 'Episode content',
+                'source_uri' => 'https://example.com/ep1',
+                'audio_uri' => 'https://example.com/audio.mp3',
             ],
         ]);
 
@@ -513,10 +513,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'Good',
-                'TxText' => 'Content',
-                'TxSourceURI' => 'https://example.com/good',
-                'TxAudioURI' => '',
+                'title' => 'Good',
+                'text' => 'Content',
+                'source_uri' => 'https://example.com/good',
+                'audio_uri' => '',
             ],
             'error' => [
                 'link' => ['https://example.com/bad'],
@@ -545,10 +545,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'Title',
-                'TxText' => 'Text',
-                'TxSourceURI' => 'https://example.com/a1',
-                'TxAudioURI' => '',
+                'title' => 'Title',
+                'text' => 'Text',
+                'source_uri' => 'https://example.com/a1',
+                'audio_uri' => '',
             ],
         ]);
 
@@ -620,10 +620,10 @@ class ImportArticlesTest extends TestCase
 
         $this->articleExtractor->method('extract')->willReturn([
             0 => [
-                'TxTitle' => 'T',
-                'TxText' => 'C',
-                'TxSourceURI' => 'https://example.com/' . (++$callCount),
-                'TxAudioURI' => '',
+                'title' => 'T',
+                'text' => 'C',
+                'source_uri' => 'https://example.com/' . (++$callCount),
+                'audio_uri' => '',
             ],
         ]);
 

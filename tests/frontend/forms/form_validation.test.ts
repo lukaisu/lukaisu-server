@@ -213,7 +213,7 @@ describe('form_validation.ts', () => {
       });
 
       it('skips notempty fields hidden under an Alpine x-show ancestor', () => {
-        // /texts/new: TxText is `notempty` but hidden via x-show when the user
+        // /texts/new: text is `notempty` but hidden via x-show when the user
         // is importing a file. Alpine sets display:none on the wrapper.
         document.body.innerHTML = `
           <div style="display: none">

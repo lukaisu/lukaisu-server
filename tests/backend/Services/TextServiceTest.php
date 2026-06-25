@@ -168,7 +168,7 @@ class TextServiceTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $result = $this->service->getArchivedTextCount(' AND TxLgID = 1', '', '');
+        $result = $this->service->getArchivedTextCount(' AND language_id = 1', '', '');
         $this->assertIsInt($result);
         $this->assertGreaterThanOrEqual(0, $result);
     }
@@ -216,7 +216,7 @@ class TextServiceTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $result = $this->service->getTextCount(' AND TxLgID = 1', '', '');
+        $result = $this->service->getTextCount(' AND language_id = 1', '', '');
         $this->assertIsInt($result);
         $this->assertGreaterThanOrEqual(0, $result);
     }
@@ -260,8 +260,8 @@ class TextServiceTest extends TestCase
         }
 
         $result = $this->service->buildArchivedQueryWhereClause('test', 'title,text', '');
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertStringContainsString('OR', $result['clause']);
         $this->assertEquals(['test', 'test'], $result['params']);
     }
@@ -273,8 +273,8 @@ class TextServiceTest extends TestCase
         }
 
         $result = $this->service->buildArchivedQueryWhereClause('test', 'title', '');
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringNotContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('texts.title', $result['clause']);
+        $this->assertStringNotContainsString('texts.text', $result['clause']);
         $this->assertEquals(['test'], $result['params']);
     }
 
@@ -285,8 +285,8 @@ class TextServiceTest extends TestCase
         }
 
         $result = $this->service->buildArchivedQueryWhereClause('test', 'text', '');
-        $this->assertStringNotContainsString('TxTitle LIKE', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringNotContainsString('title LIKE', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertEquals(['test'], $result['params']);
     }
 
@@ -340,8 +340,8 @@ class TextServiceTest extends TestCase
         }
 
         $result = $this->service->buildTextQueryWhereClause('test', 'title,text', '');
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertStringContainsString('OR', $result['clause']);
         $this->assertEquals(['test', 'test'], $result['params']);
     }
@@ -353,8 +353,8 @@ class TextServiceTest extends TestCase
         }
 
         $result = $this->service->buildTextQueryWhereClause('test', 'title', '');
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringNotContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('texts.title', $result['clause']);
+        $this->assertStringNotContainsString('texts.text', $result['clause']);
         $this->assertEquals(['test'], $result['params']);
     }
 
@@ -365,8 +365,8 @@ class TextServiceTest extends TestCase
         }
 
         $result = $this->service->buildTextQueryWhereClause('test', 'text', '');
-        $this->assertStringNotContainsString('TxTitle LIKE', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringNotContainsString('title LIKE', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertEquals(['test'], $result['params']);
     }
 

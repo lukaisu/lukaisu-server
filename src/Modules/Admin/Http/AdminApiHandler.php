@@ -143,17 +143,17 @@ class AdminApiHandler implements ApiRoutableInterface
 
         // Check if the current text belongs to this language
         $textData = QueryBuilder::table('texts')
-            ->selectRaw('TxID, TxTitle, TxLgID, LENGTH(TxAnnotatedText) > 0 AS annotated')
-            ->where('TxID', '=', $textId)
-            ->where('TxLgID', '=', $languageId)
+            ->selectRaw('id, title, language_id, LENGTH(annotated_text) > 0 AS annotated')
+            ->where('id', '=', $textId)
+            ->where('language_id', '=', $languageId)
             ->firstPrepared();
 
         if ($textData === null) {
             // Current text doesn't belong to this language, find the most recent one
             $textData = QueryBuilder::table('texts')
-                ->selectRaw('TxID, TxTitle, TxLgID, LENGTH(TxAnnotatedText) > 0 AS annotated')
-                ->where('TxLgID', '=', $languageId)
-                ->orderBy('TxID', 'DESC')
+                ->selectRaw('id, title, language_id, LENGTH(annotated_text) > 0 AS annotated')
+                ->where('language_id', '=', $languageId)
+                ->orderBy('id', 'DESC')
                 ->limit(1)
                 ->firstPrepared();
         }
@@ -168,7 +168,7 @@ class AdminApiHandler implements ApiRoutableInterface
             ->where('LgID', '=', $languageId)
             ->valuePrepared('LgName');
 
-        $textId = (int)$textData['TxID'];
+        $textId = (int)$textData['id'];
 
         // Get text statistics
         $textStatsService = new TextStatisticsService();
@@ -190,8 +190,8 @@ class AdminApiHandler implements ApiRoutableInterface
 
         return [
             'id' => $textId,
-            'title' => $textData['TxTitle'],
-            'language_id' => (int)$textData['TxLgID'],
+            'title' => $textData['title'],
+            'language_id' => (int)$textData['language_id'],
             'language_name' => (string)$languageName,
             'annotated' => (bool)$textData['annotated'],
             'stats' => $stats
@@ -208,8 +208,8 @@ class AdminApiHandler implements ApiRoutableInterface
     private function getTextCountForLanguage(int $languageId): int
     {
         return QueryBuilder::table('texts')
-            ->where('TxLgID', '=', $languageId)
-            ->whereNull('TxArchivedAt')
+            ->where('language_id', '=', $languageId)
+            ->whereNull('archived_at')
             ->count();
     }
 

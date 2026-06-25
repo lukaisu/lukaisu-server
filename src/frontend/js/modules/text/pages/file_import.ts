@@ -237,11 +237,11 @@ function handleSubtitleFile(file: File): void {
       return;
     }
 
-    setInputByName('TxText', result.text);
+    setInputByName('text', result.text);
 
-    if (!getInputByName('TxTitle')) {
+    if (!getInputByName('title')) {
       const titleFromFile = file.name.replace(/\.(srt|vtt)$/i, '');
-      setInputByName('TxTitle', titleFromFile);
+      setInputByName('title', titleFromFile);
     }
 
     setImportStatus(
@@ -261,9 +261,9 @@ function handleSubtitleFile(file: File): void {
  * action to /book/import and the EPUB-aware UI bits become visible.
  */
 function handleEpubFile(file: File): void {
-  if (!getInputByName('TxTitle')) {
+  if (!getInputByName('title')) {
     const titleFromFile = file.name.replace(/\.epub$/i, '');
-    setInputByName('TxTitle', titleFromFile);
+    setInputByName('title', titleFromFile);
   }
   setImportStatus('EPUB ready — submit to import as a book.', false, true);
   dispatchFileImportEvent('epub');

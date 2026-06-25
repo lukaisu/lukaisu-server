@@ -59,7 +59,7 @@ class SentenceService
      * own — ownership is derived from the parent `texts` row via text_id.
      *
      * Returns an SQL fragment like
-     * ` AND text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)` and
+     * ` AND text_id IN (SELECT id FROM texts WHERE user_id = ?)` and
      * pushes the current user ID onto $bindings, or an empty string
      * when multi-user mode is off / no user is authenticated. Without
      * this gate, raw `FROM sentences …` queries leak rows from every
@@ -79,7 +79,7 @@ class SentenceService
             return '';
         }
         $bindings[] = $userId;
-        return ' AND sentences.text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)';
+        return ' AND sentences.text_id IN (SELECT id FROM texts WHERE user_id = ?)';
     }
 
     /**
@@ -103,7 +103,7 @@ class SentenceService
         $hit = Connection::preparedFetchValue(
             "SELECT 1 AS owned
              FROM sentences, texts
-             WHERE id = ? AND text_id = TxID AND TxUsID = ?
+             WHERE id = ? AND text_id = id AND user_id = ?
              LIMIT 1",
             [$seid, $userId],
             'owned'

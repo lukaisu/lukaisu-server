@@ -470,9 +470,9 @@ class ArticleExtractorTest extends TestCase
         $result = $method->invoke($this->extractor, $item, '//p', '', null);
 
         if ($result !== null) {
-            $this->assertSame('Test Title', $result['TxTitle']);
-            $this->assertSame('https://example.com/audio.mp3', $result['TxAudioURI']);
-            $this->assertStringContainsString('Article content here', $result['TxText']);
+            $this->assertSame('Test Title', $result['title']);
+            $this->assertSame('https://example.com/audio.mp3', $result['audio_uri']);
+            $this->assertStringContainsString('Article content here', $result['text']);
         }
     }
 

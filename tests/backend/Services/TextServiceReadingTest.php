@@ -72,8 +72,8 @@ class TextServiceReadingTest extends TestCase
             // Create a test text with annotations and audio
             $annotatedText = "-1\t.\n0\tHello\t\t*\n0\tworld\t\ttranslation";
             Connection::query(
-                "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, " .
-                "TxSourceURI, TxAudioPosition, TxPosition) " .
+                "INSERT INTO texts (language_id, title, text, annotated_text, audio_uri, " .
+                "source_uri, audio_position, position) " .
                 "VALUES (" . self::$testLangId . ", 'Test Reading Text', 'Hello world.', " .
                 "'" . mysqli_real_escape_string(Globals::getDbConnection(), $annotatedText) . "', " .
                 "'http://audio.test/file.mp3', 'http://source.test/article', 30, 100)"
@@ -92,7 +92,7 @@ class TextServiceReadingTest extends TestCase
 
         // Clean up test data
         if (self::$testTextId > 0) {
-            Connection::query("DELETE FROM texts WHERE TxID = " . self::$testTextId);
+            Connection::query("DELETE FROM texts WHERE id = " . self::$testTextId);
         }
         if (self::$testLangId > 0) {
             Connection::query("DELETE FROM languages WHERE LgName = 'TestReadingLanguage'");
@@ -116,20 +116,20 @@ class TextServiceReadingTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('LgName', $result);
-        $this->assertArrayHasKey('TxLgID', $result);
-        $this->assertArrayHasKey('TxText', $result);
-        $this->assertArrayHasKey('TxTitle', $result);
-        $this->assertArrayHasKey('TxAudioURI', $result);
-        $this->assertArrayHasKey('TxSourceURI', $result);
-        $this->assertArrayHasKey('TxAudioPosition', $result);
+        $this->assertArrayHasKey('language_id', $result);
+        $this->assertArrayHasKey('text', $result);
+        $this->assertArrayHasKey('title', $result);
+        $this->assertArrayHasKey('audio_uri', $result);
+        $this->assertArrayHasKey('source_uri', $result);
+        $this->assertArrayHasKey('audio_position', $result);
 
         $this->assertEquals('TestReadingLanguage', $result['LgName']);
-        $this->assertEquals(self::$testLangId, (int)$result['TxLgID']);
-        $this->assertEquals('Hello world.', $result['TxText']);
-        $this->assertEquals('Test Reading Text', $result['TxTitle']);
-        $this->assertEquals('http://audio.test/file.mp3', $result['TxAudioURI']);
-        $this->assertEquals('http://source.test/article', $result['TxSourceURI']);
-        $this->assertEquals(30, (int)$result['TxAudioPosition']);
+        $this->assertEquals(self::$testLangId, (int)$result['language_id']);
+        $this->assertEquals('Hello world.', $result['text']);
+        $this->assertEquals('Test Reading Text', $result['title']);
+        $this->assertEquals('http://audio.test/file.mp3', $result['audio_uri']);
+        $this->assertEquals('http://source.test/article', $result['source_uri']);
+        $this->assertEquals(30, (int)$result['audio_position']);
     }
 
     public function testGetTextForReadingReturnsNullForNonExistent(): void
@@ -165,15 +165,15 @@ class TextServiceReadingTest extends TestCase
         $result = $this->service->getTextDataForContent(self::$testTextId);
 
         $this->assertIsArray($result);
-        $this->assertArrayHasKey('TxLgID', $result);
-        $this->assertArrayHasKey('TxTitle', $result);
-        $this->assertArrayHasKey('TxAnnotatedText', $result);
-        $this->assertArrayHasKey('TxPosition', $result);
+        $this->assertArrayHasKey('language_id', $result);
+        $this->assertArrayHasKey('title', $result);
+        $this->assertArrayHasKey('annotated_text', $result);
+        $this->assertArrayHasKey('position', $result);
 
-        $this->assertEquals(self::$testLangId, (int)$result['TxLgID']);
-        $this->assertEquals('Test Reading Text', $result['TxTitle']);
-        $this->assertStringContainsString('Hello', $result['TxAnnotatedText']);
-        $this->assertEquals(100, (int)$result['TxPosition']);
+        $this->assertEquals(self::$testLangId, (int)$result['language_id']);
+        $this->assertEquals('Test Reading Text', $result['title']);
+        $this->assertStringContainsString('Hello', $result['annotated_text']);
+        $this->assertEquals(100, (int)$result['position']);
     }
 
     public function testGetTextDataForContentReturnsNullForNonExistent(): void
@@ -357,14 +357,14 @@ class TextServiceReadingTest extends TestCase
         // Step 1: Get text for reading (header data)
         $headerData = $this->service->getTextForReading(self::$testTextId);
         $this->assertNotNull($headerData);
-        $this->assertEquals('Test Reading Text', $headerData['TxTitle']);
+        $this->assertEquals('Test Reading Text', $headerData['title']);
 
-        $langId = (int)$headerData['TxLgID'];
+        $langId = (int)$headerData['language_id'];
 
         // Step 2: Get text data for content display
         $contentData = $this->service->getTextDataForContent(self::$testTextId);
         $this->assertNotNull($contentData);
-        $this->assertEquals($langId, (int)$contentData['TxLgID']);
+        $this->assertEquals($langId, (int)$contentData['language_id']);
 
         // Step 3: Get language settings
         $langSettings = $this->service->getLanguageSettingsForReading($langId);
@@ -388,7 +388,7 @@ class TextServiceReadingTest extends TestCase
 
         // Create a text without audio
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxSourceURI) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text, source_uri) " .
             "VALUES (" . self::$testLangId . ", 'No Audio Reading Text', 'Test content.', '', " .
             "'http://source.test')"
         );
@@ -398,12 +398,12 @@ class TextServiceReadingTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertTrue(
-            $result['TxAudioURI'] === null || $result['TxAudioURI'] === '',
+            $result['audio_uri'] === null || $result['audio_uri'] === '',
             'Audio URI should be null or empty'
         );
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxID = " . $noAudioTextId);
+        Connection::query("DELETE FROM texts WHERE id = " . $noAudioTextId);
     }
 
     public function testTextWithEmptyAnnotatedText(): void
@@ -414,7 +414,7 @@ class TextServiceReadingTest extends TestCase
 
         // Create a text without annotations
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text) " .
             "VALUES (" . self::$testLangId . ", 'No Annotation Text', 'Plain text.', '')"
         );
         $noAnnTextId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -422,10 +422,10 @@ class TextServiceReadingTest extends TestCase
         $result = $this->service->getTextDataForContent($noAnnTextId);
 
         $this->assertIsArray($result);
-        $this->assertEquals('', $result['TxAnnotatedText']);
+        $this->assertEquals('', $result['annotated_text']);
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxID = " . $noAnnTextId);
+        Connection::query("DELETE FROM texts WHERE id = " . $noAnnTextId);
     }
 
     public function testTextWithZeroPositions(): void
@@ -436,7 +436,7 @@ class TextServiceReadingTest extends TestCase
 
         // Create a text with zero positions (default)
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text) " .
             "VALUES (" . self::$testLangId . ", 'Zero Position Text', 'Content.', '')"
         );
         $zeroPosTextId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -444,11 +444,11 @@ class TextServiceReadingTest extends TestCase
         $headerResult = $this->service->getTextForReading($zeroPosTextId);
         $contentResult = $this->service->getTextDataForContent($zeroPosTextId);
 
-        $this->assertEquals(0, (int)($headerResult['TxAudioPosition'] ?? 0));
-        $this->assertEquals(0, (int)($contentResult['TxPosition'] ?? 0));
+        $this->assertEquals(0, (int)($headerResult['audio_position'] ?? 0));
+        $this->assertEquals(0, (int)($contentResult['position'] ?? 0));
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxID = " . $zeroPosTextId);
+        Connection::query("DELETE FROM texts WHERE id = " . $zeroPosTextId);
     }
 
     public function testLanguageWithRemoveSpaces(): void
@@ -488,7 +488,7 @@ class TextServiceReadingTest extends TestCase
 
         // Create a text with special characters in title
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text) " .
             "VALUES (" . self::$testLangId . ", " .
             "'" . mysqli_real_escape_string(Globals::getDbConnection(), $specialTitle) . "', " .
             "'Content.', '')"
@@ -498,10 +498,10 @@ class TextServiceReadingTest extends TestCase
         $result = $this->service->getTextForReading($specialTextId);
 
         $this->assertIsArray($result);
-        $this->assertEquals($specialTitle, $result['TxTitle']);
+        $this->assertEquals($specialTitle, $result['title']);
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxID = " . $specialTextId);
+        Connection::query("DELETE FROM texts WHERE id = " . $specialTextId);
     }
 
     public function testGetTextForReadingWithUnicodeText(): void
@@ -514,7 +514,7 @@ class TextServiceReadingTest extends TestCase
 
         // Create a text with Unicode content
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text) " .
             "VALUES (" . self::$testLangId . ", 'Unicode Test', " .
             "'" . mysqli_real_escape_string(Globals::getDbConnection(), $unicodeText) . "', '')"
         );
@@ -523,9 +523,9 @@ class TextServiceReadingTest extends TestCase
         $result = $this->service->getTextForReading($unicodeTextId);
 
         $this->assertIsArray($result);
-        $this->assertEquals($unicodeText, $result['TxText']);
+        $this->assertEquals($unicodeText, $result['text']);
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxID = " . $unicodeTextId);
+        Connection::query("DELETE FROM texts WHERE id = " . $unicodeTextId);
     }
 }

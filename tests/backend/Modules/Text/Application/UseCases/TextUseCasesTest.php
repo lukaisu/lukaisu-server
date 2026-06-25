@@ -101,8 +101,8 @@ class TextUseCasesTest extends TestCase
         $useCase = new BuildTextFilters();
         $result = $useCase->buildQueryWhereClause('hello', 'title,text', '');
 
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertStringContainsString('LIKE', $result['clause']);
         $this->assertCount(2, $result['params']);
         $this->assertSame('hello', $result['params'][0]);
@@ -117,8 +117,8 @@ class TextUseCasesTest extends TestCase
         $useCase = new BuildTextFilters();
         $result = $useCase->buildQueryWhereClause('test', 'title', '');
 
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringNotContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('texts.title', $result['clause']);
+        $this->assertStringNotContainsString('texts.text', $result['clause']);
         $this->assertCount(1, $result['params']);
     }
 
@@ -130,8 +130,8 @@ class TextUseCasesTest extends TestCase
         $useCase = new BuildTextFilters();
         $result = $useCase->buildQueryWhereClause('test', 'text', '');
 
-        $this->assertStringContainsString('TxText', $result['clause']);
-        $this->assertStringNotContainsString('TxTitle', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
+        $this->assertStringNotContainsString('title', $result['clause']);
         $this->assertCount(1, $result['params']);
     }
 
@@ -160,14 +160,14 @@ class TextUseCasesTest extends TestCase
     }
 
     /**
-     * Test buildQueryWhereClause with custom table prefix.
+     * Test buildQueryWhereClause applies a custom table qualifier to the columns.
      */
     public function testBuildQueryWhereClauseCustomPrefix(): void
     {
         $useCase = new BuildTextFilters();
-        $result = $useCase->buildQueryWhereClause('test', 'title', '', 'At');
+        $result = $useCase->buildQueryWhereClause('test', 'title', '', 'archive.');
 
-        $this->assertStringContainsString('AtTitle', $result['clause']);
+        $this->assertStringContainsString('archive.title', $result['clause']);
     }
 
     /**
@@ -178,8 +178,8 @@ class TextUseCasesTest extends TestCase
         $useCase = new BuildTextFilters();
         $result = $useCase->buildQueryWhereClause('test', 'unknown', '');
 
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertCount(2, $result['params']);
     }
 
@@ -191,7 +191,7 @@ class TextUseCasesTest extends TestCase
         $useCase = new BuildTextFilters();
         $result = $useCase->buildArchivedQueryWhereClause('test', 'title', '');
 
-        $this->assertStringContainsString('TxTitle', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
     }
 
     /**
@@ -369,12 +369,12 @@ class TextUseCasesTest extends TestCase
         $result = $useCase->getTextById(42);
 
         $this->assertIsArray($result);
-        $this->assertSame(42, $result['TxID']);
-        $this->assertSame(1, $result['TxLgID']);
-        $this->assertSame('Test Title', $result['TxTitle']);
-        $this->assertSame('Some text content', $result['TxText']);
-        $this->assertSame('https://example.com/audio.mp3', $result['TxAudioURI']);
-        $this->assertSame('https://source.example.com', $result['TxSourceURI']);
+        $this->assertSame(42, $result['id']);
+        $this->assertSame(1, $result['language_id']);
+        $this->assertSame('Test Title', $result['title']);
+        $this->assertSame('Some text content', $result['text']);
+        $this->assertSame('https://example.com/audio.mp3', $result['audio_uri']);
+        $this->assertSame('https://source.example.com', $result['source_uri']);
         $this->assertSame(0, $result['annot_exists']);
     }
 
@@ -426,7 +426,7 @@ class TextUseCasesTest extends TestCase
         $result = $useCase->getTextById(10);
 
         $this->assertSame(1, $result['annot_exists']);
-        $this->assertSame(2, $result['TxLgID']);
+        $this->assertSame(2, $result['language_id']);
     }
 
     /**
@@ -500,8 +500,8 @@ class TextUseCasesTest extends TestCase
         $useCase = new GetTextForEdit($repository);
         $result = $useCase->getTextById(5);
 
-        $this->assertSame('https://example.com/audio.mp3', $result['TxAudioURI']);
-        $this->assertSame('https://source.com', $result['TxSourceURI']);
+        $this->assertSame('https://example.com/audio.mp3', $result['audio_uri']);
+        $this->assertSame('https://source.com', $result['source_uri']);
     }
 
     // =========================================================================

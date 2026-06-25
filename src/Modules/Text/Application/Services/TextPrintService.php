@@ -82,8 +82,8 @@ class TextPrintService
     public function getTextData(int $textId): ?array
     {
         $result = QueryBuilder::table('texts')
-            ->select(['TxID', 'TxLgID', 'TxTitle', 'TxSourceURI', 'TxAudioURI'])
-            ->where('TxID', '=', $textId)
+            ->select(['id', 'language_id', 'title', 'source_uri', 'audio_uri'])
+            ->where('id', '=', $textId)
             ->getPrepared();
         return !empty($result) ? $result[0] : null;
     }
@@ -114,10 +114,10 @@ class TextPrintService
     public function getAnnotatedText(int $textId): ?string
     {
         $result = QueryBuilder::table('texts')
-            ->select(['TxAnnotatedText'])
-            ->where('TxID', '=', $textId)
+            ->select(['annotated_text'])
+            ->where('id', '=', $textId)
             ->getPrepared();
-        $ann = !empty($result) ? (string) ($result[0]['TxAnnotatedText'] ?? '') : '';
+        $ann = !empty($result) ? (string) ($result[0]['annotated_text'] ?? '') : '';
         return strlen($ann) > 0 ? $ann : null;
     }
 
@@ -131,7 +131,7 @@ class TextPrintService
     public function hasAnnotation(int $textId): bool
     {
         $bindings = [$textId];
-        $sql = "SELECT LENGTH(TxAnnotatedText) AS len FROM texts WHERE TxID = ?"
+        $sql = "SELECT LENGTH(annotated_text) AS len FROM texts WHERE id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings);
         $result = Connection::preparedFetchAll($sql, $bindings);
         $length = !empty($result) ? (int) ($result[0]['len'] ?? 0) : 0;
@@ -148,8 +148,8 @@ class TextPrintService
     public function deleteAnnotation(int $textId): bool
     {
         QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
-            ->updatePrepared(['TxAnnotatedText' => null]);
+            ->where('id', '=', $textId)
+            ->updatePrepared(['annotated_text' => null]);
         return !$this->hasAnnotation($textId);
     }
 
@@ -535,17 +535,17 @@ class TextPrintService
             return null;
         }
 
-        $langData = $this->getLanguageData((int) $textData['TxLgID']);
+        $langData = $this->getLanguageData((int) $textData['language_id']);
         if ($langData === null) {
             return null;
         }
 
         return [
             'textId' => $textId,
-            'title' => (string) $textData['TxTitle'],
-            'sourceUri' => (string) $textData['TxSourceURI'],
-            'audioUri' => trim((string) ($textData['TxAudioURI'] ?? '')),
-            'langId' => (int) $textData['TxLgID'],
+            'title' => (string) $textData['title'],
+            'sourceUri' => (string) $textData['source_uri'],
+            'audioUri' => trim((string) ($textData['audio_uri'] ?? '')),
+            'langId' => (int) $textData['language_id'],
             'textSize' => (int) $langData['LgTextSize'],
             'rtlScript' => (bool) $langData['LgRightToLeft'],
             'hasAnnotation' => $this->hasAnnotation($textId)
@@ -566,7 +566,7 @@ class TextPrintService
             return null;
         }
 
-        $langData = $this->getLanguageData((int) $textData['TxLgID']);
+        $langData = $this->getLanguageData((int) $textData['language_id']);
         if ($langData === null) {
             return null;
         }
@@ -576,10 +576,10 @@ class TextPrintService
 
         return [
             'textId' => $textId,
-            'title' => (string) $textData['TxTitle'],
-            'sourceUri' => (string) $textData['TxSourceURI'],
-            'audioUri' => trim((string) ($textData['TxAudioURI'] ?? '')),
-            'langId' => (int) $textData['TxLgID'],
+            'title' => (string) $textData['title'],
+            'sourceUri' => (string) $textData['source_uri'],
+            'audioUri' => trim((string) ($textData['audio_uri'] ?? '')),
+            'langId' => (int) $textData['language_id'],
             'textSize' => (int) $langData['LgTextSize'],
             'rtlScript' => (bool) $langData['LgRightToLeft'],
             'annotation' => $annotation,

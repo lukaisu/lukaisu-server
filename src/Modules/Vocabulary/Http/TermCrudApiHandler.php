@@ -441,15 +441,15 @@ class TermCrudApiHandler
     {
         // Get language ID and settings from text
         $textData = QueryBuilder::table('texts')
-            ->select(['TxLgID', 'TxTitle'])
-            ->where('TxID', '=', $textId)
+            ->select(['language_id', 'title'])
+            ->where('id', '=', $textId)
             ->firstPrepared();
 
         if ($textData === null) {
             return ['error' => 'Text not found'];
         }
 
-        $langId = (int) $textData['TxLgID'];
+        $langId = (int) $textData['language_id'];
 
         // Get language settings
         $langData = QueryBuilder::table('languages')

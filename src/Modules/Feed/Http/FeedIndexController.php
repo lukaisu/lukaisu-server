@@ -205,15 +205,15 @@ class FeedIndexController
         foreach ($texts as $text) {
             echo '<div class="notification is-success" data-auto-hide="true">' .
                 '<button class="delete" aria-label="close"></button>' .
-                'Text "' . htmlspecialchars((string)($text['TxTitle'] ?? ''), ENT_QUOTES, 'UTF-8') . '" added!' .
+                'Text "' . htmlspecialchars((string)($text['title'] ?? ''), ENT_QUOTES, 'UTF-8') . '" added!' .
                 '</div>';
 
             $this->feedFacade->createTextFromFeed([
-                'TxLgID' => $row['language_id'],
-                'TxTitle' => $text['TxTitle'],
-                'TxText' => $text['TxText'],
-                'TxAudioURI' => $text['TxAudioURI'] ?? '',
-                'TxSourceURI' => $text['TxSourceURI'] ?? ''
+                'language_id' => $row['language_id'],
+                'title' => $text['title'],
+                'text' => $text['text'],
+                'audio_uri' => $text['audio_uri'] ?? '',
+                'source_uri' => $text['source_uri'] ?? ''
             ], $tagName);
         }
 
@@ -232,7 +232,7 @@ class FeedIndexController
     private function displayFeedMessages(string $message): void
     {
         if (InputValidator::has('checked_feeds_save')) {
-            /** @var array<int, array{Nf_ID: int|string, TagList: array<string>, Nf_Max_Texts: int|null, TxLgID: int, TxTitle: string, TxText: string, TxAudioURI: string, TxSourceURI: string}> $feedData */
+            /** @var array<int, array{Nf_ID: int|string, TagList: array<string>, Nf_Max_Texts: int|null, language_id: int, title: string, text: string, audio_uri: string, source_uri: string}> $feedData */
             $feedData = InputValidator::getArray('feed');
             $result = $this->feedFacade->saveTextsFromFeed($feedData);
             $message = "Texts archived: {$result['textsArchived']}, " .

@@ -158,13 +158,13 @@ class BookController
     private function processImport(): void
     {
         // Accept both the legacy /book/import field names (LgID, thefile) and the
-        // /texts/new form's names (TxLgID, importFile) so the inline EPUB flow
+        // /texts/new form's names (language_id, importFile) so the inline EPUB flow
         // can post here without renaming any client-side fields.
         $languageId = InputValidator::getInt('LgID');
         if ($languageId <= 0) {
-            $languageId = InputValidator::getInt('TxLgID');
+            $languageId = InputValidator::getInt('language_id');
         }
-        $overrideTitle = InputValidator::getString('TxTitle');
+        $overrideTitle = InputValidator::getString('title');
         $uploadedFile = InputValidator::getUploadedFile('thefile')
             ?? InputValidator::getUploadedFile('importFile');
         $userId = Globals::getCurrentUserId();

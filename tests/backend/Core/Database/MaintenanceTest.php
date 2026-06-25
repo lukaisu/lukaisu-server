@@ -124,7 +124,7 @@ class MaintenanceTest extends TestCase
         }
 
         // Test with texts table
-        Maintenance::adjustAutoIncrement('texts', 'TxID');
+        Maintenance::adjustAutoIncrement('texts', 'id');
         $this->assertTrue(true, 'adjustAutoIncrement should complete without error for texts');
     }
 
@@ -173,13 +173,13 @@ class MaintenanceTest extends TestCase
     }
 
     /**
-     * Note: archived_texts table no longer exists - it's merged into texts with TxArchivedAt column.
+     * Note: archived_texts table no longer exists - it's merged into texts with archived_at column.
      */
     public function testArchivedTextsMergedIntoTexts(): void
     {
         // archived_texts is no longer a separate table
-        // Archived texts are now identified by TxArchivedAt IS NOT NULL in the texts table
-        $this->assertTrue(true, 'archived_texts merged into texts table with TxArchivedAt column');
+        // Archived texts are now identified by archived_at IS NOT NULL in the texts table
+        $this->assertTrue(true, 'archived_texts merged into texts table with archived_at column');
     }
 
     public function testAdjustAutoIncrementEmptyTable(): void

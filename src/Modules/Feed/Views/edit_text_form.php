@@ -6,7 +6,7 @@
  * Renders the form for editing feed items before creating texts.
  *
  * Variables expected:
- * - $texts: array of text data (TxTitle, TxText, TxSourceURI, TxAudioURI)
+ * - $texts: array of text data (title, text, source_uri, audio_uri)
  * - $row: array feed link and feed data (language_id, id)
  * - $count: int starting form counter (passed by reference)
  * - $tagName: string tag name for the text
@@ -42,7 +42,7 @@ assert(is_array($languages));
 assert(is_string($scrdir));
 
 /**
- * @var array<int, array{TxTitle: string, TxText: string, TxSourceURI: string, TxAudioURI: string}> $texts
+ * @var array<int, array{title: string, text: string, source_uri: string, audio_uri: string}> $texts
  * @var array{language_id: int, id: int} $row
  * @var int $count
  * @var string $tagName
@@ -53,7 +53,7 @@ assert(is_string($scrdir));
  */
 
 foreach ($texts as $text) :
-    /** @var array{TxTitle: string, TxText: string, TxSourceURI: string, TxAudioURI: string} $text */
+    /** @var array{title: string, text: string, source_uri: string, audio_uri: string} $text */
     ?>
 <div class="box mb-4" x-data="{ isSelected: true }">
     <!-- Header with checkbox and title -->
@@ -73,8 +73,8 @@ foreach ($texts as $text) :
                 <div class="control is-expanded">
                     <input type="text"
                            class="input notempty"
-                           name="feed[<?php echo $count; ?>][TxTitle]"
-                           value="<?php echo htmlspecialchars($text['TxTitle'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                           name="feed[<?php echo $count; ?>][title]"
+                           value="<?php echo htmlspecialchars($text['title'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                            maxlength="200"
                            placeholder="<?php echo __e('feed.edit_text_form_title_placeholder'); ?>"
                            :disabled="!isSelected"
@@ -99,7 +99,7 @@ foreach ($texts as $text) :
                 <div class="field">
                     <div class="control">
                         <div class="select is-fullwidth">
-                            <select name="feed[<?php echo $count; ?>][TxLgID]" class="notempty setfocus">
+                            <select name="feed[<?php echo $count; ?>][language_id]" class="notempty setfocus">
                                 <?php
                                 foreach ($languages as $rowLang) :
                                     /** @var array{LgID: int, LgName: string} $rowLang */
@@ -126,11 +126,11 @@ foreach ($texts as $text) :
                 <div class="field has-addons">
                     <div class="control is-expanded">
                         <textarea <?php echo $scrdir; ?>
-                                  name="feed[<?php echo $count; ?>][TxText]"
+                                  name="feed[<?php echo $count; ?>][text]"
                                   class="textarea notempty checkbytes"
                                   rows="12"
                                   required><?php
-                                      echo htmlspecialchars($text['TxText'] ?? '', ENT_QUOTES, 'UTF-8');
+                                      echo htmlspecialchars($text['text'] ?? '', ENT_QUOTES, 'UTF-8');
                                     ?></textarea>
                     </div>
                     <div class="control">
@@ -152,8 +152,8 @@ foreach ($texts as $text) :
                     <div class="control">
                         <input type="url"
                                class="input checkurl"
-                               name="feed[<?php echo $count; ?>][TxSourceURI]"
-                               value="<?php echo htmlspecialchars($text['TxSourceURI'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                               name="feed[<?php echo $count; ?>][source_uri]"
+                               value="<?php echo htmlspecialchars($text['source_uri'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="1000"
                                placeholder="https://..." />
                     </div>
@@ -195,8 +195,8 @@ foreach ($texts as $text) :
                     <div class="control">
                         <input type="text"
                                class="input"
-                               name="feed[<?php echo $count; ?>][TxAudioURI]"
-                               value="<?php echo htmlspecialchars($text['TxAudioURI'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                               name="feed[<?php echo $count; ?>][audio_uri]"
+                               value="<?php echo htmlspecialchars($text['audio_uri'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="200"
                                placeholder="<?php echo __e('feed.edit_text_form_audio_placeholder'); ?>" />
                     </div>

@@ -102,10 +102,10 @@ class ImportArticlesUseCaseTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Test Title',
-                    'TxText' => 'Article content here.',
-                    'TxSourceURI' => 'http://example.com/article',
-                    'TxAudioURI' => '',
+                    'title' => 'Test Title',
+                    'text' => 'Article content here.',
+                    'source_uri' => 'http://example.com/article',
+                    'audio_uri' => '',
                 ]
             ]);
 
@@ -159,22 +159,22 @@ class ImportArticlesUseCaseTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Article 1',
-                    'TxText' => 'Content 1',
-                    'TxSourceURI' => 'http://example.com/1',
-                    'TxAudioURI' => ''
+                    'title' => 'Article 1',
+                    'text' => 'Content 1',
+                    'source_uri' => 'http://example.com/1',
+                    'audio_uri' => ''
                 ],
                 1 => [
-                    'TxTitle' => 'Article 2',
-                    'TxText' => 'Content 2',
-                    'TxSourceURI' => 'http://example.com/2',
-                    'TxAudioURI' => ''
+                    'title' => 'Article 2',
+                    'text' => 'Content 2',
+                    'source_uri' => 'http://example.com/2',
+                    'audio_uri' => ''
                 ],
                 2 => [
-                    'TxTitle' => 'Article 3',
-                    'TxText' => 'Content 3',
-                    'TxSourceURI' => 'http://example.com/3',
-                    'TxAudioURI' => ''
+                    'title' => 'Article 3',
+                    'text' => 'Content 3',
+                    'source_uri' => 'http://example.com/3',
+                    'audio_uri' => ''
                 ],
             ]);
 
@@ -220,10 +220,10 @@ class ImportArticlesUseCaseTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Duplicate',
-                    'TxText' => 'Content',
-                    'TxSourceURI' => 'http://example.com/duplicate',
-                    'TxAudioURI' => ''
+                    'title' => 'Duplicate',
+                    'text' => 'Content',
+                    'source_uri' => 'http://example.com/duplicate',
+                    'audio_uri' => ''
                 ],
             ]);
 
@@ -306,10 +306,10 @@ class ImportArticlesUseCaseTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Article',
-                    'TxText' => 'Content',
-                    'TxSourceURI' => 'http://example.com/article',
-                    'TxAudioURI' => ''
+                    'title' => 'Article',
+                    'text' => 'Content',
+                    'source_uri' => 'http://example.com/article',
+                    'audio_uri' => ''
                 ],
             ]);
 
@@ -380,10 +380,10 @@ class ImportArticlesUseCaseTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Article',
-                    'TxText' => 'Content',
-                    'TxSourceURI' => 'http://example.com/article',
-                    'TxAudioURI' => ''
+                    'title' => 'Article',
+                    'text' => 'Content',
+                    'source_uri' => 'http://example.com/article',
+                    'audio_uri' => ''
                 ],
             ]);
 

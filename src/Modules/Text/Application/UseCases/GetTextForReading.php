@@ -55,10 +55,10 @@ class GetTextForReading
     {
         $bindings = [$textId];
         return Connection::preparedFetchOne(
-            "SELECT LgName, TxLgID, TxText, TxTitle, TxAudioURI, TxSourceURI, TxAudioPosition
+            "SELECT LgName, language_id, text, title, audio_uri, source_uri, audio_position
             FROM texts
-            JOIN languages ON TxLgID = LgID
-            WHERE TxID = ?"
+            JOIN languages ON language_id = LgID
+            WHERE id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings)
             . UserScopedQuery::forTablePrepared('languages', $bindings),
             $bindings

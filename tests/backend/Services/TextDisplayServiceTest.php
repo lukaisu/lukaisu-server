@@ -52,7 +52,7 @@ class TextDisplayServiceTest extends TestCase
             // Create a test text with annotations
             $annotatedText = "-1\t.\n0\tHello\t\t*\n0\tworld\t\ttranslation";
             Connection::query(
-                "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI) " .
+                "INSERT INTO texts (language_id, title, text, annotated_text, audio_uri, source_uri) " .
                 "VALUES (" . self::$testLangId . ", 'Test Display Text', 'Hello world.', " .
                 "'" . mysqli_real_escape_string(Globals::getDbConnection(), $annotatedText) . "', " .
                 "'http://audio.test/file.mp3', 'http://source.test/article')"
@@ -80,7 +80,7 @@ class TextDisplayServiceTest extends TestCase
 
         // Clean up test data
         if (self::$testTextId > 0) {
-            Connection::query("DELETE FROM texts WHERE TxID = " . self::$testTextId);
+            Connection::query("DELETE FROM texts WHERE id = " . self::$testTextId);
         }
         if (self::$testWordId > 0) {
             Connection::query("DELETE FROM words WHERE id = " . self::$testWordId);
@@ -126,7 +126,7 @@ class TextDisplayServiceTest extends TestCase
 
         // Create a text without audio
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text) " .
             "VALUES (" . self::$testLangId . ", 'No Audio Text', 'Content.', '0\tContent')"
         );
         $noAudioTextId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -137,7 +137,7 @@ class TextDisplayServiceTest extends TestCase
         $this->assertEquals('', $result['audio']);
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxID = " . $noAudioTextId);
+        Connection::query("DELETE FROM texts WHERE id = " . $noAudioTextId);
     }
 
     // ===== getTextDisplaySettings() tests =====
@@ -369,7 +369,7 @@ class TextDisplayServiceTest extends TestCase
 
         // Create a text with RTL language
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text) " .
             "VALUES (" . $rtlLangId . ", 'RTL Test Text', 'Content.', '0\tContent')"
         );
         $rtlTextId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -381,7 +381,7 @@ class TextDisplayServiceTest extends TestCase
         $this->assertTrue($settings['rtlScript']);
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxID = " . $rtlTextId);
+        Connection::query("DELETE FROM texts WHERE id = " . $rtlTextId);
         Connection::query("DELETE FROM languages WHERE LgID = " . $rtlLangId);
     }
 

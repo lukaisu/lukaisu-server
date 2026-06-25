@@ -67,11 +67,11 @@ class TextCreationAdapter implements TextCreationInterface
             // Create the text
             $textId = QueryBuilder::table('texts')
                 ->insertPrepared([
-                    'TxLgID' => $languageId,
-                    'TxTitle' => $title,
-                    'TxText' => $text,
-                    'TxAudioURI' => $audioUri,
-                    'TxSourceURI' => $sourceUri,
+                    'language_id' => $languageId,
+                    'title' => $title,
+                    'text' => $text,
+                    'audio_uri' => $audioUri,
+                    'source_uri' => $sourceUri,
                 ]);
 
             // Parse the text into sentences and textitems
@@ -139,10 +139,10 @@ class TextCreationAdapter implements TextCreationInterface
                     ->where('text_id', '=', $textId)
                     ->delete();
 
-                // Archive the text (soft delete - set TxArchivedAt)
+                // Archive the text (soft delete - set archived_at)
                 $bindings = [$textId];
-                $sql = "UPDATE texts SET TxArchivedAt = NOW(), TxPosition = 0, TxAudioPosition = 0
-                        WHERE TxID = ? AND TxArchivedAt IS NULL"
+                $sql = "UPDATE texts SET archived_at = NOW(), position = 0, audio_position = 0
+                        WHERE id = ? AND archived_at IS NULL"
                     . UserScopedQuery::forTablePrepared('texts', $bindings);
                 $archived = Connection::preparedExecute($sql, $bindings);
 
@@ -185,7 +185,7 @@ class TextCreationAdapter implements TextCreationInterface
 
         // Check texts table (includes both active and archived texts)
         return QueryBuilder::table('texts')
-            ->where('TxSourceURI', '=', $trimmedUri)
+            ->where('source_uri', '=', $trimmedUri)
             ->existsPrepared();
     }
 }

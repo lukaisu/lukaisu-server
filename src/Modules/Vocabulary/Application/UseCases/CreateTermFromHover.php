@@ -99,10 +99,10 @@ class CreateTermFromHover
         $wordlc = mb_strtolower($wordText, 'UTF-8');
         $bindings = [$textId];
         $langId = (int) Connection::preparedFetchValue(
-            "SELECT TxLgID FROM texts WHERE TxID = ?"
+            "SELECT language_id FROM texts WHERE id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings,
-            'TxLgID'
+            'language_id'
         );
 
         // Create the term using VocabularyFacade

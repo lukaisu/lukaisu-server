@@ -78,10 +78,10 @@ class TextControllerArchivedTest extends TestCase
                 );
             }
 
-            // Create first archived test text (in texts table with TxArchivedAt set)
+            // Create first archived test text (in texts table with archived_at set)
             Connection::query(
                 "INSERT INTO " . Globals::table('texts') .
-                " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+                " (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
                 "VALUES (" . self::$testLangId . ", 'ArchivedTestText', 'Test archived content.', " .
                 "'0\tTest\t\t*\n0\tarchived\t\ttranslation', " .
                 "'http://audio.test/audio.mp3', 'http://source.test/article', NOW())"
@@ -93,7 +93,7 @@ class TextControllerArchivedTest extends TestCase
             // Create second archived test text
             Connection::query(
                 "INSERT INTO " . Globals::table('texts') .
-                " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+                " (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
                 "VALUES (" . self::$testLangId . ", 'ArchivedTestText2', 'Second archived content.', " .
                 "'0\tSecond\t\t*', " .
                 "'', '', NOW())"
@@ -107,13 +107,13 @@ class TextControllerArchivedTest extends TestCase
     public static function tearDownAfterClass(): void
     {
         if (self::$dbConnected && self::$testLangId > 0) {
-            // Clean up archived texts (stored in texts table with TxArchivedAt set)
+            // Clean up archived texts (stored in texts table with archived_at set)
             if (self::$testArchivedTextId > 0) {
                 Connection::query(
                     "DELETE FROM " . Globals::table('text_tag_map') . " WHERE text_id = " . self::$testArchivedTextId
                 );
                 Connection::query(
-                    "DELETE FROM " . Globals::table('texts') . " WHERE TxID = " . self::$testArchivedTextId
+                    "DELETE FROM " . Globals::table('texts') . " WHERE id = " . self::$testArchivedTextId
                 );
             }
             if (self::$testArchivedText2Id > 0) {
@@ -121,7 +121,7 @@ class TextControllerArchivedTest extends TestCase
                     "DELETE FROM " . Globals::table('text_tag_map') . " WHERE text_id = " . self::$testArchivedText2Id
                 );
                 Connection::query(
-                    "DELETE FROM " . Globals::table('texts') . " WHERE TxID = " . self::$testArchivedText2Id
+                    "DELETE FROM " . Globals::table('texts') . " WHERE id = " . self::$testArchivedText2Id
                 );
             }
 
@@ -202,8 +202,8 @@ class TextControllerArchivedTest extends TestCase
         $result = $service->getArchivedTextById(self::$testArchivedTextId);
 
         $this->assertIsArray($result);
-        $this->assertEquals('ArchivedTestText', $result['TxTitle']);
-        $this->assertEquals('Test archived content.', $result['TxText']);
+        $this->assertEquals('ArchivedTestText', $result['title']);
+        $this->assertEquals('Test archived content.', $result['text']);
     }
 
     public function testGetArchivedTextByIdNotFound(): void
@@ -241,7 +241,7 @@ class TextControllerArchivedTest extends TestCase
 
         $service = new TextFacade();
 
-        $count = $service->getArchivedTextCount(' and TxLgID=' . self::$testLangId, '', '');
+        $count = $service->getArchivedTextCount(' and language_id=' . self::$testLangId, '', '');
 
         $this->assertIsInt($count);
         $this->assertGreaterThanOrEqual(2, $count);
@@ -262,8 +262,8 @@ class TextControllerArchivedTest extends TestCase
 
         // Check first text has required keys
         $firstText = $texts[0];
-        $this->assertArrayHasKey('TxID', $firstText);
-        $this->assertArrayHasKey('TxTitle', $firstText);
+        $this->assertArrayHasKey('id', $firstText);
+        $this->assertArrayHasKey('title', $firstText);
         $this->assertArrayHasKey('LgName', $firstText);
     }
 
@@ -276,7 +276,7 @@ class TextControllerArchivedTest extends TestCase
         $service = new TextFacade();
 
         // Sort by title ascending
-        $texts = $service->getArchivedTextsList(' and TxLgID=' . self::$testLangId, '', '', 1, 1, 10);
+        $texts = $service->getArchivedTextsList(' and language_id=' . self::$testLangId, '', '', 1, 1, 10);
 
         $this->assertIsArray($texts);
         $this->assertNotEmpty($texts);
@@ -321,7 +321,7 @@ class TextControllerArchivedTest extends TestCase
 
         $result = $service->buildArchivedQueryWhereClause('test', 'title', '');
 
-        $this->assertStringContainsString('TxTitle', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
         $this->assertEquals(['test'], $result['params']);
     }
 
@@ -335,7 +335,7 @@ class TextControllerArchivedTest extends TestCase
 
         $result = $service->buildArchivedQueryWhereClause('content', 'text', '');
 
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertEquals(['content'], $result['params']);
     }
 
@@ -349,8 +349,8 @@ class TextControllerArchivedTest extends TestCase
 
         $result = $service->buildArchivedQueryWhereClause('search', 'title,text', '');
 
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertEquals(['search', 'search'], $result['params']);
     }
 
@@ -382,7 +382,7 @@ class TextControllerArchivedTest extends TestCase
         // Create a temporary archived text to update
         Connection::query(
             "INSERT INTO " . Globals::table('texts') .
-            " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+            " (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
             "VALUES (" . self::$testLangId . ", 'TempUpdateTest', 'Temp content.', '', '', '', NOW())"
         );
         $tempId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -401,11 +401,11 @@ class TextControllerArchivedTest extends TestCase
 
         // Verify update
         $updated = $service->getArchivedTextById($tempId);
-        $this->assertEquals('Updated Title', $updated['TxTitle']);
-        $this->assertEquals('Updated content.', $updated['TxText']);
+        $this->assertEquals('Updated Title', $updated['title']);
+        $this->assertEquals('Updated content.', $updated['text']);
 
         // Cleanup
-        Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE TxID = {$tempId}");
+        Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE id = {$tempId}");
     }
 
     public function testDeleteArchivedText(): void
@@ -419,7 +419,7 @@ class TextControllerArchivedTest extends TestCase
         // Create a temporary archived text to delete
         Connection::query(
             "INSERT INTO " . Globals::table('texts') .
-            " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+            " (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
             "VALUES (" . self::$testLangId . ", 'TempDeleteTest', 'Temp content.', '', '', '', NOW())"
         );
         $tempId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -444,14 +444,14 @@ class TextControllerArchivedTest extends TestCase
         // Create temporary archived texts to delete
         Connection::query(
             "INSERT INTO " . Globals::table('texts') .
-            " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+            " (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
             "VALUES (" . self::$testLangId . ", 'TempMultiDel1', 'Temp1.', '', '', '', NOW())"
         );
         $tempId1 = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
 
         Connection::query(
             "INSERT INTO " . Globals::table('texts') .
-            " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+            " (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
             "VALUES (" . self::$testLangId . ", 'TempMultiDel2', 'Temp2.', '', '', '', NOW())"
         );
         $tempId2 = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -480,7 +480,7 @@ class TextControllerArchivedTest extends TestCase
         // Create a temporary archived text to unarchive
         Connection::query(
             "INSERT INTO " . Globals::table('texts') .
-            " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+            " (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
             "VALUES (" . self::$testLangId . ", 'TempUnarchiveTest', 'Temp content.', " .
             "'0\tTemp\t\t*', 'http://audio.test/temp.mp3', 'http://source.test/temp', NOW())"
         );
@@ -497,12 +497,12 @@ class TextControllerArchivedTest extends TestCase
 
         // Find and clean up the restored text
         $restoredId = Connection::fetchValue(
-            "SELECT TxID AS value FROM " . Globals::table('texts') . " WHERE TxTitle = 'TempUnarchiveTest' LIMIT 1"
+            "SELECT id AS value FROM " . Globals::table('texts') . " WHERE title = 'TempUnarchiveTest' LIMIT 1"
         );
         if ($restoredId) {
             Connection::query("DELETE FROM " . Globals::table('word_occurrences') . " WHERE text_id = {$restoredId}");
             Connection::query("DELETE FROM " . Globals::table('sentences') . " WHERE text_id = {$restoredId}");
-            Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE TxID = {$restoredId}");
+            Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE id = {$restoredId}");
         }
     }
 
@@ -517,14 +517,14 @@ class TextControllerArchivedTest extends TestCase
         // Create temporary archived texts to unarchive
         Connection::query(
             "INSERT INTO " . Globals::table('texts') .
-            " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+            " (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
             "VALUES (" . self::$testLangId . ", 'TempMultiUnarch1', 'Temp1.', '0\tTemp1\t\t*', '', '', NOW())"
         );
         $tempId1 = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
 
         Connection::query(
             "INSERT INTO " . Globals::table('texts') .
-            " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+            " (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
             "VALUES (" . self::$testLangId . ", 'TempMultiUnarch2', 'Temp2.', '0\tTemp2\t\t*', '', '', NOW())"
         );
         $tempId2 = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -542,17 +542,17 @@ class TextControllerArchivedTest extends TestCase
         // Clean up restored texts
         $restoredIds = [];
         $res = Connection::query(
-            "SELECT TxID FROM " . Globals::table('texts') . " WHERE TxTitle LIKE 'TempMultiUnarch%'"
+            "SELECT id FROM " . Globals::table('texts') . " WHERE title LIKE 'TempMultiUnarch%'"
         );
         while ($row = mysqli_fetch_assoc($res)) {
-            $restoredIds[] = (int)$row['TxID'];
+            $restoredIds[] = (int)$row['id'];
         }
         mysqli_free_result($res);
 
         foreach ($restoredIds as $restoredId) {
             Connection::query("DELETE FROM " . Globals::table('word_occurrences') . " WHERE text_id = {$restoredId}");
             Connection::query("DELETE FROM " . Globals::table('sentences') . " WHERE text_id = {$restoredId}");
-            Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE TxID = {$restoredId}");
+            Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE id = {$restoredId}");
         }
     }
 
@@ -641,8 +641,8 @@ class TextControllerArchivedTest extends TestCase
         // Test title,text mode (default)
         $result = $service->buildArchivedQueryWhereClause('content', 'title,text', '');
 
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertStringContainsString('OR', $result['clause']);
         $this->assertEquals(['content', 'content'], $result['params']);
     }

@@ -233,13 +233,13 @@ class ImportUtilities
             \Lukaisu\Shared\Infrastructure\Database\Maintenance::adjustAutoIncrement('sentences', 'id');
 
             $rows = QueryBuilder::table('texts')
-                ->select(['TxID', 'TxText'])
-                ->where('TxLgID', '=', $langId)
-                ->orderBy('TxID')
+                ->select(['id', 'text'])
+                ->where('language_id', '=', $langId)
+                ->orderBy('id')
                 ->getPrepared();
             foreach ($rows as $record) {
-                $txtid = (int) $record["TxID"];
-                $txttxt = (string) $record["TxText"];
+                $txtid = (int) $record["id"];
+                $txttxt = (string) $record["text"];
                 \Lukaisu\Shared\Infrastructure\Database\TextParsing::parseAndSave($txttxt, $langId, $txtid);
             }
         } elseif ($mwords > 0) {

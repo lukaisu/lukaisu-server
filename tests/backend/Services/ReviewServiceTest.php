@@ -80,7 +80,7 @@ class ReviewServiceTest extends TestCase
 
         // Create test text
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text, audio_uri) " .
             "VALUES (" . self::$testLangId . ", 'Test Text', 'This is a test.', '', '')"
         );
         self::$testTextId = (int)Connection::fetchValue(
@@ -130,7 +130,7 @@ class ReviewServiceTest extends TestCase
         Connection::query("DELETE FROM word_occurrences WHERE text_id = " . self::$testTextId);
         Connection::query("DELETE FROM sentences WHERE text_id = " . self::$testTextId);
         Connection::query("DELETE FROM words WHERE language_id = " . self::$testLangId);
-        Connection::query("DELETE FROM texts WHERE TxID = " . self::$testTextId);
+        Connection::query("DELETE FROM texts WHERE id = " . self::$testTextId);
         // Clean up test language
         Connection::query("DELETE FROM languages WHERE LgID = " . self::$testLangId);
     }

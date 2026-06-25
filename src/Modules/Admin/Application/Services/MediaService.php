@@ -408,7 +408,7 @@ class MediaService
      */
     private function renderOnlineVideoPlayer(string $url): void
     {
-        // TxAudioURI/TxSourceURI come from the user-supplied edit form
+        // audio_uri/source_uri come from the user-supplied edit form
         // and are reached here unescaped. AudioUriValidator filters
         // schemes on save, but anything that survives still needs to
         // be HTML-escaped when echoed into an attribute, otherwise a

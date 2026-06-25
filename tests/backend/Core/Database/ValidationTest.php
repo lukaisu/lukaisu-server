@@ -57,17 +57,17 @@ class ValidationTest extends TestCase
         // Clean up any existing test data first
         Connection::query(
             "DELETE FROM text_tag_map WHERE text_id IN " .
-            "(SELECT TxID FROM texts WHERE TxTitle = 'Test Validation Text')"
+            "(SELECT id FROM texts WHERE title = 'Test Validation Text')"
         );
         Connection::query(
             "DELETE FROM word_occurrences WHERE text_id IN " .
-            "(SELECT TxID FROM texts WHERE TxTitle = 'Test Validation Text')"
+            "(SELECT id FROM texts WHERE title = 'Test Validation Text')"
         );
         Connection::query(
             "DELETE FROM sentences WHERE text_id IN " .
-            "(SELECT TxID FROM texts WHERE TxTitle = 'Test Validation Text')"
+            "(SELECT id FROM texts WHERE title = 'Test Validation Text')"
         );
-        Connection::query("DELETE FROM texts WHERE TxTitle = 'Test Validation Text'");
+        Connection::query("DELETE FROM texts WHERE title = 'Test Validation Text'");
         Connection::query("DELETE FROM languages WHERE LgName = 'Test Validation Language'");
         Connection::query("DELETE FROM tags WHERE text = 'test_validation_tag'");
         Connection::query("DELETE FROM text_tags WHERE text = 'test_validation_tag2'");
@@ -89,7 +89,7 @@ class ValidationTest extends TestCase
 
         // Create test text
         $sql = "INSERT INTO texts (
-            TxLgID, TxTitle, TxText, TxAudioURI
+            language_id, title, text, audio_uri
         ) VALUES (
             " . self::$testLanguageId . ",
             'Test Validation Text',
@@ -124,7 +124,7 @@ class ValidationTest extends TestCase
             Connection::query("DELETE FROM tags WHERE id = " . self::$testTagId);
         }
         if (self::$testTextId) {
-            Connection::query("DELETE FROM texts WHERE TxID = " . self::$testTextId);
+            Connection::query("DELETE FROM texts WHERE id = " . self::$testTextId);
         }
         if (self::$testLanguageId) {
             Connection::query("DELETE FROM languages WHERE LgID = " . self::$testLanguageId);

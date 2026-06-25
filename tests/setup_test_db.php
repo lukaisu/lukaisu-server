@@ -292,7 +292,7 @@ if (!in_array($fkMigration, $appliedMigrations)) {
     $fkConstraints = [
         // Language references
         "ALTER TABLE texts ADD CONSTRAINT fk_texts_language " .
-            "FOREIGN KEY (TxLgID) REFERENCES languages(LgID) ON DELETE CASCADE",
+            "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
         "ALTER TABLE words ADD CONSTRAINT fk_words_language " .
             "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
         "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_language " .
@@ -301,11 +301,11 @@ if (!in_array($fkMigration, $appliedMigrations)) {
             "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
         // Text references
         "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_text " .
-            "FOREIGN KEY (text_id) REFERENCES texts(TxID) ON DELETE CASCADE",
+            "FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE",
         "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_text " .
-            "FOREIGN KEY (text_id) REFERENCES texts(TxID) ON DELETE CASCADE",
+            "FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE",
         "ALTER TABLE text_tag_map ADD CONSTRAINT fk_text_tag_map_text " .
-            "FOREIGN KEY (text_id) REFERENCES texts(TxID) ON DELETE CASCADE",
+            "FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE",
         // Sentence reference
         "ALTER TABLE word_occurrences ADD CONSTRAINT fk_word_occurrences_sentence " .
             "FOREIGN KEY (sentence_id) REFERENCES sentences(id) ON DELETE CASCADE",
@@ -363,7 +363,7 @@ if (!in_array($columnDefaultsMigration, $appliedMigrations)) {
         "ALTER TABLE languages MODIFY COLUMN LgRegexpSplitSentences varchar(500) NOT NULL DEFAULT '.!?'",
         "ALTER TABLE languages MODIFY COLUMN LgExceptionsSplitSentences varchar(500) NOT NULL DEFAULT ''",
         "ALTER TABLE languages MODIFY COLUMN LgRegexpWordCharacters varchar(500) NOT NULL DEFAULT 'a-zA-ZÀ-ÖØ-öø-ȳ'",
-        "ALTER TABLE texts MODIFY COLUMN TxAnnotatedText longtext NOT NULL DEFAULT ''",
+        "ALTER TABLE texts MODIFY COLUMN annotated_text longtext NOT NULL DEFAULT ''",
         "ALTER TABLE feed_links MODIFY COLUMN audio varchar(200) NOT NULL DEFAULT ''",
         "ALTER TABLE feed_links MODIFY COLUMN text longtext NOT NULL DEFAULT ''",
     ];

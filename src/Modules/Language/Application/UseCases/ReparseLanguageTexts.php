@@ -46,13 +46,13 @@ class ReparseLanguageTexts
         Maintenance::adjustAutoIncrement('sentences', 'id');
 
         $rows = QueryBuilder::table('texts')
-            ->select(['TxID', 'TxText'])
-            ->where('TxLgID', '=', $id)
-            ->orderBy('TxID')
+            ->select(['id', 'text'])
+            ->where('language_id', '=', $id)
+            ->orderBy('id')
             ->getPrepared();
         foreach ($rows as $record) {
-            $txtid = (int)$record["TxID"];
-            $txttxt = (string)$record["TxText"];
+            $txtid = (int)$record["id"];
+            $txttxt = (string)$record["text"];
             TextParsing::parseAndSave($txttxt, $id, $txtid);
         }
 
@@ -89,13 +89,13 @@ class ReparseLanguageTexts
         Maintenance::adjustAutoIncrement('sentences', 'id');
 
         $rows = QueryBuilder::table('texts')
-            ->select(['TxID', 'TxText'])
-            ->where('TxLgID', '=', $id)
-            ->orderBy('TxID')
+            ->select(['id', 'text'])
+            ->where('language_id', '=', $id)
+            ->orderBy('id')
             ->getPrepared();
         foreach ($rows as $record) {
-            $txtid = (int)$record["TxID"];
-            $txttxt = (string)$record["TxText"];
+            $txtid = (int)$record["id"];
+            $txttxt = (string)$record["text"];
             TextParsing::parseAndSave($txttxt, $id, $txtid);
         }
 
@@ -136,14 +136,14 @@ class ReparseLanguageTexts
         Maintenance::initWordCount();
 
         $rows = QueryBuilder::table('texts')
-            ->select(['TxID', 'TxText'])
-            ->where('TxLgID', '=', $id)
-            ->orderBy('TxID')
+            ->select(['id', 'text'])
+            ->where('language_id', '=', $id)
+            ->orderBy('id')
             ->getPrepared();
         $count = 0;
         foreach ($rows as $record) {
-            $txtid = (int)$record["TxID"];
-            $txttxt = (string)$record["TxText"];
+            $txtid = (int)$record["id"];
+            $txttxt = (string)$record["text"];
             TextParsing::parseAndSave($txttxt, $id, $txtid);
             $count++;
         }

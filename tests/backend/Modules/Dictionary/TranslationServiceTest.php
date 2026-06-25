@@ -77,14 +77,14 @@ class TranslationServiceTest extends TestCase
 
         // Create a test text
         $existingText = Connection::fetchValue(
-            "SELECT TxID AS value FROM texts WHERE TxTitle = 'TranslationServiceTestText' LIMIT 1"
+            "SELECT id AS value FROM texts WHERE title = 'TranslationServiceTestText' LIMIT 1"
         );
 
         if ($existingText) {
             self::$testTextId = (int)$existingText;
         } else {
             Connection::query(
-                "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAudioURI) " .
+                "INSERT INTO texts (language_id, title, text, audio_uri) " .
                 "VALUES (" . self::$testLangId . ", 'TranslationServiceTestText', " .
                 "'This is a test sentence. Another test sentence.', '')"
             );
@@ -103,7 +103,7 @@ class TranslationServiceTest extends TestCase
         // Clean up in reverse order
         Connection::query("DELETE FROM word_occurrences WHERE text_id = " . self::$testTextId);
         Connection::query("DELETE FROM sentences WHERE language_id = " . self::$testLangId);
-        Connection::query("DELETE FROM texts WHERE TxTitle = 'TranslationServiceTestText'");
+        Connection::query("DELETE FROM texts WHERE title = 'TranslationServiceTestText'");
         Connection::query("DELETE FROM words WHERE language_id = " . self::$testLangId);
         Connection::query("DELETE FROM languages WHERE LgName = 'TranslationServiceTestLang'");
     }

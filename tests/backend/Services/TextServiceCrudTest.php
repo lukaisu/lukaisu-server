@@ -96,12 +96,12 @@ class TextServiceCrudTest extends TestCase
         foreach ($this->createdTextIds as $id) {
             Connection::query("DELETE FROM word_occurrences WHERE text_id = " . $id);
             Connection::query("DELETE FROM sentences WHERE text_id = " . $id);
-            Connection::query("DELETE FROM texts WHERE TxID = " . $id);
+            Connection::query("DELETE FROM texts WHERE id = " . $id);
         }
 
         // Clean up created archived texts
         foreach ($this->createdArchivedTextIds as $id) {
-            Connection::query("DELETE FROM texts WHERE TxID = " . $id);
+            Connection::query("DELETE FROM texts WHERE id = " . $id);
         }
     }
 
@@ -116,7 +116,7 @@ class TextServiceCrudTest extends TestCase
     private function createTestText(string $title, string $text): int
     {
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text, audio_uri, source_uri) " .
             "VALUES (" . self::$testLangId . ", " .
             "'" . mysqli_real_escape_string(Globals::getDbConnection(), $title) . "', " .
             "'" . mysqli_real_escape_string(Globals::getDbConnection(), $text) . "', " .
@@ -138,7 +138,7 @@ class TextServiceCrudTest extends TestCase
     private function createTestArchivedText(string $title, string $text): int
     {
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI, TxArchivedAt) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text, audio_uri, source_uri, archived_at) " .
             "VALUES (" . self::$testLangId . ", " .
             "'" . mysqli_real_escape_string(Globals::getDbConnection(), $title) . "', " .
             "'" . mysqli_real_escape_string(Globals::getDbConnection(), $text) . "', " .
@@ -162,9 +162,9 @@ class TextServiceCrudTest extends TestCase
         $result = $this->service->getTextById($textId);
 
         $this->assertIsArray($result);
-        $this->assertEquals('CRUD Test Text', $result['TxTitle']);
-        $this->assertEquals('Test content for CRUD.', $result['TxText']);
-        $this->assertEquals(self::$testLangId, (int)$result['TxLgID']);
+        $this->assertEquals('CRUD Test Text', $result['title']);
+        $this->assertEquals('Test content for CRUD.', $result['text']);
+        $this->assertEquals(self::$testLangId, (int)$result['language_id']);
     }
 
     public function testGetTextByIdReturnsNullForNonExistent(): void
@@ -189,7 +189,7 @@ class TextServiceCrudTest extends TestCase
         $result = $this->service->getTextForReading($textId);
 
         $this->assertIsArray($result);
-        $this->assertEquals('Reading Test', $result['TxTitle']);
+        $this->assertEquals('Reading Test', $result['title']);
         $this->assertArrayHasKey('LgName', $result);
         $this->assertEquals('TextServiceCrudTestLang', $result['LgName']);
     }
@@ -205,8 +205,8 @@ class TextServiceCrudTest extends TestCase
         $result = $this->service->getTextForEdit($textId);
 
         $this->assertIsArray($result);
-        $this->assertEquals('Edit Test', $result['TxTitle']);
-        $this->assertEquals('Content for editing.', $result['TxText']);
+        $this->assertEquals('Edit Test', $result['title']);
+        $this->assertEquals('Content for editing.', $result['text']);
         $this->assertArrayHasKey('annot_exists', $result);
     }
 
@@ -221,8 +221,8 @@ class TextServiceCrudTest extends TestCase
         $result = $this->service->getTextDataForContent($textId);
 
         $this->assertIsArray($result);
-        $this->assertArrayHasKey('TxAnnotatedText', $result);
-        $this->assertArrayHasKey('TxPosition', $result);
+        $this->assertArrayHasKey('annotated_text', $result);
+        $this->assertArrayHasKey('position', $result);
     }
 
     // ===== Delete tests =====
@@ -306,7 +306,7 @@ class TextServiceCrudTest extends TestCase
 
         // Find in archived texts
         $archivedId = Connection::fetchValue(
-            "SELECT TxID AS value FROM texts WHERE TxTitle = 'Archive Test' LIMIT 1"
+            "SELECT id AS value FROM texts WHERE title = 'Archive Test' LIMIT 1"
         );
 
         $this->assertNotNull($archivedId);
@@ -341,10 +341,10 @@ class TextServiceCrudTest extends TestCase
         // Find and cleanup archived texts
         $archivedIds = [];
         $res = Connection::query(
-            "SELECT TxID FROM texts WHERE TxTitle LIKE 'Archive Multi%'"
+            "SELECT id FROM texts WHERE title LIKE 'Archive Multi%'"
         );
         while ($row = mysqli_fetch_assoc($res)) {
-            $archivedIds[] = (int)$row['TxID'];
+            $archivedIds[] = (int)$row['id'];
         }
         mysqli_free_result($res);
 
@@ -375,7 +375,7 @@ class TextServiceCrudTest extends TestCase
 
             $text = $this->service->getTextById($result['textId']);
             $this->assertIsArray($text);
-            $this->assertEquals('Unarchive Test', $text['TxTitle']);
+            $this->assertEquals('Unarchive Test', $text['title']);
 
             // Archived text should be gone
             $this->assertNull($this->service->getArchivedTextById($archivedId));
@@ -400,10 +400,10 @@ class TextServiceCrudTest extends TestCase
 
         // Find created texts
         $res = Connection::query(
-            "SELECT TxID FROM texts WHERE TxTitle LIKE 'Unarchive Multi%'"
+            "SELECT id FROM texts WHERE title LIKE 'Unarchive Multi%'"
         );
         while ($row = mysqli_fetch_assoc($res)) {
-            $this->createdTextIds[] = (int)$row['TxID'];
+            $this->createdTextIds[] = (int)$row['id'];
         }
         mysqli_free_result($res);
 
@@ -439,8 +439,8 @@ class TextServiceCrudTest extends TestCase
         $result = $this->service->getArchivedTextById($archivedId);
 
         $this->assertIsArray($result);
-        $this->assertEquals('Archived CRUD Test', $result['TxTitle']);
-        $this->assertEquals('Archived content.', $result['TxText']);
+        $this->assertEquals('Archived CRUD Test', $result['title']);
+        $this->assertEquals('Archived content.', $result['text']);
     }
 
     public function testGetArchivedTextByIdReturnsNullForNonExistent(): void
@@ -519,10 +519,10 @@ class TextServiceCrudTest extends TestCase
 
         // Verify update
         $result = $this->service->getArchivedTextById($archivedId);
-        $this->assertEquals('Updated Archived Title', $result['TxTitle']);
-        $this->assertEquals('Updated content.', $result['TxText']);
-        $this->assertEquals('http://new-audio.test/file.mp3', $result['TxAudioURI']);
-        $this->assertEquals('http://new-source.test/article', $result['TxSourceURI']);
+        $this->assertEquals('Updated Archived Title', $result['title']);
+        $this->assertEquals('Updated content.', $result['text']);
+        $this->assertEquals('http://new-audio.test/file.mp3', $result['audio_uri']);
+        $this->assertEquals('http://new-source.test/article', $result['source_uri']);
     }
 
     // ===== Count tests =====
@@ -538,7 +538,7 @@ class TextServiceCrudTest extends TestCase
         $this->createTestText('Count Test 2', 'Content 2');
 
         $count = $this->service->getTextCount(
-            ' AND TxLgID = ' . self::$testLangId,
+            ' AND language_id = ' . self::$testLangId,
             '',
             ''
         );
@@ -558,7 +558,7 @@ class TextServiceCrudTest extends TestCase
         $this->createTestArchivedText('Archived Count 2', 'Content 2');
 
         $count = $this->service->getArchivedTextCount(
-            ' AND TxLgID = ' . self::$testLangId,
+            ' AND language_id = ' . self::$testLangId,
             '',
             ''
         );
@@ -578,7 +578,7 @@ class TextServiceCrudTest extends TestCase
         $this->createTestText('List Test Text', 'List content.');
 
         $texts = $this->service->getTextsList(
-            ' AND TxLgID = ' . self::$testLangId,
+            ' AND language_id = ' . self::$testLangId,
             '',
             '',
             1, // sort
@@ -588,7 +588,7 @@ class TextServiceCrudTest extends TestCase
 
         $this->assertIsArray($texts);
 
-        $titles = array_column($texts, 'TxTitle');
+        $titles = array_column($texts, 'title');
         $this->assertContains('List Test Text', $titles);
     }
 
@@ -601,7 +601,7 @@ class TextServiceCrudTest extends TestCase
         $this->createTestArchivedText('Archived List Test', 'Archived content.');
 
         $texts = $this->service->getArchivedTextsList(
-            ' AND TxLgID = ' . self::$testLangId,
+            ' AND language_id = ' . self::$testLangId,
             '',
             '',
             1, // sort
@@ -611,7 +611,7 @@ class TextServiceCrudTest extends TestCase
 
         $this->assertIsArray($texts);
 
-        $titles = array_column($texts, 'TxTitle');
+        $titles = array_column($texts, 'title');
         $this->assertContains('Archived List Test', $titles);
     }
 

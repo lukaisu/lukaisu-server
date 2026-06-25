@@ -219,8 +219,8 @@ class ReviewService
         if ($text !== null) {
             $row = QueryBuilder::table('texts')
                 ->select(['LgName'])
-                ->join('languages', 'TxLgID', '=', 'LgID')
-                ->where('TxID', '=', $text)
+                ->join('languages', 'language_id', '=', 'LgID')
+                ->where('id', '=', $text)
                 ->firstPrepared();
             /** @var mixed $nameRawFromRow */
             $nameRawFromRow = $row['LgName'] ?? null;
@@ -695,8 +695,8 @@ class ReviewService
 
             /** @var mixed $titleRaw */
             $titleRaw = QueryBuilder::table('texts')
-                ->where('TxID', '=', $textId)
-                ->valuePrepared('TxTitle');
+                ->where('id', '=', $textId)
+                ->valuePrepared('title');
             $title = is_string($titleRaw) ? $titleRaw : 'Unknown Text';
 
             Settings::savePerUser('currenttext', (string) $textId);

@@ -266,8 +266,8 @@ describe('feed_text_edit_component.ts', () => {
     it('enables form fields when checkbox is checked', () => {
       document.body.innerHTML = `
         <input type="checkbox" value="0" checked>
-        <input type="text" name="feed[0][TxTitle]" disabled>
-        <input type="text" name="feed[0][TxText]" disabled>
+        <input type="text" name="feed[0][title]" disabled>
+        <input type="text" name="feed[0][text]" disabled>
       `;
 
       const component = feedTextEditData();
@@ -276,8 +276,8 @@ describe('feed_text_edit_component.ts', () => {
 
       component.handleFeedCheckboxChange(event);
 
-      const titleInput = document.querySelector<HTMLInputElement>('[name="feed[0][TxTitle]"]')!;
-      const textInput = document.querySelector<HTMLInputElement>('[name="feed[0][TxText]"]')!;
+      const titleInput = document.querySelector<HTMLInputElement>('[name="feed[0][title]"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="feed[0][text]"]')!;
       expect(titleInput.disabled).toBe(false);
       expect(textInput.disabled).toBe(false);
     });
@@ -285,8 +285,8 @@ describe('feed_text_edit_component.ts', () => {
     it('disables form fields when checkbox is unchecked', () => {
       document.body.innerHTML = `
         <input type="checkbox" value="0">
-        <input type="text" name="feed[0][TxTitle]">
-        <input type="text" name="feed[0][TxText]">
+        <input type="text" name="feed[0][title]">
+        <input type="text" name="feed[0][text]">
       `;
 
       const component = feedTextEditData();
@@ -296,15 +296,15 @@ describe('feed_text_edit_component.ts', () => {
 
       component.handleFeedCheckboxChange(event);
 
-      const titleInput = document.querySelector<HTMLInputElement>('[name="feed[0][TxTitle]"]')!;
+      const titleInput = document.querySelector<HTMLInputElement>('[name="feed[0][title]"]')!;
       expect(titleInput.disabled).toBe(true);
     });
 
     it('adds notempty class to title and text fields when enabled', () => {
       document.body.innerHTML = `
         <input type="checkbox" value="0" checked>
-        <input type="text" name="feed[0][TxTitle]" disabled>
-        <textarea name="feed[0][TxText]" disabled></textarea>
+        <input type="text" name="feed[0][title]" disabled>
+        <textarea name="feed[0][text]" disabled></textarea>
       `;
 
       const component = feedTextEditData();
@@ -313,8 +313,8 @@ describe('feed_text_edit_component.ts', () => {
 
       component.handleFeedCheckboxChange(event);
 
-      const titleInput = document.querySelector<HTMLInputElement>('[name="feed[0][TxTitle]"]')!;
-      const textArea = document.querySelector<HTMLTextAreaElement>('[name="feed[0][TxText]"]')!;
+      const titleInput = document.querySelector<HTMLInputElement>('[name="feed[0][title]"]')!;
+      const textArea = document.querySelector<HTMLTextAreaElement>('[name="feed[0][text]"]')!;
       expect(titleInput.classList.contains('notempty')).toBe(true);
       expect(textArea.classList.contains('notempty')).toBe(true);
     });
@@ -322,7 +322,7 @@ describe('feed_text_edit_component.ts', () => {
     it('removes notempty class when disabled', () => {
       document.body.innerHTML = `
         <input type="checkbox" value="0">
-        <input type="text" name="feed[0][TxTitle]" class="notempty">
+        <input type="text" name="feed[0][title]" class="notempty">
       `;
 
       const component = feedTextEditData();
@@ -332,7 +332,7 @@ describe('feed_text_edit_component.ts', () => {
 
       component.handleFeedCheckboxChange(event);
 
-      const titleInput = document.querySelector<HTMLInputElement>('[name="feed[0][TxTitle]"]')!;
+      const titleInput = document.querySelector<HTMLInputElement>('[name="feed[0][title]"]')!;
       expect(titleInput.classList.contains('notempty')).toBe(false);
     });
 
@@ -340,8 +340,8 @@ describe('feed_text_edit_component.ts', () => {
       document.body.innerHTML = `
         <input type="checkbox" value="0" checked>
         <input type="checkbox" value="1">
-        <input type="text" name="feed[0][TxTitle]">
-        <input type="text" name="feed[1][TxTitle]" disabled>
+        <input type="text" name="feed[0][title]">
+        <input type="text" name="feed[1][title]" disabled>
       `;
 
       const component = feedTextEditData();
@@ -350,13 +350,13 @@ describe('feed_text_edit_component.ts', () => {
       const checkbox0 = document.querySelector<HTMLInputElement>('input[value="0"]')!;
       checkbox0.checked = false;
       component.handleFeedCheckboxChange({ target: checkbox0 } as unknown as Event);
-      expect(document.querySelector<HTMLInputElement>('[name="feed[0][TxTitle]"]')?.disabled).toBe(true);
+      expect(document.querySelector<HTMLInputElement>('[name="feed[0][title]"]')?.disabled).toBe(true);
 
       // Toggle second checkbox on
       const checkbox1 = document.querySelector<HTMLInputElement>('input[value="1"]')!;
       checkbox1.checked = true;
       component.handleFeedCheckboxChange({ target: checkbox1 } as unknown as Event);
-      expect(document.querySelector<HTMLInputElement>('[name="feed[1][TxTitle]"]')?.disabled).toBe(false);
+      expect(document.querySelector<HTMLInputElement>('[name="feed[1][title]"]')?.disabled).toBe(false);
     });
   });
 });

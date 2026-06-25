@@ -65,7 +65,7 @@ describe('file_import.ts', () => {
     it('dispatches lukaisu:file-import with type=epub instead of redirecting', () => {
       document.body.innerHTML = `
         <input type="file" id="importFile" />
-        <input type="text" name="TxTitle" />
+        <input type="text" name="title" />
         <span id="importFileStatus"></span>
       `;
 
@@ -87,7 +87,7 @@ describe('file_import.ts', () => {
     it('prefills the title input from the EPUB filename when title is empty', () => {
       document.body.innerHTML = `
         <input type="file" id="importFile" />
-        <input type="text" name="TxTitle" />
+        <input type="text" name="title" />
         <span id="importFileStatus"></span>
       `;
 
@@ -98,14 +98,14 @@ describe('file_import.ts', () => {
       Object.defineProperty(input, 'files', { value: [epubFile] });
       input.dispatchEvent(new Event('change'));
 
-      const title = document.querySelector<HTMLInputElement>('input[name="TxTitle"]')!;
+      const title = document.querySelector<HTMLInputElement>('input[name="title"]')!;
       expect(title.value).toBe('my-book');
     });
 
     it('shows an info status reflecting the inline import flow', () => {
       document.body.innerHTML = `
         <input type="file" id="importFile" />
-        <input type="text" name="TxTitle" />
+        <input type="text" name="title" />
         <span id="importFileStatus"></span>
       `;
 
@@ -325,7 +325,7 @@ describe('file_import.ts', () => {
     it('handles mixed case epub extension', () => {
       document.body.innerHTML = `
         <input type="file" id="importFile" />
-        <input type="text" name="TxTitle" />
+        <input type="text" name="title" />
         <span id="importFileStatus"></span>
       `;
 
@@ -355,8 +355,8 @@ describe('file_import.ts', () => {
       document.body.innerHTML = `
         <input type="file" id="importFile" />
         <span id="importFileStatus"></span>
-        <input name="TxText" value="" />
-        <input name="TxTitle" value="" />
+        <input name="text" value="" />
+        <input name="title" value="" />
       `;
       initFileImport();
     });
@@ -377,11 +377,11 @@ Goodbye World`;
 
       // Wait for FileReader to complete
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Hello World');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).toContain('Hello World');
       expect(textInput.value).toContain('Goodbye World');
     });
@@ -401,11 +401,11 @@ Goodbye World`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Italic text');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).not.toContain('<i>');
       expect(textInput.value).not.toContain('</i>');
       expect(textInput.value).not.toContain('<b>');
@@ -426,11 +426,11 @@ Line 2`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Line 1');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).toContain('Line 1');
       expect(textInput.value).toContain('Line 2');
     });
@@ -446,16 +446,16 @@ Content`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const titleInput = document.querySelector<HTMLInputElement>('[name="TxTitle"]')!;
+        const titleInput = document.querySelector<HTMLInputElement>('[name="title"]')!;
         return titleInput.value === 'MyVideo';
       });
 
-      const titleInput = document.querySelector<HTMLInputElement>('[name="TxTitle"]')!;
+      const titleInput = document.querySelector<HTMLInputElement>('[name="title"]')!;
       expect(titleInput.value).toBe('MyVideo');
     });
 
     it('does not override existing title', async () => {
-      const titleInput = document.querySelector<HTMLInputElement>('[name="TxTitle"]')!;
+      const titleInput = document.querySelector<HTMLInputElement>('[name="title"]')!;
       titleInput.value = 'Existing Title';
 
       const srtContent = `1
@@ -468,7 +468,7 @@ Content`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Content');
       });
 
@@ -484,11 +484,11 @@ Content`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Windows line endings');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).toContain('Windows line endings');
     });
 
@@ -501,11 +501,11 @@ Content`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Mac line endings');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).toContain('Mac line endings');
     });
 
@@ -608,8 +608,8 @@ Only one cue`;
       document.body.innerHTML = `
         <input type="file" id="importFile" />
         <span id="importFileStatus"></span>
-        <input name="TxText" value="" />
-        <input name="TxTitle" value="" />
+        <input name="text" value="" />
+        <input name="title" value="" />
       `;
       initFileImport();
     });
@@ -629,11 +629,11 @@ Goodbye World`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Hello World');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).toContain('Hello World');
       expect(textInput.value).toContain('Goodbye World');
     });
@@ -653,11 +653,11 @@ Goodbye World`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Colored text');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).not.toContain('<c');
       expect(textInput.value).not.toContain('<v');
       expect(textInput.value).toContain('Colored text');
@@ -678,11 +678,11 @@ Actual content`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Actual content');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).not.toContain('This is a comment');
       expect(textInput.value).toContain('Actual content');
     });
@@ -702,11 +702,11 @@ Actual content`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Actual content');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).not.toContain('::cue');
       expect(textInput.value).toContain('Actual content');
     });
@@ -727,11 +727,11 @@ Actual content`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Actual content');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).not.toContain('region1');
       expect(textInput.value).toContain('Actual content');
     });
@@ -753,11 +753,11 @@ Second cue`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('First cue');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).toContain('First cue');
       expect(textInput.value).toContain('Second cue');
     });
@@ -774,11 +774,11 @@ Second cue`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('English text');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).not.toContain('<lang');
       expect(textInput.value).toContain('English text');
     });
@@ -795,11 +795,11 @@ Second cue`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('漢字');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).not.toContain('<ruby>');
       expect(textInput.value).not.toContain('<rt>');
       expect(textInput.value).toContain('漢字');
@@ -818,11 +818,11 @@ Content`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const titleInput = document.querySelector<HTMLInputElement>('[name="TxTitle"]')!;
+        const titleInput = document.querySelector<HTMLInputElement>('[name="title"]')!;
         return titleInput.value === 'MyVideo';
       });
 
-      const titleInput = document.querySelector<HTMLInputElement>('[name="TxTitle"]')!;
+      const titleInput = document.querySelector<HTMLInputElement>('[name="title"]')!;
       expect(titleInput.value).toBe('MyVideo');
     });
 
@@ -838,11 +838,11 @@ Content`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Content');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).not.toContain('WEBVTT');
       expect(textInput.value).not.toContain('description');
       expect(textInput.value).toContain('Content');
@@ -859,8 +859,8 @@ Content`;
       document.body.innerHTML = `
         <input type="file" id="importFile" />
         <span id="importFileStatus"></span>
-        <input name="TxText" value="" />
-        <input name="TxTitle" value="" />
+        <input name="text" value="" />
+        <input name="title" value="" />
       `;
       initFileImport();
     });
@@ -915,11 +915,11 @@ Uppercase extension`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Uppercase extension');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).toContain('Uppercase extension');
     });
 
@@ -935,11 +935,11 @@ Uppercase extension`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Uppercase extension');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).toContain('Uppercase extension');
     });
   });
@@ -954,8 +954,8 @@ Uppercase extension`;
       document.body.innerHTML = `
         <input type="file" id="importFile" />
         <span id="importFileStatus"></span>
-        <input name="TxText" value="" />
-        <input name="TxTitle" value="" />
+        <input name="text" value="" />
+        <input name="title" value="" />
       `;
       initFileImport();
     });
@@ -977,11 +977,11 @@ Second`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('First');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       // Should not have more than 2 consecutive newlines
       expect(textInput.value).not.toContain('\n\n\n');
     });
@@ -997,11 +997,11 @@ Second`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Spaces around');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).toBe('Spaces around');
     });
 
@@ -1016,11 +1016,11 @@ Multiple   spaces   here`;
       input.dispatchEvent(new Event('change'));
 
       await vi.waitFor(() => {
-        const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+        const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
         return textInput.value.includes('Multiple');
       });
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
       expect(textInput.value).not.toContain('   ');
       expect(textInput.value).toContain('Multiple spaces here');
     });
@@ -1034,8 +1034,8 @@ Multiple   spaces   here`;
     it('handles missing status element gracefully', async () => {
       document.body.innerHTML = `
         <input type="file" id="importFile" />
-        <input name="TxText" value="" />
-        <input name="TxTitle" value="" />
+        <input name="text" value="" />
+        <input name="title" value="" />
       `;
       initFileImport();
 
@@ -1054,7 +1054,7 @@ Content`;
       document.body.innerHTML = `
         <input type="file" id="importFile" />
         <span id="importFileStatus"></span>
-        <input name="TxTitle" value="" />
+        <input name="title" value="" />
       `;
       initFileImport();
 
@@ -1073,7 +1073,7 @@ Content`;
       document.body.innerHTML = `
         <input type="file" id="importFile" />
         <span id="importFileStatus"></span>
-        <input name="TxText" value="" />
+        <input name="text" value="" />
       `;
       initFileImport();
 

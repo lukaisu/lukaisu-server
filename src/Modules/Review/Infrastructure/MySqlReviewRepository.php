@@ -419,8 +419,8 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
         if ($config->reviewKey === ReviewConfiguration::KEY_TEXT) {
             $row = QueryBuilder::table('texts')
                 ->select(['LgName'])
-                ->join('languages', 'TxLgID', '=', 'LgID')
-                ->where('TxID', '=', $config->selection)
+                ->join('languages', 'language_id', '=', 'LgID')
+                ->where('id', '=', $config->selection)
                 ->firstPrepared();
             /** @var mixed $name */
             $name = $row['LgName'] ?? null;
@@ -499,7 +499,7 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
     public function getSentenceWithAnnotations(int $wordId, string $wordLc): array
     {
         // First, find the best sentence (same logic as getSentenceForWord)
-        $sql = "SELECT DISTINCT ti.sentence_id AS id, ti.text_id AS TxID,
+        $sql = "SELECT DISTINCT ti.sentence_id AS id, ti.text_id AS id,
             1 - IFNULL(sUnknownCount.c, 0) / sWordCount.c AS KnownRatio
             FROM word_occurrences ti
             JOIN (
@@ -526,7 +526,7 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
         }
 
         $seid = (int) $record['id'];
-        $txid = (int) $record['TxID'];
+        $txid = (int) $record['id'];
         $sentenceCount = (int) Settings::getWithDefault('set-test-sentence-count');
 
         // Get the formatted sentence

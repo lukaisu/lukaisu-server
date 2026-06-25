@@ -342,8 +342,8 @@ class TermEditController extends VocabularyBaseController
 
             // Get showRoman from language joined with text
             $showRoman = (bool) QueryBuilder::table('languages')
-                ->join('texts', 'TxLgID', '=', 'LgID')
-                ->where('TxID', '=', $textId)
+                ->join('texts', 'language_id', '=', 'LgID')
+                ->where('id', '=', $textId)
                 ->valuePrepared('LgShowRomanization');
 
             $similarTermsRow = (new \Lukaisu\Modules\Vocabulary\Application\UseCases\FindSimilarTerms())->getTableRow();

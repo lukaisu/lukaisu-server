@@ -238,7 +238,7 @@ class CreateBookFromTexts
         $bindings = [$bookId, $chapterNum, $chapterTitle, $textId];
         Connection::preparedExecute(
             "UPDATE " . Globals::table('texts') .
-            " SET TxBkID = ?, TxChapterNum = ?, TxChapterTitle = ? WHERE TxID = ?",
+            " SET book_id = ?, chapter_num = ?, chapter_title = ? WHERE id = ?",
             $bindings
         );
     }

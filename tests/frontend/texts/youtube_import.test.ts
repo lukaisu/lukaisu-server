@@ -59,9 +59,9 @@ describe('youtube_import.ts', () => {
         document.body.innerHTML = `
           <div id="ytDataStatus"></div>
           <input id="ytVideoId" value="dQw4w9WgXcQ">
-          <input name="TxTitle" value="">
-          <input name="TxText" value="">
-          <input name="TxSourceURI" value="">
+          <input name="title" value="">
+          <input name="text" value="">
+          <input name="source_uri" value="">
         `;
       });
 
@@ -99,9 +99,9 @@ describe('youtube_import.ts', () => {
           expect(document.getElementById('ytDataStatus')!.textContent).toBe('Success!');
         });
 
-        expect((document.querySelector('[name=TxTitle]') as HTMLInputElement).value).toBe('Test Video Title');
-        expect((document.querySelector('[name=TxText]') as HTMLInputElement).value).toBe('Test video description content');
-        expect((document.querySelector('[name=TxSourceURI]') as HTMLInputElement).value).toBe('https://youtube.com/watch?v=dQw4w9WgXcQ');
+        expect((document.querySelector('[name=title]') as HTMLInputElement).value).toBe('Test Video Title');
+        expect((document.querySelector('[name=text]') as HTMLInputElement).value).toBe('Test video description content');
+        expect((document.querySelector('[name=source_uri]') as HTMLInputElement).value).toBe('https://youtube.com/watch?v=dQw4w9WgXcQ');
       });
 
       it('handles missing data in response', async () => {
@@ -122,7 +122,7 @@ describe('youtube_import.ts', () => {
         await vi.waitFor(() => {
           expect(document.getElementById('ytDataStatus')!.textContent).toBe('No video data returned.');
         });
-        expect((document.querySelector('[name=TxTitle]') as HTMLInputElement).value).toBe(''); // Unchanged
+        expect((document.querySelector('[name=title]') as HTMLInputElement).value).toBe(''); // Unchanged
       });
 
       it('constructs correct API URL with server proxy', () => {
@@ -336,9 +336,9 @@ describe('youtube_import.ts', () => {
       document.body.innerHTML = `
         <div id="ytDataStatus"></div>
         <input id="ytVideoId" value="  video-id  ">
-        <input name="TxSourceURI" value="">
-        <input name="TxTitle" value="">
-        <input name="TxText" value="">
+        <input name="source_uri" value="">
+        <input name="title" value="">
+        <input name="text" value="">
       `;
 
       const mockResponse = {

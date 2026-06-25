@@ -251,7 +251,7 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         $searchClause = '';
         $searchBindings = [];
         if ($search !== '') {
-            $searchClause = " AND (title LIKE ? OR description LIKE ?)";
+            $searchClause = " AND (feed_links.title LIKE ? OR feed_links.description LIKE ?)";
             $searchBindings[] = '%' . $search . '%';
             $searchBindings[] = '%' . $search . '%';
         }
@@ -259,14 +259,15 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
         // Merge all bindings in correct order: text scope, feed IDs, search
         $allBindings = array_merge($textScopeBindings, $bindings, $searchBindings);
 
-        // Complex query with LEFT JOIN to texts (archived texts are in same table with TxArchivedAt)
-        $sql = "SELECT id, feed_id, title, link, description, published_at, audio, text,
-                       TxID, TxArchivedAt
+        // Complex query with LEFT JOIN to texts (archived texts are in same table with archived_at)
+        $sql = "SELECT feed_links.id, feed_links.feed_id, feed_links.title, feed_links.link,
+                       feed_links.description, feed_links.published_at, feed_links.audio,
+                       feed_links.text, texts.id AS text_id, texts.archived_at
                 FROM feed_links
-                LEFT JOIN texts ON TxSourceURI = TRIM(link)"
+                LEFT JOIN texts ON texts.source_uri = TRIM(feed_links.link)"
                 . $textScope
-                . " WHERE feed_id IN {$feedInClause} {$searchClause}"
-                . " ORDER BY {$orderBy} {$direction}"
+                . " WHERE feed_links.feed_id IN {$feedInClause} {$searchClause}"
+                . " ORDER BY feed_links.{$orderBy} {$direction}"
                 . " LIMIT {$offset}, {$limit}";
 
         $result = [];
@@ -274,9 +275,9 @@ class MySqlArticleRepository extends AbstractRepository implements ArticleReposi
 
         foreach ($rows as $row) {
             $article = $this->mapToEntity($row);
-            $textId = isset($row['TxID']) ? (int) $row['TxID'] : null;
-            // Archived texts are identified by TxArchivedAt being non-null
-            $isArchived = $textId !== null && isset($row['TxArchivedAt']) && $row['TxArchivedAt'] !== null;
+            $textId = isset($row['text_id']) ? (int) $row['text_id'] : null;
+            // Archived texts are identified by archived_at being non-null
+            $isArchived = $textId !== null && isset($row['archived_at']) && $row['archived_at'] !== null;
             $archivedId = $isArchived ? $textId : null;
             $activeTextId = ($textId !== null && !$isArchived) ? $textId : null;
 

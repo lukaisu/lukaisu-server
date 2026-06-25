@@ -259,7 +259,7 @@ class HomeFacadeTest extends TestCase
         }
 
         $textId = Connection::fetchValue(
-            "SELECT TxID AS value FROM texts LIMIT 1"
+            "SELECT id AS value FROM texts LIMIT 1"
         );
 
         if ($textId === null) {

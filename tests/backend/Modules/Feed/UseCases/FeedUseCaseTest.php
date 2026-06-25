@@ -686,10 +686,10 @@ class FeedUseCaseTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Article Title',
-                    'TxText' => 'Extracted text content.',
-                    'TxSourceURI' => 'https://example.com/article',
-                    'TxAudioURI' => '',
+                    'title' => 'Article Title',
+                    'text' => 'Extracted text content.',
+                    'source_uri' => 'https://example.com/article',
+                    'audio_uri' => '',
                 ],
             ]);
 
@@ -766,10 +766,10 @@ class FeedUseCaseTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Existing Article',
-                    'TxText' => 'Some text',
-                    'TxSourceURI' => 'https://example.com/existing',
-                    'TxAudioURI' => '',
+                    'title' => 'Existing Article',
+                    'text' => 'Some text',
+                    'source_uri' => 'https://example.com/existing',
+                    'audio_uri' => '',
                 ],
             ]);
 
@@ -897,10 +897,10 @@ class FeedUseCaseTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Article',
-                    'TxText' => 'Content',
-                    'TxSourceURI' => 'https://example.com/article',
-                    'TxAudioURI' => '',
+                    'title' => 'Article',
+                    'text' => 'Content',
+                    'source_uri' => 'https://example.com/article',
+                    'audio_uri' => '',
                 ],
             ]);
 
@@ -1004,10 +1004,10 @@ class FeedUseCaseTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Article',
-                    'TxText' => 'Content',
-                    'TxSourceURI' => 'https://example.com/art',
-                    'TxAudioURI' => '',
+                    'title' => 'Article',
+                    'text' => 'Content',
+                    'source_uri' => 'https://example.com/art',
+                    'audio_uri' => '',
                 ],
             ]);
 
@@ -1087,10 +1087,10 @@ class FeedUseCaseTest extends TestCase
                 $callCount++;
                 return [
                     0 => [
-                        'TxTitle' => 'Title',
-                        'TxText' => 'Text',
-                        'TxSourceURI' => 'https://example.com/' . $callCount,
-                        'TxAudioURI' => '',
+                        'title' => 'Title',
+                        'text' => 'Text',
+                        'source_uri' => 'https://example.com/' . $callCount,
+                        'audio_uri' => '',
                     ],
                 ];
             });

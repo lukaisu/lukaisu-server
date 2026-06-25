@@ -138,7 +138,7 @@ class MySqlBackupRepository implements BackupRepositoryInterface
         switch ($table) {
             case 'text_tag_map':
                 return 'SELECT * FROM text_tag_map WHERE text_id IN ('
-                    . 'SELECT TxID FROM texts WHERE TxUsID = ' . $userId . ')';
+                    . 'SELECT id FROM texts WHERE user_id = ' . $userId . ')';
             case 'word_tag_map':
                 return 'SELECT * FROM word_tag_map WHERE word_id IN ('
                     . 'SELECT id FROM words WHERE user_id = ' . $userId . ')';
@@ -166,8 +166,8 @@ class MySqlBackupRepository implements BackupRepositoryInterface
 
             if ($table == 'texts') {
                 $result = Connection::querySelect(
-                    'SELECT TxID, TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI,
-                    TxSourceURI FROM ' . $table . $scope['texts']
+                    'SELECT id, language_id, title, text, annotated_text, audio_uri,
+                    source_uri FROM ' . $table . $scope['texts']
                 );
             } elseif ($table == 'words') {
                 $result = Connection::querySelect(
@@ -242,11 +242,11 @@ class MySqlBackupRepository implements BackupRepositoryInterface
 
         $scope = $empty;
         $scope['languages']    = ' AND LgUsID = ' . $userId;
-        $scope['texts']        = ' WHERE TxUsID = ' . $userId;
+        $scope['texts']        = ' WHERE user_id = ' . $userId;
         $scope['words']        = ' WHERE user_id = ' . $userId;
         $scope['tags']         = ' WHERE user_id = ' . $userId;
         $scope['text_tags']    = ' WHERE user_id = ' . $userId;
-        $scope['text_tag_map'] = ' WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = ' . $userId . ')';
+        $scope['text_tag_map'] = ' WHERE text_id IN (SELECT id FROM texts WHERE user_id = ' . $userId . ')';
         $scope['word_tag_map'] = ' WHERE word_id IN (SELECT id FROM words WHERE user_id = ' . $userId . ')';
         return $scope;
     }
@@ -286,7 +286,7 @@ class MySqlBackupRepository implements BackupRepositoryInterface
     {
         $schemas = [
             // Note: archived_texts and archived_text_tag_map have been merged into
-            // the texts and text_tag_map tables with TxArchivedAt column.
+            // the texts and text_tag_map tables with archived_at column.
             'languages' => "CREATE TABLE `languages` (
                 `LgID` int(11) unsigned NOT NULL AUTO_INCREMENT,
                 `LgName` varchar(40) NOT NULL,
@@ -355,15 +355,15 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 KEY `Ti2TextLC` (`Ti2TextLC`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8;\n",
             'texts' => "CREATE TABLE `texts` (
-                `TxID` int(11) unsigned NOT NULL AUTO_INCREMENT,
-                `TxLgID` int(11) unsigned NOT NULL,
-                `TxTitle` varchar(200) NOT NULL,
-                `TxText` text NOT NULL,
-                `TxAnnotatedText` longtext NOT NULL,
-                `TxAudioURI` varchar(200) DEFAULT NULL,
-                `TxSourceURI` varchar(1000) DEFAULT NULL,
-                PRIMARY KEY (`TxID`),
-                KEY `TxLgID` (`TxLgID`)
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `language_id` int(11) unsigned NOT NULL,
+                `title` varchar(200) NOT NULL,
+                `text` text NOT NULL,
+                `annotated_text` longtext NOT NULL,
+                `audio_uri` varchar(200) DEFAULT NULL,
+                `source_uri` varchar(1000) DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                KEY `language_id` (`language_id`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'text_tag_map' => "CREATE TABLE `text_tag_map` (
                 `text_id` int(11) unsigned NOT NULL,

@@ -117,16 +117,16 @@ class Migrations
         Maintenance::initWordCount();
         // Only reparse texts that have a valid language reference
         $rows = QueryBuilder::table('texts')
-            ->select(['texts.TxID', 'texts.TxLgID'])
-            ->join('languages', 'texts.TxLgID', '=', 'languages.LgID')
+            ->select(['texts.id', 'texts.language_id'])
+            ->join('languages', 'texts.language_id', '=', 'languages.LgID')
             ->getPrepared();
         foreach ($rows as $record) {
-            $id = (int) $record['TxID'];
-            $lgId = (int) $record['TxLgID'];
+            $id = (int) $record['id'];
+            $lgId = (int) $record['language_id'];
             /** @var string|null $textValue */
             $textValue = QueryBuilder::table('texts')
-                ->where('TxID', '=', $id)
-                ->valuePrepared('TxText');
+                ->where('id', '=', $id)
+                ->valuePrepared('text');
             TextParsing::parseAndSave(
                 (string)$textValue,
                 $lgId,
@@ -511,8 +511,8 @@ class Migrations
             // Clean up orphaned text_tag_map (texts deleted)
             Connection::execute(
                 "DELETE text_tag_map
-                FROM (text_tag_map LEFT JOIN texts ON text_id = TxID)
-                WHERE TxID IS NULL"
+                FROM (text_tag_map LEFT JOIN texts ON text_id = id)
+                WHERE id IS NULL"
             );
             Maintenance::optimizeDatabase();
             Settings::save('lastscorecalc', $today);

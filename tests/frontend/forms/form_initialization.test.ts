@@ -34,14 +34,14 @@ describe('form_initialization.ts', () => {
   // ===========================================================================
 
   describe('changeTextboxesLanguage', () => {
-    it('sets lang attribute on TxTitle and TxText', () => {
+    it('sets lang attribute on title and text', () => {
       document.body.innerHTML = `
-        <select id="TxLgID">
+        <select id="language_id">
           <option value="1">English</option>
           <option value="2">French</option>
         </select>
-        <input id="TxTitle" type="text" />
-        <textarea id="TxText"></textarea>
+        <input id="title" type="text" />
+        <textarea id="text"></textarea>
       `;
 
       const languageData = {
@@ -49,19 +49,19 @@ describe('form_initialization.ts', () => {
         '2': 'fr'
       };
 
-      const langSelect = document.getElementById('TxLgID') as HTMLSelectElement;
+      const langSelect = document.getElementById('language_id') as HTMLSelectElement;
       langSelect.value = '2';
 
       changeTextboxesLanguage(languageData);
 
-      expect(document.getElementById('TxTitle')?.getAttribute('lang')).toBe('fr');
-      expect(document.getElementById('TxText')?.getAttribute('lang')).toBe('fr');
+      expect(document.getElementById('title')?.getAttribute('lang')).toBe('fr');
+      expect(document.getElementById('text')?.getAttribute('lang')).toBe('fr');
     });
 
     it('handles missing language select element', () => {
       document.body.innerHTML = `
-        <input id="TxTitle" type="text" />
-        <textarea id="TxText"></textarea>
+        <input id="title" type="text" />
+        <textarea id="text"></textarea>
       `;
 
       expect(() => changeTextboxesLanguage({ '1': 'en' })).not.toThrow();
@@ -69,20 +69,20 @@ describe('form_initialization.ts', () => {
 
     it('sets empty string when language not in data', () => {
       document.body.innerHTML = `
-        <select id="TxLgID">
+        <select id="language_id">
           <option value="99">Unknown</option>
         </select>
-        <input id="TxTitle" type="text" lang="en" />
-        <textarea id="TxText" lang="en"></textarea>
+        <input id="title" type="text" lang="en" />
+        <textarea id="text" lang="en"></textarea>
       `;
 
-      const langSelect = document.getElementById('TxLgID') as HTMLSelectElement;
+      const langSelect = document.getElementById('language_id') as HTMLSelectElement;
       langSelect.value = '99';
 
       changeTextboxesLanguage({ '1': 'en' });
 
-      expect(document.getElementById('TxTitle')?.getAttribute('lang')).toBe('');
-      expect(document.getElementById('TxText')?.getAttribute('lang')).toBe('');
+      expect(document.getElementById('title')?.getAttribute('lang')).toBe('');
+      expect(document.getElementById('text')?.getAttribute('lang')).toBe('');
     });
   });
 
@@ -101,27 +101,27 @@ describe('form_initialization.ts', () => {
         <script id="text-edit-config" type="application/json">
           {"languageData": {"1": "en", "2": "fr"}}
         </script>
-        <select data-action="change-language" id="TxLgID">
+        <select data-action="change-language" id="language_id">
           <option value="1">English</option>
           <option value="2">French</option>
         </select>
-        <input id="TxTitle" type="text" />
-        <textarea id="TxText"></textarea>
+        <input id="title" type="text" />
+        <textarea id="text"></textarea>
       `;
 
       initTextEditForm();
 
       // Initial language should be applied
-      expect(document.getElementById('TxTitle')?.getAttribute('lang')).toBe('en');
-      expect(document.getElementById('TxText')?.getAttribute('lang')).toBe('en');
+      expect(document.getElementById('title')?.getAttribute('lang')).toBe('en');
+      expect(document.getElementById('text')?.getAttribute('lang')).toBe('en');
 
       // Change language
       const langSelect = document.querySelector('[data-action="change-language"]') as HTMLSelectElement;
       langSelect.value = '2';
       langSelect.dispatchEvent(new Event('change'));
 
-      expect(document.getElementById('TxTitle')?.getAttribute('lang')).toBe('fr');
-      expect(document.getElementById('TxText')?.getAttribute('lang')).toBe('fr');
+      expect(document.getElementById('title')?.getAttribute('lang')).toBe('fr');
+      expect(document.getElementById('text')?.getAttribute('lang')).toBe('fr');
     });
 
     it('sets up form change tracking', () => {

@@ -92,8 +92,8 @@ class TextControllerEditTest extends TestCase
 
             // Create first test text
             Connection::query(
-                "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, " .
-                "TxSourceURI, TxAudioPosition, TxPosition) " .
+                "INSERT INTO texts (language_id, title, text, annotated_text, audio_uri, " .
+                "source_uri, audio_position, position) " .
                 "VALUES (" . self::$testLangId . ", 'EditControllerTestText', 'Test content.', " .
                 "'0\tTest\t\t*\n0\tcontent\t\ttranslation', " .
                 "'http://audio.test/audio.mp3', 'http://source.test/article', 0, 0)"
@@ -104,7 +104,7 @@ class TextControllerEditTest extends TestCase
 
             // Create second test text
             Connection::query(
-                "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+                "INSERT INTO texts (language_id, title, text, annotated_text) " .
                 "VALUES (" . self::$testLangId . ", 'EditControllerTestText2', 'Second test content.', '')"
             );
             self::$testText2Id = (int)Connection::fetchValue(
@@ -123,7 +123,7 @@ class TextControllerEditTest extends TestCase
         $textIds = self::$testTextId . ", " . self::$testText2Id;
         Connection::query("DELETE FROM word_occurrences WHERE text_id IN (" . $textIds . ")");
         Connection::query("DELETE FROM sentences WHERE text_id IN (" . $textIds . ")");
-        Connection::query("DELETE FROM texts WHERE TxID IN (" . $textIds . ")");
+        Connection::query("DELETE FROM texts WHERE id IN (" . $textIds . ")");
         Connection::query("DELETE FROM languages WHERE LgName = 'EditControllerTestLang'");
     }
 
@@ -241,8 +241,8 @@ class TextControllerEditTest extends TestCase
         $text = $service->getTextById(self::$testTextId);
 
         $this->assertIsArray($text);
-        $this->assertEquals('EditControllerTestText', $text['TxTitle']);
-        $this->assertEquals(self::$testLangId, (int)$text['TxLgID']);
+        $this->assertEquals('EditControllerTestText', $text['title']);
+        $this->assertEquals(self::$testLangId, (int)$text['language_id']);
     }
 
     public function testTextServiceGetTextByIdReturnsNullForInvalidId(): void
@@ -269,10 +269,10 @@ class TextControllerEditTest extends TestCase
         $text = $service->getTextForEdit(self::$testTextId);
 
         $this->assertIsArray($text);
-        $this->assertEquals('EditControllerTestText', $text['TxTitle']);
-        $this->assertEquals('Test content.', $text['TxText']);
-        $this->assertEquals('http://source.test/article', $text['TxSourceURI']);
-        $this->assertEquals('http://audio.test/audio.mp3', $text['TxAudioURI']);
+        $this->assertEquals('EditControllerTestText', $text['title']);
+        $this->assertEquals('Test content.', $text['text']);
+        $this->assertEquals('http://source.test/article', $text['source_uri']);
+        $this->assertEquals('http://audio.test/audio.mp3', $text['audio_uri']);
     }
 
     public function testTextServiceGetTextCount(): void
@@ -290,7 +290,7 @@ class TextControllerEditTest extends TestCase
         $this->assertGreaterThanOrEqual(2, $count); // At least our 2 test texts
 
         // Count with language filter
-        $langCount = $service->getTextCount(' AND TxLgID = ' . self::$testLangId, '', '');
+        $langCount = $service->getTextCount(' AND language_id = ' . self::$testLangId, '', '');
 
         $this->assertIsInt($langCount);
         $this->assertGreaterThanOrEqual(2, $langCount);
@@ -305,7 +305,7 @@ class TextControllerEditTest extends TestCase
         $service = new TextFacade();
 
         $texts = $service->getTextsList(
-            ' AND TxLgID = ' . self::$testLangId,
+            ' AND language_id = ' . self::$testLangId,
             '',
             '',
             1, // sort
@@ -317,7 +317,7 @@ class TextControllerEditTest extends TestCase
         $this->assertNotEmpty($texts);
 
         // Check that our test texts are in the list
-        $titles = array_column($texts, 'TxTitle');
+        $titles = array_column($texts, 'title');
         $this->assertContains('EditControllerTestText', $titles);
     }
 
@@ -384,7 +384,7 @@ class TextControllerEditTest extends TestCase
 
         $result = $service->buildTextQueryWhereClause('test', 'title', '');
 
-        $this->assertStringContainsString('TxTitle', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
         $this->assertStringContainsString('LIKE', $result['clause']);
         $this->assertEquals(['test'], $result['params']);
     }
@@ -399,7 +399,7 @@ class TextControllerEditTest extends TestCase
 
         $result = $service->buildTextQueryWhereClause('test', 'text', '');
 
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertStringContainsString('LIKE', $result['clause']);
         $this->assertEquals(['test'], $result['params']);
     }
@@ -414,8 +414,8 @@ class TextControllerEditTest extends TestCase
 
         $result = $service->buildTextQueryWhereClause('test', 'title,text', '');
 
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertStringContainsString('OR', $result['clause']);
         $this->assertEquals(['test', 'test'], $result['params']);
     }

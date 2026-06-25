@@ -45,8 +45,8 @@ class TextAnnotationApiHandler
     public function saveImprTextData(int $textid, int $line, string $val): array
     {
         $ann = (string) QueryBuilder::table('texts')
-            ->where('TxID', '=', $textid)
-            ->valuePrepared('TxAnnotatedText');
+            ->where('id', '=', $textid)
+            ->valuePrepared('annotated_text');
 
         $items = preg_split('/[\n]/u', $ann);
         if ($items === false) {
@@ -75,8 +75,8 @@ class TextAnnotationApiHandler
         $items[$line] = implode("\t", array($vals[0], $vals[1], $vals[2], $val));
 
         QueryBuilder::table('texts')
-            ->where('TxID', '=', $textid)
-            ->updatePrepared(['TxAnnotatedText' => implode("\n", $items)]);
+            ->where('id', '=', $textid)
+            ->updatePrepared(['annotated_text' => implode("\n", $items)]);
 
         return ['success' => true];
     }
@@ -364,14 +364,14 @@ class TextAnnotationApiHandler
     public function editTermForm(int $textid): string
     {
         $record = QueryBuilder::table('texts')
-            ->select(['TxLgID', 'TxAnnotatedText'])
-            ->where('TxID', '=', $textid)
+            ->select(['language_id', 'annotated_text'])
+            ->where('id', '=', $textid)
             ->firstPrepared();
         if ($record === null) {
             return '<p>Text not found</p>';
         }
-        $langid = (int) $record['TxLgID'];
-        $ann = (string) $record['TxAnnotatedText'];
+        $langid = (int) $record['language_id'];
+        $ann = (string) $record['annotated_text'];
         if (strlen($ann) > 0) {
             $annotationService = new AnnotationService();
             $ann = $annotationService->recreateSaveAnnotation($textid, $ann);

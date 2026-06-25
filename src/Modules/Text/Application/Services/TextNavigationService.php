@@ -73,7 +73,7 @@ class TextNavigationService
         );
         $wh_lang = '';
         if ($currentlang != '') {
-            $wh_lang = ' AND TxLgID = ?';
+            $wh_lang = ' AND language_id = ?';
             $params[] = $currentlang;
         }
 
@@ -89,16 +89,16 @@ class TextNavigationService
             $likeClause = $currentregexmode . 'LIKE ?';
             switch ($currentquerymode) {
                 case 'title,text':
-                    $wh_query = ' AND (TxTitle ' . $likeClause . ' OR TxText ' . $likeClause . ')';
+                    $wh_query = ' AND (title ' . $likeClause . ' OR text ' . $likeClause . ')';
                     $params[] = $queryParam;
                     $params[] = $queryParam;
                     break;
                 case 'title':
-                    $wh_query = ' AND (TxTitle ' . $likeClause . ')';
+                    $wh_query = ' AND (title ' . $likeClause . ')';
                     $params[] = $queryParam;
                     break;
                 case 'text':
-                    $wh_query = ' AND (TxText ' . $likeClause . ')';
+                    $wh_query = ' AND (text ' . $likeClause . ')';
                     $params[] = $queryParam;
                     break;
             }
@@ -147,7 +147,7 @@ class TextNavigationService
         }
 
         $currentsort = InputValidator::getIntWithDb("sort", 'currenttextsort', 1);
-        $sorts = array('TxTitle','TxID desc','TxID asc');
+        $sorts = array('texts.title', 'texts.id desc', 'texts.id asc');
         $lsorts = count($sorts);
         if ($currentsort < 1) {
             $currentsort = 1;
@@ -156,36 +156,36 @@ class TextNavigationService
             $currentsort = $lsorts;
         }
 
-        $textScope = UserScopedQuery::forTablePrepared('texts', $params);
+        $textScope = UserScopedQuery::forTablePrepared('texts', $params, 'texts');
         if ($onlyAnn) {
-            $sql = 'SELECT TxID
+            $sql = 'SELECT texts.id
             FROM (
                 (texts
-                    LEFT JOIN text_tag_map ON TxID = text_id
+                    LEFT JOIN text_tag_map ON texts.id = text_tag_map.text_id
                 )
-                LEFT JOIN text_tags ON id = text_tag_id
+                LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id
             ), languages
-            WHERE LgID = TxLgID AND LENGTH(TxAnnotatedText) > 0 '
+            WHERE LgID = texts.language_id AND LENGTH(texts.annotated_text) > 0 '
             . $wh_lang . $wh_query . $textScope . '
-            GROUP BY TxID ' . $wh_tag . '
+            GROUP BY texts.id ' . $wh_tag . '
             ORDER BY ' . $sorts[$currentsort - 1];
         } else {
-            $sql = 'SELECT TxID
+            $sql = 'SELECT texts.id
             FROM (
                 (texts
-                    LEFT JOIN text_tag_map ON TxID = text_id
+                    LEFT JOIN text_tag_map ON texts.id = text_tag_map.text_id
                 )
-                LEFT JOIN text_tags ON id = text_tag_id
+                LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id
             ), languages
-            WHERE LgID = TxLgID ' . $wh_lang . $wh_query . $textScope . '
-            GROUP BY TxID ' . $wh_tag . '
+            WHERE LgID = texts.language_id ' . $wh_lang . $wh_query . $textScope . '
+            GROUP BY texts.id ' . $wh_tag . '
             ORDER BY ' . $sorts[$currentsort - 1];
         }
 
         $list = array(0);
         $rows = Connection::preparedFetchAll($sql, $params);
         foreach ($rows as $record) {
-            array_push($list, (int) $record['TxID']);
+            array_push($list, (int) $record['id']);
         }
         array_push($list, 0);
         $listlen = count($list);
@@ -280,8 +280,8 @@ class TextNavigationService
  * @var string|null $result
 */
         $result = QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
-            ->valuePrepared('TxTitle');
+            ->where('id', '=', $textId)
+            ->valuePrepared('title');
         return $result ?? '';
     }
 }

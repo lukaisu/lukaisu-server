@@ -70,22 +70,22 @@ class GetDashboardData
     {
         /** @var mixed $title */
         $title = QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
-            ->valuePrepared('TxTitle');
+            ->where('id', '=', $textId)
+            ->valuePrepared('title');
 
         if ($title === null) {
             return null;
         }
 
         $languageId = (int)QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
-            ->valuePrepared('TxLgID');
+            ->where('id', '=', $textId)
+            ->valuePrepared('language_id');
 
         $languageName = $this->getLanguageName($languageId);
 
         $row = QueryBuilder::table('texts')
-            ->select(['LENGTH(TxAnnotatedText) AS annotated_length'])
-            ->where('TxID', '=', $textId)
+            ->select(['LENGTH(annotated_text) AS annotated_length'])
+            ->where('id', '=', $textId)
             ->firstPrepared();
         $annotated = isset($row['annotated_length']) && (int)$row['annotated_length'] > 0;
 
@@ -177,8 +177,8 @@ class GetDashboardData
         }
 
         return QueryBuilder::table('texts')
-            ->where('TxLgID', '=', $languageId)
-            ->whereNull('TxArchivedAt')
+            ->where('language_id', '=', $languageId)
+            ->whereNull('archived_at')
             ->count();
     }
 }

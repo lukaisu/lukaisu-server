@@ -135,7 +135,7 @@ class TextScoringService
     private function ownsText(int $textId): bool
     {
         return \Lukaisu\Shared\Infrastructure\Database\QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
+            ->where('id', '=', $textId)
             ->count() > 0;
     }
 
@@ -161,12 +161,12 @@ class TextScoringService
             return array_values(array_map('intval', $textIds));
         }
         $rows = Connection::preparedFetchAll(
-            'SELECT TxID FROM texts WHERE TxID IN ' . $inClause . $userScope,
+            'SELECT id FROM texts WHERE id IN ' . $inClause . $userScope,
             $bindings
         );
         $owned = [];
         foreach ($rows as $row) {
-            $owned[] = (int) $row['TxID'];
+            $owned[] = (int) $row['id'];
         }
         return $owned;
     }
@@ -189,12 +189,12 @@ class TextScoringService
     ): array {
         // Get all text IDs for this language
         $bindings = [$languageId];
-        $sql = "SELECT TxID FROM texts WHERE TxLgID = ?"
+        $sql = "SELECT id FROM texts WHERE language_id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
 
         $rows = Connection::preparedFetchAll($sql, $bindings);
         $textIds = array_map(
-            fn(array $row): int => (int) $row['TxID'],
+            fn(array $row): int => (int) $row['id'],
             $rows
         );
 

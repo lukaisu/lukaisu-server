@@ -63,7 +63,7 @@ class Maintenance
     {
         self::adjustAutoIncrement('languages', 'LgID');
         self::adjustAutoIncrement('sentences', 'id');
-        self::adjustAutoIncrement('texts', 'TxID');
+        self::adjustAutoIncrement('texts', 'id');
         self::adjustAutoIncrement('words', 'id');
         self::adjustAutoIncrement('tags', 'id');
         self::adjustAutoIncrement('text_tags', 'id');

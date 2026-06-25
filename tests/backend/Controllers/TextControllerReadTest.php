@@ -81,8 +81,8 @@ class TextControllerReadTest extends TestCase
             // Create first test text
             $annotatedText = "-1\t.\n0\tTest\t\t*\n0\ttext\t\ttranslation";
             Connection::query(
-                "INSERT INTO " . Globals::table('texts') . " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, " .
-                "TxSourceURI, TxAudioPosition, TxPosition) " .
+                "INSERT INTO " . Globals::table('texts') . " (language_id, title, text, annotated_text, audio_uri, " .
+                "source_uri, audio_position, position) " .
                 "VALUES (" . self::$testLangId . ", 'ReadControllerTestText', 'Test text.', " .
                 "'" . mysqli_real_escape_string(Globals::getDbConnection(), $annotatedText) . "', " .
                 "'http://audio.test/audio.mp3', 'http://source.test/article', 15, 50)"
@@ -93,7 +93,7 @@ class TextControllerReadTest extends TestCase
 
             // Create second test text (for navigation tests)
             Connection::query(
-                "INSERT INTO " . Globals::table('texts') . " (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+                "INSERT INTO " . Globals::table('texts') . " (language_id, title, text, annotated_text) " .
                 "VALUES (" . self::$testLangId . ", 'ReadControllerTestText2', 'Second test.', '')"
             );
             self::$testText2Id = (int)Connection::fetchValue(
@@ -120,7 +120,7 @@ class TextControllerReadTest extends TestCase
         );
         Connection::query(
             "DELETE FROM " . Globals::table('texts') .
-            " WHERE TxID IN (" . $textIds . ")"
+            " WHERE id IN (" . $textIds . ")"
         );
         Connection::query(
             "DELETE FROM " . Globals::table('languages') .
@@ -197,16 +197,16 @@ class TextControllerReadTest extends TestCase
         // Test getTextForReading
         $headerData = $service->getTextForReading(self::$testTextId);
         $this->assertIsArray($headerData);
-        $this->assertEquals('ReadControllerTestText', $headerData['TxTitle']);
-        $this->assertEquals(self::$testLangId, (int)$headerData['TxLgID']);
-        $this->assertEquals('http://audio.test/audio.mp3', $headerData['TxAudioURI']);
-        $this->assertEquals(15, (int)$headerData['TxAudioPosition']);
+        $this->assertEquals('ReadControllerTestText', $headerData['title']);
+        $this->assertEquals(self::$testLangId, (int)$headerData['language_id']);
+        $this->assertEquals('http://audio.test/audio.mp3', $headerData['audio_uri']);
+        $this->assertEquals(15, (int)$headerData['audio_position']);
 
         // Test getTextDataForContent
         $contentData = $service->getTextDataForContent(self::$testTextId);
         $this->assertIsArray($contentData);
-        $this->assertEquals(50, (int)$contentData['TxPosition']);
-        $this->assertStringContainsString('Test', $contentData['TxAnnotatedText']);
+        $this->assertEquals(50, (int)$contentData['position']);
+        $this->assertStringContainsString('Test', $contentData['annotated_text']);
 
         // Test getLanguageSettingsForReading
         $langSettings = $service->getLanguageSettingsForReading(self::$testLangId);
@@ -359,12 +359,12 @@ class TextControllerReadTest extends TestCase
         $headerData = $service->getTextForReading($textId);
         $this->assertNotNull($headerData);
 
-        $title = (string) $headerData['TxTitle'];
-        $langId = (int) $headerData['TxLgID'];
-        $media = isset($headerData['TxAudioURI']) ? trim((string) $headerData['TxAudioURI']) : '';
-        $audioPosition = (int) ($headerData['TxAudioPosition'] ?? 0);
-        $sourceUri = (string) ($headerData['TxSourceURI'] ?? '');
-        $text = (string) $headerData['TxText'];
+        $title = (string) $headerData['title'];
+        $langId = (int) $headerData['language_id'];
+        $media = isset($headerData['audio_uri']) ? trim((string) $headerData['audio_uri']) : '';
+        $audioPosition = (int) ($headerData['audio_position'] ?? 0);
+        $sourceUri = (string) ($headerData['source_uri'] ?? '');
+        $text = (string) $headerData['text'];
         $languageName = (string) $headerData['LgName'];
 
         $this->assertEquals('ReadControllerTestText', $title);
@@ -379,8 +379,8 @@ class TextControllerReadTest extends TestCase
         $textData = $service->getTextDataForContent($textId);
         $this->assertNotNull($textData);
 
-        $annotatedText = (string) ($textData['TxAnnotatedText'] ?? '');
-        $textPosition = (int) ($textData['TxPosition'] ?? 0);
+        $annotatedText = (string) ($textData['annotated_text'] ?? '');
+        $textPosition = (int) ($textData['position'] ?? 0);
 
         $this->assertStringContainsString('Test', $annotatedText);
         $this->assertEquals(50, $textPosition);
@@ -435,10 +435,10 @@ class TextControllerReadTest extends TestCase
         $headerData = $service->getTextForReading(self::$testText2Id);
 
         $this->assertIsArray($headerData);
-        $this->assertEquals('ReadControllerTestText2', $headerData['TxTitle']);
+        $this->assertEquals('ReadControllerTestText2', $headerData['title']);
         $this->assertTrue(
-            $headerData['TxAudioURI'] === null || $headerData['TxAudioURI'] === '',
-            'Text without audio should have empty or null TxAudioURI'
+            $headerData['audio_uri'] === null || $headerData['audio_uri'] === '',
+            'Text without audio should have empty or null audio_uri'
         );
     }
 
@@ -464,7 +464,7 @@ class TextControllerReadTest extends TestCase
 
         // Create text with RTL language
         Connection::query(
-            "INSERT INTO " . Globals::table('texts') . " (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO " . Globals::table('texts') . " (language_id, title, text, annotated_text) " .
             "VALUES (" . $rtlLangId . ", 'RTL Test', 'RTL content.', '')"
         );
         $rtlTextId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -476,7 +476,7 @@ class TextControllerReadTest extends TestCase
         $this->assertEquals(1, (int)$langSettings['LgRightToLeft']);
 
         // Cleanup
-        Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE TxID = " . $rtlTextId);
+        Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE id = " . $rtlTextId);
         Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . $rtlLangId);
     }
 

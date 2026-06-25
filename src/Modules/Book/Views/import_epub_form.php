@@ -163,12 +163,12 @@ sudo systemctl restart httpd  # or nginx</code></pre>
 
         <!-- Override Title (optional) -->
         <div class="field">
-            <label class="label" for="TxTitle"><?php echo __('book.title_override'); ?></label>
+            <label class="label" for="title"><?php echo __('book.title_override'); ?></label>
             <div class="control">
                 <input type="text"
                        class="input"
-                       name="TxTitle"
-                       id="TxTitle"
+                       name="title"
+                       id="title"
                        maxlength="200"
                        placeholder="<?php
                            echo htmlspecialchars(__('book.title_override_placeholder'), ENT_QUOTES);

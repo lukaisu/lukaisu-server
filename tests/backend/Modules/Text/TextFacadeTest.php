@@ -153,12 +153,12 @@ class TextFacadeTest extends TestCase
         $this->listTexts
             ->expects($this->once())
             ->method('getArchivedTextCount')
-            ->with(' AND TxLgID = 1', " AND TxTitle LIKE '%test%'", '')
+            ->with(' AND language_id = 1', " AND title LIKE '%test%'", '')
             ->willReturn(42);
 
         $result = $this->facade->getArchivedTextCount(
-            ' AND TxLgID = 1',
-            " AND TxTitle LIKE '%test%'",
+            ' AND language_id = 1',
+            " AND title LIKE '%test%'",
             ''
         );
 
@@ -168,8 +168,8 @@ class TextFacadeTest extends TestCase
     public function testGetArchivedTextsListDelegatesToListTexts(): void
     {
         $expected = [
-            ['TxID' => 1, 'TxTitle' => 'Test Text 1'],
-            ['TxID' => 2, 'TxTitle' => 'Test Text 2'],
+            ['id' => 1, 'title' => 'Test Text 1'],
+            ['id' => 2, 'title' => 'Test Text 2'],
         ];
 
         $this->listTexts
@@ -181,16 +181,16 @@ class TextFacadeTest extends TestCase
         $result = $this->facade->getArchivedTextsList('', '', '', 1, 1, 10);
 
         $this->assertCount(2, $result);
-        $this->assertEquals('Test Text 1', $result[0]['TxTitle']);
+        $this->assertEquals('Test Text 1', $result[0]['title']);
     }
 
     public function testGetArchivedTextByIdDelegatesToGetTextForEdit(): void
     {
         $expected = [
-            'TxID' => 5,
-            'TxTitle' => 'Archived Text',
-            'TxText' => 'Content',
-            'TxLgID' => 1,
+            'id' => 5,
+            'title' => 'Archived Text',
+            'text' => 'Content',
+            'language_id' => 1,
         ];
 
         $this->getTextForEdit
@@ -202,8 +202,8 @@ class TextFacadeTest extends TestCase
         $result = $this->facade->getArchivedTextById(5);
 
         $this->assertIsArray($result);
-        $this->assertEquals(5, $result['TxID']);
-        $this->assertEquals('Archived Text', $result['TxTitle']);
+        $this->assertEquals(5, $result['id']);
+        $this->assertEquals('Archived Text', $result['title']);
     }
 
     public function testGetArchivedTextByIdReturnsNullForNotFound(): void
@@ -303,7 +303,7 @@ class TextFacadeTest extends TestCase
 
     public function testBuildArchivedQueryWhereClauseDelegatesToFilterBuilder(): void
     {
-        $expected = ['clause' => " AND TxTitle LIKE '%test%'", 'params' => []];
+        $expected = ['clause' => " AND title LIKE '%test%'", 'params' => []];
 
         $this->buildTextFilters
             ->expects($this->once())
@@ -359,12 +359,12 @@ class TextFacadeTest extends TestCase
 
     public function testBuildTextQueryWhereClauseDelegatesToFilterBuilder(): void
     {
-        $expected = ['clause' => " AND TxTitle LIKE '%test%'", 'params' => []];
+        $expected = ['clause' => " AND title LIKE '%test%'", 'params' => []];
 
         $this->buildTextFilters
             ->expects($this->once())
             ->method('buildQueryWhereClause')
-            ->with('test', 'title', 'N', 'Tx')
+            ->with('test', 'title', 'N', 'texts.')
             ->willReturn($expected);
 
         $result = $this->facade->buildTextQueryWhereClause('test', 'title', 'N');
@@ -499,10 +499,10 @@ class TextFacadeTest extends TestCase
     public function testGetTextByIdDelegatesToGetTextForEdit(): void
     {
         $expected = [
-            'TxID' => 5,
-            'TxTitle' => 'Test Text',
-            'TxText' => 'Content',
-            'TxLgID' => 1,
+            'id' => 5,
+            'title' => 'Test Text',
+            'text' => 'Content',
+            'language_id' => 1,
         ];
 
         $this->getTextForEdit
@@ -514,7 +514,7 @@ class TextFacadeTest extends TestCase
         $result = $this->facade->getTextById(5);
 
         $this->assertIsArray($result);
-        $this->assertEquals(5, $result['TxID']);
+        $this->assertEquals(5, $result['id']);
     }
 
     public function testGetTextByIdReturnsNullForNotFound(): void
@@ -562,10 +562,10 @@ class TextFacadeTest extends TestCase
         $this->listTexts
             ->expects($this->once())
             ->method('getTextCount')
-            ->with(' AND TxLgID = 1', '', '')
+            ->with(' AND language_id = 1', '', '')
             ->willReturn(25);
 
-        $result = $this->facade->getTextCount(' AND TxLgID = 1', '', '');
+        $result = $this->facade->getTextCount(' AND language_id = 1', '', '');
 
         $this->assertEquals(25, $result);
     }
@@ -573,8 +573,8 @@ class TextFacadeTest extends TestCase
     public function testGetTextsListDelegatesToListTexts(): void
     {
         $expected = [
-            ['TxID' => 1, 'TxTitle' => 'Text 1'],
-            ['TxID' => 2, 'TxTitle' => 'Text 2'],
+            ['id' => 1, 'title' => 'Text 1'],
+            ['id' => 2, 'title' => 'Text 2'],
         ];
 
         $this->listTexts
@@ -782,8 +782,8 @@ class TextFacadeTest extends TestCase
     public function testGetTextForReadingDelegatesToGetTextForReading(): void
     {
         $expected = [
-            'TxID' => 5,
-            'TxTitle' => 'Reading Text',
+            'id' => 5,
+            'title' => 'Reading Text',
             'sentences' => []
         ];
 
@@ -796,7 +796,7 @@ class TextFacadeTest extends TestCase
         $result = $this->facade->getTextForReading(5);
 
         $this->assertIsArray($result);
-        $this->assertEquals(5, $result['TxID']);
+        $this->assertEquals(5, $result['id']);
     }
 
     public function testGetTextForReadingReturnsNullForNotFound(): void
@@ -919,9 +919,9 @@ class TextFacadeTest extends TestCase
     public function testGetTextForEditDelegatesToGetTextForEdit(): void
     {
         $expected = [
-            'TxID' => 5,
-            'TxTitle' => 'Edit Text',
-            'TxText' => 'Content'
+            'id' => 5,
+            'title' => 'Edit Text',
+            'text' => 'Content'
         ];
 
         $this->getTextForEdit
@@ -933,7 +933,7 @@ class TextFacadeTest extends TestCase
         $result = $this->facade->getTextForEdit(5);
 
         $this->assertIsArray($result);
-        $this->assertEquals(5, $result['TxID']);
+        $this->assertEquals(5, $result['id']);
     }
 
     public function testGetTextForEditReturnsNullForNotFound(): void

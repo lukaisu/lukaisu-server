@@ -253,7 +253,7 @@ class TextFacade
         string $queryMode,
         string $regexMode
     ): array {
-        return $this->buildTextFilters->buildQueryWhereClause($query, $queryMode, $regexMode, 'Tx');
+        return $this->buildTextFilters->buildQueryWhereClause($query, $queryMode, $regexMode, 'texts.');
     }
 
     /**
@@ -571,13 +571,13 @@ class TextFacade
         int $perPage = 20,
         int $sort = 1
     ): array {
-        $sorts = ['TxTitle', 'TxID DESC', 'TxID ASC'];
+        $sorts = ['texts.title', 'texts.id DESC', 'texts.id ASC'];
         $sortColumn = $sorts[max(0, min($sort - 1, count($sorts) - 1))];
         $offset = ($page - 1) * $perPage;
 
         $bindings1 = [$langId];
         $total = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS cnt FROM texts WHERE TxLgID = ?"
+            "SELECT COUNT(*) AS cnt FROM texts WHERE language_id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings1),
             $bindings1,
             'cnt'
@@ -587,22 +587,22 @@ class TextFacade
         // text_tags scope must live in the LEFT JOIN ON clause so untagged
         // texts survive the join; its binding is at the head of the list.
         $tagJoinBindings = [];
-        $tagJoinScope = UserScopedQuery::forTablePrepared('text_tags', $tagJoinBindings);
+        $tagJoinScope = UserScopedQuery::forTablePrepared('text_tags', $tagJoinBindings, 'text_tags');
 
         $bindings2 = array_merge($tagJoinBindings, [$langId]);
-        $textScope = UserScopedQuery::forTablePrepared('texts', $bindings2);
+        $textScope = UserScopedQuery::forTablePrepared('texts', $bindings2, 'texts');
         $bindings2[] = $offset;
         $bindings2[] = $perPage;
         $records = Connection::preparedFetchAll(
-            "SELECT TxID, TxTitle, TxAudioURI, TxSourceURI,
-            LENGTH(TxAnnotatedText) AS annotlen,
-            IFNULL(GROUP_CONCAT(DISTINCT text ORDER BY text SEPARATOR ','), '') AS taglist
+            "SELECT texts.id, texts.title, texts.audio_uri, texts.source_uri,
+            LENGTH(texts.annotated_text) AS annotlen,
+            IFNULL(GROUP_CONCAT(DISTINCT text_tags.text ORDER BY text_tags.text SEPARATOR ','), '') AS taglist
             FROM (
-                (texts LEFT JOIN text_tag_map ON TxID = text_id)
-                LEFT JOIN text_tags ON id = text_tag_id{$tagJoinScope}
+                (texts LEFT JOIN text_tag_map ON texts.id = text_tag_map.text_id)
+                LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id{$tagJoinScope}
             )
-            WHERE TxLgID = ?{$textScope}
-            GROUP BY TxID
+            WHERE texts.language_id = ?{$textScope}
+            GROUP BY texts.id
             ORDER BY {$sortColumn}
             LIMIT ?, ?",
             $bindings2
@@ -611,12 +611,12 @@ class TextFacade
         $texts = [];
         foreach ($records as $record) {
             $texts[] = [
-                'id' => (int) $record['TxID'],
-                'title' => (string) $record['TxTitle'],
-                'has_audio' => !empty($record['TxAudioURI']),
-                'source_uri' => (string) ($record['TxSourceURI'] ?? ''),
-                'has_source' => !empty($record['TxSourceURI'])
-                    && substr((string)($record['TxSourceURI'] ?? ''), 0, 1) !== '#',
+                'id' => (int) $record['id'],
+                'title' => (string) $record['title'],
+                'has_audio' => !empty($record['audio_uri']),
+                'source_uri' => (string) ($record['source_uri'] ?? ''),
+                'has_source' => !empty($record['source_uri'])
+                    && substr((string)($record['source_uri'] ?? ''), 0, 1) !== '#',
                 'annotated' => !empty($record['annotlen']),
                 'taglist' => (string) $record['taglist']
             ];
@@ -649,13 +649,13 @@ class TextFacade
         int $perPage,
         int $sort
     ): array {
-        $sorts = ['TxTitle', 'TxID DESC', 'TxID ASC'];
+        $sorts = ['texts.title', 'texts.id DESC', 'texts.id ASC'];
         $sortColumn = $sorts[max(0, min($sort - 1, count($sorts) - 1))];
         $offset = ($page - 1) * $perPage;
 
         $bindings1 = [$langId];
         $total = (int) Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS cnt FROM texts WHERE TxLgID = ? AND TxArchivedAt IS NOT NULL"
+            "SELECT COUNT(*) AS cnt FROM texts WHERE language_id = ? AND archived_at IS NOT NULL"
             . UserScopedQuery::forTablePrepared('texts', $bindings1),
             $bindings1,
             'cnt'
@@ -664,22 +664,22 @@ class TextFacade
 
         // See getTextsForLanguage for the binding-order rationale.
         $tagJoinBindings = [];
-        $tagJoinScope = UserScopedQuery::forTablePrepared('text_tags', $tagJoinBindings);
+        $tagJoinScope = UserScopedQuery::forTablePrepared('text_tags', $tagJoinBindings, 'text_tags');
 
         $bindings2 = array_merge($tagJoinBindings, [$langId]);
-        $textScope = UserScopedQuery::forTablePrepared('texts', $bindings2);
+        $textScope = UserScopedQuery::forTablePrepared('texts', $bindings2, 'texts');
         $bindings2[] = $offset;
         $bindings2[] = $perPage;
         $records = Connection::preparedFetchAll(
-            "SELECT TxID, TxTitle, TxAudioURI, TxSourceURI,
-            LENGTH(TxAnnotatedText) AS annotlen,
-            IFNULL(GROUP_CONCAT(DISTINCT text ORDER BY text SEPARATOR ','), '') AS taglist
+            "SELECT texts.id, texts.title, texts.audio_uri, texts.source_uri,
+            LENGTH(texts.annotated_text) AS annotlen,
+            IFNULL(GROUP_CONCAT(DISTINCT text_tags.text ORDER BY text_tags.text SEPARATOR ','), '') AS taglist
             FROM (
-                (texts LEFT JOIN text_tag_map ON TxID = text_id)
-                LEFT JOIN text_tags ON id = text_tag_id{$tagJoinScope}
+                (texts LEFT JOIN text_tag_map ON texts.id = text_tag_map.text_id)
+                LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id{$tagJoinScope}
             )
-            WHERE TxLgID = ? AND TxArchivedAt IS NOT NULL{$textScope}
-            GROUP BY TxID
+            WHERE texts.language_id = ? AND texts.archived_at IS NOT NULL{$textScope}
+            GROUP BY texts.id
             ORDER BY {$sortColumn}
             LIMIT ?, ?",
             $bindings2
@@ -688,11 +688,11 @@ class TextFacade
         $texts = [];
         foreach ($records as $record) {
             $texts[] = [
-                'id' => (int) $record['TxID'],
-                'title' => (string) $record['TxTitle'],
-                'has_audio' => !empty($record['TxAudioURI']),
-                'source_uri' => (string) ($record['TxSourceURI'] ?? ''),
-                'has_source' => !empty($record['TxSourceURI']),
+                'id' => (int) $record['id'],
+                'title' => (string) $record['title'],
+                'has_audio' => !empty($record['audio_uri']),
+                'source_uri' => (string) ($record['source_uri'] ?? ''),
+                'has_source' => !empty($record['source_uri']),
                 'annotated' => !empty($record['annotlen']),
                 'taglist' => (string) $record['taglist']
             ];
@@ -737,9 +737,9 @@ class TextFacade
     {
         $bindings = [$textId];
         return Connection::preparedFetchOne(
-            "SELECT TxLgID, TxTitle, TxAnnotatedText, TxPosition
+            "SELECT language_id, title, annotated_text, position
                 FROM texts
-                WHERE TxID = ?"
+                WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings
         );
@@ -824,7 +824,7 @@ class TextFacade
     ): array {
         $cleanText = str_replace("\xC2\xAD", "", $text);
 
-        // Validate TxAudioURI before persisting. On update, fetch the
+        // Validate audio_uri before persisting. On update, fetch the
         // prior value so the validator can grandfather unchanged URIs
         // (existing data from before per-user-subdir enforcement).
         $previousAudioUri = null;
@@ -832,10 +832,10 @@ class TextFacade
             $bindings0 = [$textId];
             /** @var string|null $previousAudioUri */
             $previousAudioUri = Connection::preparedFetchValue(
-                "SELECT TxAudioURI FROM texts WHERE TxID = ?"
+                "SELECT audio_uri FROM texts WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('texts', $bindings0),
                 $bindings0,
-                'TxAudioURI'
+                'audio_uri'
             );
         }
         $audioUri = AudioUriValidator::validate($audioUri, $previousAudioUri);
@@ -845,7 +845,7 @@ class TextFacade
             $bindings1 = [$lgId, $title, $cleanText, $audioValue, $sourceUri];
             $textId = (int) Connection::preparedInsert(
                 "INSERT INTO texts (
-                    TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI"
+                    language_id, title, text, annotated_text, audio_uri, source_uri"
                     . UserScopedQuery::insertColumn('texts')
                 . ") VALUES (?, ?, ?, '', ?, ?"
                     . UserScopedQuery::insertValuePrepared('texts', $bindings1)
@@ -856,8 +856,8 @@ class TextFacade
             $bindings1 = [$lgId, $title, $cleanText, $audioValue, $sourceUri, $textId];
             Connection::preparedExecute(
                 "UPDATE texts SET
-                    TxLgID = ?, TxTitle = ?, TxText = ?, TxAudioURI = ?, TxSourceURI = ?
-                 WHERE TxID = ?"
+                    language_id = ?, title = ?, text = ?, audio_uri = ?, source_uri = ?
+                 WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('texts', $bindings1),
                 $bindings1
             );
@@ -876,10 +876,10 @@ class TextFacade
         $bindings2 = [$textId];
         TextParsing::parseAndSave(
             (string)Connection::preparedFetchValue(
-                "SELECT TxText FROM texts WHERE TxID = ?"
+                "SELECT text FROM texts WHERE id = ?"
                 . UserScopedQuery::forTablePrepared('texts', $bindings2),
                 $bindings2,
-                'TxText'
+                'text'
             ),
             $lgId,
             $textId
@@ -954,14 +954,14 @@ class TextFacade
     public function getTermTranslations(string $termLc, int $textId): array
     {
         $record = QueryBuilder::table('texts')
-            ->select(['TxLgID', 'TxAnnotatedText'])
-            ->where('TxID', '=', $textId)
+            ->select(['language_id', 'annotated_text'])
+            ->where('id', '=', $textId)
             ->firstPrepared();
         if ($record === null) {
             return ['error' => 'Text not found'];
         }
-        $langid = (int) $record['TxLgID'];
-        $ann = (string) $record['TxAnnotatedText'];
+        $langid = (int) $record['language_id'];
+        $ann = (string) $record['annotated_text'];
         if (strlen($ann) > 0) {
             $annotationService = new Services\AnnotationService();
             $ann = $annotationService->recreateSaveAnnotation($textId, $ann);

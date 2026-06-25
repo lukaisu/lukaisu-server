@@ -47,8 +47,8 @@ class TextPositionApiHandler
     public function saveTextPosition(int $textid, int $position): void
     {
         QueryBuilder::table('texts')
-            ->where('TxID', '=', $textid)
-            ->updatePrepared(['TxPosition' => $position]);
+            ->where('id', '=', $textid)
+            ->updatePrepared(['position' => $position]);
     }
 
     /**
@@ -71,8 +71,8 @@ class TextPositionApiHandler
     public function saveAudioPosition(int $textid, float $audioposition): void
     {
         QueryBuilder::table('texts')
-            ->where('TxID', '=', $textid)
-            ->updatePrepared(['TxAudioPosition' => self::sanitizePosition($audioposition)]);
+            ->where('id', '=', $textid)
+            ->updatePrepared(['audio_position' => self::sanitizePosition($audioposition)]);
     }
 
     /**
@@ -135,7 +135,7 @@ class TextPositionApiHandler
     public function setDisplayMode(int $textId, ?int $annotations, ?bool $romanization, ?bool $translation): array
     {
         $exists = QueryBuilder::table('texts')
-            ->where('TxID', '=', $textId)
+            ->where('id', '=', $textId)
             ->existsPrepared();
 
         if (!$exists) {

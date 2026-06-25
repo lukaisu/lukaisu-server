@@ -359,8 +359,8 @@ describe('whisper_import.ts', () => {
           <option value="small">Small</option>
           <option value="medium">Medium</option>
         </select>
-        <input name="TxText" value="" />
-        <input name="TxTitle" value="" />
+        <input name="text" value="" />
+        <input name="title" value="" />
       `;
 
       global.fetch = vi.fn()
@@ -523,8 +523,8 @@ describe('whisper_import.ts', () => {
         <progress id="whisperProgressBar" value="0" max="100"></progress>
         <select id="whisperLanguage"></select>
         <select id="whisperModel"><option value="small">Small</option></select>
-        <input name="TxText" value="" />
-        <input name="TxTitle" value="" />
+        <input name="text" value="" />
+        <input name="title" value="" />
       `;
     });
 
@@ -637,9 +637,9 @@ describe('whisper_import.ts', () => {
         <progress id="whisperProgressBar" value="0" max="100"></progress>
         <select id="whisperLanguage"></select>
         <select id="whisperModel"><option value="small">Small</option></select>
-        <input name="TxText" value="" />
-        <input name="TxTitle" value="" />
-        <input name="TxAudioURI" value="" />
+        <input name="text" value="" />
+        <input name="title" value="" />
+        <input name="audio_uri" value="" />
       `;
     });
 
@@ -695,8 +695,8 @@ describe('whisper_import.ts', () => {
       // Advance past polling interval
       await vi.advanceTimersByTimeAsync(3000);
 
-      const textInput = document.querySelector<HTMLInputElement>('[name="TxText"]')!;
-      const titleInput = document.querySelector<HTMLInputElement>('[name="TxTitle"]')!;
+      const textInput = document.querySelector<HTMLInputElement>('[name="text"]')!;
+      const titleInput = document.querySelector<HTMLInputElement>('[name="title"]')!;
 
       expect(textInput.value).toBe('Hello world transcription');
       expect(titleInput.value).toBe('MyAudioFile');
@@ -809,9 +809,9 @@ describe('whisper_import.ts', () => {
         <progress id="whisperProgressBar" value="0" max="100"></progress>
         <select id="whisperLanguage"></select>
         <select id="whisperModel"><option value="small">Small</option></select>
-        <input name="TxText" value="" />
-        <input name="TxTitle" value="Existing Title" />
-        <input name="TxAudioURI" value="" />
+        <input name="text" value="" />
+        <input name="title" value="Existing Title" />
+        <input name="audio_uri" value="" />
       `;
 
       global.fetch = vi.fn()
@@ -859,7 +859,7 @@ describe('whisper_import.ts', () => {
       await vi.runAllTimersAsync();
       await vi.advanceTimersByTimeAsync(3000);
 
-      const titleInput = document.querySelector<HTMLInputElement>('[name="TxTitle"]')!;
+      const titleInput = document.querySelector<HTMLInputElement>('[name="title"]')!;
       expect(titleInput.value).toBe('Existing Title');
     });
   });

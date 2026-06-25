@@ -113,13 +113,13 @@ if (!$isNew) {
       x-data
       <?php endif; ?>>
     <?php echo \Lukaisu\Shared\UI\Helpers\FormHelper::csrfField(); ?>
-    <input type="hidden" name="TxID" value="<?php echo $textIdTyped; ?>" />
+    <input type="hidden" name="id" value="<?php echo $textIdTyped; ?>" />
 
     <?php if ($isNew) : ?>
     <!-- New Text Form -->
     <div class="container mb-5" style="max-width: 500px;">
         <!-- Language from navbar selection -->
-        <input type="hidden" name="TxLgID" id="TxLgID" value="<?php echo $textLgId; ?>" />
+        <input type="hidden" name="language_id" id="language_id" value="<?php echo $textLgId; ?>" />
 
         <!-- Where to find texts (step 1 only) -->
         <div x-show="step === 1" x-transition class="mb-5">
@@ -356,7 +356,7 @@ if (!$isNew) {
                             name="Dir"
                             class="input"
                             data-action="media-dir-select"
-                            data-target-field="TxAudioURI"></select>
+                            data-target-field="audio_uri"></select>
                         <span class="click" data-action="refresh-media-select">
                             <?php echo IconHelper::render(
                                 'refresh-cw',
@@ -908,13 +908,13 @@ if (!$isNew) {
 
             <!-- Title -->
             <div class="field">
-                <label class="label" for="TxTitle"><?= __e('text.new.review.title_input') ?></label>
+                <label class="label" for="title"><?= __e('text.new.review.title_input') ?></label>
                 <div class="control">
                     <input type="text"
                            class="input notempty checkoutsidebmp"
                            data_info="Title"
-                           name="TxTitle"
-                           id="TxTitle"
+                           name="title"
+                           id="title"
                            value="<?php echo \htmlspecialchars($textTitle, ENT_QUOTES, 'UTF-8'); ?>"
                            maxlength="200"
                            placeholder="<?= __e('text.new.review.title_placeholder') ?>" />
@@ -923,11 +923,11 @@ if (!$isNew) {
 
             <!-- Text Content (hidden for file import) -->
             <div x-show="showTextArea()" class="field">
-                <label class="label" for="TxText"><?= __e('text.common.text') ?></label>
+                <label class="label" for="text"><?= __e('text.common.text') ?></label>
                 <div class="control">
                     <textarea <?php echo $scrdirTyped; ?>
-                              name="TxText"
-                              id="TxText"
+                              name="text"
+                              id="text"
                               class="textarea notempty checkoutsidebmp"
                               data_info="Text"
                               rows="10"
@@ -1016,13 +1016,13 @@ if (!$isNew) {
             <div x-show="open" x-transition x-cloak class="mt-4">
                 <!-- Source URI -->
                 <div class="field">
-                    <label class="label" for="TxSourceURI"><?= __e('text.common.source_uri') ?></label>
+                    <label class="label" for="source_uri"><?= __e('text.common.source_uri') ?></label>
                     <div class="control">
                         <input type="url"
                                class="input checkurl checkoutsidebmp"
                                data_info="Source URI"
-                               name="TxSourceURI"
-                               id="TxSourceURI"
+                               name="source_uri"
+                               id="source_uri"
                                value="<?php echo \htmlspecialchars($textSource, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="1000"
                                placeholder="https://example.com/article" />
@@ -1047,7 +1047,7 @@ if (!$isNew) {
     <div class="box">
         <!-- Language -->
         <div class="field">
-            <label class="label" for="TxLgID">
+            <label class="label" for="language_id">
                 <?= __e('text.common.language') ?>
                 <span class="icon has-text-danger is-small" title="<?= __e('text.common.field_required') ?>">
                     <?php echo IconHelper::render('asterisk', ['alt' => __('text.common.required')]); ?>
@@ -1058,8 +1058,8 @@ if (!$isNew) {
                     $languagesTyped,
                     $textLgId,
                     [
-                        'name' => 'TxLgID',
-                        'id' => 'TxLgID',
+                        'name' => 'language_id',
+                        'id' => 'language_id',
                         'placeholder' => __('text.common.choose'),
                         'required' => true,
                         'dataAction' => 'change-language'
@@ -1070,7 +1070,7 @@ if (!$isNew) {
 
         <!-- Title -->
         <div class="field">
-            <label class="label" for="TxTitle">
+            <label class="label" for="title">
                 <?= __e('text.common.title') ?>
                 <span class="icon has-text-danger is-small" title="<?= __e('text.common.field_required') ?>">
                     <?php echo IconHelper::render('asterisk', ['alt' => __('text.common.required')]); ?>
@@ -1080,8 +1080,8 @@ if (!$isNew) {
                 <input type="text"
                        class="input notempty checkoutsidebmp"
                        data_info="Title"
-                       name="TxTitle"
-                       id="TxTitle"
+                       name="title"
+                       id="title"
                        value="<?php echo \htmlspecialchars($textTitle, ENT_QUOTES, 'UTF-8'); ?>"
                        maxlength="200"
                        required />
@@ -1090,7 +1090,7 @@ if (!$isNew) {
 
         <!-- Text Content -->
         <div class="field">
-            <label class="label" for="TxText">
+            <label class="label" for="text">
                 <?= __e('text.common.text') ?>
                 <span class="icon has-text-danger is-small" title="<?= __e('text.common.field_required') ?>">
                     <?php echo IconHelper::render('asterisk', ['alt' => __('text.common.required')]); ?>
@@ -1098,8 +1098,8 @@ if (!$isNew) {
             </label>
             <div class="control">
                 <textarea <?php echo $scrdirTyped; ?>
-                          name="TxText"
-                          id="TxText"
+                          name="text"
+                          id="text"
                           class="textarea notempty checkoutsidebmp"
                           data_info="Text"
                           rows="15"
@@ -1146,13 +1146,13 @@ if (!$isNew) {
 
         <!-- Source URI -->
         <div class="field">
-            <label class="label" for="TxSourceURI"><?= __e('text.common.source_uri') ?></label>
+            <label class="label" for="source_uri"><?= __e('text.common.source_uri') ?></label>
             <div class="control">
                 <input type="url"
                        class="input checkurl checkoutsidebmp"
                        data_info="Source URI"
-                       name="TxSourceURI"
-                       id="TxSourceURI"
+                       name="source_uri"
+                       id="source_uri"
                        value="<?php echo \htmlspecialchars($textSource, ENT_QUOTES, 'UTF-8'); ?>"
                        maxlength="1000"
                        placeholder="https://example.com/article" />
@@ -1169,13 +1169,13 @@ if (!$isNew) {
 
         <!-- Media URI -->
         <div class="field">
-            <label class="label" for="TxAudioURI"><?= __e('text.common.media_uri') ?></label>
+            <label class="label" for="audio_uri"><?= __e('text.common.media_uri') ?></label>
             <div class="control">
                 <input type="text"
                        class="input checkoutsidebmp"
                        data_info="Audio-URI"
-                       name="TxAudioURI"
-                       id="TxAudioURI"
+                       name="audio_uri"
+                       id="audio_uri"
                        maxlength="2048"
                        value="<?php echo \htmlspecialchars($textMediaUri, ENT_QUOTES, 'UTF-8'); ?>"
                        placeholder="media/audio.mp3" />

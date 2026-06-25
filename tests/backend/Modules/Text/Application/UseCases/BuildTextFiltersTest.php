@@ -45,14 +45,14 @@ class BuildTextFiltersTest extends TestCase
     public function testBuildLangWhereClauseWithValidId(): void
     {
         $result = $this->filters->buildLangWhereClause(5);
-        $this->assertSame(' AND TxLgID = ?', $result['clause']);
+        $this->assertSame(' AND texts.language_id = ?', $result['clause']);
         $this->assertSame([5], $result['params']);
     }
 
     public function testBuildLangWhereClauseWithStringId(): void
     {
         $result = $this->filters->buildLangWhereClause('3');
-        $this->assertSame(' AND TxLgID = ?', $result['clause']);
+        $this->assertSame(' AND texts.language_id = ?', $result['clause']);
         $this->assertSame([3], $result['params']);
     }
 
@@ -76,8 +76,8 @@ class BuildTextFiltersTest extends TestCase
     public function testBuildQueryWhereClauseTitleAndText(): void
     {
         $result = $this->filters->buildQueryWhereClause('hello', 'title,text', '');
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertStringContainsString('LIKE', $result['clause']);
         $this->assertCount(2, $result['params']);
         $this->assertSame('hello', $result['params'][0]);
@@ -86,16 +86,16 @@ class BuildTextFiltersTest extends TestCase
     public function testBuildQueryWhereClauseTitleOnly(): void
     {
         $result = $this->filters->buildQueryWhereClause('test', 'title', '');
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringNotContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('texts.title', $result['clause']);
+        $this->assertStringNotContainsString('texts.text', $result['clause']);
         $this->assertCount(1, $result['params']);
     }
 
     public function testBuildQueryWhereClauseTextOnly(): void
     {
         $result = $this->filters->buildQueryWhereClause('test', 'text', '');
-        $this->assertStringContainsString('TxText', $result['clause']);
-        $this->assertStringNotContainsString('TxTitle', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
+        $this->assertStringNotContainsString('title', $result['clause']);
         $this->assertCount(1, $result['params']);
     }
 
@@ -121,8 +121,8 @@ class BuildTextFiltersTest extends TestCase
     public function testBuildQueryWhereClauseDefaultMode(): void
     {
         $result = $this->filters->buildQueryWhereClause('test', 'unknown_mode', '');
-        $this->assertStringContainsString('TxTitle', $result['clause']);
-        $this->assertStringContainsString('TxText', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
+        $this->assertStringContainsString('text', $result['clause']);
         $this->assertCount(2, $result['params']);
     }
 
@@ -145,7 +145,7 @@ class BuildTextFiltersTest extends TestCase
     public function testBuildArchivedQueryWhereClauseDelegatesToBuildQueryWhereClause(): void
     {
         $result = $this->filters->buildArchivedQueryWhereClause('test', 'title', '');
-        $this->assertStringContainsString('TxTitle', $result['clause']);
+        $this->assertStringContainsString('title', $result['clause']);
         $this->assertCount(1, $result['params']);
     }
 

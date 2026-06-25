@@ -578,7 +578,7 @@ class FeedFacadeTest extends TestCase
             ['title' => 'Test', 'link' => 'https://example.com/test'],
         ];
         $expected = [
-            0 => ['TxTitle' => 'Test', 'TxText' => 'Content'],
+            0 => ['title' => 'Test', 'text' => 'Content'],
         ];
 
         $this->articleExtractor
@@ -673,11 +673,11 @@ class FeedFacadeTest extends TestCase
             ->willReturn(123);
 
         $result = $this->facade->createTextFromFeed([
-            'TxLgID' => 1,
-            'TxTitle' => 'Test Title',
-            'TxText' => 'Test content',
-            'TxAudioURI' => 'audio.mp3',
-            'TxSourceURI' => 'https://source.com',
+            'language_id' => 1,
+            'title' => 'Test Title',
+            'text' => 'Test content',
+            'audio_uri' => 'audio.mp3',
+            'source_uri' => 'https://source.com',
         ], 'news');
 
         $this->assertEquals(123, $result);
@@ -739,10 +739,10 @@ class FeedFacadeTest extends TestCase
             ->method('extract')
             ->willReturn([
                 0 => [
-                    'TxTitle' => 'Import Me',
-                    'TxText' => 'Extracted text content',
-                    'TxAudioURI' => '',
-                    'TxSourceURI' => 'https://example.com/article',
+                    'title' => 'Import Me',
+                    'text' => 'Extracted text content',
+                    'audio_uri' => '',
+                    'source_uri' => 'https://example.com/article',
                 ],
             ]);
 

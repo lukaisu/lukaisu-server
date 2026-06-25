@@ -54,8 +54,8 @@ class FeedArticleApiHandlerTest extends TestCase
             'published_at' => '2026-01-15',
             'audio' => '',
             'text' => '',
-            'TxID' => null,
-            'TxArchivedAt' => null,
+            'text_id' => null,
+            'archived_at' => null,
         ];
 
         $result = $this->handler->formatArticleRecord($row);
@@ -75,8 +75,8 @@ class FeedArticleApiHandlerTest extends TestCase
             'published_at' => '2026-01-15',
             'audio' => '',
             'text' => 'Some text',
-            'TxID' => '10',
-            'TxArchivedAt' => null,
+            'text_id' => '10',
+            'archived_at' => null,
         ];
 
         $result = $this->handler->formatArticleRecord($row);
@@ -96,8 +96,8 @@ class FeedArticleApiHandlerTest extends TestCase
             'published_at' => '2026-01-15',
             'audio' => '',
             'text' => 'Text content',
-            'TxID' => '10',
-            'TxArchivedAt' => '2026-01-20 10:00:00',
+            'text_id' => '10',
+            'archived_at' => '2026-01-20 10:00:00',
         ];
 
         $result = $this->handler->formatArticleRecord($row);
@@ -117,8 +117,8 @@ class FeedArticleApiHandlerTest extends TestCase
             'published_at' => '2026-01-15',
             'audio' => '',
             'text' => '',
-            'TxID' => null,
-            'TxArchivedAt' => null,
+            'text_id' => null,
+            'archived_at' => null,
         ];
 
         $result = $this->handler->formatArticleRecord($row);
@@ -216,7 +216,7 @@ class FeedArticleApiHandlerTest extends TestCase
 
     public function testFormatArticleRecordTxIdEmptyStringTreatedAsNew(): void
     {
-        $row = $this->makeArticleRow(['TxID' => '', 'TxArchivedAt' => null]);
+        $row = $this->makeArticleRow(['text_id' => '', 'archived_at' => null]);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('new', $result['status']);
         $this->assertNull($result['textId']);
@@ -224,21 +224,21 @@ class FeedArticleApiHandlerTest extends TestCase
 
     public function testFormatArticleRecordTxIdZeroTreatedAsNew(): void
     {
-        // TxID of '0' casts to int 0 which is falsy but not null
+        // id of '0' casts to int 0 which is falsy but not null
         // The code checks !== null && !== '' so '0' -> (int)0 which is not null
-        $row = $this->makeArticleRow(['TxID' => '0', 'TxArchivedAt' => null]);
+        $row = $this->makeArticleRow(['text_id' => '0', 'archived_at' => null]);
         $result = $this->handler->formatArticleRecord($row);
-        // TxID '0' passes the check, becomes textId=0, status='imported'
+        // id '0' passes the check, becomes textId=0, status='imported'
         $this->assertSame('imported', $result['status']);
     }
 
     public function testFormatArticleRecordImportedTakesPriorityOverErrorLink(): void
     {
-        // When TxID is set, imported status takes priority even if link starts with space
+        // When id is set, imported status takes priority even if link starts with space
         $row = $this->makeArticleRow([
             'link' => ' https://example.com/broken',
-            'TxID' => '5',
-            'TxArchivedAt' => null,
+            'text_id' => '5',
+            'archived_at' => null,
         ]);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('imported', $result['status']);
@@ -248,8 +248,8 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $row = $this->makeArticleRow([
             'link' => ' https://example.com/broken',
-            'TxID' => '5',
-            'TxArchivedAt' => '2026-01-20',
+            'text_id' => '5',
+            'archived_at' => '2026-01-20',
         ]);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('archived', $result['status']);
@@ -259,7 +259,7 @@ class FeedArticleApiHandlerTest extends TestCase
     {
         $row = $this->makeArticleRow([
             'link' => 'https://example.com/ok',
-            'TxID' => null,
+            'text_id' => null,
         ]);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('new', $result['status']);
@@ -267,10 +267,10 @@ class FeedArticleApiHandlerTest extends TestCase
 
     public function testFormatArticleRecordArchivedWithEmptyTxArchivedAt(): void
     {
-        // TxArchivedAt is empty string -> not archived -> imported
+        // archived_at is empty string -> not archived -> imported
         $row = $this->makeArticleRow([
-            'TxID' => '7',
-            'TxArchivedAt' => '',
+            'text_id' => '7',
+            'archived_at' => '',
         ]);
         $result = $this->handler->formatArticleRecord($row);
         $this->assertSame('imported', $result['status']);
@@ -573,10 +573,10 @@ class FeedArticleApiHandlerTest extends TestCase
         $this->feedFacade->method('extractTextFromArticle')
             ->willReturn([
                 [
-                    'TxTitle' => 'Article 1',
-                    'TxText' => 'Article text content',
-                    'TxAudioURI' => '',
-                    'TxSourceURI' => 'https://example.com/article1',
+                    'title' => 'Article 1',
+                    'text' => 'Article text content',
+                    'audio_uri' => '',
+                    'source_uri' => 'https://example.com/article1',
                 ]
             ]);
 
@@ -603,7 +603,7 @@ class FeedArticleApiHandlerTest extends TestCase
 
         $this->feedFacade->method('extractTextFromArticle')
             ->willReturn([
-                ['TxTitle' => 'T', 'TxText' => 'X', 'TxAudioURI' => '', 'TxSourceURI' => '']
+                ['title' => 'T', 'text' => 'X', 'audio_uri' => '', 'source_uri' => '']
             ]);
 
         $this->feedFacade->method('createTextFromFeed')->willReturn(1);
@@ -654,7 +654,7 @@ class FeedArticleApiHandlerTest extends TestCase
 
         $this->feedFacade->method('extractTextFromArticle')
             ->willReturn([
-                ['TxTitle' => 'T', 'TxText' => 'X', 'TxAudioURI' => '', 'TxSourceURI' => '']
+                ['title' => 'T', 'text' => 'X', 'audio_uri' => '', 'source_uri' => '']
             ]);
 
         $this->feedFacade->expects($this->once())
@@ -681,7 +681,7 @@ class FeedArticleApiHandlerTest extends TestCase
 
         $this->feedFacade->method('extractTextFromArticle')
             ->willReturn([
-                ['TxTitle' => 'T', 'TxText' => 'X', 'TxAudioURI' => '', 'TxSourceURI' => '']
+                ['title' => 'T', 'text' => 'X', 'audio_uri' => '', 'source_uri' => '']
             ]);
 
         $this->feedFacade->expects($this->once())
@@ -703,7 +703,7 @@ class FeedArticleApiHandlerTest extends TestCase
 
         $this->feedFacade->method('extractTextFromArticle')
             ->willReturn([
-                ['TxTitle' => 'T', 'TxText' => 'X', 'TxAudioURI' => '', 'TxSourceURI' => '']
+                ['title' => 'T', 'text' => 'X', 'audio_uri' => '', 'source_uri' => '']
             ]);
 
         $this->feedFacade->method('createTextFromFeed')->willReturn(1);
@@ -729,7 +729,7 @@ class FeedArticleApiHandlerTest extends TestCase
                 // Verify that the doc link is '#10' when link is empty
                 $this->assertSame('#10', $doc[0]['link']);
                 return [
-                    ['TxTitle' => 'T', 'TxText' => 'X', 'TxAudioURI' => '', 'TxSourceURI' => '']
+                    ['title' => 'T', 'text' => 'X', 'audio_uri' => '', 'source_uri' => '']
                 ];
             });
 
@@ -965,7 +965,7 @@ class FeedArticleApiHandlerTest extends TestCase
                 'windows-1252'
             )
             ->willReturn([
-                ['TxTitle' => 'T', 'TxText' => 'X', 'TxAudioURI' => '', 'TxSourceURI' => '']
+                ['title' => 'T', 'text' => 'X', 'audio_uri' => '', 'source_uri' => '']
             ]);
 
         $this->feedFacade->method('createTextFromFeed')->willReturn(1);
@@ -985,9 +985,9 @@ class FeedArticleApiHandlerTest extends TestCase
         // Extraction returns multiple texts from one article
         $this->feedFacade->method('extractTextFromArticle')
             ->willReturn([
-                ['TxTitle' => 'Part 1', 'TxText' => 'Text 1', 'TxAudioURI' => '', 'TxSourceURI' => ''],
-                ['TxTitle' => 'Part 2', 'TxText' => 'Text 2', 'TxAudioURI' => '', 'TxSourceURI' => ''],
-                ['TxTitle' => 'Part 3', 'TxText' => 'Text 3', 'TxAudioURI' => '', 'TxSourceURI' => ''],
+                ['title' => 'Part 1', 'text' => 'Text 1', 'audio_uri' => '', 'source_uri' => ''],
+                ['title' => 'Part 2', 'text' => 'Text 2', 'audio_uri' => '', 'source_uri' => ''],
+                ['title' => 'Part 3', 'text' => 'Text 3', 'audio_uri' => '', 'source_uri' => ''],
             ]);
 
         $this->feedFacade->expects($this->exactly(3))
@@ -1031,8 +1031,8 @@ class FeedArticleApiHandlerTest extends TestCase
             'published_at' => '2026-01-01',
             'audio' => '',
             'text' => '',
-            'TxID' => null,
-            'TxArchivedAt' => null,
+            'text_id' => null,
+            'archived_at' => null,
         ], $overrides);
     }
 

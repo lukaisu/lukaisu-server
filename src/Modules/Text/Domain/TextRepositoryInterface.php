@@ -86,7 +86,7 @@ interface TextRepositoryInterface
      */
     public function findByLanguage(
         int $languageId,
-        ?string $orderBy = 'TxTitle',
+        ?string $orderBy = 'title',
         string $direction = 'ASC'
     ): array;
 
@@ -194,7 +194,7 @@ interface TextRepositoryInterface
         int $languageId = 0,
         int $page = 1,
         int $perPage = 20,
-        string $orderBy = 'TxTitle',
+        string $orderBy = 'title',
         string $direction = 'ASC'
     ): array;
 }

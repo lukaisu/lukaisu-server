@@ -696,8 +696,8 @@ class FeedApiHandlerTest extends TestCase
             });
         $this->feedFacade->method('extractTextFromArticle')
             ->willReturn([
-                ['TxTitle' => 'Art1', 'TxText' => 'Body1', 'TxAudioURI' => '', 'TxSourceURI' => 'http://example.com/1'],
-                ['TxTitle' => 'Art2', 'TxText' => 'Body2', 'TxAudioURI' => '', 'TxSourceURI' => 'http://example.com/2'],
+                ['title' => 'Art1', 'text' => 'Body1', 'audio_uri' => '', 'source_uri' => 'http://example.com/1'],
+                ['title' => 'Art2', 'text' => 'Body2', 'audio_uri' => '', 'source_uri' => 'http://example.com/2'],
             ]);
 
         $this->feedFacade->expects($this->exactly(2))
@@ -1000,8 +1000,8 @@ class FeedApiHandlerTest extends TestCase
             'published_at' => '2025-01-01',
             'audio' => '',
             'text' => '',
-            'TxID' => null,
-            'TxArchivedAt' => null,
+            'text_id' => null,
+            'archived_at' => null,
         ];
 
         $method = new \ReflectionMethod(FeedApiHandler::class, 'formatArticleRecord');
@@ -1026,8 +1026,8 @@ class FeedApiHandlerTest extends TestCase
             'published_at' => '2025-01-01',
             'audio' => '',
             'text' => 'some text',
-            'TxID' => 42,
-            'TxArchivedAt' => null,
+            'text_id' => 42,
+            'archived_at' => null,
         ];
 
         $method = new \ReflectionMethod(FeedApiHandler::class, 'formatArticleRecord');
@@ -1051,8 +1051,8 @@ class FeedApiHandlerTest extends TestCase
             'published_at' => '2025-01-01',
             'audio' => '',
             'text' => '',
-            'TxID' => 50,
-            'TxArchivedAt' => '2025-02-01',
+            'text_id' => 50,
+            'archived_at' => '2025-02-01',
         ];
 
         $method = new \ReflectionMethod(FeedApiHandler::class, 'formatArticleRecord');
@@ -1075,8 +1075,8 @@ class FeedApiHandlerTest extends TestCase
             'published_at' => '2025-01-01',
             'audio' => '',
             'text' => '',
-            'TxID' => null,
-            'TxArchivedAt' => null,
+            'text_id' => null,
+            'archived_at' => null,
         ];
 
         $method = new \ReflectionMethod(FeedApiHandler::class, 'formatArticleRecord');
@@ -1098,8 +1098,8 @@ class FeedApiHandlerTest extends TestCase
             'published_at' => '',
             'audio' => 'audio.mp3',
             'text' => '',
-            'TxID' => '',
-            'TxArchivedAt' => null,
+            'text_id' => '',
+            'archived_at' => null,
         ];
 
         $method = new \ReflectionMethod(FeedApiHandler::class, 'formatArticleRecord');
@@ -1121,8 +1121,8 @@ class FeedApiHandlerTest extends TestCase
             'published_at' => '2025-01-15',
             'audio' => '',
             'text' => 'Full article text here',
-            'TxID' => null,
-            'TxArchivedAt' => null,
+            'text_id' => null,
+            'archived_at' => null,
         ];
 
         $method = new \ReflectionMethod(FeedApiHandler::class, 'formatArticleRecord');
@@ -1143,8 +1143,8 @@ class FeedApiHandlerTest extends TestCase
             'published_at' => '2025-01-15',
             'audio' => '',
             'text' => '',
-            'TxID' => null,
-            'TxArchivedAt' => null,
+            'text_id' => null,
+            'archived_at' => null,
         ];
 
         $method = new \ReflectionMethod(FeedApiHandler::class, 'formatArticleRecord');

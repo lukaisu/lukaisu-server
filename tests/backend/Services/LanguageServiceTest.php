@@ -484,7 +484,7 @@ class LanguageServiceTest extends TestCase
 
         // Add a related text
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAudioURI)
+            "INSERT INTO texts (language_id, title, text, audio_uri)
              VALUES ($id, 'Test Text', 'Test content', '')"
         );
 
@@ -496,7 +496,7 @@ class LanguageServiceTest extends TestCase
         $this->assertTrue($this->service->exists($id));
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxLgID = $id");
+        Connection::query("DELETE FROM texts WHERE language_id = $id");
     }
 
     public function testDeleteFailsWithRelatedWords(): void
@@ -552,7 +552,7 @@ class LanguageServiceTest extends TestCase
 
         // Add texts
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAudioURI)
+            "INSERT INTO texts (language_id, title, text, audio_uri)
              VALUES ($id, 'Text 1', 'Content 1', ''), ($id, 'Text 2', 'Content 2', '')"
         );
 
@@ -570,7 +570,7 @@ class LanguageServiceTest extends TestCase
         $this->assertEquals(0, $result['feeds']);
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxLgID = $id");
+        Connection::query("DELETE FROM texts WHERE language_id = $id");
         Connection::query("DELETE FROM words WHERE language_id = $id");
     }
 
@@ -599,7 +599,7 @@ class LanguageServiceTest extends TestCase
 
         // Add a related text
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAudioURI)
+            "INSERT INTO texts (language_id, title, text, audio_uri)
              VALUES ($id, 'Test', 'Content', '')"
         );
 
@@ -608,7 +608,7 @@ class LanguageServiceTest extends TestCase
         $this->assertFalse($result);
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxLgID = $id");
+        Connection::query("DELETE FROM texts WHERE language_id = $id");
     }
 
     // ===== isDuplicateName() tests =====

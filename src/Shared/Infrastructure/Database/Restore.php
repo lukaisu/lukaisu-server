@@ -371,7 +371,7 @@ class Restore
     {
         // Level 1: Link/map and derived tables, scoped via parent ownership.
         Connection::preparedExecute(
-            'DELETE FROM text_tag_map WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
+            'DELETE FROM text_tag_map WHERE text_id IN (SELECT id FROM texts WHERE user_id = ?)',
             [$userId]
         );
         Connection::preparedExecute(
@@ -379,7 +379,7 @@ class Restore
             [$userId]
         );
         Connection::preparedExecute(
-            'DELETE FROM word_occurrences WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
+            'DELETE FROM word_occurrences WHERE text_id IN (SELECT id FROM texts WHERE user_id = ?)',
             [$userId]
         );
         Connection::preparedExecute(
@@ -387,13 +387,13 @@ class Restore
             [$userId]
         );
         Connection::preparedExecute(
-            'DELETE FROM sentences WHERE text_id IN (SELECT TxID FROM texts WHERE TxUsID = ?)',
+            'DELETE FROM sentences WHERE text_id IN (SELECT id FROM texts WHERE user_id = ?)',
             [$userId]
         );
 
         // Level 2: Direct user-scoped tables.
         Connection::preparedExecute('DELETE FROM news_feeds WHERE user_id = ?', [$userId]);
-        Connection::preparedExecute('DELETE FROM texts WHERE TxUsID = ?', [$userId]);
+        Connection::preparedExecute('DELETE FROM texts WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM words WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM tags WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM text_tags WHERE user_id = ?', [$userId]);
@@ -495,7 +495,7 @@ class Restore
         foreach (
             [
                 'languages'          => 'LgUsID',
-                'texts'              => 'TxUsID',
+                'texts'              => 'user_id',
                 'words'              => 'user_id',
                 'tags'                => 'user_id',
                 'text_tags'          => 'user_id',

@@ -184,7 +184,7 @@ export function feedTextEditData(config: FeedTextEditConfig = {}): FeedTextEditD
         feedFields.forEach(el => {
           el.disabled = false;
           // Add notempty class to title and text fields
-          if (el.name.includes('[TxTitle]') || el.name.includes('[TxText]')) {
+          if (el.name.includes('[title]') || el.name.includes('[text]')) {
             el.classList.add('notempty');
           }
         });

@@ -350,12 +350,12 @@ class LemmaBatchService
     private function fetchUnmatchedTextItems(int $languageId, ?int $textId = null): array
     {
         // word_occurrences is not auto-scoped — inherit user scope through
-        // texts.TxUsID (joined via text_id) so cross-user rows never sneak
+        // texts.user_id (joined via text_id) so cross-user rows never sneak
         // into the batch.
         $bindings = [$languageId];
         $sql = "SELECT ti.Ti2ID, ti.text, LOWER(ti.text) as Ti2TextLC, ti.text_id
                 FROM word_occurrences ti
-                JOIN texts ON ti.text_id = TxID
+                JOIN texts ON ti.text_id = id
                 WHERE ti.language_id = ?
                   AND ti.word_id IS NULL
                   AND ti.word_count = 1"
@@ -450,7 +450,7 @@ class LemmaBatchService
     public function linkTextItemsByLemmaSql(int $languageId, ?int $textId = null): int
     {
         // Scope both the words subquery (by user_id) and the unmatched text
-        // items pool (by TxUsID, joined via text_id → texts) so this never
+        // items pool (by user_id, joined via text_id → texts) so this never
         // links one user's rows to another user's vocabulary.
         $bindings = [$languageId];
         $wordsScope = UserScopedQuery::forTablePrepared('words', $bindings, 'w');
@@ -473,7 +473,7 @@ class LemmaBatchService
                             LIMIT 1
                            ) as MatchedWoID
                     FROM word_occurrences ti2
-                    JOIN texts ON ti2.text_id = TxID
+                    JOIN texts ON ti2.text_id = id
                     WHERE ti2.language_id = ?
                       AND ti2.word_id IS NULL
                       AND ti2.word_count = 1"

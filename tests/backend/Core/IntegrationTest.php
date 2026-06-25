@@ -388,9 +388,9 @@ class IntegrationTest extends TestCase
     public function testReturnTextWordCount()
     {
         // Get first text from demo DB
-        $text_res = Connection::query("SELECT TxID FROM texts LIMIT 1");
+        $text_res = Connection::query("SELECT id FROM texts LIMIT 1");
         if ($text_row = \mysqli_fetch_assoc($text_res)) {
-            $text_id = (int)$text_row['TxID'];
+            $text_id = (int)$text_row['id'];
             $statsService = new TextStatisticsService();
             $counts = $statsService->getTextWordCount([$text_id]);
 
@@ -410,9 +410,9 @@ class IntegrationTest extends TestCase
      */
     public function testTodoWordsCount()
     {
-        $text_res = Connection::query("SELECT TxID FROM texts LIMIT 1");
+        $text_res = Connection::query("SELECT id FROM texts LIMIT 1");
         if ($text_row = \mysqli_fetch_assoc($text_res)) {
-            $text_id = (int)$text_row['TxID'];
+            $text_id = (int)$text_row['id'];
             $statsService = new TextStatisticsService();
             $count = $statsService->getTodoWordsCount($text_id);
 
@@ -671,19 +671,19 @@ class IntegrationTest extends TestCase
         $lang_id = (int)Connection::lastInsertId();
 
         Connection::query(
-            "INSERT INTO texts (TxTitle, TxText, TxLgID)
+            "INSERT INTO texts (title, text, language_id)
              VALUES ('Text 1', 'Content 1', $lang_id)"
         );
         $text1_id = (int)Connection::lastInsertId();
 
         Connection::query(
-            "INSERT INTO texts (TxTitle, TxText, TxLgID)
+            "INSERT INTO texts (title, text, language_id)
              VALUES ('Text 2', 'Content 2', $lang_id)"
         );
         $text2_id = (int)Connection::lastInsertId();
 
         Connection::query(
-            "INSERT INTO texts (TxTitle, TxText, TxLgID)
+            "INSERT INTO texts (title, text, language_id)
              VALUES ('Text 3', 'Content 3', $lang_id)"
         );
         $text3_id = (int)Connection::lastInsertId();
@@ -704,7 +704,7 @@ class IntegrationTest extends TestCase
         $this->assertIsString($result);
 
         // Clean up
-        Connection::query("DELETE FROM texts WHERE TxLgID = $lang_id");
+        Connection::query("DELETE FROM texts WHERE language_id = $lang_id");
         Connection::query("DELETE FROM languages WHERE LgID = $lang_id");
     }
 

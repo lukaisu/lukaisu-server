@@ -80,8 +80,8 @@ class TextPrintControllerTest extends TestCase
             // Create a test text
             $textTable = Globals::table('texts');
             $existingText = Connection::fetchValue(
-                "SELECT TxID AS value FROM " . $textTable .
-                " WHERE TxTitle = 'PrintControllerTestText' LIMIT 1"
+                "SELECT id AS value FROM " . $textTable .
+                " WHERE title = 'PrintControllerTestText' LIMIT 1"
             );
 
             if ($existingText) {
@@ -89,7 +89,7 @@ class TextPrintControllerTest extends TestCase
             } else {
                 Connection::query(
                     "INSERT INTO " . $textTable .
-                    " (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI) " .
+                    " (language_id, title, text, annotated_text, audio_uri, source_uri) " .
                     "VALUES (" . self::$testLangId .
                     ", 'PrintControllerTestText', 'This is test text.', " .
                     "'0\tThis\t\t\n1\tis\t\t\n2\ttest\t\t\n3\ttext\t\ttranslation', " .
@@ -121,7 +121,7 @@ class TextPrintControllerTest extends TestCase
             "DELETE FROM " . $sentencesTable . " WHERE text_id = " . self::$testTextId
         );
         Connection::query(
-            "DELETE FROM " . $textsTable . " WHERE TxTitle = 'PrintControllerTestText'"
+            "DELETE FROM " . $textsTable . " WHERE title = 'PrintControllerTestText'"
         );
         Connection::query(
             "DELETE FROM " . $languagesTable . " WHERE LgName = 'PrintControllerTestLang'"
@@ -215,6 +215,6 @@ class TextPrintControllerTest extends TestCase
         // Verify service works
         $data = $service->getTextData(self::$testTextId);
         $this->assertIsArray($data);
-        $this->assertEquals('PrintControllerTestText', $data['TxTitle']);
+        $this->assertEquals('PrintControllerTestText', $data['title']);
     }
 }

@@ -70,14 +70,14 @@ class TextPrintServiceTest extends TestCase
 
             // Create a test text
             $existingText = Connection::fetchValue(
-                "SELECT TxID AS value FROM texts WHERE TxTitle = 'TextPrintTestText' LIMIT 1"
+                "SELECT id AS value FROM texts WHERE title = 'TextPrintTestText' LIMIT 1"
             );
 
             if ($existingText) {
                 self::$testTextId = (int)$existingText;
             } else {
                 Connection::query(
-                    "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText, TxAudioURI, TxSourceURI) " .
+                    "INSERT INTO texts (language_id, title, text, annotated_text, audio_uri, source_uri) " .
                     "VALUES (" . self::$testLangId . ", 'TextPrintTestText', 'This is test text.', " .
                     "'0\tThis\t\t\n1\tis\t\t\n2\ttest\t\t\n3\ttext\t\ttranslation', " .
                     "'http://audio.test/audio.mp3', 'http://source.test')"
@@ -98,7 +98,7 @@ class TextPrintServiceTest extends TestCase
         // Clean up test data
         Connection::query("DELETE FROM word_occurrences WHERE text_id = " . self::$testTextId);
         Connection::query("DELETE FROM sentences WHERE text_id = " . self::$testTextId);
-        Connection::query("DELETE FROM texts WHERE TxTitle = 'TextPrintTestText'");
+        Connection::query("DELETE FROM texts WHERE title = 'TextPrintTestText'");
         Connection::query("DELETE FROM languages WHERE LgName = 'TextPrintTestLang'");
     }
 
@@ -126,10 +126,10 @@ class TextPrintServiceTest extends TestCase
         $data = $service->getTextData(self::$testTextId);
 
         $this->assertIsArray($data);
-        $this->assertArrayHasKey('TxID', $data);
-        $this->assertArrayHasKey('TxLgID', $data);
-        $this->assertArrayHasKey('TxTitle', $data);
-        $this->assertEquals('TextPrintTestText', $data['TxTitle']);
+        $this->assertArrayHasKey('id', $data);
+        $this->assertArrayHasKey('language_id', $data);
+        $this->assertArrayHasKey('title', $data);
+        $this->assertEquals('TextPrintTestText', $data['title']);
     }
 
     public function testGetTextDataReturnsNullForNonExistentText(): void
@@ -195,7 +195,7 @@ class TextPrintServiceTest extends TestCase
 
         // Create a text without annotation
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text) " .
             "VALUES (" . self::$testLangId . ", 'NoAnnotationTest', 'Test text.', '')"
         );
         $textId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -206,7 +206,7 @@ class TextPrintServiceTest extends TestCase
         $this->assertNull($ann);
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxID = {$textId}");
+        Connection::query("DELETE FROM texts WHERE id = {$textId}");
     }
 
     // ===== hasAnnotation tests =====
@@ -231,7 +231,7 @@ class TextPrintServiceTest extends TestCase
 
         // Create a text without annotation
         Connection::query(
-            "INSERT INTO texts (TxLgID, TxTitle, TxText, TxAnnotatedText) " .
+            "INSERT INTO texts (language_id, title, text, annotated_text) " .
             "VALUES (" . self::$testLangId . ", 'NoAnnotationTest2', 'Test text.', '')"
         );
         $textId = (int)Connection::fetchValue("SELECT LAST_INSERT_ID() AS value");
@@ -242,7 +242,7 @@ class TextPrintServiceTest extends TestCase
         $this->assertFalse($result);
 
         // Cleanup
-        Connection::query("DELETE FROM texts WHERE TxID = {$textId}");
+        Connection::query("DELETE FROM texts WHERE id = {$textId}");
     }
 
     // ===== Settings tests =====

@@ -24,14 +24,14 @@ interface TextEditFormConfig {
  * @param languageData - Mapping of language ID to language code
  */
 export function changeTextboxesLanguage(languageData: Record<string, string>): void {
-  const langSelect = document.getElementById('TxLgID') as HTMLSelectElement | null;
+  const langSelect = document.getElementById('language_id') as HTMLSelectElement | null;
   if (!langSelect) return;
 
   const lid = langSelect.value;
   const langCode = languageData[lid] || '';
 
-  const titleEl = document.getElementById('TxTitle');
-  const textEl = document.getElementById('TxText');
+  const titleEl = document.getElementById('title');
+  const textEl = document.getElementById('text');
   if (titleEl) titleEl.setAttribute('lang', langCode);
   if (textEl) textEl.setAttribute('lang', langCode);
 }
@@ -119,7 +119,7 @@ export function autoInitializeForms(): void {
   if (langConfigEl) {
     try {
       const languageData = JSON.parse(langConfigEl.textContent || '{}') as Record<string, string>;
-      const langSelect = document.getElementById('TxLgID');
+      const langSelect = document.getElementById('language_id');
       if (langSelect) {
         // Apply initial language
         changeTextboxesLanguage(languageData);

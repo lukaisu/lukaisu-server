@@ -447,11 +447,11 @@ class FeedFacade
     public function createTextFromFeed(array $textData, string $tagName): int
     {
         return $this->textCreation->createText(
-            (int) $textData['TxLgID'],
-            (string) $textData['TxTitle'],
-            (string) $textData['TxText'],
-            (string) ($textData['TxAudioURI'] ?? ''),
-            (string) ($textData['TxSourceURI'] ?? ''),
+            (int) $textData['language_id'],
+            (string) $textData['title'],
+            (string) $textData['text'],
+            (string) ($textData['audio_uri'] ?? ''),
+            (string) ($textData['source_uri'] ?? ''),
             $tagName
         );
     }
@@ -804,7 +804,7 @@ class FeedFacade
      *
      * @return array{
      *     id: int, title: string, link: string, description: string, published_at: string,
-     *     audio: string, TxID: int|null, ArchivedTxID: int|null
+     *     audio: string, text_id: int|null, ArchivedTxID: int|null
      * } Legacy array format
      */
     private function articleToLegacyArray(array $item): array
@@ -821,7 +821,7 @@ class FeedFacade
             'description' => $article->description(),
             'published_at' => $article->date(),
             'audio' => $article->audio(),
-            'TxID' => $item['text_id'],
+            'text_id' => $item['text_id'],
             'ArchivedTxID' => $item['archived_id'],
         ];
     }
@@ -840,11 +840,11 @@ class FeedFacade
      *     Nf_ID: int|string,
      *     TagList: array<string>,
      *     Nf_Max_Texts: int|null,
-     *     TxLgID: int,
-     *     TxTitle: string,
-     *     TxText: string,
-     *     TxAudioURI: string,
-     *     TxSourceURI: string
+     *     language_id: int,
+     *     title: string,
+     *     text: string,
+     *     audio_uri: string,
+     *     source_uri: string
      * }> $texts Array of text data from extractTextFromArticle()
      *
      * @return array{textsArchived: int, sentencesDeleted: int, textItemsDeleted: int} Archive statistics
@@ -895,29 +895,29 @@ class FeedFacade
                     // Create the text
                     $id = \Lukaisu\Shared\Infrastructure\Database\QueryBuilder::table('texts')
                         ->insertPrepared([
-                            'TxLgID' => $text['TxLgID'],
-                            'TxTitle' => $text['TxTitle'],
-                            'TxText' => $text['TxText'],
-                            'TxAudioURI' => $text['TxAudioURI'],
-                            'TxSourceURI' => $text['TxSourceURI']
+                            'language_id' => $text['language_id'],
+                            'title' => $text['title'],
+                            'text' => $text['text'],
+                            'audio_uri' => $text['audio_uri'],
+                            'source_uri' => $text['source_uri']
                         ]);
 
                     // Parse the text
                     $bindings = [$id];
                     /** @var string|null $textContentRaw */
                     $textContentRaw = \Lukaisu\Shared\Infrastructure\Database\Connection::preparedFetchValue(
-                        'SELECT TxText FROM texts WHERE TxID = ?'
+                        'SELECT text FROM texts WHERE id = ?'
                         . \Lukaisu\Shared\Infrastructure\Database\UserScopedQuery::forTablePrepared('texts', $bindings),
                         $bindings,
-                        'TxText'
+                        'text'
                     );
                     $textContent = is_string($textContentRaw) ? $textContentRaw : '';
                     /** @var int|string|null $textLgIdRaw */
                     $textLgIdRaw = \Lukaisu\Shared\Infrastructure\Database\Connection::preparedFetchValue(
-                        'SELECT TxLgID FROM texts WHERE TxID = ?'
+                        'SELECT language_id FROM texts WHERE id = ?'
                         . \Lukaisu\Shared\Infrastructure\Database\UserScopedQuery::forTablePrepared('texts', $bindings),
                         $bindings,
-                        'TxLgID'
+                        'language_id'
                     );
                     $textLgId = is_numeric($textLgIdRaw) ? (int)$textLgIdRaw : 0;
                     \Lukaisu\Shared\Infrastructure\Database\TextParsing::parseAndSave($textContent, $textLgId, (int) $id);
@@ -975,11 +975,11 @@ class FeedFacade
                         ->where('text_id', '=', $txId)
                         ->delete();
 
-                    // Archive the text (soft delete - set TxArchivedAt)
+                    // Archive the text (soft delete - set archived_at)
                     $bindings = [$txId];
                     $archiveCount += \Lukaisu\Shared\Infrastructure\Database\Connection::preparedExecute(
-                        'UPDATE texts SET TxArchivedAt = NOW(), TxPosition = 0, TxAudioPosition = 0
-                         WHERE TxID = ? AND TxArchivedAt IS NULL'
+                        'UPDATE texts SET archived_at = NOW(), position = 0, audio_position = 0
+                         WHERE id = ? AND archived_at IS NULL'
                         . \Lukaisu\Shared\Infrastructure\Database\UserScopedQuery::forTablePrepared('texts', $bindings),
                         $bindings
                     );

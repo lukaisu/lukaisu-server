@@ -268,16 +268,16 @@ export interface TextsByLanguageResult {
   };
 }
 
-/** Order texts like the server's sort map `['TxTitle','TxID desc','TxID asc']`. */
+/** Order texts like the server's sort map `['title','id desc','id asc']`. */
 function sortTexts(texts: LocalText[], sort: number): LocalText[] {
   const arr = [...texts];
   switch (sort) {
-    case 2: // newest first (TxID desc)
+    case 2: // newest first (id desc)
       return arr.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
-    case 3: // oldest first (TxID asc)
+    case 3: // oldest first (id asc)
       return arr.sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
     case 1:
-    default: // title A–Z (TxTitle)
+    default: // title A–Z (title)
       return arr.sort((a, b) => a.title.localeCompare(b.title));
   }
 }

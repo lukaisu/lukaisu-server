@@ -42,35 +42,35 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     /**
      * @var string Primary key column
      */
-    protected string $primaryKey = 'TxID';
+    protected string $primaryKey = 'id';
 
     /**
      * @var array<string, string> Property to column mapping
      */
     protected array $columnMap = [
-        'id' => 'TxID',
-        'languageId' => 'TxLgID',
-        'title' => 'TxTitle',
-        'text' => 'TxText',
-        'annotatedText' => 'TxAnnotatedText',
-        'mediaUri' => 'TxAudioURI',
-        'sourceUri' => 'TxSourceURI',
-        'position' => 'TxPosition',
-        'audioPosition' => 'TxAudioPosition',
+        'id' => 'id',
+        'languageId' => 'language_id',
+        'title' => 'title',
+        'text' => 'text',
+        'annotatedText' => 'annotated_text',
+        'mediaUri' => 'audio_uri',
+        'sourceUri' => 'source_uri',
+        'position' => 'position',
+        'audioPosition' => 'audio_position',
     ];
 
     /**
      * Override base query to filter out archived texts.
      *
-     * Active texts have TxArchivedAt IS NULL. Archived texts use
-     * a separate set of methods that explicitly include TxArchivedAt IS NOT NULL.
+     * Active texts have archived_at IS NULL. Archived texts use
+     * a separate set of methods that explicitly include archived_at IS NOT NULL.
      *
      * @return \Lukaisu\Shared\Infrastructure\Database\QueryBuilder
      */
     protected function query(): \Lukaisu\Shared\Infrastructure\Database\QueryBuilder
     {
         return \Lukaisu\Shared\Infrastructure\Database\QueryBuilder::table($this->tableName)
-            ->whereNull('TxArchivedAt');
+            ->whereNull('archived_at');
     }
 
     /**
@@ -79,15 +79,15 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     protected function mapToEntity(array $row): Text
     {
         return Text::reconstitute(
-            (int) $row['TxID'],
-            (int) $row['TxLgID'],
-            (string) $row['TxTitle'],
-            (string) $row['TxText'],
-            (string) ($row['TxAnnotatedText'] ?? ''),
-            (string) ($row['TxAudioURI'] ?? ''),
-            (string) ($row['TxSourceURI'] ?? ''),
-            (int) ($row['TxPosition'] ?? 0),
-            (float) ($row['TxAudioPosition'] ?? 0.0)
+            (int) $row['id'],
+            (int) $row['language_id'],
+            (string) $row['title'],
+            (string) $row['text'],
+            (string) ($row['annotated_text'] ?? ''),
+            (string) ($row['audio_uri'] ?? ''),
+            (string) ($row['source_uri'] ?? ''),
+            (int) ($row['position'] ?? 0),
+            (float) ($row['audio_position'] ?? 0.0)
         );
     }
 
@@ -101,15 +101,15 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     protected function mapToRow(object $entity): array
     {
         return [
-            'TxID' => $entity->id()->toInt(),
-            'TxLgID' => $entity->languageId()->toInt(),
-            'TxTitle' => $entity->title(),
-            'TxText' => $entity->text(),
-            'TxAnnotatedText' => $entity->annotatedText(),
-            'TxAudioURI' => $entity->mediaUri(),
-            'TxSourceURI' => $entity->sourceUri(),
-            'TxPosition' => $entity->position(),
-            'TxAudioPosition' => $entity->audioPosition(),
+            'id' => $entity->id()->toInt(),
+            'language_id' => $entity->languageId()->toInt(),
+            'title' => $entity->title(),
+            'text' => $entity->text(),
+            'annotated_text' => $entity->annotatedText(),
+            'audio_uri' => $entity->mediaUri(),
+            'source_uri' => $entity->sourceUri(),
+            'position' => $entity->position(),
+            'audio_position' => $entity->audioPosition(),
         ];
     }
 
@@ -167,12 +167,12 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
      */
     public function findByLanguage(
         int $languageId,
-        ?string $orderBy = 'TxTitle',
+        ?string $orderBy = 'title',
         string $direction = 'ASC'
     ): array {
         $rows = $this->query()
-            ->where('TxLgID', '=', $languageId)
-            ->orderBy($orderBy ?? 'TxTitle', $direction)
+            ->where('language_id', '=', $languageId)
+            ->orderBy($orderBy ?? 'title', $direction)
             ->getPrepared();
 
         return array_map(
@@ -187,8 +187,8 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function findByTitle(int $languageId, string $title): ?Text
     {
         $row = $this->query()
-            ->where('TxLgID', '=', $languageId)
-            ->where('TxTitle', '=', $title)
+            ->where('language_id', '=', $languageId)
+            ->where('title', '=', $title)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -200,11 +200,11 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function titleExists(int $languageId, string $title, ?int $excludeId = null): bool
     {
         $query = $this->query()
-            ->where('TxLgID', '=', $languageId)
-            ->where('TxTitle', '=', $title);
+            ->where('language_id', '=', $languageId)
+            ->where('title', '=', $title);
 
         if ($excludeId !== null) {
-            $query->where('TxID', '!=', $excludeId);
+            $query->where('id', '!=', $excludeId);
         }
 
         return $query->existsPrepared();
@@ -216,7 +216,7 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function countByLanguage(int $languageId): int
     {
         return $this->query()
-            ->where('TxLgID', '=', $languageId)
+            ->where('language_id', '=', $languageId)
             ->countPrepared();
     }
 
@@ -226,25 +226,25 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function getForSelect(int $languageId = 0, int $maxNameLength = 40): array
     {
         $query = $this->query()
-            ->select(['TxID', 'TxTitle', 'TxLgID'])
-            ->orderBy('TxTitle');
+            ->select(['id', 'title', 'language_id'])
+            ->orderBy('title');
 
         if ($languageId > 0) {
-            $query->where('TxLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
         $result = [];
 
         foreach ($rows as $row) {
-            $title = (string) $row['TxTitle'];
+            $title = (string) $row['title'];
             if (mb_strlen($title, 'UTF-8') > $maxNameLength) {
                 $title = mb_substr($title, 0, $maxNameLength, 'UTF-8') . '...';
             }
             $result[] = [
-                'id' => (int) $row['TxID'],
+                'id' => (int) $row['id'],
                 'title' => $title,
-                'language_id' => (int) $row['TxLgID'],
+                'language_id' => (int) $row['language_id'],
             ];
         }
 
@@ -261,11 +261,11 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function findWithMedia(?int $languageId = null): array
     {
         $query = $this->query()
-            ->where('TxAudioURI', '!=', '')
-            ->orderBy('TxTitle');
+            ->where('audio_uri', '!=', '')
+            ->orderBy('title');
 
         if ($languageId !== null) {
-            $query->where('TxLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -286,11 +286,11 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function findAnnotated(?int $languageId = null): array
     {
         $query = $this->query()
-            ->where('TxAnnotatedText', '!=', '')
-            ->orderBy('TxTitle');
+            ->where('annotated_text', '!=', '')
+            ->orderBy('title');
 
         if ($languageId !== null) {
-            $query->where('TxLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -311,11 +311,11 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function findUnannotated(?int $languageId = null): array
     {
         $query = $this->query()
-            ->where('TxAnnotatedText', '=', '')
-            ->orderBy('TxTitle');
+            ->where('annotated_text', '=', '')
+            ->orderBy('title');
 
         if ($languageId !== null) {
-            $query->where('TxLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $rows = $query->getPrepared();
@@ -332,8 +332,8 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function updatePosition(int $textId, int $position): bool
     {
         $affected = $this->query()
-            ->where('TxID', '=', $textId)
-            ->updatePrepared(['TxPosition' => max(0, $position)]);
+            ->where('id', '=', $textId)
+            ->updatePrepared(['position' => max(0, $position)]);
 
         return $affected > 0;
     }
@@ -344,8 +344,8 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function updateAudioPosition(int $textId, float $position): bool
     {
         $affected = $this->query()
-            ->where('TxID', '=', $textId)
-            ->updatePrepared(['TxAudioPosition' => max(0.0, $position)]);
+            ->where('id', '=', $textId)
+            ->updatePrepared(['audio_position' => max(0.0, $position)]);
 
         return $affected > 0;
     }
@@ -360,11 +360,11 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function resetProgress(int $textId): bool
     {
         $affected = $this->query()
-            ->where('TxID', '=', $textId)
+            ->where('id', '=', $textId)
             ->updatePrepared(
                 [
-                'TxPosition' => 0,
-                'TxAudioPosition' => 0.0,
+                'position' => 0,
+                'audio_position' => 0.0,
                 ]
             );
 
@@ -381,8 +381,8 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function clearAnnotation(int $textId): bool
     {
         $affected = $this->query()
-            ->where('TxID', '=', $textId)
-            ->updatePrepared(['TxAnnotatedText' => '']);
+            ->where('id', '=', $textId)
+            ->updatePrepared(['annotated_text' => '']);
 
         return $affected > 0;
     }
@@ -393,14 +393,14 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function getPreviousTextId(int $textId, int $languageId): ?int
     {
         $row = $this->query()
-            ->select('TxID')
-            ->where('TxLgID', '=', $languageId)
-            ->where('TxID', '<', $textId)
-            ->orderBy('TxID', 'DESC')
+            ->select('id')
+            ->where('language_id', '=', $languageId)
+            ->where('id', '<', $textId)
+            ->orderBy('id', 'DESC')
             ->limit(1)
             ->firstPrepared();
 
-        return $row !== null ? (int) $row['TxID'] : null;
+        return $row !== null ? (int) $row['id'] : null;
     }
 
     /**
@@ -409,14 +409,14 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function getNextTextId(int $textId, int $languageId): ?int
     {
         $row = $this->query()
-            ->select('TxID')
-            ->where('TxLgID', '=', $languageId)
-            ->where('TxID', '>', $textId)
-            ->orderBy('TxID', 'ASC')
+            ->select('id')
+            ->where('language_id', '=', $languageId)
+            ->where('id', '>', $textId)
+            ->orderBy('id', 'ASC')
             ->limit(1)
             ->firstPrepared();
 
-        return $row !== null ? (int) $row['TxID'] : null;
+        return $row !== null ? (int) $row['id'] : null;
     }
 
     /**
@@ -427,14 +427,14 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
         $row = $this->query()
             ->select(
                 [
-                'TxID',
-                'TxTitle',
-                'TxLgID',
-                'TxAudioURI',
-                'LENGTH(TxAnnotatedText) AS annotlen'
+                'id',
+                'title',
+                'language_id',
+                'audio_uri',
+                'LENGTH(annotated_text) AS annotlen'
                 ]
             )
-            ->where('TxID', '=', $textId)
+            ->where('id', '=', $textId)
             ->firstPrepared();
 
         if ($row === null) {
@@ -442,10 +442,10 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
         }
 
         return [
-            'id' => (int) $row['TxID'],
-            'title' => (string) $row['TxTitle'],
-            'language_id' => (int) $row['TxLgID'],
-            'has_media' => !empty($row['TxAudioURI']),
+            'id' => (int) $row['id'],
+            'title' => (string) $row['title'],
+            'language_id' => (int) $row['language_id'],
+            'has_media' => !empty($row['audio_uri']),
             'has_annotation' => !empty($row['annotlen']),
         ];
     }
@@ -465,13 +465,13 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
         int $languageId = 0,
         int $page = 1,
         int $perPage = 20,
-        string $orderBy = 'TxTitle',
+        string $orderBy = 'title',
         string $direction = 'ASC'
     ): array {
         $query = $this->query();
 
         if ($languageId > 0) {
-            $query->where('TxLgID', '=', $languageId);
+            $query->where('language_id', '=', $languageId);
         }
 
         $total = (clone $query)->countPrepared();
@@ -515,12 +515,12 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
         $searchPattern = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $query) . '%';
 
         $dbQuery = $this->query()
-            ->where('TxTitle', 'LIKE', $searchPattern)
-            ->orderBy('TxTitle')
+            ->where('title', 'LIKE', $searchPattern)
+            ->orderBy('title')
             ->limit($limit);
 
         if ($languageId !== null) {
-            $dbQuery->where('TxLgID', '=', $languageId);
+            $dbQuery->where('language_id', '=', $languageId);
         }
 
         $rows = $dbQuery->getPrepared();
@@ -539,11 +539,11 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     public function getLanguagesWithTexts(): array
     {
         $rows = $this->query()
-            ->select('DISTINCT TxLgID')
+            ->select('DISTINCT language_id')
             ->getPrepared();
 
         return array_map(
-            fn(array $row) => (int) $row['TxLgID'],
+            fn(array $row) => (int) $row['language_id'],
             $rows
         );
     }
@@ -559,21 +559,21 @@ class MySqlTextRepository extends AbstractRepository implements TextRepositoryIn
     {
         $baseQuery = $this->query();
         if ($languageId !== null) {
-            $baseQuery->where('TxLgID', '=', $languageId);
+            $baseQuery->where('language_id', '=', $languageId);
         }
 
         $total = (clone $baseQuery)->countPrepared();
 
         $withMedia = (clone $baseQuery)
-            ->where('TxAudioURI', '!=', '')
+            ->where('audio_uri', '!=', '')
             ->countPrepared();
 
         $annotated = (clone $baseQuery)
-            ->where('TxAnnotatedText', '!=', '')
+            ->where('annotated_text', '!=', '')
             ->countPrepared();
 
         $withSource = (clone $baseQuery)
-            ->where('TxSourceURI', '!=', '')
+            ->where('source_uri', '!=', '')
             ->countPrepared();
 
         return [

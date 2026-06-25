@@ -57,17 +57,17 @@ class UpdateText
         // Remove soft hyphens
         $text = $this->removeSoftHyphens($text);
 
-        // Check if text content changed + fetch the prior TxAudioURI so
+        // Check if text content changed + fetch the prior audio_uri so
         // the validator can grandfather unchanged values.
         $bindings1 = [$textId];
-        /** @var array{TxText: ?string, TxAudioURI: ?string}|null $existing */
+        /** @var array{text: ?string, audio_uri: ?string}|null $existing */
         $existing = Connection::preparedFetchOne(
-            "SELECT TxText, TxAudioURI FROM texts WHERE TxID = ?"
+            "SELECT text, audio_uri FROM texts WHERE id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings1),
             $bindings1
         );
-        $oldText = $existing['TxText'] ?? null;
-        $previousAudioUri = $existing['TxAudioURI'] ?? null;
+        $oldText = $existing['text'] ?? null;
+        $previousAudioUri = $existing['audio_uri'] ?? null;
         $textChanged = $text !== $oldText;
 
         $audioUri = AudioUriValidator::validate($audioUri, $previousAudioUri);
@@ -76,8 +76,8 @@ class UpdateText
         $bindings2 = [$languageId, $title, $text, $audioUri, $sourceUri, $textId];
         $affected = Connection::preparedExecute(
             "UPDATE texts SET
-                TxLgID = ?, TxTitle = ?, TxText = ?, TxAudioURI = ?, TxSourceURI = ?
-            WHERE TxID = ?"
+                language_id = ?, title = ?, text = ?, audio_uri = ?, source_uri = ?
+            WHERE id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings2),
             $bindings2
         );
@@ -154,17 +154,17 @@ class UpdateText
         string $audioUri,
         string $sourceUri
     ): int {
-        // Check if text content changed + fetch the prior TxAudioURI so
+        // Check if text content changed + fetch the prior audio_uri so
         // the validator can grandfather unchanged values.
         $bindings1 = [$textId];
-        /** @var array{TxText: ?string, TxAudioURI: ?string}|null $existing */
+        /** @var array{text: ?string, audio_uri: ?string}|null $existing */
         $existing = Connection::preparedFetchOne(
-            "SELECT TxText, TxAudioURI FROM texts WHERE TxID = ? AND TxArchivedAt IS NOT NULL"
+            "SELECT text, audio_uri FROM texts WHERE id = ? AND archived_at IS NOT NULL"
             . UserScopedQuery::forTablePrepared('texts', $bindings1),
             $bindings1
         );
-        $oldText = $existing['TxText'] ?? null;
-        $previousAudioUri = $existing['TxAudioURI'] ?? null;
+        $oldText = $existing['text'] ?? null;
+        $previousAudioUri = $existing['audio_uri'] ?? null;
         $textsdiffer = $text !== $oldText;
 
         $audioUri = AudioUriValidator::validate($audioUri, $previousAudioUri);
@@ -172,8 +172,8 @@ class UpdateText
         $bindings2 = [$languageId, $title, $text, $audioUri, $sourceUri, $textId];
         $affected = Connection::preparedExecute(
             "UPDATE texts SET
-                TxLgID = ?, TxTitle = ?, TxText = ?, TxAudioURI = ?, TxSourceURI = ?
-             WHERE TxID = ? AND TxArchivedAt IS NOT NULL"
+                language_id = ?, title = ?, text = ?, audio_uri = ?, source_uri = ?
+             WHERE id = ? AND archived_at IS NOT NULL"
             . UserScopedQuery::forTablePrepared('texts', $bindings2),
             $bindings2
         );
@@ -182,7 +182,7 @@ class UpdateText
         if ($affected > 0 && $textsdiffer) {
             $bindings3 = [$textId];
             Connection::preparedExecute(
-                "UPDATE texts SET TxAnnotatedText = '' WHERE TxID = ? AND TxArchivedAt IS NOT NULL"
+                "UPDATE texts SET annotated_text = '' WHERE id = ? AND archived_at IS NOT NULL"
                 . UserScopedQuery::forTablePrepared('texts', $bindings3),
                 $bindings3
             );
@@ -224,16 +224,16 @@ class UpdateText
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
         $records = Connection::preparedFetchAll(
-            "SELECT TxID, TxLgID, TxText FROM texts WHERE TxID IN ({$placeholders})"
+            "SELECT id, language_id, text FROM texts WHERE id IN ({$placeholders})"
             . UserScopedQuery::forTablePrepared('texts', $ids),
             $ids
         );
 
         foreach ($records as $record) {
             $this->reparseText(
-                (int) $record['TxID'],
-                (int) $record['TxLgID'],
-                (string) $record['TxText']
+                (int) $record['id'],
+                (int) $record['language_id'],
+                (string) $record['text']
             );
             $count++;
         }
@@ -275,7 +275,7 @@ class UpdateText
         // Clear annotation
         $bindings = [$textId];
         Connection::preparedExecute(
-            "UPDATE texts SET TxAnnotatedText = '' WHERE TxID = ?"
+            "UPDATE texts SET annotated_text = '' WHERE id = ?"
             . UserScopedQuery::forTablePrepared('texts', $bindings),
             $bindings
         );
