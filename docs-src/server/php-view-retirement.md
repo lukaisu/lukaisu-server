@@ -9,15 +9,17 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Pages 1–9 landed
+> (`read`/`review`/`library`/connect + minimal create). **Pages 1–9 and 11 landed
 > 2026-06-25:** the terms list (`words.html`), the term **edit** form
 > (`word.html`), the languages list (`languages.html`), the language
 > **settings** form (`language-edit.html`), the **archived texts** page
 > (`texts.html`), the **text edit** form (`text-edit.html`), the **tags**
 > management page (`tags.html`), the **preferences** page (`settings.html`), and
-> the **parse-preview** tool (`text-check.html`). Pages 5–8 completed **the
-> critical path to the cut-over**; page 9 is the first of the *optional* Job-A
-> pages, leaving 10–11. (Page 2's "new term" and page 4's standalone wizard
+> the **parse-preview** tool (`text-check.html`), and the **plain-print** page
+> (`text-print.html`). Pages 5–8 completed **the critical path to the
+> cut-over**; pages 9 and 11 are *optional* Job-A pages (print is plain-only
+> offline — the Improved Annotated Text is server-only), leaving only **page
+> 10** (the dashboard). (Page 2's "new term" and page 4's standalone wizard
 > halves are deferred — see their table notes; page 5's *active* manage half was
 > already bundled as `library.html` — see its subsection.)
 
@@ -99,7 +101,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 | 8 ✅ | `settings.html` (preferences) — **landed** | `User/preferences` (`Admin/settings_form` is server-only) | purpose-built form (like `language-edit.ts`; `settings_form.ts` is form-glue, not data-binding) | ✅ default language fully offline (`POST /settings` `currentlanguage`→`setCurrentLanguageId`); interface language server-only (offline ships English); the rest of `preferences.php` is server-consumed (deferred) | form |
 | 9 ✅ | `text-check.html` (parse preview) — **landed** | `Text/check_form` | purpose-built page (legacy `text_check_display.ts` is a server-driven auto-init reader, not mountable) | ✅ added local `POST /texts/check` → `checkText` (on-device tokenizer); multi-word matching stays server-enhanced | form + data |
 | 10 | `home.html` (dashboard) | `Home/index`, `helpers` | `js/home/home_app.ts` | ✅ `navbar`, `activity/streak`; content suggestions are server-enhanced | mount (optional) |
-| 11 | `text-print.html` (print/annotate) | `Text/print_alpine`, `display_*` | `text/pages/text_print_app.ts` | ⚠️ annotations storage — confirm; low priority | mount (optional) |
+| 11 ✅ | `text-print.html` (plain print) — **landed** | `Text/print_alpine` (plain mode) | `text/pages/text_print_app.ts` (reused; +`getConfigRtl`) | ✅ added local `GET /texts/{id}/print-items` → `getPrintItems` (same word/occurrence data the reader uses); the annotated/edit "Improved Annotated Text" is server-only — no on-device store | mount |
 
 **Reader/review partials already replaced** (delete when their parent route
 goes, no port needed): all of `Review/Views/*` (13), and `Text/Views/`
@@ -414,6 +416,40 @@ already know (saved with a translation) are highlighted, mirroring the server's
   / non-word lists + known-word marking — is fully faithful. Reached by direct
   path (the navbar surfaces no "Check" link), like `tags.html`.
 - **PHP deletion deferred** to the cut-over, same as pages 1–8.
+
+### Page 11: `text-print.html` (plain print) — ✅ done 2026-06-25
+
+A **mount** page that reuses the existing `textPrintApp` Alpine component
+(`text/pages/text_print_app.ts`), but **plain-print only**. The component renders
+three modes (plain / annotated / edit); the annotated *"Improved Annotated Text"*
+persists a hand-edited annotation blob (`texts.annotated_text`) the bundle has no
+on-device store for, so the page pins the mode to `plain` and serves only that.
+Reached from the reader's and library's printer links (`/text/{id}/print-plain`).
+
+- **Data-layer gap closed (for plain print).** Added `getPrintItems()` in a new
+  `local/repositories/print.ts` and a `GET /texts/{id}/print-items` arm to the
+  local router. It mirrors `TextPrintService::getTextItemsForApi` +
+  `preparePlainPrintData` (see `TextAnnotationApiHandler::getPrintItems`) — the
+  same stored occurrences + words the reader assembles, plus word tags joined
+  like `getWordTagList`. So plain print — status-filtered word annotations
+  (translation / romanization / tags, behind / in front / ruby) — is **fully
+  on-device** (the E2E asserts `apiAttempts === 0`).
+- **Purpose-built shell, not a prerender.** `print_alpine.php` branches on
+  `$mode` and needs controller-computed service HTML (`navLinksHtml`,
+  `annotationLinkHtml`, `editFormHtml`); a hand-authored `text-print.html` mounts
+  the component with a real `#navbar-root` and the plain-mode DOM (the
+  status-range `<select>` options are lifted verbatim from
+  `SelectOptionsBuilder::forWordStatus`, so the filter matches the server).
+  Added one CSP-safe accessor (`getConfigRtl`) to the component for the `:dir`
+  binding — backward-compatible, unused by the server view.
+- **Print filters persist offline.** The component saves `currentprint*` via
+  `POST /settings` (generic `setSetting`); `getPrintItems` reads them back with
+  the same defaults as `TextPrintService` (ann 3 / status 14 / placement 0).
+- **Annotated/edit modes stay server-backed.** `bundledPageFor` maps only
+  `/text/{id}/print-plain`; the annotated `/text/{id}/print` (and `/print/edit`)
+  fall through to the remote server's web UI when connected — graceful
+  degradation, same as the other server-only features.
+- **PHP deletion deferred** to the cut-over, same as pages 1–9.
 
 ## The cut-over (the payoff — do after Job A pages 1–8)
 

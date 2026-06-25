@@ -113,6 +113,7 @@ export interface TextPrintAppData {
   // Safe accessors (CSP-compatible - avoid ?. in templates)
   getConfigTitle(fallback: string): string;
   getConfigTextSize(fallback: number): number;
+  getConfigRtl(): boolean;
   getAnnConfigTitle(fallback: string): string;
   getAnnConfigTextSize(fallback: number): number;
 
@@ -562,6 +563,10 @@ export function textPrintAppData(): TextPrintAppData {
 
     getConfigTextSize(fallback: number): number {
       return this.config ? this.config.textSize : fallback;
+    },
+
+    getConfigRtl(): boolean {
+      return this.config ? this.config.rtlScript : false;
     },
 
     getAnnConfigTitle(fallback: string): string {

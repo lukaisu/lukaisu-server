@@ -62,6 +62,9 @@ export const pageUrl = {
   settings(): string {
     return 'settings.html';
   },
+  print(textId: number | string): string {
+    return `text-print.html?text=${encodeURIComponent(String(textId))}`;
+  },
   words(query = ''): string {
     return query ? `words.html?${query}` : 'words.html';
   },
@@ -144,6 +147,14 @@ export function bundledPageFor(path: string): string | null {
   // resolves locally instead of falling through to a remote server.
   if (pathname === '/profile/preferences') {
     return pageUrl.settings();
+  }
+  // Plain print, reached from the reader's and library's printer links
+  // (/text/{id}/print-plain). The bundled page is plain-print only; the
+  // annotated "Improved Annotated Text" (/text/{id}/print) is a server-only
+  // feature, so that path is left to fall through to the remote server.
+  const printMatch = pathname.match(/^\/text\/(\d+)\/print-plain$/);
+  if (printMatch) {
+    return pageUrl.print(printMatch[1]);
   }
   // /text/{id}/read
   const readMatch = pathname.match(/^\/text\/(\d+)\/read$/);

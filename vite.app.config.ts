@@ -83,7 +83,8 @@ export default defineConfig({
         'text-check': resolve(__dirname, 'src/frontend/app/text-check.html'),
         tags: resolve(__dirname, 'src/frontend/app/tags.html'),
         texts: resolve(__dirname, 'src/frontend/app/texts.html'),
-        settings: resolve(__dirname, 'src/frontend/app/settings.html')
+        settings: resolve(__dirname, 'src/frontend/app/settings.html'),
+        'text-print': resolve(__dirname, 'src/frontend/app/text-print.html')
       }
     }
   }

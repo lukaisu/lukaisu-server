@@ -44,6 +44,7 @@ import {
   markAllIgnored,
   reparseLanguage,
 } from './repositories/texts';
+import { getPrintItems } from './repositories/print';
 import {
   setStatus,
   incrementStatus,
@@ -184,6 +185,10 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   m = path.match(/^\/texts\/(\d+)\/words$/);
   if (m) {
     return wrap(await getTextWords(num(m[1])));
+  }
+  m = path.match(/^\/texts\/(\d+)\/print-items$/);
+  if (m) {
+    return wrap(await getPrintItems(num(m[1])));
   }
   m = path.match(/^\/texts\/(\d+)\/audio$/);
   if (m) {
