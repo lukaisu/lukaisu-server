@@ -19,10 +19,15 @@
 > (`home.html`), and the **plain-print** page (`text-print.html`). Pages 5–8 were
 > **the critical path to the cut-over**; pages 9–11 were the *optional* Job-A
 > pages (print is plain-only offline — the Improved Annotated Text is
-> server-only). **Job A is complete — the cut-over is now unblocked.** (Page 2's
-> "new term" and page 4's standalone wizard halves are deferred — see their table
-> notes; page 5's *active* manage half was already bundled as `library.html` —
-> see its subsection.)
+> server-only). **Job A is complete, and the in-repo cut-over has landed
+> (2026-06-25):** the PHP server now serves the bundle under `/app/` as its
+> default UI for all Job-A surfaces, server-backed via `/api/v1` (3 new endpoints
+> closed the last gaps). `ViteHelper`/the `vite.config` web build are retained
+> (Job B/C still need them), the `src/frontend` → `lukaisu` move is deferred, and
+> the dormant Job-A views are not yet deleted — all pending live verification (see
+> *The cut-over* below). (Page 2's "new term" and page 4's standalone wizard
+> halves are deferred — see their table notes; page 5's *active* manage half was
+> already bundled as `library.html` — see its subsection.)
 
 ## The shape of the problem
 
@@ -483,26 +488,64 @@ Reached from the reader's and library's printer links (`/text/{id}/print-plain`)
   degradation, same as the other server-only features.
 - **PHP deletion deferred** to the cut-over, same as pages 1–9.
 
-## The cut-over (the payoff — do after Job A)
+## The cut-over (the payoff) — ✅ in-repo cut-over landed 2026-06-25
 
-> **Now unblocked (2026-06-25):** **all of Job A (pages 1–11) has landed**, so
-> this is the next step.
+The PHP server now serves the **bundle** as its own browser UI for every Job-A
+surface, talking to its own `/api/v1` in same-origin server-backed mode. What
+landed (three commits: enablement → endpoints → redirect):
 
-Once the management pages are bundled, the PHP server no longer needs to *render*
-anything user-facing. Cut its own browser UI over to the bundle:
+1. **Serve `dist-app/` under `/app/`** (`BundleController`, the `/app` prefix
+   route behind `AuthMiddleware`, and `Router::resolveStaticAsset`'s `/app/* →
+   dist-app/*` mapping). The shell is served by PHP so it can inject a per-session
+   `<meta name="csrf-token">`, the base path, and a `{sameOriginServer}`
+   runtime-config blob; `boot.ts` reads that and runs server-backed against this
+   origin (cookie auth) instead of going local-first. `client.ts` makes
+   `credentials:'same-origin'` explicit and routes a mid-session 401 to `/login`.
+   The Dockerfile + `build:all` now build and ship `dist-app/`. The packaged
+   F-Droid/offline path is unchanged (no injected config → false).
+2. **Redirect the Job-A page routes** into the bundle: every reading/learning GET
+   route 302s to its `/app/*.html` page (`BundleController::redirect`, mirroring
+   `app/router.ts` `bundledPageFor()`), registered last so it overrides the
+   page-render handlers for GET only. POST/JSON/DELETE data routes keep their
+   controllers; annotated print, Job B/C, the API and bundle assets are untouched.
+3. **New `/api/v1` endpoints** so the offline-first pages also work *server*-backed
+   (they had local-router-only data arms with no server counterpart):
+   `GET`/`PUT /texts/{id}` (single-text edit), `GET /tags/manage` +
+   `PUT`/`DELETE /tags/{term,text}/{id}` (tag management), `POST /texts/check`
+   (parse preview → `TextParsing::checkTextDetailed`). Guarded by
+   `BundleCutoverTest`.
 
-1. Serve `dist-app/` as the server's web UI (static), talking to its own
-   `/api/v1` in **server-backed mode** (`boot.ts` already does this when a server
-   is configured). Replace the PHP page routes with a catch-all that serves the
-   bundle shell.
-2. Delete `vite.config.ts`'s web-UI build (the PHP-coupled one: `/dist/` base,
-   manifest, PurgeCSS-over-PHP-views, the SW plugin) and `ViteHelper.php`.
-3. **The frontend now has one consumer** → `git mv src/frontend` into the
-   `lukaisu` app, drop the F-Droid submodule question (`lukaisu/FDROID.md` Step
-   5). This resolves *Piece 2* in `BRIEFING.md`.
+### Scope corrections discovered during the cut-over
 
-After cut-over the PHP server serves only: `/api/v1`, `/admin/*`, auth. Its
-`Views/` directory is reduced to Job C.
+- **`ViteHelper.php` + the `vite.config.ts` web build STAY.** The original step 2
+  ("delete them") is **not yet possible**: every surviving PHP page — Job B
+  (feeds/books/dictionaries) and Job C (login/admin/profile) — renders through
+  `PageLayoutHelper::renderPageStart*` → `ViteHelper` → `dist/`. Deleting it would
+  break login and admin. Removal is gated on Jobs B + C, not Job A.
+- **The cross-repo `git mv src/frontend` into `lukaisu` (step 3) is deferred.**
+  The "one consumer" premise is currently circular: the server still serves
+  `dist-app/`, so it still consumes the frontend. Moving the source out would
+  require the server to pull the built bundle *back* from `lukaisu` — new infra to
+  design with the `lukaisu` agent. Coordinate before doing it.
+- **Deleting the now-dormant Job-A views/controllers is deferred to a follow-up**
+  (see *Open items*). The GET page routes redirect, so the views are unreachable,
+  but the deletion is a large, entangled refactor (controllers shared with kept
+  POST/data routes + tests) best done **after a live smoke-test** confirms the
+  bundle's server-backed mode and exactly which web routes it still exercises.
+
+After this cut-over the PHP server's user-facing rendering is the bundle for all
+Job-A surfaces; it still renders Job B + Job C pages (and keeps `ViteHelper`/
+`dist/` for them) until those jobs land.
+
+### ⚠️ Live verification still required
+
+Same-origin serving is **unit- and routing-verified** (BundleController
+serve/inject/traversal, the redirect map, the new endpoints' routability, the
+offline E2E unbroken) but was **not live-tested** — the build env had no DB/docker.
+Before relying on it: `docker compose up`, then exercise `/`, `/texts`,
+`/text/1/read`, `/words`, `/languages`, `/tags`, `/text/check`, a text edit, and a
+tag rename in a browser, confirming `/api/v1` returns 200 and writes persist, in
+both `MULTI_USER_ENABLED=false` and `true`.
 
 ## Job B — server-enhanced surfaces (defer)
 
@@ -543,31 +586,40 @@ Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
 
 ## Definition of done
 
-- **Job A done:** `app/` ships the management pages; `bundledPageFor()` has no
-  reading/learning path falling through to the remote server; the offline E2E
-  exercises list → edit across terms/texts/languages/tags at `apiAttempts === 0`.
-  The PHP page routes + views are **not** deleted here — they coexist with the
-  bundle pages and are removed at the **cut-over** (the PHP server still serves
-  its own PWA from them through Job A; see *First PR* deferral).
-- **Cut-over done:** `vite.config.ts` web build + `ViteHelper.php` gone;
-  `src/frontend/` relocated to `lukaisu`; server serves only API + admin + auth.
-- **All-views done (post-PHP-decommission):** Jobs B and C resolved; `Views/`
-  directories removed. *Blocked on Python sync/auth — out of scope here.*
+- **Job A done. ✅** `app/` ships every management page; `bundledPageFor()` has no
+  reading/learning path falling through; the offline E2E exercises list → edit
+  across terms/texts/languages/tags at `apiAttempts === 0`.
+- **In-repo cut-over done. ✅** The PHP server serves the bundle (under `/app/`) as
+  the default UI for all Job-A surfaces; the page routes redirect into it; the
+  bundle works server-backed via `/api/v1` (the 3 new endpoints close the last
+  gaps). **Caveats vs the original plan:** `vite.config.ts` web build +
+  `ViteHelper.php` **remain** (Job B/C PHP pages need them) and `src/frontend/`
+  has **not** moved to `lukaisu` (deferred — see the cut-over section). The
+  now-dormant Job-A views/controllers are **not yet deleted** (follow-up below).
+  *Same-origin serving is not yet live-tested — see the ⚠️ note above.*
+- **Views deleted (follow-up):** after a live smoke-test, delete the dormant
+  Job-A `[A→…]` views + their unreachable GET render methods + DI + tests
+  (see the deletion checklist). Keep `ViteHelper`/`dist/` and all POST/JSON/DELETE
+  data routes the bundle's server-backed mode still uses.
+- **All-views done (post-PHP-decommission):** Jobs B and C resolved; `ViteHelper`
+  + the `vite.config.ts` web build removed; `src/frontend/` relocated to
+  `lukaisu`; `Views/` directories removed. *Blocked on Python sync/auth.*
 
 ## Open items / risks
 
-- **Data-layer gaps — all closed.** ~~tag write repositories (page 7)~~,
-  ~~single-text edit `GET`/`PUT /texts/{id}` (page 6)~~, ~~single-text
-  delete/archive/unarchive (page 5)~~ — each landed in its page's PR. Page 8
-  needed none (the offline `POST /settings` arm already existed). Of the optional
-  pages: 9 added `POST /texts/check` (`checkText`) and 11 added
-  `GET /texts/{id}/print-items` (`getPrintItems`); **page 10 (dashboard) added
-  none** — it reads existing arms (`/languages`, `/texts/by-language`,
-  `/texts/statistics`).
-- **Navbar targets:** the bundled navbar (`GET /api/v1/navbar`) links to several
-  of these pages; until each lands, those are dead links offline (today they
-  fall through to the remote server). Track navbar link coverage as pages ship.
-- **Don't fork the frontend.** Until the cut-over, the frontend stays here and is
-  bundled; coordinate the eventual `git mv` with the `lukaisu` agent.
+- **Live verification of same-origin mode (highest priority).** The whole
+  cut-over rests on the bundle working server-backed; it is unit/routing-verified
+  but not browser-tested (no DB/docker in the build env). Run the smoke-test in
+  the ⚠️ note before pushing or deleting any PHP views.
+- **Delete the dormant Job-A views/controllers** — a large, entangled refactor
+  (controllers shared with retained POST/data routes the bundle uses, plus their
+  tests). Gated on the live test so we know exactly what is safe to remove.
+- **Data-layer gaps — all closed, both layers.** The offline (local-router) arms
+  landed per page; the cut-over added the matching **server** `/api/v1` arms:
+  `GET`/`PUT /texts/{id}`, `GET /tags/manage` + `PUT`/`DELETE /tags/{term,text}/{id}`,
+  `POST /texts/check`. (`print-items` already existed server-side.)
+- **Don't fork the frontend.** `src/frontend/` stays here for now (the server
+  still builds + serves `dist-app/`); coordinate the eventual `git mv` into
+  `lukaisu` — and the reverse-pull infra it needs — with the `lukaisu` agent.
 </content>
 </invoke>

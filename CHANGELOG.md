@@ -31,6 +31,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
     `UrlUtilities::safeHttpGet` guard.
 * Documentation under `docs-src/server/`: the local-first overview, the stable
   edge HTTP contract, and design-only specs for multi-device sync and auth.
+* **PHP-view cut-over (in-repo).** The server now serves the bundled client
+  (`dist-app/`, built by `npm run build:app` and shipped in the image) as its own
+  browser UI under `/app/`, talking to its own `/api/v1` in same-origin
+  server-backed mode. Every reading/learning page route (`/`, `/texts`,
+  `/text/{id}/read`, `/words`, `/languages`, `/tags`, `/review`, the edit forms,
+  print-plain, preferences) now redirects into the bundle; the bundle is the
+  default UI for those surfaces. Data routes (POST/JSON/DELETE), annotated print,
+  feeds/books, admin/auth, and the API are unaffected. *Note: requires a live
+  smoke-test on a real instance before relying on it (see
+  `docs-src/server/php-view-retirement.md`).*
+* New `/api/v1` endpoints so the bundled edit/tags/check pages work against a
+  connected server (not just offline): `GET`/`PUT /texts/{id}` (single-text edit),
+  `GET /tags/manage` + `PUT`/`DELETE /tags/{term,text}/{id}` (tag management), and
+  `POST /texts/check` (parse preview). These bring the server's `/api/v1` to
+  parity with the bundle's needs for the cut-over (a deliberate exception to the
+  PHP-frozen policy, scoped to enabling it).
 
 ### Changed
 
