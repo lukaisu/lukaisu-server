@@ -61,7 +61,7 @@ class Maintenance
      */
     public static function optimizeDatabase(): void
     {
-        self::adjustAutoIncrement('languages', 'LgID');
+        self::adjustAutoIncrement('languages', 'id');
         self::adjustAutoIncrement('sentences', 'id');
         self::adjustAutoIncrement('texts', 'id');
         self::adjustAutoIncrement('words', 'id');
@@ -194,8 +194,8 @@ class Maintenance
          * @var array<string, mixed>|null $row ID for the Japanese language using MeCab
          */
         $row = QueryBuilder::table('languages')
-            ->selectRaw('GROUP_CONCAT(LgID) AS lang_ids')
-            ->whereRaw("UPPER(LgRegexpWordCharacters)='MECAB'")
+            ->selectRaw('GROUP_CONCAT(id) AS lang_ids')
+            ->whereRaw("UPPER(regexp_word_characters)='MECAB'")
             ->first();
         /** @var string|int|null $japid */
         $japid = $row !== null ? ($row['lang_ids'] ?? null) : null;
@@ -204,18 +204,18 @@ class Maintenance
             self::updateJapaneseWordCount((int)$japid);
         }
         $rows = QueryBuilder::table('words')
-            ->select(['id', 'text_lc', 'LgRegexpWordCharacters', 'LgSplitEachChar'])
-            ->join('languages', 'words.language_id', '=', 'languages.LgID')
+            ->select(['words.id', 'text_lc', 'regexp_word_characters', 'split_each_char'])
+            ->join('languages', 'words.language_id', '=', 'languages.id')
             ->where('word_count', '=', 0)
-            ->orderBy('id')
+            ->orderBy('words.id')
             ->getPrepared();
 
         // Collect all (id, wordCount) pairs
         $data = [];
         foreach ($rows as $rec) {
-            $splitEachChar = (int) $rec['LgSplitEachChar'];
+            $splitEachChar = (int) $rec['split_each_char'];
             $woTextLC = (string) $rec['text_lc'];
-            $regexpWordChars = (string) $rec['LgRegexpWordCharacters'];
+            $regexpWordChars = (string) $rec['regexp_word_characters'];
             $woID = (int) $rec['id'];
 
             if ($splitEachChar === 1) {

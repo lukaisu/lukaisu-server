@@ -582,10 +582,10 @@ class WordListService
     {
         $bindings = [$langId];
         $showRoman = (bool) Connection::preparedFetchValue(
-            'SELECT LgShowRomanization FROM languages WHERE LgID = ?'
+            'SELECT show_romanization FROM languages WHERE id = ?'
             . UserScopedQuery::forTablePrepared('languages', $bindings),
             $bindings,
-            'LgShowRomanization'
+            'show_romanization'
         );
 
         $languageService = new LanguageFacade();
@@ -606,9 +606,12 @@ class WordListService
     {
         $bindings = [$wordId];
         $record = Connection::preparedFetchOne(
-            'SELECT * FROM words, languages
-            WHERE LgID = language_id AND id = ?'
-            . UserScopedQuery::forTablePrepared('words', $bindings)
+            'SELECT words.id, words.language_id, words.text, words.text_lc, words.translation,
+                words.romanization, words.sentence, words.status,
+                languages.name, languages.right_to_left, languages.show_romanization
+            FROM words, languages
+            WHERE languages.id = words.language_id AND words.id = ?'
+            . UserScopedQuery::forTablePrepared('words', $bindings, 'words')
             . UserScopedQuery::forTablePrepared('languages', $bindings, 'languages'),
             $bindings
         );
@@ -631,10 +634,10 @@ class WordListService
             'romanization' => $record['romanization'],
             'sentence' => ExportService::replaceTabNewline((string)($record['sentence'] ?? '')),
             'status' => $record['status'],
-            'LgName' => $record['LgName'],
-            'LgRightToLeft' => $record['LgRightToLeft'],
-            'LgShowRomanization' => $record['LgShowRomanization'],
-            'scrdir' => $record['LgRightToLeft'] ? ' dir="rtl" ' : '',
+            'name' => $record['name'],
+            'right_to_left' => $record['right_to_left'],
+            'show_romanization' => $record['show_romanization'],
+            'scrdir' => $record['right_to_left'] ? ' dir="rtl" ' : '',
         ];
     }
 

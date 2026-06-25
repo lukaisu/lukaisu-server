@@ -599,7 +599,7 @@ class WordListServiceTest extends TestCase
             [3]
         );
         $this->assertIsArray($result);
-        $this->assertStringContainsString('LgExportTemplate', $result['sql']);
+        $this->assertStringContainsString('export_template', $result['sql']);
         $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertStringNotContainsString('word_occurrences', $result['sql']);
         $this->assertSame([3], $result['params']);
@@ -611,7 +611,7 @@ class WordListServiceTest extends TestCase
         $result = $this->service->getFlexibleExportSql([5, 6], '', '', '', '', '');
         $this->assertStringContainsString('id in', $result['sql']);
         $this->assertSame([5, 6], $result['params']);
-        $this->assertStringContainsString('LgExportTemplate', $result['sql']);
+        $this->assertStringContainsString('export_template', $result['sql']);
     }
 
     #[Test]

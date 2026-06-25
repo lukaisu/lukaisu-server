@@ -293,7 +293,7 @@ class ApiControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT LgID, LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI
+        $sql = "SELECT id, name, dict1_uri, dict2_uri, google_translate_uri
                 FROM " . Globals::table('languages') . " LIMIT 10";
         $result = Connection::query($sql);
 

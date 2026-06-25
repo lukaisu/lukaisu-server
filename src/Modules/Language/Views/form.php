@@ -113,7 +113,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
           showAdvanced: <?php echo $isNew ? 'false' : 'true'; ?>
       }">
     <?php echo \Lukaisu\Shared\UI\Helpers\FormHelper::csrfField(); ?>
-    <input type="hidden" name="LgID" value="<?php echo $langId ?? ''; ?>" />
+    <input type="hidden" name="id" value="<?php echo $langId ?? ''; ?>" />
 
     <?php if (!$isNew) : ?>
     <!-- Edit Warning -->
@@ -128,15 +128,15 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
     <!-- Language Name (always visible) -->
     <div class="container mb-5" style="max-width: 400px;">
         <div class="field">
-            <label class="label is-medium" for="LgName">
+            <label class="label is-medium" for="name">
                 <?php echo __('language.form.display_name_label'); ?>
             </label>
             <div class="control">
                 <input type="text"
                        class="input is-medium notempty<?php echo $isNew ? '' : ' setfocus'; ?> checkoutsidebmp"
                        data_info="Study Language"
-                       name="LgName"
-                       id="LgName"
+                       name="name"
+                       id="name"
                        value="<?php echo htmlspecialchars($langName, ENT_QUOTES, 'UTF-8'); ?>"
                        maxlength="40"
                        @input="showJapaneseOptions = ($event.target.value === 'Japanese')"
@@ -278,7 +278,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                         <label class="label is-small"><?php echo __('language.form.lookup_mode'); ?></label>
                         <div class="control">
                             <div class="select is-small">
-                                <select name="LgLocalDictMode" id="LgLocalDictMode">
+                                <select name="local_dict_mode" id="local_dict_mode">
                                     <option value="0" <?php echo $langLocalDictMode === 0 ? 'selected' : ''; ?>>
                                         <?php echo __('language.form.lookup_mode_online_only'); ?>
                                     </option>
@@ -298,7 +298,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                 </div>
                 <?php else : ?>
                 <!-- Hidden field for new languages (default to local first) -->
-                <input type="hidden" name="LgLocalDictMode" value="1" />
+                <input type="hidden" name="local_dict_mode" value="1" />
                 <?php endif; ?>
 
                 <!-- Online Dictionary URIs -->
@@ -318,13 +318,13 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                     <div class="control">
                         <input type="url"
                                class="input notempty checkdicturl checkoutsidebmp"
-                               name="LgDict1URI"
+                               name="dict1_uri"
                                value="<?php echo htmlspecialchars($langDict1Uri, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="200"
                                data_info="Dictionary 1 URI" />
                     </div>
                     <label class="checkbox mt-2">
-                        <input type="checkbox" name="LgDict1PopUp" id="LgDict1PopUp" value="1"
+                        <input type="checkbox" name="dict1_popup" id="dict1_popup" value="1"
                                <?php echo $langDict1Popup ? 'checked' : ''; ?> />
                         <span class="has-text-grey-dark"><?php echo __('language.form.open_in_popup'); ?></span>
                     </label>
@@ -336,13 +336,13 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                     <div class="control">
                         <input type="url"
                                class="input checkdicturl checkoutsidebmp"
-                               name="LgDict2URI"
+                               name="dict2_uri"
                                value="<?php echo htmlspecialchars($langDict2Uri, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="200"
                                data_info="Dictionary 2 URI" />
                     </div>
                     <label class="checkbox mt-2">
-                        <input type="checkbox" name="LgDict2PopUp" id="LgDict2PopUp" value="1"
+                        <input type="checkbox" name="dict2_popup" id="dict2_popup" value="1"
                                <?php echo $langDict2Popup ? 'checked' : ''; ?> />
                         <span class="has-text-grey-dark"><?php echo __('language.form.open_in_popup'); ?></span>
                     </label>
@@ -376,7 +376,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                         <div class="control">
                             <input type="url"
                                    class="input checkdicturl checkoutsidebmp"
-                                   name="LgGoogleTranslateURI"
+                                   name="google_translate_uri"
                                    value="<?php echo htmlspecialchars($langTranslatorUri, ENT_QUOTES, 'UTF-8'); ?>"
                                    maxlength="200"
                                    data_info="GoogleTranslate URI"
@@ -398,7 +398,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                     </div>
 
                     <label class="checkbox mt-2">
-                        <input type="checkbox" name="LgGoogleTranslatePopUp" id="LgGoogleTranslatePopUp" value="1"
+                        <input type="checkbox" name="google_translate_popup" id="google_translate_popup" value="1"
                                <?php echo $langTranslatorPopup ? 'checked' : ''; ?> />
                         <span class="has-text-grey-dark"><?php echo __('language.form.open_in_popup'); ?></span>
                     </label>
@@ -413,8 +413,8 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                             <div class="control">
                                 <input type="text"
                                        class="input"
-                                       name="LgSourceLang"
-                                       id="LgSourceLang"
+                                       name="source_lang"
+                                       id="source_lang"
                                        value="<?php echo htmlspecialchars($langSourceLang, ENT_QUOTES, 'UTF-8'); ?>"
                                        maxlength="10"
                                        placeholder="e.g., de, ja, zh" />
@@ -428,8 +428,8 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                             <div class="control">
                                 <input type="text"
                                        class="input"
-                                       name="LgTargetLang"
-                                       id="LgTargetLang"
+                                       name="target_lang"
+                                       id="target_lang"
                                        value="<?php echo htmlspecialchars($langTargetLang, ENT_QUOTES, 'UTF-8'); ?>"
                                        maxlength="10"
                                        placeholder="e.g., en" />
@@ -447,7 +447,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                 <div class="field">
                     <label class="label"><?php echo __('language.form.text_size'); ?></label>
                     <div class="control">
-                        <input name="LgTextSize"
+                        <input name="text_size"
                                type="number"
                                min="100"
                                max="250"
@@ -483,7 +483,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                     <label class="label"><?php echo __('language.form.parser_type'); ?></label>
                     <div class="control">
                         <div class="select is-fullwidth">
-                            <select name="LgParserType" id="LgParserType" x-model="parserType">
+                            <select name="parser_type" id="parser_type" x-model="parserType">
                                 <?php foreach ($parserInfo as $type => $info) :
                                     $infoAvailable = isset($info['available']) && $info['available'];
                                     $infoName = isset($info['name']) && is_string($info['name']) ? $info['name'] : '';
@@ -507,7 +507,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                         <input type="text"
                                class="input checkoutsidebmp"
                                data_info="Character Substitutions"
-                               name="LgCharacterSubstitutions"
+                               name="character_substitutions"
                                value="<?php echo htmlspecialchars($langCharSubstitutions, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="500" />
                     </div>
@@ -532,7 +532,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                         <input type="text"
                                class="input checkoutsidebmp"
                                :class="{ 'notempty': parserType === 'regex' }"
-                               name="LgRegexpSplitSentences"
+                               name="regexp_split_sentences"
                                value="<?php echo htmlspecialchars($langRegexpSplitSentences, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="500"
                                data_info="RegExp Split Sentences" />
@@ -546,7 +546,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                         <input type="text"
                                class="input checkoutsidebmp"
                                data_info="Exceptions Split Sentences"
-                               name="LgExceptionsSplitSentences"
+                               name="exceptions_split_sentences"
                                value="<?php
                                 echo htmlspecialchars($langExceptionsSplitSentences, ENT_QUOTES, 'UTF-8');
                                 ?>"
@@ -581,7 +581,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                         <input type="text"
                                class="input notempty checkoutsidebmp"
                                data_info="RegExp Word Characters"
-                               name="LgRegexpWordCharacters"
+                               name="regexp_word_characters"
                                value="<?php echo htmlspecialchars($langRegexpWordCharacters, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="500" />
                     </div>
@@ -593,8 +593,8 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                 <div class="field" x-show="parserType === 'regex'" x-transition x-cloak>
                     <label class="checkbox">
                         <input type="checkbox"
-                               name="LgSplitEachChar"
-                               id="LgSplitEachChar"
+                               name="split_each_char"
+                               id="split_each_char"
                                value="1"
                                <?php echo $langSplitEachChar ? "checked" : ""; ?> />
                         <strong><?php echo __('language.form.split_each_char'); ?></strong>
@@ -605,8 +605,8 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                 <div class="field">
                     <label class="checkbox">
                         <input type="checkbox"
-                               name="LgRemoveSpaces"
-                               id="LgRemoveSpaces"
+                               name="remove_spaces"
+                               id="remove_spaces"
                                value="1"
                                <?php echo $langRemoveSpaces ? "checked" : ""; ?> />
                         <strong><?php echo __('language.form.remove_spaces'); ?></strong>
@@ -617,8 +617,8 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                 <div class="field">
                     <label class="checkbox">
                         <input type="checkbox"
-                               name="LgRightToLeft"
-                               id="LgRightToLeft"
+                               name="right_to_left"
+                               id="right_to_left"
                                value="1"
                                <?php echo $langRightToLeft ? "checked" : ""; ?> />
                         <strong><?php echo __('language.form.right_to_left'); ?></strong>
@@ -629,8 +629,8 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                 <div class="field">
                     <label class="checkbox">
                         <input type="checkbox"
-                               name="LgShowRomanization"
-                               id="LgShowRomanization"
+                               name="show_romanization"
+                               id="show_romanization"
                                value="1"
                                <?php echo $langShowRomanization ? "checked" : ""; ?> />
                         <strong><?php echo __('language.form.show_romanization'); ?></strong>
@@ -650,7 +650,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                         <input type="text"
                                class="input checkoutsidebmp"
                                data_info="Export Template"
-                               name="LgExportTemplate"
+                               name="export_template"
                                value="<?php echo htmlspecialchars($langExportTemplate, ENT_QUOTES, 'UTF-8'); ?>"
                                maxlength="1000" />
                     </div>
@@ -678,7 +678,7 @@ $formAction = url($isNew ? '/languages/new' : '/languages/' . (int) $langId . '/
                     <div class="control">
                         <textarea class="textarea checkoutsidebmp"
                                   data_info="Third-Party Text-to-Speech API"
-                                  name="LgTTSVoiceAPI"
+                                  name="tts_voice_api"
                                   maxlength="2048"
                                   rows="4"
                                   placeholder="<?php echo htmlspecialchars(

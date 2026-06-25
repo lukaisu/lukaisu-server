@@ -438,7 +438,7 @@ echo PageLayoutHelper::buildActionCard($actions);
       x-data="wordUploadFormApp">
     <?php echo \Lukaisu\Shared\UI\Helpers\FormHelper::csrfField(); ?>
     <!-- Language ID from current language setting -->
-    <input type="hidden" name="LgID" value="<?php echo $langId; ?>" />
+    <input type="hidden" name="id" value="<?php echo $langId; ?>" />
 
     <!-- ==================== INPUT SOURCE ==================== -->
     <div class="box">

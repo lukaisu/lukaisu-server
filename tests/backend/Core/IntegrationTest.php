@@ -428,12 +428,12 @@ class IntegrationTest extends TestCase
     public function testSentencesContainingWordLcQuery(): void
     {
         // Get a valid language ID from the database
-        $langRow = Connection::query("SELECT LgID FROM languages LIMIT 1");
+        $langRow = Connection::query("SELECT id FROM languages LIMIT 1");
         $lang = $langRow ? \mysqli_fetch_assoc($langRow) : null;
         if (!$lang) {
             $this->markTestSkipped('No languages in database');
         }
-        $langId = (int) $lang['LgID'];
+        $langId = (int) $lang['id'];
 
         // findSentencesFromWord with wid=-1 triggers the complex sentence search
         $service = new SentenceService();
@@ -474,9 +474,9 @@ class IntegrationTest extends TestCase
     public function testGetScriptDirectionTag()
     {
         // Test with a language from demo DB
-        $lang_res = Connection::query("SELECT LgID FROM languages LIMIT 1");
+        $lang_res = Connection::query("SELECT id FROM languages LIMIT 1");
         if ($lang_row = \mysqli_fetch_assoc($lang_res)) {
-            $lang_id = (int)$lang_row['LgID'];
+            $lang_id = (int)$lang_row['id'];
             $dir_tag = self::$languageService->getScriptDirectionTag($lang_id);
 
             $this->assertIsString($dir_tag);
@@ -567,7 +567,7 @@ class IntegrationTest extends TestCase
     {
         // Create a test word with tags
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+            "INSERT INTO languages (name, dict1_uri, google_translate_uri)
              VALUES ('Test Lang', 'http://test', 'http://test')"
         );
         $lang_id = (int)Connection::lastInsertId();
@@ -595,7 +595,7 @@ class IntegrationTest extends TestCase
         Connection::query("DELETE FROM word_tag_map WHERE word_id = $word_id");
         Connection::query("DELETE FROM words WHERE id = $word_id");
         Connection::query("DELETE FROM tags WHERE id = $tag_id");
-        Connection::query("DELETE FROM languages WHERE LgID = $lang_id");
+        Connection::query("DELETE FROM languages WHERE id = $lang_id");
     }
 
     // ========== ADDITIONAL HELPER FUNCTIONS TESTS ==========
@@ -665,7 +665,7 @@ class IntegrationTest extends TestCase
     {
         // Create test texts
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+            "INSERT INTO languages (name, dict1_uri, google_translate_uri)
              VALUES ('Test Lang', 'http://test', 'http://test')"
         );
         $lang_id = (int)Connection::lastInsertId();
@@ -705,7 +705,7 @@ class IntegrationTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM texts WHERE language_id = $lang_id");
-        Connection::query("DELETE FROM languages WHERE LgID = $lang_id");
+        Connection::query("DELETE FROM languages WHERE id = $lang_id");
     }
 
     public function testMediaPathsSearchExtended(): void

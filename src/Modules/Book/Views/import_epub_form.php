@@ -109,7 +109,7 @@ sudo systemctl restart httpd  # or nginx</code></pre>
     <div class="box">
         <!-- Language -->
         <div class="field">
-            <label class="label" for="LgID">
+            <label class="label" for="id">
                 <?php echo __('common.language'); ?>
                 <span class="icon has-text-danger is-small"
                       title="<?php echo htmlspecialchars(__('common.required_field'), ENT_QUOTES); ?>">
@@ -118,7 +118,7 @@ sudo systemctl restart httpd  # or nginx</code></pre>
             </label>
             <div class="control">
                 <div class="select is-fullwidth">
-                    <select name="LgID" id="LgID" class="notempty setfocus" required>
+                    <select name="id" id="id" class="notempty setfocus" required>
                         <?php echo $languagesOption; ?>
                     </select>
                 </div>

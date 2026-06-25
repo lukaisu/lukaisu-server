@@ -56,7 +56,7 @@ class WordListQueryService
     ): int {
         if ($textId == '') {
             $bindings = $params;
-            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings);
+            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
             $sql = 'select count(*) as value from (select id from (' .
                 'words left JOIN word_tag_map' .
                 ' ON words.id = word_id) where (1=1) ' .
@@ -68,7 +68,7 @@ class WordListQueryService
             $inClause = Connection::buildPreparedInClause($textIds, $bindings);
             /** @var array<int, mixed> $bindings */
             $bindings = array_values(array_merge($bindings, $params));
-            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings);
+            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
             $sql = 'select count(*) as value from (select id from (' .
                 'words left JOIN word_tag_map' .
                 ' ON words.id = word_id), word_occurrences' .
@@ -127,22 +127,22 @@ class WordListQueryService
         if ($textId == '') {
             if ($whTag == '') {
                 $bindings = $filterParams;
-                $wordScope = UserScopedQuery::forTablePrepared('words', $bindings);
-                $langScope = UserScopedQuery::forTablePrepared('languages', $bindings);
+                $wordScope = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
+                $langScope = UserScopedQuery::forTablePrepared('languages', $bindings, 'languages');
                 $bindings[] = $offset;
                 $bindings[] = $perPage;
                 $sql = 'select words.id, words.text, translation, romanization, sentence,
-                        SentOK, status, LgName, LgRightToLeft, LgGoogleTranslateURI, Days,
+                        SentOK, status, name, right_to_left, google_translate_uri, Days,
                         today_score AS Score, tomorrow_score AS Score2,
                         ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist
-                        from (select id, text_lc, text, translation, romanization,
+                        from (select words.id, text_lc, text, translation, romanization,
                         sentence,
                         ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
-                        status, LgName, LgRightToLeft, LgGoogleTranslateURI,
+                        status, name, right_to_left, google_translate_uri,
                         DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score,
                         tomorrow_score
                         from words, languages
-                        where language_id = LgID ' . $whLang . $whStat . $whQuery . $wordScope . $langScope . '
+                        where words.language_id = languages.id ' . $whLang . $whStat . $whQuery . $wordScope . $langScope . '
                         group by words.id
                         order by ' . $sorts[$sort - 1] . ' LIMIT ?, ?) AS words
                         left JOIN word_tag_map ON words.id = word_id
@@ -151,20 +151,20 @@ class WordListQueryService
                         order by ' . $sorts[$sort - 1];
             } else {
                 $bindings = $filterParams;
-                $wordScope = UserScopedQuery::forTablePrepared('words', $bindings);
-                $langScope = UserScopedQuery::forTablePrepared('languages', $bindings);
+                $wordScope = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
+                $langScope = UserScopedQuery::forTablePrepared('languages', $bindings, 'languages');
                 $bindings[] = $offset;
                 $bindings[] = $perPage;
                 $sql = 'select words.id, words.text, translation, romanization, sentence,
                         ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
-                        status, LgName, LgRightToLeft, LgGoogleTranslateURI,
+                        status, name, right_to_left, google_translate_uri,
                         DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
                         tomorrow_score AS Score2,
                         ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist
                         from ((words left JOIN word_tag_map
                         ON words.id = word_id) left join tags
                         on tags.id = tag_id), languages
-                        where language_id = LgID ' . $whLang . $whStat . $whQuery . $wordScope . $langScope .
+                        where words.language_id = languages.id ' . $whLang . $whStat . $whQuery . $wordScope . $langScope .
                         ' group by words.id ' . $whTag . ' order by ' . $sorts[$sort - 1] . ' LIMIT ?, ?';
             }
         } else {
@@ -173,13 +173,13 @@ class WordListQueryService
             $inClause = Connection::buildPreparedInClause($textIds, $bindings);
             /** @var array<int, mixed> $bindings */
             $bindings = array_values(array_merge($bindings, $filterParams));
-            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings);
-            $langScope = UserScopedQuery::forTablePrepared('languages', $bindings);
+            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
+            $langScope = UserScopedQuery::forTablePrepared('languages', $bindings, 'languages');
             $bindings[] = $offset;
             $bindings[] = $perPage;
             $sql = 'select distinct words.id, words.text, translation, romanization,
                     sentence, ifnull(sentence,\'\') like \'%{%}%\' as SentOK, status,
-                    LgName, LgRightToLeft, LgGoogleTranslateURI,
+                    name, right_to_left, google_translate_uri,
                     DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
                     tomorrow_score AS Score2,
                     ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist
@@ -187,8 +187,8 @@ class WordListQueryService
                     left JOIN word_tag_map ON words.id = word_id)
                     left join tags on tags.id = tag_id),
                     languages, word_occurrences
-                    where language_id = language_id and word_id = words.id and text_id in ' .
-                    $inClause . ' and language_id = LgID ' . $whLang . $whStat . $whQuery . $wordScope . $langScope . '
+                    where words.language_id = word_occurrences.language_id and word_id = words.id and text_id in ' .
+                    $inClause . ' and words.language_id = languages.id ' . $whLang . $whStat . $whQuery . $wordScope . $langScope . '
                     group by words.id ' . $whTag . '
                     order by ' . $sorts[$sort - 1] . ' LIMIT ?, ?';
         }
@@ -222,12 +222,12 @@ class WordListQueryService
             foreach ($filterParams as $param) {
                 $bindings[] = $param;
             }
-            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings);
-            $langScope = UserScopedQuery::forTablePrepared('languages', $bindings);
+            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
+            $langScope = UserScopedQuery::forTablePrepared('languages', $bindings, 'languages');
             $sql = 'select words.id, count(words.id) AS textswordcount, words.text, translation,
                     romanization, sentence,
                     ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
-                    status, LgName, LgRightToLeft, LgGoogleTranslateURI,
+                    status, name, right_to_left, google_translate_uri,
                     DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
                     tomorrow_score AS Score2,
                     ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist,
@@ -236,7 +236,7 @@ class WordListQueryService
                     ON words.id = word_id)
                     left join tags on tags.id = tag_id),
                     languages, word_occurrences
-                    where language_id = language_id and word_id = words.id and language_id = LgID
+                    where words.language_id = word_occurrences.language_id and word_id = words.id and words.language_id = languages.id
                     and text_id in ' . $inClause . ' ' .
                     $whLang . $whStat . $whQuery . $wordScope . $langScope .
                     ' group by words.id ' . $whTag .
@@ -246,8 +246,8 @@ class WordListQueryService
             // Both halves share the same filter params and the same user scope, so we duplicate
             // each set of bindings via two forTablePrepared calls.
             $bindings = $filterParams;
-            $wordScope1 = UserScopedQuery::forTablePrepared('words', $bindings);
-            $langScope1 = UserScopedQuery::forTablePrepared('languages', $bindings);
+            $wordScope1 = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
+            $langScope1 = UserScopedQuery::forTablePrepared('languages', $bindings, 'languages');
             // Re-append the filter params for the UNION's second half. Use
             // a foreach instead of array_merge so Psalm preserves the
             // `array<int, mixed>` shape required by forTablePrepared's
@@ -255,12 +255,12 @@ class WordListQueryService
             foreach ($filterParams as $param) {
                 $bindings[] = $param;
             }
-            $wordScope2 = UserScopedQuery::forTablePrepared('words', $bindings);
-            $langScope2 = UserScopedQuery::forTablePrepared('languages', $bindings);
+            $wordScope2 = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
+            $langScope2 = UserScopedQuery::forTablePrepared('languages', $bindings, 'languages');
             $sql = 'select words.id, 0 AS textswordcount, words.text, translation,
                     romanization, sentence,
                     ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
-                    status, LgName, LgRightToLeft, LgGoogleTranslateURI,
+                    status, name, right_to_left, google_translate_uri,
                     DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
                     tomorrow_score AS Score2,
                     ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist,
@@ -269,15 +269,15 @@ class WordListQueryService
                     ON words.id = word_id)
                     left join tags on tags.id = tag_id),
                     languages
-                    where language_id = LgID and words.id NOT IN (SELECT DISTINCT word_id
-                    from word_occurrences where language_id = LgID) ' .
+                    where words.language_id = languages.id and words.id NOT IN (SELECT DISTINCT word_id
+                    from word_occurrences where word_occurrences.language_id = languages.id) ' .
                     $whLang . $whStat . $whQuery . $wordScope1 . $langScope1 . '
                     group by words.id ' . $whTag . '
                     UNION
                     select words.id, count(words.id) AS textswordcount, words.text, translation,
                     romanization, sentence,
                     ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
-                    status, LgName, LgRightToLeft, LgGoogleTranslateURI,
+                    status, name, right_to_left, google_translate_uri,
                     DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
                     tomorrow_score AS Score2,
                     ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist,
@@ -286,7 +286,7 @@ class WordListQueryService
                     ON words.id = word_id)
                     left join tags on tags.id = tag_id),
                     languages, word_occurrences
-                    where language_id = language_id and word_id = words.id and language_id = LgID ' .
+                    where words.language_id = word_occurrences.language_id and word_id = words.id and words.language_id = languages.id ' .
                     $whLang . $whStat . $whQuery . $wordScope2 . $langScope2 .
                     ' group by words.id ' . $whTag .
                     ' order by ' . $sortExpr;
@@ -317,7 +317,7 @@ class WordListQueryService
     ): array {
         if ($textId == '') {
             $bindings = $params;
-            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings);
+            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
             $sql = 'select distinct id from (
                 words
                 left JOIN word_tag_map
@@ -330,7 +330,7 @@ class WordListQueryService
             $inClause = Connection::buildPreparedInClause($textIds, $bindings);
             /** @var array<int, mixed> $bindings */
             $bindings = array_values(array_merge($bindings, $params));
-            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings);
+            $wordScope = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
             $sql = 'select distinct id
             from (
                 words

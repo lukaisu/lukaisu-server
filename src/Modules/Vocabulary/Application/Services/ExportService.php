@@ -185,13 +185,13 @@ class ExportService
      */
     private function formatAnkiRow(array $record): string
     {
-        if ('MECAB' == strtoupper(trim((string) $record['LgRegexpWordCharacters']))) {
+        if ('MECAB' == strtoupper(trim((string) $record['regexp_word_characters']))) {
             $termchar = '一-龥ぁ-ヾ';
         } else {
-            $termchar = (string)$record['LgRegexpWordCharacters'];
+            $termchar = (string)$record['regexp_word_characters'];
         }
 
-        $rtlScript = (int)$record['LgRightToLeft'] === 1;
+        $rtlScript = (int)$record['right_to_left'] === 1;
         $span1 = ($rtlScript ? '<span dir="rtl">' : '');
         $span2 = ($rtlScript ? '</span>' : '');
         $lpar = ($rtlScript ? ']' : '[');
@@ -227,7 +227,7 @@ class ExportService
             htmlspecialchars(self::replaceTabNewline((string)$record["romanization"]), ENT_QUOTES, 'UTF-8') . "\t" .
             $span1 . $sent1 . $span2 . "\t" .
             $span1 . $sent2 . $span2 . "\t" .
-            htmlspecialchars(self::replaceTabNewline((string)$record["LgName"]), ENT_QUOTES, 'UTF-8') . "\t" .
+            htmlspecialchars(self::replaceTabNewline((string)$record["name"]), ENT_QUOTES, 'UTF-8') . "\t" .
             htmlspecialchars((string)$record["id"], ENT_QUOTES, 'UTF-8') . "\t" .
             htmlspecialchars((string)$record["taglist"], ENT_QUOTES, 'UTF-8') .
             "\r\n";
@@ -255,7 +255,7 @@ class ExportService
             CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["sentence"])) . "\t" .
             CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["romanization"])) . "\t" .
             (string)($record["status"] ?? '') . "\t" .
-            CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["LgName"])) . "\t" .
+            CsvFormulaGuard::escapeCell(self::replaceTabNewline((string)$record["name"])) . "\t" .
             (string)($record["id"] ?? '') . "\t" .
             CsvFormulaGuard::escapeCell((string)($record["taglist"] ?? '')) . "\r\n";
     }
@@ -269,13 +269,13 @@ class ExportService
      */
     private function formatFlexibleRow(array $record): string
     {
-        if (!isset($record['LgExportTemplate'])) {
+        if (!isset($record['export_template'])) {
             return '';
         }
 
         $woid = (string)$record['id'];
-        $langname = self::replaceTabNewline((string)$record['LgName']);
-        $rtlScript = (int)$record['LgRightToLeft'] === 1;
+        $langname = self::replaceTabNewline((string)$record['name']);
+        $rtlScript = (int)$record['right_to_left'] === 1;
         $span1 = ($rtlScript ? '<span dir="rtl">' : '');
         $span2 = ($rtlScript ? '</span>' : '');
         $term = self::replaceTabNewline((string)$record['text']);
@@ -295,7 +295,7 @@ class ExportService
         $status = (string)$record['status'];
         $taglist = trim((string)$record['taglist']);
 
-        $output = self::replaceTabNewline((string)$record['LgExportTemplate']);
+        $output = self::replaceTabNewline((string)$record['export_template']);
 
         // Replace plain text placeholders
         $output = str_replace('%w', $term, $output);

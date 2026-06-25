@@ -55,7 +55,7 @@ class ExportAndAnnotationTest extends TestCase
 
         // Clean up test data
         Connection::query("DELETE FROM texts WHERE title LIKE 'test_export_%'");
-        Connection::query("DELETE FROM languages WHERE LgName LIKE 'test_export_%'");
+        Connection::query("DELETE FROM languages WHERE name LIKE 'test_export_%'");
     }
 
     // ===== create_ann() tests =====
@@ -67,7 +67,7 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         // Create test language
-        Connection::query("INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+        Connection::query("INSERT INTO languages (name, dict1_uri, google_translate_uri)
                          VALUES ('test_export_lang', 'http://test', 'http://test')");
         $lgId = (int)Connection::lastInsertId();
 
@@ -83,7 +83,7 @@ class ExportAndAnnotationTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM texts WHERE id = $textId");
-        Connection::query("DELETE FROM languages WHERE LgID = $lgId");
+        Connection::query("DELETE FROM languages WHERE id = $lgId");
     }
 
     public function testCreateAnnWithNonExistentText(): void
@@ -107,7 +107,7 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         // Create test language
-        Connection::query("INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+        Connection::query("INSERT INTO languages (name, dict1_uri, google_translate_uri)
                          VALUES ('test_export_recreate', 'http://test', 'http://test')");
         $lgId = (int)Connection::lastInsertId();
 
@@ -123,7 +123,7 @@ class ExportAndAnnotationTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM texts WHERE id = $textId");
-        Connection::query("DELETE FROM languages WHERE LgID = $lgId");
+        Connection::query("DELETE FROM languages WHERE id = $lgId");
     }
 
     public function testRecreateSaveAnnWithEmptyOldAnn(): void
@@ -133,7 +133,7 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         // Create test language
-        Connection::query("INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+        Connection::query("INSERT INTO languages (name, dict1_uri, google_translate_uri)
                          VALUES ('test_export_empty', 'http://test', 'http://test')");
         $lgId = (int)Connection::lastInsertId();
 
@@ -148,7 +148,7 @@ class ExportAndAnnotationTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM texts WHERE id = $textId");
-        Connection::query("DELETE FROM languages WHERE LgID = $lgId");
+        Connection::query("DELETE FROM languages WHERE id = $lgId");
     }
 
     public function testRecreateSaveAnnUpdatesDatabase(): void
@@ -158,7 +158,7 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         // Create test language
-        Connection::query("INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+        Connection::query("INSERT INTO languages (name, dict1_uri, google_translate_uri)
                          VALUES ('test_export_update', 'http://test', 'http://test')");
         $lgId = (int)Connection::lastInsertId();
 
@@ -176,7 +176,7 @@ class ExportAndAnnotationTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM texts WHERE id = $textId");
-        Connection::query("DELETE FROM languages WHERE LgID = $lgId");
+        Connection::query("DELETE FROM languages WHERE id = $lgId");
     }
 
     // ===== Helper function tests =====
@@ -218,7 +218,7 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         // Create test language
-        Connection::query("INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+        Connection::query("INSERT INTO languages (name, dict1_uri, google_translate_uri)
                          VALUES ('test_export_struct', 'http://test', 'http://test')");
         $lgId = (int)Connection::lastInsertId();
 
@@ -235,7 +235,7 @@ class ExportAndAnnotationTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM texts WHERE id = $textId");
-        Connection::query("DELETE FROM languages WHERE LgID = $lgId");
+        Connection::query("DELETE FROM languages WHERE id = $lgId");
     }
 
     public function testAnnotationWithTabSeparatedValues(): void
@@ -263,7 +263,7 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         // Create test language
-        Connection::query("INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+        Connection::query("INSERT INTO languages (name, dict1_uri, google_translate_uri)
                          VALUES ('test_export_workflow', 'http://test', 'http://test')");
         $lgId = (int)Connection::lastInsertId();
 
@@ -287,7 +287,7 @@ class ExportAndAnnotationTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM texts WHERE id = $textId");
-        Connection::query("DELETE FROM languages WHERE LgID = $lgId");
+        Connection::query("DELETE FROM languages WHERE id = $lgId");
     }
 
     public function testAnnotationPreservesTranslations(): void
@@ -297,7 +297,7 @@ class ExportAndAnnotationTest extends TestCase
         }
 
         // Create test language
-        Connection::query("INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+        Connection::query("INSERT INTO languages (name, dict1_uri, google_translate_uri)
                          VALUES ('test_export_preserve', 'http://test', 'http://test')");
         $lgId = (int)Connection::lastInsertId();
 
@@ -315,7 +315,7 @@ class ExportAndAnnotationTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM texts WHERE id = $textId");
-        Connection::query("DELETE FROM languages WHERE LgID = $lgId");
+        Connection::query("DELETE FROM languages WHERE id = $lgId");
     }
 
     // ===== Additional utility tests =====

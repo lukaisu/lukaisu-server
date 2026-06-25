@@ -686,7 +686,7 @@ use Lukaisu\Shared\UI\Helpers\FormHelper;
                     <label class="label" for="get-language"><?= __('preferences.voice_language_label') ?></label>
                     <div class="control">
                         <div class="select is-fullwidth">
-                            <select name="LgName"
+                            <select name="name"
                                     id="get-language"
                                     x-model="currentLanguage"
                                     @change="onLanguageChange()">

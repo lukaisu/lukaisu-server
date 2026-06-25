@@ -124,14 +124,14 @@ class SentenceService
     {
         $mecab_str = null;
         $record = QueryBuilder::table('languages')
-            ->select(['LgRegexpWordCharacters', 'LgRemoveSpaces'])
-            ->where('LgID', '=', $lid)
+            ->select(['regexp_word_characters', 'remove_spaces'])
+            ->where('id', '=', $lid)
             ->firstPrepared();
         if ($record === null) {
             return [];
         }
-        $removeSpaces = (int)$record["LgRemoveSpaces"];
-        $regexpWordChars = (string)($record["LgRegexpWordCharacters"] ?? '');
+        $removeSpaces = (int)$record["remove_spaces"];
+        $regexpWordChars = (string)($record["regexp_word_characters"] ?? '');
 
         if ('MECAB' == strtoupper(trim($regexpWordChars))) {
             $mecab_file = sys_get_temp_dir() . "/lukaisu_mecab_to_db.txt";
@@ -269,20 +269,20 @@ class SentenceService
             "SELECT
             CONCAT(
                 '​', group_concat(text ORDER BY position asc SEPARATOR '​'), '​'
-            ) AS text, text_id AS text_id, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar
+            ) AS text, text_id AS text_id, regexp_word_characters,
+            remove_spaces, split_each_char
             FROM word_occurrences, languages
-            WHERE language_id = LgID AND word_count < 2 AND sentence_id = ?
+            WHERE language_id = id AND word_count < 2 AND sentence_id = ?
             AND text != '¶'",
             [$seid]
         );
         if ($record === null) {
             return [$mode > 1 ? '' : $wordlc, $wordlc];
         }
-        $removeSpaces = (int)$record["LgRemoveSpaces"] == 1;
-        $splitEachChar = (int)$record['LgSplitEachChar'] != 0;
+        $removeSpaces = (int)$record["remove_spaces"] == 1;
+        $splitEachChar = (int)$record['split_each_char'] != 0;
         $txtid = (int)$record["text_id"];
-        $termchar = (string) $record["LgRegexpWordCharacters"];
+        $termchar = (string) $record["regexp_word_characters"];
         $seText = (string)($record["text"] ?? '');
 
         if (
@@ -378,7 +378,7 @@ class SentenceService
     /**
      * Convert zero-width space (ZWS) markers to proper spacing.
      *
-     * For languages that use spaces between words (LgRemoveSpaces = 0),
+     * For languages that use spaces between words (remove_spaces = 0),
      * this method converts ZWS markers in the text to actual spaces where
      * appropriate (between words and after punctuation).
      *
@@ -430,11 +430,11 @@ class SentenceService
                 CONCAT(
                     '​', GROUP_CONCAT(text ORDER BY position ASC SEPARATOR '​'), '​'
                 ) AS text,
-                LgRegexpWordCharacters,
-                LgRemoveSpaces,
-                LgSplitEachChar
+                regexp_word_characters,
+                remove_spaces,
+                split_each_char
             FROM word_occurrences
-            JOIN languages ON language_id = LgID
+            JOIN languages ON language_id = id
             WHERE word_count < 2
               AND sentence_id = ?
               AND text != '¶'",
@@ -445,9 +445,9 @@ class SentenceService
             return null;
         }
 
-        $removeSpaces = (int) $record['LgRemoveSpaces'] == 1;
-        $splitEachChar = (int) $record['LgSplitEachChar'] != 0;
-        $termchar = (string) $record['LgRegexpWordCharacters'];
+        $removeSpaces = (int) $record['remove_spaces'] == 1;
+        $splitEachChar = (int) $record['split_each_char'] != 0;
+        $termchar = (string) $record['regexp_word_characters'];
 
         // For languages that don't remove spaces and don't split each char
         // (like most Western languages), apply spacing conversion
@@ -493,10 +493,10 @@ class SentenceService
 
         // Get language settings
         $langRecord = Connection::preparedFetchOne(
-            "SELECT LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar,
-                    LgRegexpSplitSentences
+            "SELECT regexp_word_characters, remove_spaces, split_each_char,
+                    regexp_split_sentences
              FROM word_occurrences
-             JOIN languages ON language_id = LgID
+             JOIN languages ON language_id = id
              WHERE text_id = ? LIMIT 1",
             [$textId]
         );
@@ -505,10 +505,10 @@ class SentenceService
             return null;
         }
 
-        $removeSpaces = (int) $langRecord['LgRemoveSpaces'] == 1;
-        $splitEachChar = (int) $langRecord['LgSplitEachChar'] != 0;
-        $termchar = (string) $langRecord['LgRegexpWordCharacters'];
-        $splitSentence = (string) $langRecord['LgRegexpSplitSentences'];
+        $removeSpaces = (int) $langRecord['remove_spaces'] == 1;
+        $splitEachChar = (int) $langRecord['split_each_char'] != 0;
+        $termchar = (string) $langRecord['regexp_word_characters'];
+        $splitSentence = (string) $langRecord['regexp_split_sentences'];
 
         // Get tokens around the position (larger context to find sentence boundaries)
         // We'll get ~100 tokens before and after the target position

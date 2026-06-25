@@ -66,19 +66,19 @@ class DictionaryAdapter
     {
         $record = QueryBuilder::table('languages')
             ->select([
-                'LgDict1URI', 'LgDict2URI', 'LgGoogleTranslateURI',
-                'LgDict1PopUp', 'LgDict2PopUp', 'LgGoogleTranslatePopUp'
+                'dict1_uri', 'dict2_uri', 'google_translate_uri',
+                'dict1_popup', 'dict2_popup', 'google_translate_popup'
             ])
-            ->where('LgID', '=', $langId)
+            ->where('id', '=', $langId)
             ->firstPrepared();
 
         return [
-            'dict1' => (string) ($record['LgDict1URI'] ?? ''),
-            'dict2' => (string) ($record['LgDict2URI'] ?? ''),
-            'translator' => (string) ($record['LgGoogleTranslateURI'] ?? ''),
-            'popup1' => (bool) ($record['LgDict1PopUp'] ?? false),
-            'popup2' => (bool) ($record['LgDict2PopUp'] ?? false),
-            'popup3' => (bool) ($record['LgGoogleTranslatePopUp'] ?? false),
+            'dict1' => (string) ($record['dict1_uri'] ?? ''),
+            'dict2' => (string) ($record['dict2_uri'] ?? ''),
+            'translator' => (string) ($record['google_translate_uri'] ?? ''),
+            'popup1' => (bool) ($record['dict1_popup'] ?? false),
+            'popup2' => (bool) ($record['dict2_popup'] ?? false),
+            'popup3' => (bool) ($record['google_translate_popup'] ?? false),
         ];
     }
 
@@ -92,11 +92,11 @@ class DictionaryAdapter
     public function getLocalDictMode(int $langId): int
     {
         $record = QueryBuilder::table('languages')
-            ->select(['LgLocalDictMode'])
-            ->where('LgID', '=', $langId)
+            ->select(['local_dict_mode'])
+            ->where('id', '=', $langId)
             ->firstPrepared();
 
-        return (int) ($record['LgLocalDictMode'] ?? 0);
+        return (int) ($record['local_dict_mode'] ?? 0);
     }
 
     /**

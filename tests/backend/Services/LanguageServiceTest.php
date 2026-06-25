@@ -69,8 +69,8 @@ class LanguageServiceTest extends TestCase
         }
 
         // Clean up test languages after each test
-        Connection::query("DELETE FROM languages WHERE LgName LIKE 'Test_%'");
-        Connection::query("DELETE FROM languages WHERE LgName LIKE 'TestLang%'");
+        Connection::query("DELETE FROM languages WHERE name LIKE 'Test_%'");
+        Connection::query("DELETE FROM languages WHERE name LIKE 'TestLang%'");
         self::$testLanguageIds = [];
     }
 
@@ -95,9 +95,9 @@ class LanguageServiceTest extends TestCase
     {
         Connection::query(
             "INSERT INTO languages (
-                LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI,
-                LgTextSize, LgRegexpSplitSentences, LgRegexpWordCharacters,
-                LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization
+                name, dict1_uri, dict2_uri, google_translate_uri,
+                text_size, regexp_split_sentences, regexp_word_characters,
+                remove_spaces, split_each_char, right_to_left, show_romanization
             ) VALUES (
                 '$name', 'https://dict.test/lukaisu_term', '', 'https://translate.test/lukaisu_term',
                 100, '.!?', 'a-zA-Z',
@@ -144,12 +144,12 @@ class LanguageServiceTest extends TestCase
 
         // Clean up any existing empty-name language first
         Connection::query(
-            "DELETE FROM languages WHERE LgName = ''"
+            "DELETE FROM languages WHERE name = ''"
         );
 
         // Insert language with empty name (placeholder)
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgTextSize, LgRegexpSplitSentences, LgRegexpWordCharacters)
+            "INSERT INTO languages (name, dict1_uri, text_size, regexp_split_sentences, regexp_word_characters)
              VALUES ('', 'https://test.com', 100, '.!?', 'a-z')"
         );
 
@@ -159,7 +159,7 @@ class LanguageServiceTest extends TestCase
 
         // Clean up
         Connection::query(
-            "DELETE FROM languages WHERE LgName = ''"
+            "DELETE FROM languages WHERE name = ''"
         );
     }
 
@@ -303,17 +303,17 @@ class LanguageServiceTest extends TestCase
         }
 
         $this->setLanguageRequestData([
-            'LgName' => 'TestLang_Create',
-            'LgDict1URI' => 'https://dict.test/lukaisu_term',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => 'https://translate.test/lukaisu_term',
-            'LgExportTemplate' => '',
-            'LgTextSize' => '150',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => '',
-            'LgRegexpWordCharacters' => 'a-zA-Z',
-            'LgTTSVoiceAPI' => '',
+            'name' => 'TestLang_Create',
+            'dict1_uri' => 'https://dict.test/lukaisu_term',
+            'dict2_uri' => '',
+            'google_translate_uri' => 'https://translate.test/lukaisu_term',
+            'export_template' => '',
+            'text_size' => '150',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => '',
+            'regexp_word_characters' => 'a-zA-Z',
+            'tts_voice_api' => '',
         ]);
 
         $result = $this->service->create();
@@ -334,21 +334,21 @@ class LanguageServiceTest extends TestCase
         }
 
         $this->setLanguageRequestData([
-            'LgName' => 'TestLang_Checkboxes',
-            'LgDict1URI' => 'https://dict.test/lukaisu_term',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => '',
-            'LgExportTemplate' => '',
-            'LgTextSize' => '100',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => '',
-            'LgRegexpWordCharacters' => 'a-zA-Z',
-            'LgTTSVoiceAPI' => '',
-            'LgRemoveSpaces' => '1',
-            'LgSplitEachChar' => '1',
-            'LgRightToLeft' => '1',
-            'LgShowRomanization' => '1',
+            'name' => 'TestLang_Checkboxes',
+            'dict1_uri' => 'https://dict.test/lukaisu_term',
+            'dict2_uri' => '',
+            'google_translate_uri' => '',
+            'export_template' => '',
+            'text_size' => '100',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => '',
+            'regexp_word_characters' => 'a-zA-Z',
+            'tts_voice_api' => '',
+            'remove_spaces' => '1',
+            'split_each_char' => '1',
+            'right_to_left' => '1',
+            'show_romanization' => '1',
         ]);
 
         $this->service->create();
@@ -374,17 +374,17 @@ class LanguageServiceTest extends TestCase
         $id = $this->createTestLanguage('TestLang_Update');
 
         $this->setLanguageRequestData([
-            'LgName' => 'TestLang_Updated',
-            'LgDict1URI' => 'https://newdict.test/lukaisu_term',
-            'LgDict2URI' => 'https://dict2.test/lukaisu_term',
-            'LgGoogleTranslateURI' => 'https://newtranslate.test/lukaisu_term',
-            'LgExportTemplate' => 'template',
-            'LgTextSize' => '200',
-            'LgCharacterSubstitutions' => 'a=b',
-            'LgRegexpSplitSentences' => '.!?:',
-            'LgExceptionsSplitSentences' => 'Mr.',
-            'LgRegexpWordCharacters' => 'a-zA-Z0-9',
-            'LgTTSVoiceAPI' => '{"input": "lukaisu_term"}',
+            'name' => 'TestLang_Updated',
+            'dict1_uri' => 'https://newdict.test/lukaisu_term',
+            'dict2_uri' => 'https://dict2.test/lukaisu_term',
+            'google_translate_uri' => 'https://newtranslate.test/lukaisu_term',
+            'export_template' => 'template',
+            'text_size' => '200',
+            'character_substitutions' => 'a=b',
+            'regexp_split_sentences' => '.!?:',
+            'exceptions_split_sentences' => 'Mr.',
+            'regexp_word_characters' => 'a-zA-Z0-9',
+            'tts_voice_api' => '{"input": "lukaisu_term"}',
         ]);
 
         $result = $this->service->update($id);
@@ -405,17 +405,17 @@ class LanguageServiceTest extends TestCase
         }
 
         $this->setLanguageRequestData([
-            'LgName' => 'TestLang_NotFound',
-            'LgDict1URI' => '',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => '',
-            'LgExportTemplate' => '',
-            'LgTextSize' => '100',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => '',
-            'LgRegexpWordCharacters' => 'a-z',
-            'LgTTSVoiceAPI' => '',
+            'name' => 'TestLang_NotFound',
+            'dict1_uri' => '',
+            'dict2_uri' => '',
+            'google_translate_uri' => '',
+            'export_template' => '',
+            'text_size' => '100',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => '',
+            'regexp_word_characters' => 'a-z',
+            'tts_voice_api' => '',
         ]);
 
         $result = $this->service->update(999999);
@@ -435,17 +435,17 @@ class LanguageServiceTest extends TestCase
 
         // Update only non-parsing-related fields
         $this->setLanguageRequestData([
-            'LgName' => 'TestLang_NoReparse_Updated',
-            'LgDict1URI' => 'https://newdict.test/lukaisu_term',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => '',
-            'LgExportTemplate' => '',
-            'LgTextSize' => '150',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => '',
-            'LgRegexpWordCharacters' => 'a-zA-Z',
-            'LgTTSVoiceAPI' => '',
+            'name' => 'TestLang_NoReparse_Updated',
+            'dict1_uri' => 'https://newdict.test/lukaisu_term',
+            'dict2_uri' => '',
+            'google_translate_uri' => '',
+            'export_template' => '',
+            'text_size' => '150',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => '',
+            'regexp_word_characters' => 'a-zA-Z',
+            'tts_voice_api' => '',
         ]);
 
         $result = $this->service->update($id);
@@ -705,7 +705,7 @@ class LanguageServiceTest extends TestCase
 
         // Insert language with empty name
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgTextSize, LgRegexpSplitSentences, LgRegexpWordCharacters)
+            "INSERT INTO languages (name, dict1_uri, text_size, regexp_split_sentences, regexp_word_characters)
              VALUES ('', 'https://test.com', 100, '.!?', 'a-z')"
         );
 

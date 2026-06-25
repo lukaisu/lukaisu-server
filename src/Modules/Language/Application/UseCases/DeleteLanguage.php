@@ -50,7 +50,7 @@ class DeleteLanguage
         }
 
         $affected = QueryBuilder::table('languages')
-            ->where('LgID', '=', $id)
+            ->where('id', '=', $id)
             ->delete();
         return ['success' => $affected > 0, 'count' => $affected, 'error' => null];
     }
@@ -65,7 +65,7 @@ class DeleteLanguage
     public function deleteById(int $id): bool
     {
         $affected = QueryBuilder::table('languages')
-            ->where('LgID', '=', $id)
+            ->where('id', '=', $id)
             ->delete();
         return $affected > 0;
     }

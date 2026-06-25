@@ -16,7 +16,7 @@
 
 /**
  * Normalize a regex character-class *fragment* coming from language settings
- * (e.g. `LgRegexpWordCharacters`) into a JS-compatible fragment for use with
+ * (e.g. `regexp_word_characters`) into a JS-compatible fragment for use with
  * the `u` flag. Converts PHP `\x{HHHH}` escapes to JS `\u{HHHH}`.
  *
  * The fragment is inserted verbatim into a character class, so ranges like

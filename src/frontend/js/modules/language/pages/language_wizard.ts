@@ -128,23 +128,23 @@ export const languageWizard = {
     if (!learningLg) return;
 
     // Set language name and trigger change event
-    setInputValue('input[name="LgName"]', l2, true);
+    setInputValue('input[name="name"]', l2, true);
 
     // Check for language-specific UI changes (e.g., Japanese regexp field)
     languageForm.checkLanguageChanged(l2);
 
     // Set source language code
-    setInputValue('input[name="LgSourceLang"]', learningLg[1]);
+    setInputValue('input[name="source_lang"]', learningLg[1]);
 
     // Set text size based on language needs
-    setInputValue('input[name="LgTextSize"]', learningLg[2] ? 200 : 150, true);
+    setInputValue('input[name="text_size"]', learningLg[2] ? 200 : 150, true);
 
     // Set language parsing rules
-    setInputValue('input[name="LgRegexpSplitSentences"]', learningLg[4]);
-    setInputValue('input[name="LgRegexpWordCharacters"]', learningLg[3]);
-    setChecked('input[name="LgSplitEachChar"]', learningLg[5]);
-    setChecked('input[name="LgRemoveSpaces"]', learningLg[6]);
-    setChecked('input[name="LgRightToLeft"]', learningLg[7]);
+    setInputValue('input[name="regexp_split_sentences"]', learningLg[4]);
+    setInputValue('input[name="regexp_word_characters"]', learningLg[3]);
+    setChecked('input[name="split_each_char"]', learningLg[5]);
+    setChecked('input[name="remove_spaces"]', learningLg[6]);
+    setChecked('input[name="right_to_left"]', learningLg[7]);
 
     // Also update dictionary URLs if L1 is already set
     this.updateDictionaryUrls();
@@ -164,7 +164,7 @@ export const languageWizard = {
     if (!knownLg) return;
 
     // Set target language code
-    setInputValue('input[name="LgTargetLang"]', knownLg[1]);
+    setInputValue('input[name="target_lang"]', knownLg[1]);
 
     // Update dictionary URLs if L2 is already set
     this.updateDictionaryUrls();
@@ -201,14 +201,14 @@ export const languageWizard = {
 
     // Set dictionary URL (Glosbe) and popup checkbox
     setInputValue(
-      'input[name="LgDict1URI"]',
+      'input[name="dict1_uri"]',
       'https://glosbe.com/' + learningLg[0] + '/' + knownLg[0] + '/lukaisu_term'
     );
-    setChecked('input[name="LgDict1PopUp"]', true);
+    setChecked('input[name="dict1_popup"]', true);
 
     // Set translator URL
     if (window.GGTRANSLATE) {
-      setInputValue('input[name="LgGoogleTranslateURI"]', window.GGTRANSLATE);
+      setInputValue('input[name="google_translate_uri"]', window.GGTRANSLATE);
     }
   },
 

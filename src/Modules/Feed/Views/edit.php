@@ -5,7 +5,7 @@
  *
  * Variables expected:
  * - $feed: array feed data from database
- * - $languages: array of language data [{LgID, LgName}, ...]
+ * - $languages: array of language data [{id, name}, ...]
  * - $options: array parsed feed options
  * - $autoUpdateInterval: string|null auto-update interval value
  * - $autoUpdateUnit: string|null auto-update unit (h/d/w)
@@ -31,7 +31,7 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
  * @var array{id: int|null, language_id: int, name: string, source_uri: string,
  *            article_section_tags: string, filter_tags: string, update_interval: int,
  *            options: string} $feed Feed data
- * @var array<int, array{LgID: int, LgName: string}> $languages Language records
+ * @var array<int, array{id: int, name: string}> $languages Language records
  * @var array<string, string> $options Parsed feed options
  * @var string|null $autoUpdateInterval Auto-update interval value
  * @var string|null $autoUpdateUnit Auto-update unit (h/d/w)
@@ -92,9 +92,9 @@ $helpLabel = __('feed.edit_help');
                 <div class="select is-fullwidth">
                     <select name="language_id" id="language_id">
                         <?php foreach ($languages as $lang) : ?>
-                            <?php $selected = ($feed['language_id'] === $lang['LgID']) ? ' selected' : ''; ?>
-                            <option value="<?php echo $lang['LgID']; ?>"<?php echo $selected; ?>>
-                            <?php echo htmlspecialchars($lang['LgName'], ENT_QUOTES, 'UTF-8'); ?>
+                            <?php $selected = ($feed['language_id'] === $lang['id']) ? ' selected' : ''; ?>
+                            <option value="<?php echo $lang['id']; ?>"<?php echo $selected; ?>>
+                            <?php echo htmlspecialchars($lang['name'], ENT_QUOTES, 'UTF-8'); ?>
                         </option>
                         <?php endforeach; ?>
                     </select>

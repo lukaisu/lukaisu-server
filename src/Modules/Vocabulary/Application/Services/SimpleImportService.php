@@ -69,8 +69,8 @@ class SimpleImportService
         bool $ignoreFirst
     ): void {
         $removeSpaces = (bool) QueryBuilder::table('languages')
-            ->where('LgID', '=', $langId)
-            ->valuePrepared('LgRemoveSpaces');
+            ->where('id', '=', $langId)
+            ->valuePrepared('remove_spaces');
 
         if ($this->utilities->isLocalInfileEnabled()) {
             $this->importSimpleWithLoadData(

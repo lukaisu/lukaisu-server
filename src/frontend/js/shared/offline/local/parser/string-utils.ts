@@ -17,7 +17,7 @@ export function removeSpaces(value: string, remove: boolean): string {
 
 /**
  * Apply pipe-separated `from=to` character substitutions (the
- * `LgCharacterSubstitutions` setting), e.g. `´='|...=…`. Applied before
+ * `character_substitutions` setting), e.g. `´='|...=…`. Applied before
  * parsing. Empty/blank rules are skipped.
  */
 export function applyCharacterSubstitutions(text: string, rules: string): string {

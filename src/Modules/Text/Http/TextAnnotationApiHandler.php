@@ -378,14 +378,14 @@ class TextAnnotationApiHandler
         }
 
         $langRecord = QueryBuilder::table('languages')
-            ->select(['LgTextSize', 'LgRightToLeft'])
-            ->where('LgID', '=', $langid)
+            ->select(['text_size', 'right_to_left'])
+            ->where('id', '=', $langid)
             ->firstPrepared();
-        $textsize = $langRecord !== null ? (int)$langRecord['LgTextSize'] : 100;
+        $textsize = $langRecord !== null ? (int)$langRecord['text_size'] : 100;
         if ($textsize > 100) {
             $textsize = intval($textsize * 0.8);
         }
-        $rtlScript = $langRecord !== null && !empty($langRecord['LgRightToLeft']);
+        $rtlScript = $langRecord !== null && !empty($langRecord['right_to_left']);
 
         $dictionaryAdapter = new DictionaryAdapter();
 

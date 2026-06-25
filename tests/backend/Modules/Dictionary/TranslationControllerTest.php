@@ -57,14 +57,14 @@ class TranslationControllerTest extends TestCase
 
     private static function setupTestData(): void
     {
-        // Reset auto_increment to prevent overflow (LgID is tinyint max 255)
-        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM " . Globals::table('languages'));
+        // Reset auto_increment to prevent overflow (id is tinyint max 255)
+        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(id), 0) AS value FROM " . Globals::table('languages'));
         Connection::query("ALTER TABLE " . Globals::table('languages') . " AUTO_INCREMENT = " . ((int)$maxId + 1));
 
         // Create a test language
         $existingLang = Connection::fetchValue(
-            "SELECT LgID AS value FROM " . Globals::table('languages') .
-            " WHERE LgName = 'TranslationControllerTestLang' LIMIT 1"
+            "SELECT id AS value FROM " . Globals::table('languages') .
+            " WHERE name = 'TranslationControllerTestLang' LIMIT 1"
         );
 
         if ($existingLang) {
@@ -72,10 +72,10 @@ class TranslationControllerTest extends TestCase
         } else {
             $table = Globals::table('languages');
             Connection::query(
-                "INSERT INTO " . $table . " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, " .
-                "LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, " .
-                "LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                "INSERT INTO " . $table . " (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                "text_size, character_substitutions, regexp_split_sentences, " .
+                "exceptions_split_sentences, regexp_word_characters, remove_spaces, " .
+                "split_each_char, right_to_left, show_romanization) " .
                 "VALUES ('TranslationControllerTestLang', 'http://dict1.test/lukaisu_term', " .
                 "'http://dict2.test/###', 'ggl.php?text=lukaisu_term&sl=es&tl=en', " .
                 "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
@@ -97,11 +97,11 @@ class TranslationControllerTest extends TestCase
         Connection::query("DELETE FROM " . $wordsTable . " WHERE language_id = " . self::$testLangId);
         $langTable = Globals::table('languages');
         Connection::query(
-            "DELETE FROM " . $langTable . " WHERE LgName = 'TranslationControllerTestLang'"
+            "DELETE FROM " . $langTable . " WHERE name = 'TranslationControllerTestLang'"
         );
 
-        // Reset auto_increment to prevent overflow (LgID is tinyint max 255)
-        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM " . Globals::table('languages'));
+        // Reset auto_increment to prevent overflow (id is tinyint max 255)
+        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(id), 0) AS value FROM " . Globals::table('languages'));
         Connection::query("ALTER TABLE " . Globals::table('languages') . " AUTO_INCREMENT = " . ((int)$maxId + 1));
     }
 

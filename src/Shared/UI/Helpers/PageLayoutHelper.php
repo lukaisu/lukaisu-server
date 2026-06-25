@@ -82,16 +82,16 @@ class PageLayoutHelper
     {
         try {
             $languages = QueryBuilder::table('languages')
-                ->select(['LgID', 'LgName'])
-                ->where('LgName', '<>', '')
-                ->orderBy('LgName')
+                ->select(['id', 'name'])
+                ->where('name', '<>', '')
+                ->orderBy('name')
                 ->getPrepared();
 
             $result = [];
             foreach ($languages as $row) {
                 $result[] = [
-                    'id' => (int) $row['LgID'],
-                    'name' => (string) $row['LgName'],
+                    'id' => (int) $row['id'],
+                    'name' => (string) $row['name'],
                 ];
             }
 

@@ -100,18 +100,18 @@ describe('language_wizard.ts', () => {
           <option value="Japanese">Japanese</option>
           <option value="Arabic">Arabic</option>
         </select>
-        <input name="LgName" />
-        <input name="LgSourceLang" />
-        <input name="LgTargetLang" />
-        <input name="LgDict1URI" />
-        <input name="LgDict1PopUp" type="checkbox" />
-        <input name="LgGoogleTranslateURI" />
-        <input name="LgTextSize" />
-        <input name="LgRegexpSplitSentences" />
-        <input name="LgRegexpWordCharacters" />
-        <input name="LgSplitEachChar" type="checkbox" />
-        <input name="LgRemoveSpaces" type="checkbox" />
-        <input name="LgRightToLeft" type="checkbox" />
+        <input name="name" />
+        <input name="source_lang" />
+        <input name="target_lang" />
+        <input name="dict1_uri" />
+        <input name="dict1_popup" type="checkbox" />
+        <input name="google_translate_uri" />
+        <input name="text_size" />
+        <input name="regexp_split_sentences" />
+        <input name="regexp_word_characters" />
+        <input name="split_each_char" type="checkbox" />
+        <input name="remove_spaces" type="checkbox" />
+        <input name="right_to_left" type="checkbox" />
       `;
     });
 
@@ -121,7 +121,7 @@ describe('language_wizard.ts', () => {
 
       languageWizard.onL2Change();
 
-      const nameInput = document.querySelector('input[name="LgName"]') as HTMLInputElement;
+      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
       expect(nameInput.value).toBe('');
     });
 
@@ -131,7 +131,7 @@ describe('language_wizard.ts', () => {
 
       languageWizard.onL2Change();
 
-      const nameInput = document.querySelector('input[name="LgName"]') as HTMLInputElement;
+      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
       expect(nameInput.value).toBe('French');
     });
 
@@ -150,7 +150,7 @@ describe('language_wizard.ts', () => {
 
       languageWizard.onL2Change();
 
-      const sourceInput = document.querySelector('input[name="LgSourceLang"]') as HTMLInputElement;
+      const sourceInput = document.querySelector('input[name="source_lang"]') as HTMLInputElement;
       expect(sourceInput.value).toBe('fr');
     });
 
@@ -160,7 +160,7 @@ describe('language_wizard.ts', () => {
 
       languageWizard.onL2Change();
 
-      const textSizeInput = document.querySelector('input[name="LgTextSize"]') as HTMLInputElement;
+      const textSizeInput = document.querySelector('input[name="text_size"]') as HTMLInputElement;
       expect(textSizeInput.value).toBe('200');
     });
 
@@ -170,7 +170,7 @@ describe('language_wizard.ts', () => {
 
       languageWizard.onL2Change();
 
-      const textSizeInput = document.querySelector('input[name="LgTextSize"]') as HTMLInputElement;
+      const textSizeInput = document.querySelector('input[name="text_size"]') as HTMLInputElement;
       expect(textSizeInput.value).toBe('150');
     });
 
@@ -180,13 +180,13 @@ describe('language_wizard.ts', () => {
 
       languageWizard.onL2Change();
 
-      const sentencesInput = document.querySelector('input[name="LgRegexpSplitSentences"]') as HTMLInputElement;
+      const sentencesInput = document.querySelector('input[name="regexp_split_sentences"]') as HTMLInputElement;
       expect(sentencesInput.value).toBe('。！？');
-      const wordCharsInput = document.querySelector('input[name="LgRegexpWordCharacters"]') as HTMLInputElement;
+      const wordCharsInput = document.querySelector('input[name="regexp_word_characters"]') as HTMLInputElement;
       expect(wordCharsInput.value).toBe('[\\p{Han}\\p{Hiragana}\\p{Katakana}]');
-      const splitCharInput = document.querySelector('input[name="LgSplitEachChar"]') as HTMLInputElement;
+      const splitCharInput = document.querySelector('input[name="split_each_char"]') as HTMLInputElement;
       expect(splitCharInput.checked).toBe(true);
-      const removeSpacesInput = document.querySelector('input[name="LgRemoveSpaces"]') as HTMLInputElement;
+      const removeSpacesInput = document.querySelector('input[name="remove_spaces"]') as HTMLInputElement;
       expect(removeSpacesInput.checked).toBe(true);
     });
 
@@ -196,7 +196,7 @@ describe('language_wizard.ts', () => {
 
       languageWizard.onL2Change();
 
-      const rtlInput = document.querySelector('input[name="LgRightToLeft"]') as HTMLInputElement;
+      const rtlInput = document.querySelector('input[name="right_to_left"]') as HTMLInputElement;
       expect(rtlInput.checked).toBe(true);
     });
 
@@ -225,10 +225,10 @@ describe('language_wizard.ts', () => {
       document.body.innerHTML = `
         <select id="l1"><option value="">Select...</option><option value="English">English</option></select>
         <select id="l2"><option value="">Select...</option><option value="French">French</option></select>
-        <input name="LgTargetLang" />
-        <input name="LgDict1URI" />
-        <input name="LgDict1PopUp" type="checkbox" />
-        <input name="LgGoogleTranslateURI" />
+        <input name="target_lang" />
+        <input name="dict1_uri" />
+        <input name="dict1_popup" type="checkbox" />
+        <input name="google_translate_uri" />
       `;
     });
 
@@ -256,7 +256,7 @@ describe('language_wizard.ts', () => {
 
       languageWizard.onL1Change();
 
-      const targetInput = document.querySelector('input[name="LgTargetLang"]') as HTMLInputElement;
+      const targetInput = document.querySelector('input[name="target_lang"]') as HTMLInputElement;
       expect(targetInput.value).toBe('en');
     });
 
@@ -293,9 +293,9 @@ describe('language_wizard.ts', () => {
           <option value="French">French</option>
           <option value="German">German</option>
         </select>
-        <input name="LgDict1URI" />
-        <input name="LgDict1PopUp" type="checkbox" />
-        <input name="LgGoogleTranslateURI" />
+        <input name="dict1_uri" />
+        <input name="dict1_popup" type="checkbox" />
+        <input name="google_translate_uri" />
       `;
     });
 
@@ -360,9 +360,9 @@ describe('language_wizard.ts', () => {
 
       languageWizard.updateDictionaryUrls();
 
-      const dictInput = document.querySelector('input[name="LgDict1URI"]') as HTMLInputElement;
+      const dictInput = document.querySelector('input[name="dict1_uri"]') as HTMLInputElement;
       expect(dictInput.value).toContain('glosbe.com/de/en');
-      const popupInput = document.querySelector('input[name="LgDict1PopUp"]') as HTMLInputElement;
+      const popupInput = document.querySelector('input[name="dict1_popup"]') as HTMLInputElement;
       expect(popupInput.checked).toBe(true);
     });
 
@@ -376,7 +376,7 @@ describe('language_wizard.ts', () => {
 
       languageWizard.updateDictionaryUrls();
 
-      const input = document.querySelector('input[name="LgGoogleTranslateURI"]') as HTMLInputElement;
+      const input = document.querySelector('input[name="google_translate_uri"]') as HTMLInputElement;
       expect(input.value).toBe('https://translate.google.com/?source=fr&target=en');
     });
   });
@@ -428,14 +428,14 @@ describe('language_wizard.ts', () => {
           <option value="">Select...</option>
           <option value="French">French</option>
         </select>
-        <input name="LgName" />
-        <input name="LgSourceLang" />
-        <input name="LgTextSize" />
-        <input name="LgRegexpSplitSentences" />
-        <input name="LgRegexpWordCharacters" />
-        <input name="LgSplitEachChar" type="checkbox" />
-        <input name="LgRemoveSpaces" type="checkbox" />
-        <input name="LgRightToLeft" type="checkbox" />
+        <input name="name" />
+        <input name="source_lang" />
+        <input name="text_size" />
+        <input name="regexp_split_sentences" />
+        <input name="regexp_word_characters" />
+        <input name="split_each_char" type="checkbox" />
+        <input name="remove_spaces" type="checkbox" />
+        <input name="right_to_left" type="checkbox" />
       `;
 
       initLanguageWizard();
@@ -444,7 +444,7 @@ describe('language_wizard.ts', () => {
       l2Select.value = 'French';
       l2Select.dispatchEvent(new Event('change'));
 
-      const nameInput = document.querySelector('input[name="LgName"]') as HTMLInputElement;
+      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
       expect(nameInput.value).toBe('French');
     });
 
@@ -457,7 +457,7 @@ describe('language_wizard.ts', () => {
           <option value="">Select...</option>
           <option value="English">English</option>
         </select>
-        <input name="LgTargetLang" />
+        <input name="target_lang" />
       `;
 
       initLanguageWizard();

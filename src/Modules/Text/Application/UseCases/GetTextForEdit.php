@@ -109,14 +109,14 @@ class GetTextForEdit
     {
         $bindings = [];
         $rows = Connection::preparedFetchAll(
-            "SELECT LgID, LgGoogleTranslateURI FROM languages WHERE 1=1"
+            "SELECT id, google_translate_uri FROM languages WHERE 1=1"
             . UserScopedQuery::forTablePrepared('languages', $bindings),
             $bindings
         );
 
         $result = [];
         foreach ($rows as $row) {
-            $result[(int) $row['LgID']] = (string) $row['LgGoogleTranslateURI'];
+            $result[(int) $row['id']] = (string) $row['google_translate_uri'];
         }
         return $result;
     }

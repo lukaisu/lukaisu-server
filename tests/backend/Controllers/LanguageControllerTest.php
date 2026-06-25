@@ -53,9 +53,9 @@ class LanguageControllerTest extends TestCase
         }
 
         if (self::$dbConnected) {
-            // Reset auto_increment to prevent overflow (LgID is tinyint max 255)
+            // Reset auto_increment to prevent overflow (id is tinyint max 255)
             $languagesTable = Globals::table('languages');
-            $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM {$languagesTable}");
+            $maxId = Connection::fetchValue("SELECT COALESCE(MAX(id), 0) AS value FROM {$languagesTable}");
             Connection::query("ALTER TABLE {$languagesTable} AUTO_INCREMENT = " . ((int)$maxId + 1));
         }
     }
@@ -89,11 +89,11 @@ class LanguageControllerTest extends TestCase
 
         // Clean up test languages
         $languagesTable = Globals::table('languages');
-        Connection::query("DELETE FROM {$languagesTable} WHERE LgName LIKE 'Test_%'");
-        Connection::query("DELETE FROM {$languagesTable} WHERE LgName LIKE 'TestLang%'");
+        Connection::query("DELETE FROM {$languagesTable} WHERE name LIKE 'Test_%'");
+        Connection::query("DELETE FROM {$languagesTable} WHERE name LIKE 'TestLang%'");
 
-        // Reset auto_increment to prevent overflow (LgID is tinyint max 255)
-        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM {$languagesTable}");
+        // Reset auto_increment to prevent overflow (id is tinyint max 255)
+        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(id), 0) AS value FROM {$languagesTable}");
         Connection::query("ALTER TABLE {$languagesTable} AUTO_INCREMENT = " . ((int)$maxId + 1));
     }
 
@@ -109,9 +109,9 @@ class LanguageControllerTest extends TestCase
         $languagesTable = Globals::table('languages');
         Connection::query(
             "INSERT INTO {$languagesTable} (
-                LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI,
-                LgTextSize, LgRegexpSplitSentences, LgRegexpWordCharacters,
-                LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization
+                name, dict1_uri, dict2_uri, google_translate_uri,
+                text_size, regexp_split_sentences, regexp_word_characters,
+                remove_spaces, split_each_char, right_to_left, show_romanization
             ) VALUES (
                 '$name', 'https://dict.test/lukaisu_term', '', 'https://translate.test/lukaisu_term',
                 100, '.!?', 'a-zA-Z',
@@ -227,17 +227,17 @@ class LanguageControllerTest extends TestCase
         $service = new LanguageFacade();
 
         $_REQUEST = [
-            'LgName' => 'TestLang_ControllerCreate',
-            'LgDict1URI' => 'https://dict.test/lukaisu_term',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => '',
-            'LgExportTemplate' => '',
-            'LgTextSize' => '100',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => '',
-            'LgRegexpWordCharacters' => 'a-zA-Z',
-            'LgTTSVoiceAPI' => '',
+            'name' => 'TestLang_ControllerCreate',
+            'dict1_uri' => 'https://dict.test/lukaisu_term',
+            'dict2_uri' => '',
+            'google_translate_uri' => '',
+            'export_template' => '',
+            'text_size' => '100',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => '',
+            'regexp_word_characters' => 'a-zA-Z',
+            'tts_voice_api' => '',
         ];
 
         $result = $service->create();
@@ -257,17 +257,17 @@ class LanguageControllerTest extends TestCase
         $service = new LanguageFacade();
 
         $_REQUEST = [
-            'LgName' => 'TestLang_ControllerUpdated',
-            'LgDict1URI' => 'https://newdict.test/lukaisu_term',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => '',
-            'LgExportTemplate' => '',
-            'LgTextSize' => '150',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => '',
-            'LgRegexpWordCharacters' => 'a-zA-Z',
-            'LgTTSVoiceAPI' => '',
+            'name' => 'TestLang_ControllerUpdated',
+            'dict1_uri' => 'https://newdict.test/lukaisu_term',
+            'dict2_uri' => '',
+            'google_translate_uri' => '',
+            'export_template' => '',
+            'text_size' => '150',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => '',
+            'regexp_word_characters' => 'a-zA-Z',
+            'tts_voice_api' => '',
         ];
 
         $result = $service->update($id);
@@ -377,17 +377,17 @@ class LanguageControllerTest extends TestCase
 
         // Empty name should throw an exception (database constraint)
         $_REQUEST = [
-            'LgName' => '',
-            'LgDict1URI' => 'https://dict.test/lukaisu_term',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => '',
-            'LgExportTemplate' => '',
-            'LgTextSize' => '100',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => '',
-            'LgRegexpWordCharacters' => 'a-zA-Z',
-            'LgTTSVoiceAPI' => '',
+            'name' => '',
+            'dict1_uri' => 'https://dict.test/lukaisu_term',
+            'dict2_uri' => '',
+            'google_translate_uri' => '',
+            'export_template' => '',
+            'text_size' => '100',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => '',
+            'regexp_word_characters' => 'a-zA-Z',
+            'tts_voice_api' => '',
         ];
 
         $this->expectException(\RuntimeException::class);
@@ -403,17 +403,17 @@ class LanguageControllerTest extends TestCase
         $service = new LanguageFacade();
 
         $_REQUEST = [
-            'LgName' => "TestLang_Special'Chars\"",
-            'LgDict1URI' => 'https://dict.test/lukaisu_term',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => '',
-            'LgExportTemplate' => '',
-            'LgTextSize' => '100',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => '',
-            'LgRegexpWordCharacters' => 'a-zA-Z',
-            'LgTTSVoiceAPI' => '',
+            'name' => "TestLang_Special'Chars\"",
+            'dict1_uri' => 'https://dict.test/lukaisu_term',
+            'dict2_uri' => '',
+            'google_translate_uri' => '',
+            'export_template' => '',
+            'text_size' => '100',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => '',
+            'regexp_word_characters' => 'a-zA-Z',
+            'tts_voice_api' => '',
         ];
 
         $result = $service->create();
@@ -431,17 +431,17 @@ class LanguageControllerTest extends TestCase
         $service = new LanguageFacade();
 
         $_REQUEST = [
-            'LgName' => 'TestLang_日本語',
-            'LgDict1URI' => 'https://dict.test/lukaisu_term',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => '',
-            'LgExportTemplate' => '',
-            'LgTextSize' => '100',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => '',
-            'LgRegexpWordCharacters' => 'a-zA-Z',
-            'LgTTSVoiceAPI' => '',
+            'name' => 'TestLang_日本語',
+            'dict1_uri' => 'https://dict.test/lukaisu_term',
+            'dict2_uri' => '',
+            'google_translate_uri' => '',
+            'export_template' => '',
+            'text_size' => '100',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => '',
+            'regexp_word_characters' => 'a-zA-Z',
+            'tts_voice_api' => '',
         ];
 
         $result = $service->create();

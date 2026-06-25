@@ -420,7 +420,7 @@ class Globals
      * refuse the request.
      *
      * Use this on any handler that writes a cross-table reference
-     * with a client-supplied LgID (local-dict create, feed create,
+     * with a client-supplied id (local-dict create, feed create,
      * etc.) — without the check, an authenticated user can pin
      * their new row against a stranger's language.
      */
@@ -433,7 +433,7 @@ class Globals
             return false;
         }
         return \Lukaisu\Shared\Infrastructure\Database\QueryBuilder::table('languages')
-            ->where('LgID', '=', $langId)
+            ->where('id', '=', $langId)
             ->existsPrepared();
     }
 

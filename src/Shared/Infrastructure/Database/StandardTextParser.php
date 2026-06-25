@@ -63,7 +63,7 @@ class StandardTextParser
     public static function getLanguageSettings(int $lid): ?array
     {
         $record = QueryBuilder::table('languages')
-            ->where('LgID', '=', $lid)
+            ->where('id', '=', $lid)
             ->firstPrepared();
 
         if ($record === null) {
@@ -71,12 +71,12 @@ class StandardTextParser
         }
 
         return [
-            'removeSpaces' => (string)$record['LgRemoveSpaces'],
-            'splitSentence' => (string)$record['LgRegexpSplitSentences'],
-            'noSentenceEnd' => (string)$record['LgExceptionsSplitSentences'],
-            'termchar' => (string)$record['LgRegexpWordCharacters'],
-            'rtlScript' => $record['LgRightToLeft'],
-            'splitEachChar' => ((int)$record['LgSplitEachChar'] === 1),
+            'removeSpaces' => (string)$record['remove_spaces'],
+            'splitSentence' => (string)$record['regexp_split_sentences'],
+            'noSentenceEnd' => (string)$record['exceptions_split_sentences'],
+            'termchar' => (string)$record['regexp_word_characters'],
+            'rtlScript' => $record['right_to_left'],
+            'splitEachChar' => ((int)$record['split_each_char'] === 1),
         ];
     }
 

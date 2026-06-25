@@ -135,7 +135,7 @@ class TtsService
      */
     public function saveSettings(): void
     {
-        $lgname = InputValidator::getString('LgName');
+        $lgname = InputValidator::getString('name');
         $prefix = 'tts[' . $lgname;
 
         $isSecure = SecurityHeaders::isSecureConnection();

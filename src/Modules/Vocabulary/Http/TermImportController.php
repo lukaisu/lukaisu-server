@@ -281,7 +281,7 @@ class TermImportController extends VocabularyBaseController
         if ($tabType === '') {
             $tabType = 'c';
         }
-        $langId = InputValidator::getInt("LgID", 0) ?? 0;
+        $langId = InputValidator::getInt("id", 0) ?? 0;
 
         if ($langId === 0) {
             echo '<div class="notification is-danger">' .
@@ -298,7 +298,7 @@ class TermImportController extends VocabularyBaseController
             return;
         }
 
-        $removeSpaces = (bool) $langData['LgRemoveSpaces'];
+        $removeSpaces = (bool) $langData['remove_spaces'];
 
         // Parse column mapping
         $columns = [
@@ -390,7 +390,7 @@ class TermImportController extends VocabularyBaseController
      */
     private function handleDictionaryImport(): void
     {
-        $langId = InputValidator::getInt("LgID", 0) ?? 0;
+        $langId = InputValidator::getInt("id", 0) ?? 0;
         if ($langId === 0) {
             echo '<div class="notification is-danger">' .
                 '<button class="delete" aria-label="close"></button>' .
@@ -460,7 +460,7 @@ class TermImportController extends VocabularyBaseController
         }
 
         // Re-display the form with manual tab active (dictionary file sub-tab)
-        // $langId is already set from InputValidator::getInt("LgID") above
+        // $langId is already set from InputValidator::getInt("id") above
         $currentLanguage = Settings::get('currentlanguage');
         $currentLanguageName = '';
         $isFrequencyAvailable = false;

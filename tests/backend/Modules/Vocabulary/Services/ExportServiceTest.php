@@ -659,13 +659,13 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatAnkiRow');
 
         $record = [
-            'LgRegexpWordCharacters' => 'a-zA-Z',
-            'LgRightToLeft' => 0,
+            'regexp_word_characters' => 'a-zA-Z',
+            'right_to_left' => 0,
             'sentence' => 'This is a {test} sentence.',
             'text' => 'test',
             'translation' => 'prueba',
             'romanization' => '',
-            'LgName' => 'English',
+            'name' => 'English',
             'id' => '123',
             'taglist' => 'tag1, tag2',
         ];
@@ -685,13 +685,13 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatAnkiRow');
 
         $record = [
-            'LgRegexpWordCharacters' => '\x{0600}-\x{06FF}',
-            'LgRightToLeft' => 1,
+            'regexp_word_characters' => '\x{0600}-\x{06FF}',
+            'right_to_left' => 1,
             'sentence' => 'This is a {مرحبا} sentence.',
             'text' => 'مرحبا',
             'translation' => 'hello',
             'romanization' => 'marhaba',
-            'LgName' => 'Arabic',
+            'name' => 'Arabic',
             'id' => '456',
             'taglist' => '',
         ];
@@ -708,13 +708,13 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatAnkiRow');
 
         $record = [
-            'LgRegexpWordCharacters' => 'MECAB',
-            'LgRightToLeft' => 0,
+            'regexp_word_characters' => 'MECAB',
+            'right_to_left' => 0,
             'sentence' => '日本語の{単語}です。',
             'text' => '単語',
             'translation' => 'word',
             'romanization' => 'tango',
-            'LgName' => 'Japanese',
+            'name' => 'Japanese',
             'id' => '789',
             'taglist' => 'japanese',
         ];
@@ -736,7 +736,7 @@ class ExportServiceTest extends TestCase
             'sentence' => 'This is a {test} sentence.',
             'romanization' => '',
             'status' => '2',
-            'LgName' => 'English',
+            'name' => 'English',
             'id' => '123',
             'taglist' => 'tag1',
         ];
@@ -760,7 +760,7 @@ class ExportServiceTest extends TestCase
             'translation' => 'prueba',
             'sentence' => '',
             'romanization' => '',
-            'LgName' => 'English',
+            'name' => 'English',
             // Missing status, id, taglist
         ];
 
@@ -775,10 +775,10 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatFlexibleRow');
 
         $record = [
-            'LgExportTemplate' => '%w\t%t\t%s\n',
+            'export_template' => '%w\t%t\t%s\n',
             'id' => '123',
-            'LgName' => 'English',
-            'LgRightToLeft' => 0,
+            'name' => 'English',
+            'right_to_left' => 0,
             'text' => 'test',
             'text_lc' => 'test',
             'translation' => 'prueba',
@@ -801,10 +801,10 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatFlexibleRow');
 
         $record = [
-            'LgExportTemplate' => '$w\t$t',
+            'export_template' => '$w\t$t',
             'id' => '123',
-            'LgName' => 'English',
-            'LgRightToLeft' => 0,
+            'name' => 'English',
+            'right_to_left' => 0,
             'text' => '<script>alert(1)</script>',
             'text_lc' => '<script>alert(1)</script>',
             'translation' => '"quoted"',
@@ -826,10 +826,10 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatFlexibleRow');
 
         $record = [
-            'LgExportTemplate' => '%w\\t%t\\n%r\\r%%',
+            'export_template' => '%w\\t%t\\n%r\\r%%',
             'id' => '123',
-            'LgName' => 'English',
-            'LgRightToLeft' => 0,
+            'name' => 'English',
+            'right_to_left' => 0,
             'text' => 'test',
             'text_lc' => 'test',
             'translation' => 'prueba',
@@ -853,8 +853,8 @@ class ExportServiceTest extends TestCase
 
         $record = [
             'id' => '123',
-            'LgName' => 'English',
-            // Missing LgExportTemplate
+            'name' => 'English',
+            // Missing export_template
         ];
 
         $result = $method->invoke($this->exportService, $record);
@@ -867,10 +867,10 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatFlexibleRow');
 
         $record = [
-            'LgExportTemplate' => '$x\t$y',
+            'export_template' => '$x\t$y',
             'id' => '123',
-            'LgName' => 'English',
-            'LgRightToLeft' => 0,
+            'name' => 'English',
+            'right_to_left' => 0,
             'text' => 'test',
             'text_lc' => 'test',
             'translation' => 'prueba',
@@ -894,10 +894,10 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatFlexibleRow');
 
         $record = [
-            'LgExportTemplate' => '%c',
+            'export_template' => '%c',
             'id' => '123',
-            'LgName' => 'English',
-            'LgRightToLeft' => 0,
+            'name' => 'English',
+            'right_to_left' => 0,
             'text' => 'test',
             'text_lc' => 'test',
             'translation' => 'prueba',
@@ -918,10 +918,10 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatFlexibleRow');
 
         $record = [
-            'LgExportTemplate' => '%d',
+            'export_template' => '%d',
             'id' => '123',
-            'LgName' => 'English',
-            'LgRightToLeft' => 0,
+            'name' => 'English',
+            'right_to_left' => 0,
             'text' => 'test',
             'text_lc' => 'test',
             'translation' => 'prueba',
@@ -942,10 +942,10 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatFlexibleRow');
 
         $record = [
-            'LgExportTemplate' => '$w\t$s',
+            'export_template' => '$w\t$s',
             'id' => '123',
-            'LgName' => 'Arabic',
-            'LgRightToLeft' => 1,
+            'name' => 'Arabic',
+            'right_to_left' => 1,
             'text' => 'مرحبا',
             'text_lc' => 'مرحبا',
             'translation' => 'hello',
@@ -966,10 +966,10 @@ class ExportServiceTest extends TestCase
         $method = new \ReflectionMethod(ExportService::class, 'formatFlexibleRow');
 
         $record = [
-            'LgExportTemplate' => '%w|%t|%s|%r|%a|%k|%z|%l|%n',
+            'export_template' => '%w|%t|%s|%r|%a|%k|%z|%l|%n',
             'id' => '999',
-            'LgName' => 'English',
-            'LgRightToLeft' => 0,
+            'name' => 'English',
+            'right_to_left' => 0,
             'text' => 'TEST',
             'text_lc' => 'test',
             'translation' => 'TRANSLATION',

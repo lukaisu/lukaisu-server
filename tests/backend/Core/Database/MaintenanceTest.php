@@ -54,33 +54,35 @@ class MaintenanceTest extends TestCase
         // Clean up any existing test language first
         Connection::query(
             "DELETE FROM words WHERE language_id IN " .
-            "(SELECT LgID FROM languages WHERE LgName = 'Test Maintenance Language')"
+            "(SELECT id FROM languages WHERE name = 'Test Maintenance Language')"
         );
-        Connection::query("DELETE FROM languages WHERE LgName = 'Test Maintenance Language'");
+        Connection::query("DELETE FROM languages WHERE name = 'Test Maintenance Language'");
         // Also clean up Japanese test languages to avoid MeCab issues
         Connection::query(
             "DELETE FROM words WHERE language_id IN " .
-            "(SELECT LgID FROM languages WHERE LgName = 'Test Japanese')"
+            "(SELECT id FROM languages WHERE name = 'Test Japanese')"
         );
-        Connection::query("DELETE FROM languages WHERE LgName = 'Test Japanese'");
+        Connection::query("DELETE FROM languages WHERE name = 'Test Japanese'");
         // Clean up any MECAB languages that could trigger the MeCab requirement
         Connection::query(
             "DELETE FROM words WHERE language_id IN " .
-            "(SELECT LgID FROM languages WHERE UPPER(LgRegexpWordCharacters) = 'MECAB')"
+            "(SELECT id FROM languages WHERE UPPER(regexp_word_characters) = 'MECAB')"
         );
-        Connection::query("DELETE FROM languages WHERE UPPER(LgRegexpWordCharacters) = 'MECAB'");
+        Connection::query("DELETE FROM languages WHERE UPPER(regexp_word_characters) = 'MECAB'");
         // Clean up split-each-char languages (Chinese) to avoid bug with initWordCount
-        Connection::query("DELETE FROM words WHERE language_id IN (SELECT LgID FROM languages WHERE LgSplitEachChar = 1)");
-        Connection::query("DELETE FROM languages WHERE LgSplitEachChar = 1");
+        Connection::query(
+            "DELETE FROM words WHERE language_id IN (SELECT id FROM languages WHERE split_each_char = 1)"
+        );
+        Connection::query("DELETE FROM languages WHERE split_each_char = 1");
         // Clean up any words with word_count=0 from languages that don't exist (orphaned words)
-        Connection::query("DELETE FROM words WHERE word_count = 0 AND language_id NOT IN (SELECT LgID FROM languages)");
+        Connection::query("DELETE FROM words WHERE word_count = 0 AND language_id NOT IN (SELECT id FROM languages)");
 
         // Create test language
         $sql = "INSERT INTO languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test Maintenance Language',
             'https://en.wiktionary.org/wiki/###',
@@ -100,7 +102,7 @@ class MaintenanceTest extends TestCase
         // Clean up test language and associated data
         if (self::$testLanguageId) {
             Connection::query("DELETE FROM words WHERE language_id = " . self::$testLanguageId);
-            Connection::query("DELETE FROM languages WHERE LgID = " . self::$testLanguageId);
+            Connection::query("DELETE FROM languages WHERE id = " . self::$testLanguageId);
         }
     }
 
@@ -113,7 +115,7 @@ class MaintenanceTest extends TestCase
         }
 
         // Test with languages table (has auto-increment)
-        Maintenance::adjustAutoIncrement('languages', 'LgID');
+        Maintenance::adjustAutoIncrement('languages', 'id');
         $this->assertTrue(true, 'adjustAutoIncrement should complete without error for languages');
     }
 
@@ -374,10 +376,10 @@ class MaintenanceTest extends TestCase
 
         // Create a Japanese-like language with MECAB
         $sql = "INSERT INTO languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test Japanese',
             'https://jisho.org/search/###',
@@ -392,7 +394,7 @@ class MaintenanceTest extends TestCase
         $this->assertTrue(true, 'updateJapaneseWordCount should work with MeCab');
 
         // Clean up
-        Connection::query("DELETE FROM languages WHERE LgID = $japLangId");
+        Connection::query("DELETE FROM languages WHERE id = $japLangId");
     }
 
     // ===== Edge cases and robustness tests =====
@@ -457,10 +459,10 @@ class MaintenanceTest extends TestCase
 
         // Create a language that supports accented characters
         $sql = "INSERT INTO languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test French',
             'https://fr.wiktionary.org/wiki/###',
@@ -494,7 +496,7 @@ class MaintenanceTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM words WHERE id = $wordId");
-        Connection::query("DELETE FROM languages WHERE LgID = $frLangId");
+        Connection::query("DELETE FROM languages WHERE id = $frLangId");
     }
 
     public function testInitWordCountSplitEachChar(): void
@@ -503,12 +505,12 @@ class MaintenanceTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        // Create a Chinese-like language with LgSplitEachChar = 1
+        // Create a Chinese-like language with split_each_char = 1
         $sql = "INSERT INTO languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test Chinese',
             'https://www.mdbg.net/chinese/dictionary?wdqb=###',
@@ -542,6 +544,6 @@ class MaintenanceTest extends TestCase
 
         // Clean up
         Connection::query("DELETE FROM words WHERE id = $wordId");
-        Connection::query("DELETE FROM languages WHERE LgID = $chLangId");
+        Connection::query("DELETE FROM languages WHERE id = $chLangId");
     }
 }

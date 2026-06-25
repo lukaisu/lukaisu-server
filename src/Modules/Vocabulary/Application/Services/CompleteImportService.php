@@ -76,8 +76,8 @@ class CompleteImportService
         string $tabType
     ): void {
         $removeSpaces = (bool) QueryBuilder::table('languages')
-            ->where('LgID', '=', $langId)
-            ->valuePrepared('LgRemoveSpaces');
+            ->where('id', '=', $langId)
+            ->valuePrepared('remove_spaces');
 
         DB::beginTransaction();
         try {
@@ -502,7 +502,7 @@ class CompleteImportService
                     status, status_changed_at, language_id{$userScopeCol},
                     " . TermStatusService::makeScoreRandomInsertUpdate('iv') . "
                 )
-                SELECT *, $langId as LgID{$userScopeVal}, " . TermStatusService::makeScoreRandomInsertUpdate('id') . "
+                SELECT *, $langId as id{$userScopeVal}, " . TermStatusService::makeScoreRandomInsertUpdate('id') . "
                 FROM (
                     SELECT text_lc, text, translation, romanization,
                     sentence, $status AS status,

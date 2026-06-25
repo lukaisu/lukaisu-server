@@ -165,8 +165,8 @@ class AdminApiHandler implements ApiRoutableInterface
         // Get language name
         /** @var string|null $languageName */
         $languageName = QueryBuilder::table('languages')
-            ->where('LgID', '=', $languageId)
-            ->valuePrepared('LgName');
+            ->where('id', '=', $languageId)
+            ->valuePrepared('name');
 
         $textId = (int)$textData['id'];
 

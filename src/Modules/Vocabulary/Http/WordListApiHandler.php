@@ -172,14 +172,14 @@ class WordListApiHandler
             'score' => (float) ($record['Score'] ?? 0),
             'score2' => (float) ($record['Score2'] ?? 0),
             'tags' => (string) ($record['taglist'] ?? ''),
-            'langId' => 0, // Will be set from LgID if available
-            'langName' => (string) ($record['LgName'] ?? ''),
-            'rightToLeft' => (bool) ($record['LgRightToLeft'] ?? false),
+            'langId' => 0, // Will be set from id if available
+            'langName' => (string) ($record['name'] ?? ''),
+            'rightToLeft' => (bool) ($record['right_to_left'] ?? false),
             'ttsClass' => null
         ];
 
         // Extract TTS class from Google Translate URI
-        $gtUri = (string) ($record['LgGoogleTranslateURI'] ?? '');
+        $gtUri = (string) ($record['google_translate_uri'] ?? '');
         if ($gtUri !== '' && strpos($gtUri, '&sl=') !== false) {
             $ttsLang = preg_replace('/.*[?&]sl=([a-zA-Z\-]*)(&.*)*$/', '$1', $gtUri);
             if ($ttsLang !== null && $ttsLang !== $gtUri) {
@@ -400,14 +400,14 @@ class WordListApiHandler
         // Get languages
         $languages = [];
         $langResult = QueryBuilder::table('languages')
-            ->select(['LgID', 'LgName', 'LgShowRomanization'])
-            ->orderBy('LgName')
+            ->select(['id', 'name', 'show_romanization'])
+            ->orderBy('name')
             ->getPrepared();
         foreach ($langResult as $row) {
             $languages[] = [
-                'id' => (int) $row['LgID'],
-                'name' => (string) $row['LgName'],
-                'showRomanization' => (bool) $row['LgShowRomanization']
+                'id' => (int) $row['id'],
+                'name' => (string) $row['name'],
+                'showRomanization' => (bool) $row['show_romanization']
             ];
         }
 

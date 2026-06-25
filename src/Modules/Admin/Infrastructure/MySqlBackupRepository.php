@@ -177,14 +177,14 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 );
             } elseif ($table == 'languages') {
                 $result = Connection::querySelect(
-                    'SELECT LgID, LgName, LgDict1URI, LgDict2URI,
+                    'SELECT id, name, dict1_uri, dict2_uri,
                     REPLACE(
-                        LgGoogleTranslateURI, "ggl.php", "http://translate.google.com"
-                    ) AS LgGoogleTranslateURI,
-                    LgExportTemplate, LgTextSize, LgCharacterSubstitutions,
-                    LgRegexpSplitSentences, LgExceptionsSplitSentences,
-                    LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar,
-                    LgRightToLeft FROM ' . $table . ' WHERE LgName<>""' . $scope['languages']
+                        google_translate_uri, "ggl.php", "http://translate.google.com"
+                    ) AS google_translate_uri,
+                    export_template, text_size, character_substitutions,
+                    regexp_split_sentences, exceptions_split_sentences,
+                    regexp_word_characters, remove_spaces, split_each_char,
+                    right_to_left FROM ' . $table . ' WHERE name<>""' . $scope['languages']
                 );
             } elseif (
                 $table !== 'sentences' && $table !== 'word_occurrences' &&
@@ -241,7 +241,7 @@ class MySqlBackupRepository implements BackupRepositoryInterface
         }
 
         $scope = $empty;
-        $scope['languages']    = ' AND LgUsID = ' . $userId;
+        $scope['languages']    = ' AND user_id = ' . $userId;
         $scope['texts']        = ' WHERE user_id = ' . $userId;
         $scope['words']        = ' WHERE user_id = ' . $userId;
         $scope['tags']         = ' WHERE user_id = ' . $userId;
@@ -288,22 +288,22 @@ class MySqlBackupRepository implements BackupRepositoryInterface
             // Note: archived_texts and archived_text_tag_map have been merged into
             // the texts and text_tag_map tables with archived_at column.
             'languages' => "CREATE TABLE `languages` (
-                `LgID` int(11) unsigned NOT NULL AUTO_INCREMENT,
-                `LgName` varchar(40) NOT NULL,
-                `LgDict1URI` varchar(200) NOT NULL,
-                `LgDict2URI` varchar(200) DEFAULT NULL,
-                `LgGoogleTranslateURI` varchar(200) DEFAULT NULL,
-                `LgExportTemplate` varchar(1000) DEFAULT NULL,
-                `LgTextSize` int(5) unsigned NOT NULL DEFAULT '100',
-                `LgCharacterSubstitutions` varchar(500) NOT NULL,
-                `LgRegexpSplitSentences` varchar(500) NOT NULL,
-                `LgExceptionsSplitSentences` varchar(500) NOT NULL,
-                `LgRegexpWordCharacters` varchar(500) NOT NULL,
-                `LgRemoveSpaces` int(1) unsigned NOT NULL DEFAULT '0',
-                `LgSplitEachChar` int(1) unsigned NOT NULL DEFAULT '0',
-                `LgRightToLeft` int(1) unsigned NOT NULL DEFAULT '0',
-                PRIMARY KEY (`LgID`),
-                UNIQUE KEY `LgName` (`LgName`)
+                `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `name` varchar(40) NOT NULL,
+                `dict1_uri` varchar(200) NOT NULL,
+                `dict2_uri` varchar(200) DEFAULT NULL,
+                `google_translate_uri` varchar(200) DEFAULT NULL,
+                `export_template` varchar(1000) DEFAULT NULL,
+                `text_size` int(5) unsigned NOT NULL DEFAULT '100',
+                `character_substitutions` varchar(500) NOT NULL,
+                `regexp_split_sentences` varchar(500) NOT NULL,
+                `exceptions_split_sentences` varchar(500) NOT NULL,
+                `regexp_word_characters` varchar(500) NOT NULL,
+                `remove_spaces` int(1) unsigned NOT NULL DEFAULT '0',
+                `split_each_char` int(1) unsigned NOT NULL DEFAULT '0',
+                `right_to_left` int(1) unsigned NOT NULL DEFAULT '0',
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `name` (`name`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'sentences' => "CREATE TABLE `sentences` (
                 `id` int(11) unsigned NOT NULL AUTO_INCREMENT,

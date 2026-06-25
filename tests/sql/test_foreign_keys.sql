@@ -23,7 +23,7 @@ DELETE FROM feed_links WHERE title LIKE 'FK_TEST_%';
 DELETE FROM news_feeds WHERE name LIKE 'FK_TEST_%';
 DELETE FROM tags WHERE text LIKE 'fktest_%';
 DELETE FROM text_tags WHERE text LIKE 'fktest_%';
-DELETE FROM languages WHERE LgName LIKE 'FK_TEST_%';
+DELETE FROM languages WHERE name LIKE 'FK_TEST_%';
 
 SELECT '=== Starting Foreign Key Tests ===' AS status;
 
@@ -34,7 +34,7 @@ SELECT '=== Starting Foreign Key Tests ===' AS status;
 SELECT '--- Test 1: word_id nullable check ---' AS test;
 
 -- Create test language
-INSERT INTO languages (LgName, LgDict1URI, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters)
+INSERT INTO languages (name, dict1_uri, character_substitutions, regexp_split_sentences, exceptions_split_sentences, regexp_word_characters)
 VALUES ('FK_TEST_Lang', 'https://test.com/###', '', '.!?', '', 'a-zA-Z');
 
 SET @test_lang_id = LAST_INSERT_ID();
@@ -65,7 +65,7 @@ FROM word_occurrences WHERE word_id IS NULL AND text = 'unknownword';
 SELECT '--- Test 2: texts -> languages CASCADE ---' AS test;
 
 -- Create another language for cascade test
-INSERT INTO languages (LgName, LgDict1URI, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters)
+INSERT INTO languages (name, dict1_uri, character_substitutions, regexp_split_sentences, exceptions_split_sentences, regexp_word_characters)
 VALUES ('FK_TEST_Lang_Cascade', 'https://test.com/###', '', '.!?', '', 'a-zA-Z');
 
 SET @cascade_lang_id = LAST_INSERT_ID();
@@ -80,7 +80,7 @@ SELECT IF(COUNT(*) = 1, 'SETUP: Text created', 'SETUP FAIL: Text not created') A
 FROM texts WHERE id = @cascade_text_id;
 
 -- Delete language - should cascade to texts
-DELETE FROM languages WHERE LgID = @cascade_lang_id;
+DELETE FROM languages WHERE id = @cascade_lang_id;
 
 -- Verify text was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Text deleted via CASCADE', 'FAIL: Text not deleted') AS result
@@ -275,7 +275,7 @@ FROM text_tag_map WHERE text_id = @tt_test_text_id;
 
 SELECT '--- Test 9: archived texts -> languages CASCADE ---' AS test;
 
-INSERT INTO languages (LgName, LgDict1URI, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters)
+INSERT INTO languages (name, dict1_uri, character_substitutions, regexp_split_sentences, exceptions_split_sentences, regexp_word_characters)
 VALUES ('FK_TEST_Archive_Lang', 'https://test.com/###', '', '.!?', '', 'a-zA-Z');
 
 SET @arch_lang_id = LAST_INSERT_ID();
@@ -291,7 +291,7 @@ SELECT IF(COUNT(*) = 1, 'SETUP: ArchivedText created', 'SETUP FAIL') AS result
 FROM texts WHERE id = @arch_text_id AND archived_at IS NOT NULL;
 
 -- Delete language - should cascade to archived texts
-DELETE FROM languages WHERE LgID = @arch_lang_id;
+DELETE FROM languages WHERE id = @arch_lang_id;
 
 -- Verify archived text was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: ArchivedText deleted via CASCADE', 'FAIL: ArchivedText not deleted') AS result
@@ -332,7 +332,7 @@ FROM text_tag_map WHERE text_id = @att_arch_id;
 
 SELECT '--- Test 11: news_feeds -> languages CASCADE ---' AS test;
 
-INSERT INTO languages (LgName, LgDict1URI, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters)
+INSERT INTO languages (name, dict1_uri, character_substitutions, regexp_split_sentences, exceptions_split_sentences, regexp_word_characters)
 VALUES ('FK_TEST_Feed_Lang', 'https://test.com/###', '', '.!?', '', 'a-zA-Z');
 
 SET @feed_lang_id = LAST_INSERT_ID();
@@ -347,7 +347,7 @@ SELECT IF(COUNT(*) = 1, 'SETUP: Newsfeed created', 'SETUP FAIL') AS result
 FROM news_feeds WHERE id = @feed_id;
 
 -- Delete language - should cascade to news_feeds
-DELETE FROM languages WHERE LgID = @feed_lang_id;
+DELETE FROM languages WHERE id = @feed_lang_id;
 
 -- Verify newsfeed was deleted
 SELECT IF(COUNT(*) = 0, 'PASS: Newsfeed deleted via CASCADE', 'FAIL: Newsfeed not deleted') AS result
@@ -415,7 +415,7 @@ DROP PROCEDURE IF EXISTS test_fk_constraint;
 
 SELECT '--- Test 14: Full cascade chain (language -> text -> sentence -> textitem) ---' AS test;
 
-INSERT INTO languages (LgName, LgDict1URI, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters)
+INSERT INTO languages (name, dict1_uri, character_substitutions, regexp_split_sentences, exceptions_split_sentences, regexp_word_characters)
 VALUES ('FK_TEST_FullCascade', 'https://test.com/###', '', '.!?', '', 'a-zA-Z');
 
 SET @fc_lang_id = LAST_INSERT_ID();
@@ -442,7 +442,7 @@ SELECT IF(
 ) AS result;
 
 -- Delete language - should cascade through entire chain
-DELETE FROM languages WHERE LgID = @fc_lang_id;
+DELETE FROM languages WHERE id = @fc_lang_id;
 
 -- Verify all were deleted
 SELECT IF(
@@ -470,6 +470,6 @@ DELETE FROM feed_links WHERE title LIKE 'FK_TEST_%';
 DELETE FROM news_feeds WHERE name LIKE 'FK_TEST_%';
 DELETE FROM tags WHERE text LIKE 'fktest_%';
 DELETE FROM text_tags WHERE text LIKE 'fktest_%';
-DELETE FROM languages WHERE LgName LIKE 'FK_TEST_%';
+DELETE FROM languages WHERE name LIKE 'FK_TEST_%';
 
 SELECT '=== All Foreign Key Tests Complete ===' AS status;

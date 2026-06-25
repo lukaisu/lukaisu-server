@@ -342,9 +342,9 @@ class TermEditController extends VocabularyBaseController
 
             // Get showRoman from language joined with text
             $showRoman = (bool) QueryBuilder::table('languages')
-                ->join('texts', 'language_id', '=', 'LgID')
+                ->join('texts', 'language_id', '=', 'id')
                 ->where('id', '=', $textId)
-                ->valuePrepared('LgShowRomanization');
+                ->valuePrepared('show_romanization');
 
             $similarTermsRow = (new \Lukaisu\Modules\Vocabulary\Application\UseCases\FindSimilarTerms())->getTableRow();
             if ($fromAnn !== '') {
@@ -499,8 +499,8 @@ class TermEditController extends VocabularyBaseController
             }
             /** @var string|null $regexword */
             $regexword = QueryBuilder::table('languages')
-                ->where('LgID', '=', $lang)
-                ->valuePrepared('LgRegexpWordCharacters');
+                ->where('id', '=', $lang)
+                ->valuePrepared('regexp_word_characters');
             if (!isset($regexword)) {
                 throw new \RuntimeException('Cannot retrieve language data: language not found');
             }
@@ -565,8 +565,8 @@ class TermEditController extends VocabularyBaseController
             $rom = (string)$record['romanization'];
             $status = (int)$record['status'];
             $showRoman = (bool) QueryBuilder::table('languages')
-                ->where('LgID', '=', $lang)
-                ->valuePrepared('LgShowRomanization');
+                ->where('id', '=', $lang)
+                ->valuePrepared('show_romanization');
         } else {
             throw new \RuntimeException("Term data not found: invalid term ID");
         }

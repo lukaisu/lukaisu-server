@@ -50,16 +50,16 @@ class TextServiceCrudTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM languages WHERE LgName = 'TextServiceCrudTestLang' LIMIT 1"
+                "SELECT id AS value FROM languages WHERE name = 'TextServiceCrudTestLang' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 Connection::query(
-                    "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-                    "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                    "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+                    "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
                     "VALUES ('TextServiceCrudTestLang', 'http://dict.test/###', '', 'http://translate.test/###', " .
                     "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 0)"
                 );
@@ -76,7 +76,7 @@ class TextServiceCrudTest extends TestCase
             return;
         }
 
-        Connection::query("DELETE FROM languages WHERE LgName = 'TextServiceCrudTestLang'");
+        Connection::query("DELETE FROM languages WHERE name = 'TextServiceCrudTestLang'");
     }
 
     protected function setUp(): void
@@ -190,8 +190,8 @@ class TextServiceCrudTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertEquals('Reading Test', $result['title']);
-        $this->assertArrayHasKey('LgName', $result);
-        $this->assertEquals('TextServiceCrudTestLang', $result['LgName']);
+        $this->assertArrayHasKey('name', $result);
+        $this->assertEquals('TextServiceCrudTestLang', $result['name']);
     }
 
     public function testGetTextForEditReturnsCorrectData(): void
@@ -626,13 +626,13 @@ class TextServiceCrudTest extends TestCase
         $result = $this->service->getLanguageSettingsForReading(self::$testLangId);
 
         $this->assertIsArray($result);
-        $this->assertArrayHasKey('LgTextSize', $result);
-        $this->assertArrayHasKey('LgDict1URI', $result);
-        $this->assertArrayHasKey('LgDict2URI', $result);
-        $this->assertArrayHasKey('LgGoogleTranslateURI', $result);
-        $this->assertArrayHasKey('LgRightToLeft', $result);
-        $this->assertArrayHasKey('LgRemoveSpaces', $result);
-        $this->assertArrayHasKey('LgRegexpWordCharacters', $result);
+        $this->assertArrayHasKey('text_size', $result);
+        $this->assertArrayHasKey('dict1_uri', $result);
+        $this->assertArrayHasKey('dict2_uri', $result);
+        $this->assertArrayHasKey('google_translate_uri', $result);
+        $this->assertArrayHasKey('right_to_left', $result);
+        $this->assertArrayHasKey('remove_spaces', $result);
+        $this->assertArrayHasKey('regexp_word_characters', $result);
     }
 
     public function testGetTtsVoiceApi(): void

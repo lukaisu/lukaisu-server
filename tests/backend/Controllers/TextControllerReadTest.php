@@ -57,18 +57,18 @@ class TextControllerReadTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM " . Globals::table('languages') .
-                " WHERE LgName = 'ReadControllerTestLang' LIMIT 1"
+                "SELECT id AS value FROM " . Globals::table('languages') .
+                " WHERE name = 'ReadControllerTestLang' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 $sql = "INSERT INTO " . Globals::table('languages') .
-                    " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, " .
-                    "LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, " .
-                    "LgSplitEachChar, LgRightToLeft, LgShowRomanization, LgTTSVoiceAPI) " .
+                    " (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, " .
+                    "exceptions_split_sentences, regexp_word_characters, remove_spaces, " .
+                    "split_each_char, right_to_left, show_romanization, tts_voice_api) " .
                     "VALUES ('ReadControllerTestLang', 'http://dict1.test/###', " .
                     "'http://dict2.test/###', 'http://translate.test/?sl=en&tl=fr&text=###', " .
                     "120, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1, 'Google')";
@@ -124,7 +124,7 @@ class TextControllerReadTest extends TestCase
         );
         Connection::query(
             "DELETE FROM " . Globals::table('languages') .
-            " WHERE LgName = 'ReadControllerTestLang'"
+            " WHERE name = 'ReadControllerTestLang'"
         );
     }
 
@@ -211,8 +211,8 @@ class TextControllerReadTest extends TestCase
         // Test getLanguageSettingsForReading
         $langSettings = $service->getLanguageSettingsForReading(self::$testLangId);
         $this->assertIsArray($langSettings);
-        $this->assertEquals(120, (int)$langSettings['LgTextSize']);
-        $this->assertEquals('http://dict1.test/###', $langSettings['LgDict1URI']);
+        $this->assertEquals(120, (int)$langSettings['text_size']);
+        $this->assertEquals('http://dict1.test/###', $langSettings['dict1_uri']);
 
         // Test getTtsVoiceApi
         $voiceApi = $service->getTtsVoiceApi(self::$testLangId);
@@ -365,7 +365,7 @@ class TextControllerReadTest extends TestCase
         $audioPosition = (int) ($headerData['audio_position'] ?? 0);
         $sourceUri = (string) ($headerData['source_uri'] ?? '');
         $text = (string) $headerData['text'];
-        $languageName = (string) $headerData['LgName'];
+        $languageName = (string) $headerData['name'];
 
         $this->assertEquals('ReadControllerTestText', $title);
         $this->assertEquals(self::$testLangId, $langId);
@@ -389,13 +389,13 @@ class TextControllerReadTest extends TestCase
         $langSettings = $service->getLanguageSettingsForReading($langId);
         $this->assertNotNull($langSettings);
 
-        $dictLink1 = $langSettings['LgDict1URI'] ?? '';
-        $dictLink2 = $langSettings['LgDict2URI'] ?? '';
-        $translatorLink = $langSettings['LgGoogleTranslateURI'] ?? '';
-        $textSize = (int) $langSettings['LgTextSize'];
-        $regexpWordChars = $langSettings['LgRegexpWordCharacters'] ?? '';
-        $removeSpaces = (int) $langSettings['LgRemoveSpaces'];
-        $rtlScript = (bool) $langSettings['LgRightToLeft'];
+        $dictLink1 = $langSettings['dict1_uri'] ?? '';
+        $dictLink2 = $langSettings['dict2_uri'] ?? '';
+        $translatorLink = $langSettings['google_translate_uri'] ?? '';
+        $textSize = (int) $langSettings['text_size'];
+        $regexpWordChars = $langSettings['regexp_word_characters'] ?? '';
+        $removeSpaces = (int) $langSettings['remove_spaces'];
+        $rtlScript = (bool) $langSettings['right_to_left'];
 
         $this->assertEquals('http://dict1.test/###', $dictLink1);
         $this->assertEquals('http://dict2.test/###', $dictLink2);
@@ -454,9 +454,9 @@ class TextControllerReadTest extends TestCase
 
         // Create RTL language
         Connection::query(
-            "INSERT INTO " . Globals::table('languages') . " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-            "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-            "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+            "INSERT INTO " . Globals::table('languages') . " (name, dict1_uri, dict2_uri, google_translate_uri, " .
+            "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+            "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
             "VALUES ('ReadTestRTLLang', 'http://rtl.test/###', '', '', " .
             "100, '', '.!?', '', 'a-zA-Z', 0, 0, 1, 0)"
         );
@@ -473,11 +473,11 @@ class TextControllerReadTest extends TestCase
         $langSettings = $service->getLanguageSettingsForReading($rtlLangId);
 
         $this->assertIsArray($langSettings);
-        $this->assertEquals(1, (int)$langSettings['LgRightToLeft']);
+        $this->assertEquals(1, (int)$langSettings['right_to_left']);
 
         // Cleanup
         Connection::query("DELETE FROM " . Globals::table('texts') . " WHERE id = " . $rtlTextId);
-        Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . $rtlLangId);
+        Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE id = " . $rtlLangId);
     }
 
     // ===== Edge case tests =====

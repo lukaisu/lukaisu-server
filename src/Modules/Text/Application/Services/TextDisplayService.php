@@ -78,9 +78,9 @@ class TextDisplayService
     public function getTextDisplaySettings(int $textId): ?array
     {
         $record = QueryBuilder::table('texts')
-            ->select(['LgTextSize', 'LgRightToLeft'])
-            ->join('languages', 'LgID', '=', 'language_id')
-            ->where('id', '=', $textId)
+            ->select(['text_size', 'right_to_left'])
+            ->join('languages', 'languages.id', '=', 'texts.language_id')
+            ->where('texts.id', '=', $textId)
             ->firstPrepared();
 
         if ($record === null) {
@@ -88,8 +88,8 @@ class TextDisplayService
         }
 
         return [
-            'textSize' => (int) $record['LgTextSize'],
-            'rtlScript' => (bool) $record['LgRightToLeft']
+            'textSize' => (int) $record['text_size'],
+            'rtlScript' => (bool) $record['right_to_left']
         ];
     }
 

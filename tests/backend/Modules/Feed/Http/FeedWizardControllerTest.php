@@ -1469,7 +1469,7 @@ class FeedWizardControllerTest extends TestCase
         $this->wizardSession->expects($this->once())->method('init');
         $this->wizardSession->method('getRssUrl')->willReturn('http://test.com/feed');
         $this->languageFacade->method('getLanguagesForSelect')->willReturn([
-            ['LgID' => 1, 'LgName' => 'English'],
+            ['id' => 1, 'name' => 'English'],
         ]);
         $this->useStubViews();
 

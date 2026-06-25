@@ -58,7 +58,7 @@ class PreparedStatementTest extends TestCase
     {
         $table = Globals::table('languages');
         $stmt = Connection::prepare(
-            "SELECT LgID FROM {$table} WHERE LgID = ?"
+            "SELECT id FROM {$table} WHERE id = ?"
         );
 
         $this->assertInstanceOf(PreparedStatement::class, $stmt);
@@ -70,30 +70,30 @@ class PreparedStatementTest extends TestCase
 
         // First, get an existing language ID
         $row = Connection::fetchOne(
-            "SELECT LgID FROM {$table} LIMIT 1"
+            "SELECT id FROM {$table} LIMIT 1"
         );
 
         if ($row === null) {
             $this->markTestSkipped('No languages in database');
         }
 
-        $langId = (int) $row['LgID'];
+        $langId = (int) $row['id'];
 
         // Test prepared statement fetch
         $result = Connection::preparedFetchOne(
-            "SELECT LgID, LgName FROM {$table} WHERE LgID = ?",
+            "SELECT id, name FROM {$table} WHERE id = ?",
             [$langId]
         );
 
         $this->assertNotNull($result);
-        $this->assertEquals($langId, (int) $result['LgID']);
+        $this->assertEquals($langId, (int) $result['id']);
     }
 
     public function testPreparedFetchAll(): void
     {
         $table = Globals::table('languages');
         $results = Connection::preparedFetchAll(
-            "SELECT LgID FROM {$table} WHERE LgID > ?",
+            "SELECT id FROM {$table} WHERE id > ?",
             [0]
         );
 
@@ -104,7 +104,7 @@ class PreparedStatementTest extends TestCase
     {
         $table = Globals::table('languages');
         $count = Connection::preparedFetchValue(
-            "SELECT COUNT(*) AS value FROM {$table} WHERE LgID > ?",
+            "SELECT COUNT(*) AS value FROM {$table} WHERE id > ?",
             [0]
         );
 
@@ -116,7 +116,7 @@ class PreparedStatementTest extends TestCase
         $table = Globals::table('languages');
         // Test binding string and int types
         $stmt = Connection::prepare(
-            "SELECT LgID FROM {$table} WHERE LgID = ? AND LgName != ?"
+            "SELECT id FROM {$table} WHERE id = ? AND name != ?"
         );
 
         $stmt->bind('is', 1, 'nonexistent');
@@ -129,7 +129,7 @@ class PreparedStatementTest extends TestCase
     {
         $table = Globals::table('languages');
         $stmt = Connection::prepare(
-            "SELECT LgID FROM {$table} WHERE LgID = ? AND LgName != ?"
+            "SELECT id FROM {$table} WHERE id = ? AND name != ?"
         );
 
         // bindValues auto-detects types
@@ -142,8 +142,8 @@ class PreparedStatementTest extends TestCase
     public function testQueryBuilderPreparedSelect(): void
     {
         $results = QueryBuilder::table('languages')
-            ->select(['LgID', 'LgName'])
-            ->where('LgID', '>', 0)
+            ->select(['id', 'name'])
+            ->where('id', '>', 0)
             ->limit(5)
             ->getPrepared();
 
@@ -153,13 +153,13 @@ class PreparedStatementTest extends TestCase
     public function testQueryBuilderPreparedFirst(): void
     {
         $result = QueryBuilder::table('languages')
-            ->select(['LgID', 'LgName'])
-            ->where('LgID', '>', 0)
+            ->select(['id', 'name'])
+            ->where('id', '>', 0)
             ->firstPrepared();
 
         // Could be null if no languages exist, or an array with expected keys
         if ($result !== null) {
-            $this->assertArrayHasKey('LgID', $result);
+            $this->assertArrayHasKey('id', $result);
         } else {
             $this->assertNull($result);
         }
@@ -168,7 +168,7 @@ class PreparedStatementTest extends TestCase
     public function testQueryBuilderPreparedCount(): void
     {
         $count = QueryBuilder::table('languages')
-            ->where('LgID', '>', 0)
+            ->where('id', '>', 0)
             ->countPrepared();
 
         $this->assertIsInt($count);
@@ -178,7 +178,7 @@ class PreparedStatementTest extends TestCase
     public function testQueryBuilderPreparedExists(): void
     {
         $exists = QueryBuilder::table('languages')
-            ->where('LgID', '>', 0)
+            ->where('id', '>', 0)
             ->existsPrepared();
 
         $this->assertIsBool($exists);
@@ -187,8 +187,8 @@ class PreparedStatementTest extends TestCase
     public function testQueryBuilderWhereInPrepared(): void
     {
         $results = QueryBuilder::table('languages')
-            ->select(['LgID'])
-            ->whereIn('LgID', [1, 2, 3])
+            ->select(['id'])
+            ->whereIn('id', [1, 2, 3])
             ->getPrepared();
 
         $this->assertIsArray($results);
@@ -199,7 +199,7 @@ class PreparedStatementTest extends TestCase
         $table = Globals::table('languages');
         // Test that null values are handled correctly
         $stmt = Connection::prepare(
-            "SELECT LgID FROM {$table} WHERE LgID = ? OR ? IS NULL"
+            "SELECT id FROM {$table} WHERE id = ? OR ? IS NULL"
         );
 
         $stmt->bindValues([1, null]);
@@ -212,7 +212,7 @@ class PreparedStatementTest extends TestCase
     {
         $table = Globals::table('languages');
         $stmt = Connection::prepare(
-            "SELECT LgID FROM {$table} WHERE LgID > ?"
+            "SELECT id FROM {$table} WHERE id > ?"
         );
 
         // Test that float is properly handled

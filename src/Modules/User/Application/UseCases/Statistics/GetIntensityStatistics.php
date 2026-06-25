@@ -58,7 +58,7 @@ class GetIntensityStatistics
         $languageStats = [];
 
         foreach ($languages as $language) {
-            $lgId = (string) $language['LgID'];
+            $lgId = (string) $language['id'];
 
             $s1 = $termStat[$lgId][1] ?? 0;
             $s2 = $termStat[$lgId][2] ?? 0;
@@ -74,7 +74,7 @@ class GetIntensityStatistics
 
             $languageStats[] = [
                 'id' => $lgId,
-                'name' => $language['LgName'],
+                'name' => $language['name'],
                 's1' => $s1, 's2' => $s2, 's3' => $s3, 's4' => $s4, 's5' => $s5,
                 's98' => $s98, 's99' => $s99, 's14' => $s14, 's15' => $s15,
                 's599' => $s599, 'all' => $all

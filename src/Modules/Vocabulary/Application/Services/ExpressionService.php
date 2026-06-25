@@ -171,16 +171,16 @@ class ExpressionService
     {
         $occurrences = [];
         $record = QueryBuilder::table('languages')
-            ->where('LgID', '=', $lid)
+            ->where('id', '=', $lid)
             ->getPrepared()[0] ?? null;
 
         if ($record === null) {
             return $occurrences;
         }
 
-        $removeSpaces = $record["LgRemoveSpaces"] == 1;
-        $splitEachChar = $record['LgSplitEachChar'] != 0;
-        $termchar = (string)$record['LgRegexpWordCharacters'];
+        $removeSpaces = $record["remove_spaces"] == 1;
+        $splitEachChar = $record['split_each_char'] != 0;
+        $termchar = (string)$record['regexp_word_characters'];
         $likeTextlc = "%$textlc%";
         if ($removeSpaces && !$splitEachChar) {
             // Complex JOIN query - use raw SQL with UserScopedQuery
@@ -290,8 +290,8 @@ class ExpressionService
     public function insertExpressions(string $textlc, int $lid, int $wid, int $len, int $mode): array|null
     {
         $regexp = (string)(QueryBuilder::table('languages')
-            ->where('LgID', '=', $lid)
-            ->valuePrepared('LgRegexpWordCharacters') ?? '');
+            ->where('id', '=', $lid)
+            ->valuePrepared('regexp_word_characters') ?? '');
 
         if ('MECAB' == strtoupper(trim($regexp))) {
             $occurrences = $this->findMecabExpression($textlc, $lid);

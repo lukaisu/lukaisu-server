@@ -161,11 +161,11 @@ class LemmatizerFactory
     private static function getLanguageLemmatizerType(int $languageId): string
     {
         $result = Connection::preparedFetchOne(
-            "SELECT LgLemmatizerType FROM languages WHERE LgID = ?",
+            "SELECT lemmatizer_type FROM languages WHERE id = ?",
             [$languageId]
         );
 
-        return (string) ($result['LgLemmatizerType'] ?? self::TYPE_DICTIONARY);
+        return (string) ($result['lemmatizer_type'] ?? self::TYPE_DICTIONARY);
     }
 
     /**

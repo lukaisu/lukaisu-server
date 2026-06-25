@@ -359,7 +359,7 @@ class FeedLoadControllerTest extends TestCase
             ->willReturn([['id' => 1, 'name' => 'Feed']]);
 
         $this->languageFacade->method('getLanguagesForSelect')
-            ->willReturn([['LgID' => 3, 'LgName' => 'Spanish']]);
+            ->willReturn([['id' => 3, 'name' => 'Spanish']]);
 
         $method = new \ReflectionMethod(FeedLoadController::class, 'showMultiLoadForm');
 

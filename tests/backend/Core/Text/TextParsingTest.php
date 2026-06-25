@@ -58,17 +58,17 @@ class TextParsingTest extends TestCase
     {
         // Insert test language
         $sql = "INSERT INTO languages (
-            LgName,
-            LgDict1URI,
-            LgGoogleTranslateURI,
-            LgTextSize,
-            LgCharacterSubstitutions,
-            LgRegexpSplitSentences,
-            LgExceptionsSplitSentences,
-            LgRegexpWordCharacters,
-            LgRemoveSpaces,
-            LgSplitEachChar,
-            LgRightToLeft
+            name,
+            dict1_uri,
+            google_translate_uri,
+            text_size,
+            character_substitutions,
+            regexp_split_sentences,
+            exceptions_split_sentences,
+            regexp_word_characters,
+            remove_spaces,
+            split_each_char,
+            right_to_left
         ) VALUES (
             'Test English',
             'https://en.wiktionary.org/wiki/###',
@@ -93,7 +93,7 @@ class TextParsingTest extends TestCase
     public static function tearDownAfterClass(): void
     {
         if (self::$testLanguageId) {
-            Connection::query("DELETE FROM languages WHERE LgID = " . self::$testLanguageId);
+            Connection::query("DELETE FROM languages WHERE id = " . self::$testLanguageId);
         }
     }
 
@@ -134,10 +134,10 @@ class TextParsingTest extends TestCase
     {
         // Create language with character substitutions
         $sql = "INSERT INTO languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test German',
             'https://de.wiktionary.org/wiki/###',
@@ -164,7 +164,7 @@ class TextParsingTest extends TestCase
         $this->assertNotEmpty($result, 'Should parse German text');
 
         // Clean up
-        Connection::query("DELETE FROM languages WHERE LgID = $germanLangId");
+        Connection::query("DELETE FROM languages WHERE id = $germanLangId");
     }
 
     /**

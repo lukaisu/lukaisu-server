@@ -453,8 +453,8 @@ class TermCrudApiHandler
 
         // Get language settings
         $langData = QueryBuilder::table('languages')
-            ->select(['LgName', 'LgShowRomanization', 'LgGoogleTranslateURI'])
-            ->where('LgID', '=', $langId)
+            ->select(['name', 'show_romanization', 'google_translate_uri'])
+            ->where('id', '=', $langId)
             ->firstPrepared();
 
         if ($langData === null) {
@@ -467,9 +467,9 @@ class TermCrudApiHandler
         // Build language info
         $language = [
             'id' => $langId,
-            'name' => (string) $langData['LgName'],
-            'showRomanization' => (bool) $langData['LgShowRomanization'],
-            'translateUri' => (string) ($langData['LgGoogleTranslateURI'] ?? '')
+            'name' => (string) $langData['name'],
+            'showRomanization' => (bool) $langData['show_romanization'],
+            'translateUri' => (string) ($langData['google_translate_uri'] ?? '')
         ];
 
         // If word ID provided, get existing term data

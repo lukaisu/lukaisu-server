@@ -69,9 +69,9 @@ class ListLanguages
     {
         // Get base language data
         $records = QueryBuilder::table('languages')
-            ->select(['LgID', 'LgName', 'LgExportTemplate'])
-            ->where('LgName', '<>', '')
-            ->orderBy('LgName')
+            ->select(['id', 'name', 'export_template'])
+            ->where('name', '<>', '')
+            ->orderBy('name')
             ->getPrepared();
 
         // Get feed counts
@@ -80,13 +80,13 @@ class ListLanguages
 
         $languages = [];
         foreach ($records as $record) {
-            $lid = (int)$record['LgID'];
+            $lid = (int)$record['id'];
             $stats = $this->getRelatedDataCounts($lid);
 
             $languages[] = [
                 'id' => $lid,
-                'name' => $record['LgName'],
-                'hasExportTemplate' => !empty($record['LgExportTemplate']),
+                'name' => $record['name'],
+                'hasExportTemplate' => !empty($record['export_template']),
                 'textCount' => $stats['texts'],
                 'archivedTextCount' => $stats['archivedTexts'],
                 'wordCount' => $stats['words'],
@@ -106,18 +106,18 @@ class ListLanguages
     public function getLanguagesWithTextCounts(): array
     {
         $records = QueryBuilder::table('languages')
-            ->select(['languages.LgID', 'languages.LgName', 'COUNT(texts.id) AS text_count'])
-            ->join('texts', 'texts.language_id', '=', 'languages.LgID')
-            ->where('languages.LgName', '<>', '')
-            ->groupBy(['languages.LgID', 'languages.LgName'])
-            ->orderBy('languages.LgName')
+            ->select(['languages.id', 'languages.name', 'COUNT(texts.id) AS text_count'])
+            ->join('texts', 'texts.language_id', '=', 'languages.id')
+            ->where('languages.name', '<>', '')
+            ->groupBy(['languages.id', 'languages.name'])
+            ->orderBy('languages.name')
             ->getPrepared();
 
         $result = [];
         foreach ($records as $record) {
             $result[] = [
-                'id' => (int)$record['LgID'],
-                'name' => (string)$record['LgName'],
+                'id' => (int)$record['id'],
+                'name' => (string)$record['name'],
                 'text_count' => (int)$record['text_count']
             ];
         }
@@ -132,19 +132,19 @@ class ListLanguages
     public function getLanguagesWithArchivedTextCounts(): array
     {
         $records = QueryBuilder::table('languages')
-            ->select(['languages.LgID', 'languages.LgName', 'COUNT(texts.id) AS text_count'])
-            ->join('texts', 'texts.language_id', '=', 'languages.LgID')
-            ->where('languages.LgName', '<>', '')
+            ->select(['languages.id', 'languages.name', 'COUNT(texts.id) AS text_count'])
+            ->join('texts', 'texts.language_id', '=', 'languages.id')
+            ->where('languages.name', '<>', '')
             ->whereNotNull('texts.archived_at')
-            ->groupBy(['languages.LgID', 'languages.LgName'])
-            ->orderBy('languages.LgName')
+            ->groupBy(['languages.id', 'languages.name'])
+            ->orderBy('languages.name')
             ->getPrepared();
 
         $result = [];
         foreach ($records as $record) {
             $result[] = [
-                'id' => (int)$record['LgID'],
-                'name' => (string)$record['LgName'],
+                'id' => (int)$record['id'],
+                'name' => (string)$record['name'],
                 'text_count' => (int)$record['text_count']
             ];
         }

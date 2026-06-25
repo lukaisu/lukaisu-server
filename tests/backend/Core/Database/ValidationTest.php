@@ -68,16 +68,16 @@ class ValidationTest extends TestCase
             "(SELECT id FROM texts WHERE title = 'Test Validation Text')"
         );
         Connection::query("DELETE FROM texts WHERE title = 'Test Validation Text'");
-        Connection::query("DELETE FROM languages WHERE LgName = 'Test Validation Language'");
+        Connection::query("DELETE FROM languages WHERE name = 'Test Validation Language'");
         Connection::query("DELETE FROM tags WHERE text = 'test_validation_tag'");
         Connection::query("DELETE FROM text_tags WHERE text = 'test_validation_tag2'");
 
         // Create test language
         $sql = "INSERT INTO languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test Validation Language',
             'https://en.wiktionary.org/wiki/###',
@@ -127,7 +127,7 @@ class ValidationTest extends TestCase
             Connection::query("DELETE FROM texts WHERE id = " . self::$testTextId);
         }
         if (self::$testLanguageId) {
-            Connection::query("DELETE FROM languages WHERE LgID = " . self::$testLanguageId);
+            Connection::query("DELETE FROM languages WHERE id = " . self::$testLanguageId);
         }
     }
 

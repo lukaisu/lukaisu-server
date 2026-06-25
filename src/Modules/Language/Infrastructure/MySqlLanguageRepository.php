@@ -41,35 +41,35 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     /**
      * @var string Primary key column
      */
-    private string $primaryKey = 'LgID';
+    private string $primaryKey = 'id';
 
     /**
      * @var array<string, string> Property to column mapping
      */
     private array $columnMap = [
-        'id' => 'LgID',
-        'name' => 'LgName',
-        'dict1uri' => 'LgDict1URI',
-        'dict2uri' => 'LgDict2URI',
-        'translator' => 'LgGoogleTranslateURI',
-        'dict1popup' => 'LgDict1PopUp',
-        'dict2popup' => 'LgDict2PopUp',
-        'translatorpopup' => 'LgGoogleTranslatePopUp',
-        'sourcelang' => 'LgSourceLang',
-        'targetlang' => 'LgTargetLang',
-        'exporttemplate' => 'LgExportTemplate',
-        'textsize' => 'LgTextSize',
-        'charactersubst' => 'LgCharacterSubstitutions',
-        'regexpsplitsent' => 'LgRegexpSplitSentences',
-        'exceptionsplitsent' => 'LgExceptionsSplitSentences',
-        'regexpwordchar' => 'LgRegexpWordCharacters',
-        'parsertype' => 'LgParserType',
-        'removespaces' => 'LgRemoveSpaces',
-        'spliteachchar' => 'LgSplitEachChar',
-        'rightoleft' => 'LgRightToLeft',
-        'ttsvoiceapi' => 'LgTTSVoiceAPI',
-        'showromanization' => 'LgShowRomanization',
-        'localdictmode' => 'LgLocalDictMode',
+        'id' => 'id',
+        'name' => 'name',
+        'dict1uri' => 'dict1_uri',
+        'dict2uri' => 'dict2_uri',
+        'translator' => 'google_translate_uri',
+        'dict1popup' => 'dict1_popup',
+        'dict2popup' => 'dict2_popup',
+        'translatorpopup' => 'google_translate_popup',
+        'sourcelang' => 'source_lang',
+        'targetlang' => 'target_lang',
+        'exporttemplate' => 'export_template',
+        'textsize' => 'text_size',
+        'charactersubst' => 'character_substitutions',
+        'regexpsplitsent' => 'regexp_split_sentences',
+        'exceptionsplitsent' => 'exceptions_split_sentences',
+        'regexpwordchar' => 'regexp_word_characters',
+        'parsertype' => 'parser_type',
+        'removespaces' => 'remove_spaces',
+        'spliteachchar' => 'split_each_char',
+        'rightoleft' => 'right_to_left',
+        'ttsvoiceapi' => 'tts_voice_api',
+        'showromanization' => 'show_romanization',
+        'localdictmode' => 'local_dict_mode',
     ];
 
     /**
@@ -92,29 +92,29 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     private function mapToEntity(array $row): Language
     {
         return Language::reconstitute(
-            (int) $row['LgID'],
-            (string) $row['LgName'],
-            (string) $row['LgDict1URI'],
-            (string) ($row['LgDict2URI'] ?? ''),
-            (string) ($row['LgGoogleTranslateURI'] ?? ''),
-            (bool) ($row['LgDict1PopUp'] ?? false),
-            (bool) ($row['LgDict2PopUp'] ?? false),
-            (bool) ($row['LgGoogleTranslatePopUp'] ?? false),
-            isset($row['LgSourceLang']) && $row['LgSourceLang'] !== '' ? (string) $row['LgSourceLang'] : null,
-            isset($row['LgTargetLang']) && $row['LgTargetLang'] !== '' ? (string) $row['LgTargetLang'] : null,
-            (string) ($row['LgExportTemplate'] ?? ''),
-            (int) ($row['LgTextSize'] ?? 100),
-            (string) ($row['LgCharacterSubstitutions'] ?? ''),
-            (string) $row['LgRegexpSplitSentences'],
-            (string) ($row['LgExceptionsSplitSentences'] ?? ''),
-            (string) $row['LgRegexpWordCharacters'],
-            (bool) ($row['LgRemoveSpaces'] ?? false),
-            (bool) ($row['LgSplitEachChar'] ?? false),
-            (bool) ($row['LgRightToLeft'] ?? false),
-            (string) ($row['LgTTSVoiceAPI'] ?? ''),
-            (bool) ($row['LgShowRomanization'] ?? false),
-            isset($row['LgParserType']) ? (string) $row['LgParserType'] : null,
-            (int) ($row['LgLocalDictMode'] ?? 0)
+            (int) $row['id'],
+            (string) $row['name'],
+            (string) $row['dict1_uri'],
+            (string) ($row['dict2_uri'] ?? ''),
+            (string) ($row['google_translate_uri'] ?? ''),
+            (bool) ($row['dict1_popup'] ?? false),
+            (bool) ($row['dict2_popup'] ?? false),
+            (bool) ($row['google_translate_popup'] ?? false),
+            isset($row['source_lang']) && $row['source_lang'] !== '' ? (string) $row['source_lang'] : null,
+            isset($row['target_lang']) && $row['target_lang'] !== '' ? (string) $row['target_lang'] : null,
+            (string) ($row['export_template'] ?? ''),
+            (int) ($row['text_size'] ?? 100),
+            (string) ($row['character_substitutions'] ?? ''),
+            (string) $row['regexp_split_sentences'],
+            (string) ($row['exceptions_split_sentences'] ?? ''),
+            (string) $row['regexp_word_characters'],
+            (bool) ($row['remove_spaces'] ?? false),
+            (bool) ($row['split_each_char'] ?? false),
+            (bool) ($row['right_to_left'] ?? false),
+            (string) ($row['tts_voice_api'] ?? ''),
+            (bool) ($row['show_romanization'] ?? false),
+            isset($row['parser_type']) ? (string) $row['parser_type'] : null,
+            (int) ($row['local_dict_mode'] ?? 0)
         );
     }
 
@@ -128,24 +128,24 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     private function mapToRow(Language $entity): array
     {
         return [
-            'LgID' => $entity->id()->toInt(),
-            'LgName' => $entity->name(),
-            'LgDict1URI' => $entity->dict1Uri(),
-            'LgDict2URI' => $entity->dict2Uri(),
-            'LgGoogleTranslateURI' => $entity->translatorUri(),
-            'LgExportTemplate' => $entity->exportTemplate(),
-            'LgTextSize' => $entity->textSize(),
-            'LgCharacterSubstitutions' => $entity->characterSubstitutions(),
-            'LgRegexpSplitSentences' => $entity->regexpSplitSentences(),
-            'LgExceptionsSplitSentences' => $entity->exceptionsSplitSentences(),
-            'LgRegexpWordCharacters' => $entity->regexpWordCharacters(),
-            'LgParserType' => $entity->parserType(),
-            'LgRemoveSpaces' => (int) $entity->removeSpaces(),
-            'LgSplitEachChar' => (int) $entity->splitEachChar(),
-            'LgRightToLeft' => (int) $entity->rightToLeft(),
-            'LgTTSVoiceAPI' => $entity->ttsVoiceApi(),
-            'LgShowRomanization' => (int) $entity->showRomanization(),
-            'LgLocalDictMode' => $entity->localDictMode(),
+            'id' => $entity->id()->toInt(),
+            'name' => $entity->name(),
+            'dict1_uri' => $entity->dict1Uri(),
+            'dict2_uri' => $entity->dict2Uri(),
+            'google_translate_uri' => $entity->translatorUri(),
+            'export_template' => $entity->exportTemplate(),
+            'text_size' => $entity->textSize(),
+            'character_substitutions' => $entity->characterSubstitutions(),
+            'regexp_split_sentences' => $entity->regexpSplitSentences(),
+            'exceptions_split_sentences' => $entity->exceptionsSplitSentences(),
+            'regexp_word_characters' => $entity->regexpWordCharacters(),
+            'parser_type' => $entity->parserType(),
+            'remove_spaces' => (int) $entity->removeSpaces(),
+            'split_each_char' => (int) $entity->splitEachChar(),
+            'right_to_left' => (int) $entity->rightToLeft(),
+            'tts_voice_api' => $entity->ttsVoiceApi(),
+            'show_romanization' => (int) $entity->showRomanization(),
+            'local_dict_mode' => $entity->localDictMode(),
         ];
     }
 
@@ -215,10 +215,10 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function findAllActive(string $orderBy = 'LgName', string $direction = 'ASC'): array
+    public function findAllActive(string $orderBy = 'name', string $direction = 'ASC'): array
     {
         $rows = $this->query()
-            ->where('LgName', '!=', '')
+            ->where('name', '!=', '')
             ->orderBy($orderBy, $direction)
             ->getPrepared();
 
@@ -234,7 +234,7 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     public function findByName(string $name): ?Language
     {
         $row = $this->query()
-            ->where('LgName', '=', $name)
+            ->where('name', '=', $name)
             ->firstPrepared();
 
         return $row !== null ? $this->mapToEntity($row) : null;
@@ -245,10 +245,10 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
      */
     public function nameExists(string $name, ?int $excludeId = null): bool
     {
-        $query = $this->query()->where('LgName', '=', $name);
+        $query = $this->query()->where('name', '=', $name);
 
         if ($excludeId !== null) {
-            $query->where('LgID', '!=', $excludeId);
+            $query->where('id', '!=', $excludeId);
         }
 
         return $query->existsPrepared();
@@ -261,12 +261,12 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     {
         $languages = [];
         $rows = $this->query()
-            ->select(['LgID', 'LgName'])
-            ->where('LgName', '!=', '')
+            ->select(['id', 'name'])
+            ->where('name', '!=', '')
             ->getPrepared();
 
         foreach ($rows as $row) {
-            $languages[(string) $row['LgName']] = (int) $row['LgID'];
+            $languages[(string) $row['name']] = (int) $row['id'];
         }
 
         return $languages;
@@ -279,18 +279,18 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     {
         $result = [];
         $rows = $this->query()
-            ->select(['LgID', 'LgName'])
-            ->where('LgName', '!=', '')
-            ->orderBy('LgName')
+            ->select(['id', 'name'])
+            ->where('name', '!=', '')
+            ->orderBy('name')
             ->getPrepared();
 
         foreach ($rows as $row) {
-            $name = (string) $row['LgName'];
+            $name = (string) $row['name'];
             if (strlen($name) > $maxNameLength) {
                 $name = substr($name, 0, $maxNameLength) . '...';
             }
             $result[] = [
-                'id' => (int) $row['LgID'],
+                'id' => (int) $row['id'],
                 'name' => $name,
             ];
         }
@@ -304,13 +304,13 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     public function findEmptyLanguageId(): ?int
     {
         $row = $this->query()
-            ->select('LgID')
-            ->where('LgName', '=', '')
-            ->orderBy('LgID')
+            ->select('id')
+            ->where('name', '=', '')
+            ->orderBy('id')
             ->limit(1)
             ->firstPrepared();
 
-        return $row !== null ? (int) $row['LgID'] : null;
+        return $row !== null ? (int) $row['id'] : null;
     }
 
     /**
@@ -319,11 +319,11 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     public function isRightToLeft(int $id): bool
     {
         $row = $this->query()
-            ->select('LgRightToLeft')
-            ->where('LgID', '=', $id)
+            ->select('right_to_left')
+            ->where('id', '=', $id)
             ->firstPrepared();
 
-        return $row !== null && (bool) $row['LgRightToLeft'];
+        return $row !== null && (bool) $row['right_to_left'];
     }
 
     /**
@@ -332,11 +332,11 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     public function getWordCharacters(int $id): ?string
     {
         $row = $this->query()
-            ->select('LgRegexpWordCharacters')
-            ->where('LgID', '=', $id)
+            ->select('regexp_word_characters')
+            ->where('id', '=', $id)
             ->firstPrepared();
 
-        return $row !== null ? (string) $row['LgRegexpWordCharacters'] : null;
+        return $row !== null ? (string) $row['regexp_word_characters'] : null;
     }
 
     /**
@@ -358,11 +358,11 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     public function getName(int $id): ?string
     {
         $row = $this->query()
-            ->select('LgName')
-            ->where('LgID', '=', $id)
+            ->select('name')
+            ->where('id', '=', $id)
             ->firstPrepared();
 
-        return $row !== null ? (string) $row['LgName'] : null;
+        return $row !== null ? (string) $row['name'] : null;
     }
 
     /**
@@ -371,10 +371,10 @@ class MySqlLanguageRepository implements LanguageRepositoryInterface
     public function getTranslatorUri(int $id): ?string
     {
         $row = $this->query()
-            ->select('LgGoogleTranslateURI')
-            ->where('LgID', '=', $id)
+            ->select('google_translate_uri')
+            ->where('id', '=', $id)
             ->firstPrepared();
 
-        return $row !== null ? (string) $row['LgGoogleTranslateURI'] : null;
+        return $row !== null ? (string) $row['google_translate_uri'] : null;
     }
 }

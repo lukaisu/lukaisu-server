@@ -358,19 +358,19 @@ class DifficultyEstimationService
     private function getLanguageParseSettings(int $languageId): ?array
     {
         $row = QueryBuilder::table('languages')
-            ->select(['LgRegexpWordCharacters', 'LgSplitEachChar'])
-            ->where('LgID', '=', $languageId)
+            ->select(['regexp_word_characters', 'split_each_char'])
+            ->where('id', '=', $languageId)
             ->firstPrepared();
 
         if ($row === null) {
             return null;
         }
 
-        $regex = (string) ($row['LgRegexpWordCharacters'] ?? '');
+        $regex = (string) ($row['regexp_word_characters'] ?? '');
 
         return [
             'regex' => $regex !== '' ? $regex : '\\w',
-            'splitEachChar' => (int) ($row['LgSplitEachChar'] ?? 0) === 1,
+            'splitEachChar' => (int) ($row['split_each_char'] ?? 0) === 1,
         ];
     }
 

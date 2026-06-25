@@ -50,7 +50,7 @@ class UpdateLanguage
 
         // Get old values for comparison
         $records = QueryBuilder::table('languages')
-            ->where('LgID', '=', $id)
+            ->where('id', '=', $id)
             ->getPrepared();
         if (empty($records)) {
             return ['success' => false, 'reparsed' => null, 'error' => 'Cannot access language data'];
@@ -85,7 +85,7 @@ class UpdateLanguage
 
         // Get old values for comparison
         $records = QueryBuilder::table('languages')
-            ->where('LgID', '=', $id)
+            ->where('id', '=', $id)
             ->getPrepared();
 
         if (empty($records)) {
@@ -120,28 +120,28 @@ class UpdateLanguage
     private function getLanguageDataFromRequest(): array
     {
         return [
-            'LgName' => InputValidator::getString('LgName'),
-            'LgDict1URI' => InputValidator::getString('LgDict1URI'),
-            'LgDict2URI' => InputValidator::getString('LgDict2URI'),
-            'LgGoogleTranslateURI' => InputValidator::getString('LgGoogleTranslateURI'),
-            'LgDict1PopUp' => InputValidator::has('LgDict1PopUp'),
-            'LgDict2PopUp' => InputValidator::has('LgDict2PopUp'),
-            'LgGoogleTranslatePopUp' => InputValidator::has('LgGoogleTranslatePopUp'),
-            'LgSourceLang' => InputValidator::getString('LgSourceLang') ?: null,
-            'LgTargetLang' => InputValidator::getString('LgTargetLang') ?: null,
-            'LgExportTemplate' => InputValidator::getString('LgExportTemplate'),
-            'LgTextSize' => InputValidator::getString('LgTextSize', '100'),
-            'LgCharacterSubstitutions' => InputValidator::getString('LgCharacterSubstitutions', '', false),
-            'LgRegexpSplitSentences' => InputValidator::getString('LgRegexpSplitSentences'),
-            'LgExceptionsSplitSentences' => InputValidator::getString('LgExceptionsSplitSentences', '', false),
-            'LgRegexpWordCharacters' => InputValidator::getString('LgRegexpWordCharacters'),
-            'LgParserType' => InputValidator::getString('LgParserType') ?: null,
-            'LgRemoveSpaces' => InputValidator::has('LgRemoveSpaces'),
-            'LgSplitEachChar' => InputValidator::has('LgSplitEachChar'),
-            'LgRightToLeft' => InputValidator::has('LgRightToLeft'),
-            'LgTTSVoiceAPI' => InputValidator::getString('LgTTSVoiceAPI'),
-            'LgShowRomanization' => InputValidator::has('LgShowRomanization'),
-            'LgLocalDictMode' => (int) InputValidator::getString('LgLocalDictMode', '0'),
+            'name' => InputValidator::getString('name'),
+            'dict1_uri' => InputValidator::getString('dict1_uri'),
+            'dict2_uri' => InputValidator::getString('dict2_uri'),
+            'google_translate_uri' => InputValidator::getString('google_translate_uri'),
+            'dict1_popup' => InputValidator::has('dict1_popup'),
+            'dict2_popup' => InputValidator::has('dict2_popup'),
+            'google_translate_popup' => InputValidator::has('google_translate_popup'),
+            'source_lang' => InputValidator::getString('source_lang') ?: null,
+            'target_lang' => InputValidator::getString('target_lang') ?: null,
+            'export_template' => InputValidator::getString('export_template'),
+            'text_size' => InputValidator::getString('text_size', '100'),
+            'character_substitutions' => InputValidator::getString('character_substitutions', '', false),
+            'regexp_split_sentences' => InputValidator::getString('regexp_split_sentences'),
+            'exceptions_split_sentences' => InputValidator::getString('exceptions_split_sentences', '', false),
+            'regexp_word_characters' => InputValidator::getString('regexp_word_characters'),
+            'parser_type' => InputValidator::getString('parser_type') ?: null,
+            'remove_spaces' => InputValidator::has('remove_spaces'),
+            'split_each_char' => InputValidator::has('split_each_char'),
+            'right_to_left' => InputValidator::has('right_to_left'),
+            'tts_voice_api' => InputValidator::getString('tts_voice_api'),
+            'show_romanization' => InputValidator::has('show_romanization'),
+            'local_dict_mode' => (int) InputValidator::getString('local_dict_mode', '0'),
         ];
     }
 
@@ -161,28 +161,28 @@ class UpdateLanguage
             isset($data[$key]) && is_string($data[$key]) ? $data[$key] : null;
 
         return [
-            'LgName' => $getStr('name'),
-            'LgDict1URI' => $getStr('dict1Uri'),
-            'LgDict2URI' => $getStr('dict2Uri'),
-            'LgGoogleTranslateURI' => $getStr('translatorUri'),
-            'LgDict1PopUp' => !empty($data['dict1PopUp']),
-            'LgDict2PopUp' => !empty($data['dict2PopUp']),
-            'LgGoogleTranslatePopUp' => !empty($data['translatorPopUp']),
-            'LgSourceLang' => $getStrOrNull('sourceLang'),
-            'LgTargetLang' => $getStrOrNull('targetLang'),
-            'LgExportTemplate' => $getStr('exportTemplate'),
-            'LgTextSize' => (string)($data['textSize'] ?? '100'),
-            'LgCharacterSubstitutions' => $getStr('characterSubstitutions'),
-            'LgRegexpSplitSentences' => $getStr('regexpSplitSentences', '.!?'),
-            'LgExceptionsSplitSentences' => $getStr('exceptionsSplitSentences'),
-            'LgRegexpWordCharacters' => $getStr('regexpWordCharacters', 'a-zA-Z'),
-            'LgParserType' => $getStrOrNull('parserType'),
-            'LgRemoveSpaces' => !empty($data['removeSpaces']),
-            'LgSplitEachChar' => !empty($data['splitEachChar']),
-            'LgRightToLeft' => !empty($data['rightToLeft']),
-            'LgTTSVoiceAPI' => $getStr('ttsVoiceApi'),
-            'LgShowRomanization' => !empty($data['showRomanization']),
-            'LgLocalDictMode' => (int)($data['localDictMode'] ?? 0),
+            'name' => $getStr('name'),
+            'dict1_uri' => $getStr('dict1Uri'),
+            'dict2_uri' => $getStr('dict2Uri'),
+            'google_translate_uri' => $getStr('translatorUri'),
+            'dict1_popup' => !empty($data['dict1PopUp']),
+            'dict2_popup' => !empty($data['dict2PopUp']),
+            'google_translate_popup' => !empty($data['translatorPopUp']),
+            'source_lang' => $getStrOrNull('sourceLang'),
+            'target_lang' => $getStrOrNull('targetLang'),
+            'export_template' => $getStr('exportTemplate'),
+            'text_size' => (string)($data['textSize'] ?? '100'),
+            'character_substitutions' => $getStr('characterSubstitutions'),
+            'regexp_split_sentences' => $getStr('regexpSplitSentences', '.!?'),
+            'exceptions_split_sentences' => $getStr('exceptionsSplitSentences'),
+            'regexp_word_characters' => $getStr('regexpWordCharacters', 'a-zA-Z'),
+            'parser_type' => $getStrOrNull('parserType'),
+            'remove_spaces' => !empty($data['removeSpaces']),
+            'split_each_char' => !empty($data['splitEachChar']),
+            'right_to_left' => !empty($data['rightToLeft']),
+            'tts_voice_api' => $getStr('ttsVoiceApi'),
+            'show_romanization' => !empty($data['showRomanization']),
+            'local_dict_mode' => (int)($data['localDictMode'] ?? 0),
         ];
     }
 
@@ -200,20 +200,20 @@ class UpdateLanguage
             isset($arr[$key]) && is_string($arr[$key]) ? $arr[$key] : '';
 
         return (
-            $getStr($newData, "LgCharacterSubstitutions")
-            != $getStr($oldRecord, 'LgCharacterSubstitutions')
+            $getStr($newData, "character_substitutions")
+            != $getStr($oldRecord, 'character_substitutions')
         ) || (
-            trim($getStr($newData, "LgRegexpSplitSentences")) !=
-            trim($getStr($oldRecord, 'LgRegexpSplitSentences'))
+            trim($getStr($newData, "regexp_split_sentences")) !=
+            trim($getStr($oldRecord, 'regexp_split_sentences'))
         ) || (
-            $getStr($newData, "LgExceptionsSplitSentences")
-            != $getStr($oldRecord, 'LgExceptionsSplitSentences')
+            $getStr($newData, "exceptions_split_sentences")
+            != $getStr($oldRecord, 'exceptions_split_sentences')
         ) || (
-            trim($getStr($newData, "LgRegexpWordCharacters")) !=
-            trim($getStr($oldRecord, 'LgRegexpWordCharacters'))
-        ) || ((int)($newData["LgRemoveSpaces"] ?? 0) != (int)($oldRecord['LgRemoveSpaces'] ?? 0)) ||
-        ((int)($newData["LgSplitEachChar"] ?? 0) != (int)($oldRecord['LgSplitEachChar'] ?? 0)) ||
-        (($newData["LgParserType"] ?? null) != ($oldRecord['LgParserType'] ?? null));
+            trim($getStr($newData, "regexp_word_characters")) !=
+            trim($getStr($oldRecord, 'regexp_word_characters'))
+        ) || ((int)($newData["remove_spaces"] ?? 0) != (int)($oldRecord['remove_spaces'] ?? 0)) ||
+        ((int)($newData["split_each_char"] ?? 0) != (int)($oldRecord['split_each_char'] ?? 0)) ||
+        (($newData["parser_type"] ?? null) != ($oldRecord['parser_type'] ?? null));
     }
 
     /**
@@ -274,44 +274,44 @@ class UpdateLanguage
     private function buildLanguageSql(array $data, int $id): void
     {
         $columns = [
-            'LgName', 'LgDict1URI', 'LgDict2URI', 'LgGoogleTranslateURI',
-            'LgDict1PopUp', 'LgDict2PopUp', 'LgGoogleTranslatePopUp',
-            'LgSourceLang', 'LgTargetLang',
-            'LgExportTemplate', 'LgTextSize', 'LgCharacterSubstitutions',
-            'LgRegexpSplitSentences', 'LgExceptionsSplitSentences',
-            'LgRegexpWordCharacters', 'LgParserType', 'LgRemoveSpaces', 'LgSplitEachChar',
-            'LgRightToLeft', 'LgTTSVoiceAPI', 'LgShowRomanization', 'LgLocalDictMode'
+            'name', 'dict1_uri', 'dict2_uri', 'google_translate_uri',
+            'dict1_popup', 'dict2_popup', 'google_translate_popup',
+            'source_lang', 'target_lang',
+            'export_template', 'text_size', 'character_substitutions',
+            'regexp_split_sentences', 'exceptions_split_sentences',
+            'regexp_word_characters', 'parser_type', 'remove_spaces', 'split_each_char',
+            'right_to_left', 'tts_voice_api', 'show_romanization', 'local_dict_mode'
         ];
 
         $params = [
-            $this->emptyToNull($this->getString($data, "LgName")),
-            $this->emptyToNull($this->getString($data, "LgDict1URI")),
-            $this->emptyToNull($this->getString($data, "LgDict2URI")),
-            $this->emptyToNull($this->getString($data, "LgGoogleTranslateURI")),
-            (int)($data["LgDict1PopUp"] ?? false),
-            (int)($data["LgDict2PopUp"] ?? false),
-            (int)($data["LgGoogleTranslatePopUp"] ?? false),
-            $this->emptyToNull($this->getStringOrNull($data, "LgSourceLang")),
-            $this->emptyToNull($this->getStringOrNull($data, "LgTargetLang")),
-            $this->emptyToNull($this->getString($data, "LgExportTemplate")),
-            $this->emptyToNull($this->getString($data, "LgTextSize")),
-            $this->getString($data, "LgCharacterSubstitutions"),
-            $this->emptyToNull($this->getString($data, "LgRegexpSplitSentences")),
-            $this->getString($data, "LgExceptionsSplitSentences"),
-            $this->emptyToNull($this->getString($data, "LgRegexpWordCharacters")),
-            $this->getStringOrNull($data, "LgParserType"),
-            (int)($data["LgRemoveSpaces"] ?? false),
-            (int)($data["LgSplitEachChar"] ?? false),
-            (int)($data["LgRightToLeft"] ?? false),
-            $this->getString($data, "LgTTSVoiceAPI"),
-            (int)($data["LgShowRomanization"] ?? false),
-            (int)($data["LgLocalDictMode"] ?? 0),
+            $this->emptyToNull($this->getString($data, "name")),
+            $this->emptyToNull($this->getString($data, "dict1_uri")),
+            $this->emptyToNull($this->getString($data, "dict2_uri")),
+            $this->emptyToNull($this->getString($data, "google_translate_uri")),
+            (int)($data["dict1_popup"] ?? false),
+            (int)($data["dict2_popup"] ?? false),
+            (int)($data["google_translate_popup"] ?? false),
+            $this->emptyToNull($this->getStringOrNull($data, "source_lang")),
+            $this->emptyToNull($this->getStringOrNull($data, "target_lang")),
+            $this->emptyToNull($this->getString($data, "export_template")),
+            $this->emptyToNull($this->getString($data, "text_size")),
+            $this->getString($data, "character_substitutions"),
+            $this->emptyToNull($this->getString($data, "regexp_split_sentences")),
+            $this->getString($data, "exceptions_split_sentences"),
+            $this->emptyToNull($this->getString($data, "regexp_word_characters")),
+            $this->getStringOrNull($data, "parser_type"),
+            (int)($data["remove_spaces"] ?? false),
+            (int)($data["split_each_char"] ?? false),
+            (int)($data["right_to_left"] ?? false),
+            $this->getString($data, "tts_voice_api"),
+            (int)($data["show_romanization"] ?? false),
+            (int)($data["local_dict_mode"] ?? 0),
         ];
 
         $updateData = array_combine($columns, $params);
 
         QueryBuilder::table('languages')
-            ->where('LgID', '=', $id)
+            ->where('id', '=', $id)
             ->updatePrepared($updateData);
     }
 }

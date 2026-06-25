@@ -57,14 +57,14 @@ class MigrationsTest extends TestCase
     {
         return [
             'INSERT INTO with prefix' => [
-                "INSERT INTO languages (LgName) VALUES ('Test');",
+                "INSERT INTO languages (name) VALUES ('Test');",
                 "prefix_",
-                "INSERT INTO prefix_languages (LgName) VALUES ('Test');"
+                "INSERT INTO prefix_languages (name) VALUES ('Test');"
             ],
             'INSERT INTO with empty prefix' => [
-                "INSERT INTO languages (LgName) VALUES ('Test');",
+                "INSERT INTO languages (name) VALUES ('Test');",
                 "",
-                "INSERT INTO languages (LgName) VALUES ('Test');"
+                "INSERT INTO languages (name) VALUES ('Test');"
             ],
             'INSERT INTO multiple columns' => [
                 "INSERT INTO words (language_id, text) VALUES (1, 'test');",
@@ -176,7 +176,7 @@ class MigrationsTest extends TestCase
     public function testPrefixQueryUpdateStatement(): void
     {
         // UPDATE statements should not be modified by prefixQuery
-        $sql = "UPDATE languages SET LgName = 'Test';";
+        $sql = "UPDATE languages SET name = 'Test';";
         $result = Migrations::prefixQuery($sql, "prefix_");
         $this->assertEquals($sql, $result, 'UPDATE statements should be unchanged');
     }
@@ -184,7 +184,7 @@ class MigrationsTest extends TestCase
     public function testPrefixQueryDeleteStatement(): void
     {
         // DELETE statements should not be modified by prefixQuery
-        $sql = "DELETE FROM languages WHERE LgID = 1;";
+        $sql = "DELETE FROM languages WHERE id = 1;";
         $result = Migrations::prefixQuery($sql, "prefix_");
         $this->assertEquals($sql, $result, 'DELETE statements should be unchanged');
     }
@@ -192,9 +192,9 @@ class MigrationsTest extends TestCase
     public function testPrefixQueryComplexCreateTable(): void
     {
         $sql = "CREATE TABLE IF NOT EXISTS `languages` (
-            LgID tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
-            LgName varchar(40) NOT NULL,
-            PRIMARY KEY (LgID)
+            id tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
+            name varchar(40) NOT NULL,
+            PRIMARY KEY (id)
         ) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
 
         $result = Migrations::prefixQuery($sql, "test_");
@@ -213,12 +213,12 @@ class MigrationsTest extends TestCase
         // Clean up any texts that reference non-existent languages
         // to avoid "Language data not found" errors
         Connection::query("DELETE FROM word_occurrences WHERE text_id IN (
-            SELECT id FROM texts WHERE language_id NOT IN (SELECT LgID FROM languages)
+            SELECT id FROM texts WHERE language_id NOT IN (SELECT id FROM languages)
         )");
         Connection::query("DELETE FROM sentences WHERE text_id IN (
-            SELECT id FROM texts WHERE language_id NOT IN (SELECT LgID FROM languages)
+            SELECT id FROM texts WHERE language_id NOT IN (SELECT id FROM languages)
         )");
-        Connection::query("DELETE FROM texts WHERE language_id NOT IN (SELECT LgID FROM languages)");
+        Connection::query("DELETE FROM texts WHERE language_id NOT IN (SELECT id FROM languages)");
 
         // This function truncates and rebuilds text data
         // Should run without error on empty/minimal database
@@ -320,7 +320,7 @@ class MigrationsTest extends TestCase
         $result = Migrations::prefixQuery($sql, "pre_");
         $this->assertStringContainsString("pre_users", $result, 'Mixed case CREATE TABLE should be prefixed');
 
-        $sql = "insert into languages (LgName) VALUES ('Test');";
+        $sql = "insert into languages (name) VALUES ('Test');";
         $result = Migrations::prefixQuery($sql, "pre_");
         $this->assertStringContainsString("pre_languages", $result, 'Lowercase INSERT INTO should be prefixed');
 
@@ -331,10 +331,10 @@ class MigrationsTest extends TestCase
 
     public function testPrefixQueryInsertMultipleValues(): void
     {
-        $sql = "INSERT INTO languages (LgID, LgName) VALUES (1, 'English'), (2, 'French');";
+        $sql = "INSERT INTO languages (id, name) VALUES (1, 'English'), (2, 'French');";
         $result = Migrations::prefixQuery($sql, "test_");
         $this->assertEquals(
-            "INSERT INTO test_languages (LgID, LgName) VALUES (1, 'English'), (2, 'French');",
+            "INSERT INTO test_languages (id, name) VALUES (1, 'English'), (2, 'French');",
             $result
         );
     }

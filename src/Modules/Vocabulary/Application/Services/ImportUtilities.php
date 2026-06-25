@@ -53,7 +53,7 @@ class ImportUtilities
     public function getLanguageData(int $langId): ?array
     {
         return QueryBuilder::table('languages')
-            ->where('LgID', '=', $langId)
+            ->where('id', '=', $langId)
             ->firstPrepared();
     }
 
@@ -358,7 +358,7 @@ class ImportUtilities
     public function isRightToLeft(int $langId): bool
     {
         return (bool) QueryBuilder::table('languages')
-            ->where('LgID', '=', $langId)
-            ->valuePrepared('LgRightToLeft');
+            ->where('id', '=', $langId)
+            ->valuePrepared('right_to_left');
     }
 }

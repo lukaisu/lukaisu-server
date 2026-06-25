@@ -75,8 +75,8 @@ class LanguageApiHandler implements ApiRoutableInterface
     public function getReadingConfiguration(int $langId): array
     {
         $record = QueryBuilder::table('languages')
-            ->select(['LgName', 'LgTTSVoiceAPI', 'LgRegexpWordCharacters', 'LgPiperVoiceId'])
-            ->where('LgID', '=', $langId)
+            ->select(['name', 'tts_voice_api', 'regexp_word_characters', 'piper_voice_id'])
+            ->where('id', '=', $langId)
             ->firstPrepared();
 
         if ($record === null) {
@@ -90,12 +90,12 @@ class LanguageApiHandler implements ApiRoutableInterface
         }
 
         $abbr = $this->languageFacade->getLanguageCode($langId, LanguagePresets::getAll());
-        $piperVoiceId = isset($record["LgPiperVoiceId"]) && is_string($record["LgPiperVoiceId"])
-            ? $record["LgPiperVoiceId"]
+        $piperVoiceId = isset($record["piper_voice_id"]) && is_string($record["piper_voice_id"])
+            ? $record["piper_voice_id"]
             : null;
-        $ttsVoiceApi = is_string($record["LgTTSVoiceAPI"]) ? $record["LgTTSVoiceAPI"] : '';
-        $regexpWordChars = is_string($record["LgRegexpWordCharacters"]) ? $record["LgRegexpWordCharacters"] : '';
-        $lgName = is_string($record["LgName"]) ? $record["LgName"] : '';
+        $ttsVoiceApi = is_string($record["tts_voice_api"]) ? $record["tts_voice_api"] : '';
+        $regexpWordChars = is_string($record["regexp_word_characters"]) ? $record["regexp_word_characters"] : '';
+        $lgName = is_string($record["name"]) ? $record["name"] : '';
 
         // Priority: Piper > External API > Internal (MeCab) > Direct
         if ($piperVoiceId !== null && $piperVoiceId !== '') {

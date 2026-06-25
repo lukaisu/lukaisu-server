@@ -56,13 +56,13 @@ class WordListExportBuilder
         string $whTag,
         array $filterParams = []
     ): array {
-        $ankiSelect = 'select distinct id, LgRightToLeft,
-            LgRegexpWordCharacters, LgName, text, translation,
+        $ankiSelect = 'select distinct id, right_to_left,
+            regexp_word_characters, name, text, translation,
             romanization, sentence,
             ifnull(group_concat(distinct text order by text separator \' \'),\'\') as taglist';
         $ankiFrom = 'from ((words left JOIN word_tag_map ON id = word_id)
             left join tags on id = tag_id), languages';
-        $ankiWhere = 'language_id = LgID AND translation != \'*\'
+        $ankiWhere = 'language_id = id AND translation != \'*\'
             AND translation != \'\' AND translation IS NOT NULL
             AND sentence IS NOT NULL AND sentence != \'\'
             AND (sentence LIKE CONCAT(\'%{\',text,\'}%\')
@@ -125,7 +125,7 @@ class WordListExportBuilder
         string $whTag,
         array $filterParams = []
     ): array {
-        $tsvSelect = 'select distinct id, LgName, text, translation,
+        $tsvSelect = 'select distinct id, name, text, translation,
             romanization, sentence, status,
             ifnull(group_concat(distinct text order by text separator \' \'),\'\') as taglist';
         $tsvFrom = 'from ((words left JOIN word_tag_map ON id = word_id)
@@ -137,7 +137,7 @@ class WordListExportBuilder
 
             return [
                 'sql' => "$tsvSelect $tsvFrom
-                    where language_id = LgID and id in $inClause group by id",
+                    where language_id = id and id in $inClause group by id",
                 'params' => $params,
             ];
         }
@@ -145,7 +145,7 @@ class WordListExportBuilder
         if ($textId == '') {
             return [
                 'sql' => "$tsvSelect $tsvFrom
-                    where language_id = LgID $whLang $whStat $whQuery
+                    where language_id = id $whLang $whStat $whQuery
                     group by id $whTag",
                 'params' => $filterParams,
             ];
@@ -159,7 +159,7 @@ class WordListExportBuilder
         return [
             'sql' => "$tsvSelect $tsvFrom, word_occurrences
                 where language_id = language_id and word_id = id
-                and text_id in $inClause and language_id = LgID
+                and text_id in $inClause and language_id = id
                 $whLang $whStat $whQuery group by id $whTag",
             'params' => $params,
         ];
@@ -187,7 +187,7 @@ class WordListExportBuilder
         string $whTag,
         array $filterParams = []
     ): array {
-        $flexSelect = 'select distinct id, LgName, LgExportTemplate, LgRightToLeft,
+        $flexSelect = 'select distinct id, name, export_template, right_to_left,
             text, text_lc, translation, romanization, sentence, status,
             ifnull(group_concat(distinct text order by text separator \' \'),\'\') as taglist';
         $flexFrom = 'from ((words left JOIN word_tag_map ON id = word_id)
@@ -199,7 +199,7 @@ class WordListExportBuilder
 
             return [
                 'sql' => "$flexSelect $flexFrom
-                    where language_id = LgID and id in $inClause group by id",
+                    where language_id = id and id in $inClause group by id",
                 'params' => $params,
             ];
         }
@@ -207,7 +207,7 @@ class WordListExportBuilder
         if ($textId == '') {
             return [
                 'sql' => "$flexSelect $flexFrom
-                    where language_id = LgID $whLang $whStat $whQuery
+                    where language_id = id $whLang $whStat $whQuery
                     group by id $whTag",
                 'params' => $filterParams,
             ];
@@ -221,7 +221,7 @@ class WordListExportBuilder
         return [
             'sql' => "$flexSelect $flexFrom, word_occurrences
                 where language_id = language_id and word_id = id
-                and text_id in $inClause and language_id = LgID
+                and text_id in $inClause and language_id = id
                 $whLang $whStat $whQuery group by id $whTag",
             'params' => $params,
         ];

@@ -218,19 +218,19 @@ class ParserRegistry
     public function resolveParserTypeFromRow(array $row): string
     {
         // Check explicit parser type first
-        $parserType = $row['LgParserType'] ?? null;
+        $parserType = $row['parser_type'] ?? null;
         if ($parserType !== null && $parserType !== '') {
             return (string) $parserType;
         }
 
         // Legacy detection: check magic word
-        $wordChars = strtoupper(trim((string) ($row['LgRegexpWordCharacters'] ?? '')));
+        $wordChars = strtoupper(trim((string) ($row['regexp_word_characters'] ?? '')));
         if ($wordChars === 'MECAB') {
             return 'mecab';
         }
 
         // Legacy detection: check splitEachChar flag
-        if (!empty($row['LgSplitEachChar'])) {
+        if (!empty($row['split_each_char'])) {
             return 'character';
         }
 

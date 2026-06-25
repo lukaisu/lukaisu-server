@@ -942,8 +942,8 @@ class DatabaseConnectTest extends TestCase
         Maintenance::adjustAutoIncrement('settings', 'StKey');
         $this->assertTrue(true, 'adjust_autoincr should complete without error');
 
-        // Test with a table that has auto-increment (languages table has LgID)
-        Maintenance::adjustAutoIncrement('languages', 'LgID');
+        // Test with a table that has auto-increment (languages table has id)
+        Maintenance::adjustAutoIncrement('languages', 'id');
         $this->assertTrue(true, 'adjust_autoincr should work with auto-increment column');
     }
 

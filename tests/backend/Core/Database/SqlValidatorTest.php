@@ -53,7 +53,7 @@ class SqlValidatorTest extends TestCase
 
     public function testValidCreateTable(): void
     {
-        $sql = "CREATE TABLE languages ( LgID int(11) unsigned NOT NULL AUTO_INCREMENT )";
+        $sql = "CREATE TABLE languages ( id int(11) unsigned NOT NULL AUTO_INCREMENT )";
         $this->assertTrue($this->validator->validate($sql));
     }
 
@@ -110,7 +110,7 @@ class SqlValidatorTest extends TestCase
 
     public function testUpdateNotAllowed(): void
     {
-        $sql = "UPDATE languages SET LgName = 'test'";
+        $sql = "UPDATE languages SET name = 'test'";
         $this->assertFalse($this->validator->validate($sql));
     }
 
@@ -322,7 +322,7 @@ class SqlValidatorTest extends TestCase
     {
         $statements = [
             "DROP TABLE IF EXISTS languages",
-            "CREATE TABLE languages ( LgID int(11) )",
+            "CREATE TABLE languages ( id int(11) )",
             "INSERT INTO languages VALUES(1, 'English')",
         ];
         $this->assertTrue($this->validator->validateAll($statements));

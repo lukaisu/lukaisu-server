@@ -60,16 +60,16 @@ class ReviewServiceTest extends TestCase
     {
         // Create test language
         $existingLang = Connection::fetchValue(
-            "SELECT LgID AS value FROM languages WHERE LgName = 'TestLanguage' LIMIT 1"
+            "SELECT id AS value FROM languages WHERE name = 'TestLanguage' LIMIT 1"
         );
 
         if ($existingLang) {
             self::$testLangId = (int)$existingLang;
         } else {
             Connection::query(
-                "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-                "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+                "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
                 "VALUES ('TestLanguage', 'http://test.com/###', 'http://test2.com/###', 'http://translate.test/###', " .
                 "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
             );
@@ -132,7 +132,7 @@ class ReviewServiceTest extends TestCase
         Connection::query("DELETE FROM words WHERE language_id = " . self::$testLangId);
         Connection::query("DELETE FROM texts WHERE id = " . self::$testTextId);
         // Clean up test language
-        Connection::query("DELETE FROM languages WHERE LgID = " . self::$testLangId);
+        Connection::query("DELETE FROM languages WHERE id = " . self::$testLangId);
     }
 
     protected function setUp(): void

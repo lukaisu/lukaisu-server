@@ -207,14 +207,14 @@ class ParserConfig
     public static function fromDatabaseRow(array $row): self
     {
         return new self(
-            (int) ($row['LgID'] ?? 0),
-            (string) ($row['LgRegexpSplitSentences'] ?? ''),
-            (string) ($row['LgExceptionsSplitSentences'] ?? ''),
-            (string) ($row['LgRegexpWordCharacters'] ?? ''),
-            (string) ($row['LgCharacterSubstitutions'] ?? ''),
-            (bool) ($row['LgRemoveSpaces'] ?? false),
-            (bool) ($row['LgSplitEachChar'] ?? false),
-            (bool) ($row['LgRightToLeft'] ?? false)
+            (int) ($row['id'] ?? 0),
+            (string) ($row['regexp_split_sentences'] ?? ''),
+            (string) ($row['exceptions_split_sentences'] ?? ''),
+            (string) ($row['regexp_word_characters'] ?? ''),
+            (string) ($row['character_substitutions'] ?? ''),
+            (bool) ($row['remove_spaces'] ?? false),
+            (bool) ($row['split_each_char'] ?? false),
+            (bool) ($row['right_to_left'] ?? false)
         );
     }
 }

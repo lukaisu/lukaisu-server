@@ -226,7 +226,7 @@ class HomeFacadeTest extends TestCase
         }
 
         $langId = Connection::fetchValue(
-            "SELECT LgID AS value FROM languages LIMIT 1"
+            "SELECT id AS value FROM languages LIMIT 1"
         );
 
         if ($langId === null) {
@@ -299,7 +299,7 @@ class HomeFacadeTest extends TestCase
         if ($count > 0) {
             // If there are languages, we should be able to get at least one name
             $langId = Connection::fetchValue(
-                "SELECT LgID AS value FROM languages LIMIT 1"
+                "SELECT id AS value FROM languages LIMIT 1"
             );
 
             if ($langId !== null) {

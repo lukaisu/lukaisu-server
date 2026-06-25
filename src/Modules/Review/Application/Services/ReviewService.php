@@ -131,7 +131,7 @@ class ReviewService
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
                 /** @var array<int, int> $params */
                 $params = array_values(array_map('intval', $ids));
-                return ['sql' => " words WHERE id IN ($placeholders) ", 'params' => $params];
+                return ['sql' => " words WHERE words.id IN ($placeholders) ", 'params' => $params];
             case 'texts':
                 $ids = is_array($selection) ? $selection : [$selection];
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
@@ -211,19 +211,19 @@ class ReviewService
         if ($lang !== null) {
             /** @var mixed $nameRaw */
             $nameRaw = QueryBuilder::table('languages')
-                ->where('LgID', '=', $lang)
-                ->valuePrepared('LgName');
+                ->where('id', '=', $lang)
+                ->valuePrepared('name');
             return is_string($nameRaw) ? $nameRaw : 'L2';
         }
 
         if ($text !== null) {
             $row = QueryBuilder::table('texts')
-                ->select(['LgName'])
-                ->join('languages', 'language_id', '=', 'LgID')
-                ->where('id', '=', $text)
+                ->select(['languages.name'])
+                ->join('languages', 'texts.language_id', '=', 'languages.id')
+                ->where('texts.id', '=', $text)
                 ->firstPrepared();
             /** @var mixed $nameRawFromRow */
-            $nameRawFromRow = $row['LgName'] ?? null;
+            $nameRawFromRow = $row['name'] ?? null;
             return is_string($nameRawFromRow) ? $nameRawFromRow : 'L2';
         }
 
@@ -233,15 +233,15 @@ class ReviewService
                 $validation = $this->validateReviewSelection($result['sql'], $result['params']);
                 if ($validation['langCount'] == 1) {
                     $bindings = [];
-                    $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
+                    $userScope = UserScopedQuery::forTablePrepared('words', $bindings, 'words');
                     /** @var mixed $nameRawFromQuery */
                     $nameRawFromQuery = Connection::preparedFetchValue(
-                        "SELECT LgName
-                        FROM languages, {$result['sql']} AND LgID = words.language_id"
+                        "SELECT languages.name
+                        FROM languages, {$result['sql']} AND languages.id = words.language_id"
                         . $userScope . "
                         LIMIT 1",
                         array_merge($result['params'], $bindings),
-                        'LgName'
+                        'name'
                     );
                     return is_string($nameRawFromQuery) ? $nameRawFromQuery : 'L2';
                 }
@@ -411,10 +411,10 @@ class ReviewService
     public function getLanguageSettings(int $langId): array
     {
         $record = QueryBuilder::table('languages')
-            ->select(['LgName', 'LgDict1URI', 'LgDict2URI', 'LgGoogleTranslateURI',
-                'LgTextSize', 'LgRemoveSpaces', 'LgRegexpWordCharacters', 'LgRightToLeft',
-                'LgTTSVoiceAPI'])
-            ->where('LgID', '=', $langId)
+            ->select(['name', 'dict1_uri', 'dict2_uri', 'google_translate_uri',
+                'text_size', 'remove_spaces', 'regexp_word_characters', 'right_to_left',
+                'tts_voice_api'])
+            ->where('id', '=', $langId)
             ->firstPrepared();
 
         if ($record === null) {
@@ -422,15 +422,15 @@ class ReviewService
         }
 
         return [
-            'name' => $record['LgName'],
-            'dict1Uri' => $record['LgDict1URI'] ?? '',
-            'dict2Uri' => $record['LgDict2URI'] ?? '',
-            'translateUri' => $record['LgGoogleTranslateURI'] ?? '',
-            'textSize' => (int) $record['LgTextSize'],
-            'removeSpaces' => (bool) $record['LgRemoveSpaces'],
-            'regexWord' => $record['LgRegexpWordCharacters'],
-            'rtl' => (bool) $record['LgRightToLeft'],
-            'ttsVoiceApi' => $record['LgTTSVoiceAPI'] ?? null
+            'name' => $record['name'],
+            'dict1Uri' => $record['dict1_uri'] ?? '',
+            'dict2Uri' => $record['dict2_uri'] ?? '',
+            'translateUri' => $record['google_translate_uri'] ?? '',
+            'textSize' => (int) $record['text_size'],
+            'removeSpaces' => (bool) $record['remove_spaces'],
+            'regexWord' => $record['regexp_word_characters'],
+            'rtl' => (bool) $record['right_to_left'],
+            'ttsVoiceApi' => $record['tts_voice_api'] ?? null
         ];
     }
 
@@ -662,15 +662,15 @@ class ReviewService
             $title = 'Selected ' . $totalCount . ' Term' . ($totalCount < 2 ? '' : 's');
 
             $bindings2 = [];
-            $userScope2 = UserScopedQuery::forTablePrepared('words', $bindings2);
+            $userScope2 = UserScopedQuery::forTablePrepared('words', $bindings2, 'words');
             /** @var mixed $langNameRaw */
             $langNameRaw = Connection::preparedFetchValue(
-                "SELECT LgName
-                FROM languages, {$reviewsql} AND LgID = words.language_id"
+                "SELECT languages.name
+                FROM languages, {$reviewsql} AND languages.id = words.language_id"
                 . $userScope2 . "
                 LIMIT 1",
                 array_merge($reviewParams, $bindings2),
-                'LgName'
+                'name'
             );
             $langName = is_string($langNameRaw) ? $langNameRaw : null;
             if ($langName !== null && $langName !== '') {
@@ -683,8 +683,8 @@ class ReviewService
 
             /** @var mixed $langNameRawFromLang */
             $langNameRawFromLang = QueryBuilder::table('languages')
-                ->where('LgID', '=', $langId)
-                ->valuePrepared('LgName');
+                ->where('id', '=', $langId)
+                ->valuePrepared('name');
             $langName = is_string($langNameRawFromLang) ? $langNameRawFromLang : 'Unknown';
             $title = "All Terms in " . $langName;
         } elseif ($textId !== null) {

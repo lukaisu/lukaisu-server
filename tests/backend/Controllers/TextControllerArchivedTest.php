@@ -57,8 +57,8 @@ class TextControllerArchivedTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language if it doesn't exist
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM " . Globals::table('languages') .
-                " WHERE LgName = 'ArchivedTestLang' LIMIT 1"
+                "SELECT id AS value FROM " . Globals::table('languages') .
+                " WHERE name = 'ArchivedTestLang' LIMIT 1"
             );
 
             if ($existingLang) {
@@ -66,9 +66,9 @@ class TextControllerArchivedTest extends TestCase
             } else {
                 Connection::query(
                     "INSERT INTO " . Globals::table('languages') .
-                    " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-                    "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                    " (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+                    "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
                     "VALUES ('ArchivedTestLang', 'http://dict1.test/###', 'http://dict2.test/###', " .
                     "'http://translate.test/?sl=en&tl=fr&text=###', " .
                     "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
@@ -126,7 +126,7 @@ class TextControllerArchivedTest extends TestCase
             }
 
             // Clean up test language
-            Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE LgID = " . self::$testLangId);
+            Connection::query("DELETE FROM " . Globals::table('languages') . " WHERE id = " . self::$testLangId);
         }
     }
 
@@ -264,7 +264,7 @@ class TextControllerArchivedTest extends TestCase
         $firstText = $texts[0];
         $this->assertArrayHasKey('id', $firstText);
         $this->assertArrayHasKey('title', $firstText);
-        $this->assertArrayHasKey('LgName', $firstText);
+        $this->assertArrayHasKey('name', $firstText);
     }
 
     public function testGetArchivedTextsListWithSort(): void

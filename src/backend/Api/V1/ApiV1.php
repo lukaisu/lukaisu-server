@@ -308,7 +308,7 @@ class ApiV1
 
         // Per-user LgIDs are already unique in practice, so the
         // downstream sentence/word query can't actually return another
-        // user's data. But accepting an arbitrary LgID still leaks
+        // user's data. But accepting an arbitrary id still leaks
         // existence — the response shape differs between "no such
         // language" and "language not yours" — and an explicit guard
         // here keeps the policy verifiable instead of incidental.

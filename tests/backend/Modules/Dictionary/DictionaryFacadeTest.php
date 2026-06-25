@@ -78,7 +78,7 @@ class DictionaryFacadeTest extends TestCase
             // Create a test language if needed
             if (self::$tablesExist) {
                 $langId = Connection::fetchValue(
-                    "SELECT LgID AS value FROM languages LIMIT 1"
+                    "SELECT id AS value FROM languages LIMIT 1"
                 );
                 if ($langId !== null) {
                     self::$testLanguageId = (int)$langId;

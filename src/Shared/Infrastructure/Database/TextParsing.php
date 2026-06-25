@@ -62,14 +62,14 @@ class TextParsing
     public static function parseAndDisplayPreview(string $text, int $lid): void
     {
         $record = QueryBuilder::table('languages')
-            ->select(['LgRightToLeft'])
-            ->where('LgID', '=', $lid)
+            ->select(['right_to_left'])
+            ->where('id', '=', $lid)
             ->firstPrepared();
 
         if ($record === null) {
-            throw DatabaseException::recordNotFound('languages', 'LgID', $lid);
+            throw DatabaseException::recordNotFound('languages', 'id', $lid);
         }
-        $rtlScript = (bool)$record['LgRightToLeft'];
+        $rtlScript = (bool)$record['right_to_left'];
 
         // Parse text and display preview HTML (id=-1 triggers preview display in prepare)
         self::prepare($text, -1, $lid);
@@ -115,12 +115,12 @@ class TextParsing
         }
 
         $record = QueryBuilder::table('languages')
-            ->select(['LgID'])
-            ->where('LgID', '=', $lid)
+            ->select(['id'])
+            ->where('id', '=', $lid)
             ->firstPrepared();
 
         if ($record === null) {
-            throw DatabaseException::recordNotFound('languages', 'LgID', $lid);
+            throw DatabaseException::recordNotFound('languages', 'id', $lid);
         }
 
         // Parse text into temp_word_occurrences (id>0 uses MAX(id)+1 for sentence IDs)
@@ -244,7 +244,7 @@ class TextParsing
     private static function prepare(string $text, int $id, int $lid): ?array
     {
         $record = QueryBuilder::table('languages')
-            ->where('LgID', '=', $lid)
+            ->where('id', '=', $lid)
             ->firstPrepared();
 
         // Return null if language not found
@@ -252,8 +252,8 @@ class TextParsing
             return null;
         }
 
-        $termchar = (string)$record['LgRegexpWordCharacters'];
-        $replace = explode("|", (string) $record['LgCharacterSubstitutions']);
+        $termchar = (string)$record['regexp_word_characters'];
+        $replace = explode("|", (string) $record['character_substitutions']);
         $text = Escaping::prepareTextdata($text);
         QueryBuilder::table('temp_word_occurrences')->truncate();
 

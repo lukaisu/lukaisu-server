@@ -60,7 +60,7 @@ class LanguageRepositoryTest extends TestCase
 
         // Clean up test languages after each test
         $prefix = '';
-        Connection::query("DELETE FROM {$prefix}languages WHERE LgName LIKE 'RepoTest_%'");
+        Connection::query("DELETE FROM {$prefix}languages WHERE name LIKE 'RepoTest_%'");
         self::$testLanguageIds = [];
     }
 
@@ -86,9 +86,9 @@ class LanguageRepositoryTest extends TestCase
         $prefix = '';
         Connection::query(
             "INSERT INTO {$prefix}languages (
-                LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI,
-                LgTextSize, LgRegexpSplitSentences, LgRegexpWordCharacters,
-                LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization
+                name, dict1_uri, dict2_uri, google_translate_uri,
+                text_size, regexp_split_sentences, regexp_word_characters,
+                remove_spaces, split_each_char, right_to_left, show_romanization
             ) VALUES (
                 '$name', 'https://dict.test/lukaisu_term', '', '',
                 100, '.!?', 'a-zA-Z',
@@ -233,7 +233,7 @@ class LanguageRepositoryTest extends TestCase
         try {
             Connection::query(
                 "INSERT INTO {$prefix}languages " .
-                "(LgName, LgDict1URI, LgTextSize, LgRegexpSplitSentences, LgRegexpWordCharacters) " .
+                "(name, dict1_uri, text_size, regexp_split_sentences, regexp_word_characters) " .
                 "VALUES ('', 'https://test.com', 100, '.!?', 'a-z')"
             );
         } catch (\RuntimeException $e) {
@@ -335,7 +335,7 @@ class LanguageRepositoryTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        // LgName is varchar(40), so create exactly 40 chars (max allowed)
+        // name is varchar(40), so create exactly 40 chars (max allowed)
         $longName = 'RT_' . str_repeat('A', 37); // 3 + 37 = 40 chars
         $this->createTestLanguageInDb($longName);
 
@@ -372,8 +372,8 @@ class LanguageRepositoryTest extends TestCase
         // Create RTL language
         Connection::query(
             "INSERT INTO {$prefix}languages (
-                LgName, LgDict1URI, LgTextSize, LgRegexpSplitSentences,
-                LgRegexpWordCharacters, LgRightToLeft
+                name, dict1_uri, text_size, regexp_split_sentences,
+                regexp_word_characters, right_to_left
             ) VALUES (
                 'RepoTest_RTL', 'https://dict.test', 100, '.!?', 'a-z', 1
             )"

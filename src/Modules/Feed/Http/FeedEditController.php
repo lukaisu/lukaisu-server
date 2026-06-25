@@ -385,9 +385,9 @@ class FeedEditController
         // first language in their list — without this, the curated-feed
         // wizard posts language_id=0 and the server rejects with 500.
         if ($currentLanguageId === 0 && !empty($languages)) {
-            /** @var array{LgID: int|string} $first */
+            /** @var array{id: int|string} $first */
             $first = $languages[0];
-            $currentLanguageId = (int) $first['LgID'];
+            $currentLanguageId = (int) $first['id'];
         }
         $currentLanguageName = $this->languageFacade->getLanguageName($currentLanguageId);
 

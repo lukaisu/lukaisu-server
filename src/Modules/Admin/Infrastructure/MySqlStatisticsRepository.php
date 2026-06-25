@@ -53,16 +53,16 @@ class MySqlStatisticsRepository
     /**
      * Get list of languages with IDs and names.
      *
-     * Returns records with LgID (int) and LgName (string) fields.
+     * Returns records with id (int) and name (string) fields.
      *
      * @return array<int, array<string, mixed>> Language records
      */
     public function getLanguageList(): array
     {
         return QueryBuilder::table('languages')
-            ->select(['LgID', 'LgName'])
-            ->where('LgName', '<>', '')
-            ->orderBy('LgName')
+            ->select(['id', 'name'])
+            ->where('name', '<>', '')
+            ->orderBy('name')
             ->getPrepared();
     }
 

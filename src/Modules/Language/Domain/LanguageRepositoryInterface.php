@@ -73,7 +73,7 @@ interface LanguageRepositoryInterface
      *
      * @return Language[]
      */
-    public function findAllActive(string $orderBy = 'LgName', string $direction = 'ASC'): array;
+    public function findAllActive(string $orderBy = 'name', string $direction = 'ASC'): array;
 
     /**
      * Find a language by name.

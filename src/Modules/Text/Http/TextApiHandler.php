@@ -590,7 +590,7 @@ class TextApiHandler implements ApiRoutableInterface
         $page = max(1, (int) ($params['page'] ?? 1));
 
         // GDL uses ISO 639-1 slugs for the common languages (en, fr, de, …),
-        // so the same LgSourceLang resolution as Gutenberg applies.
+        // so the same source_lang resolution as Gutenberg applies.
         $languageCode = null;
         if ($languageId > 0) {
             $languageCode = $this->resolveLanguageCode($languageId);
@@ -658,7 +658,7 @@ class TextApiHandler implements ApiRoutableInterface
     /**
      * Resolve a language ID to an ISO 639-1 code for Gutenberg.
      *
-     * Tries LgSourceLang first, then guesses from LgName.
+     * Tries source_lang first, then guesses from name.
      *
      * @param int $languageId Language ID
      *
@@ -667,8 +667,8 @@ class TextApiHandler implements ApiRoutableInterface
     private function resolveLanguageCode(int $languageId): ?string
     {
         $row = QueryBuilder::table('languages')
-            ->select(['LgSourceLang', 'LgName'])
-            ->where('LgID', '=', $languageId)
+            ->select(['source_lang', 'name'])
+            ->where('id', '=', $languageId)
             ->firstPrepared();
 
         if ($row === null) {
@@ -678,14 +678,14 @@ class TextApiHandler implements ApiRoutableInterface
         // Use explicit source language code if set.
         // Strip region/script subtags (e.g. "zh-CN" → "zh") because
         // Gutendex only accepts bare ISO 639-1 codes.
-        $sourceLang = (string) ($row['LgSourceLang'] ?? '');
+        $sourceLang = (string) ($row['source_lang'] ?? '');
         if ($sourceLang !== '') {
             $parts = explode('-', $sourceLang, 2);
             return strtolower($parts[0]);
         }
 
         // Fall back to guessing from language name
-        $name = (string) ($row['LgName'] ?? '');
+        $name = (string) ($row['name'] ?? '');
         return GutenbergClient::guessLanguageCode($name);
     }
 }

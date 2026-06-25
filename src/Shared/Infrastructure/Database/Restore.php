@@ -397,7 +397,7 @@ class Restore
         Connection::preparedExecute('DELETE FROM words WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM tags WHERE user_id = ?', [$userId]);
         Connection::preparedExecute('DELETE FROM text_tags WHERE user_id = ?', [$userId]);
-        Connection::preparedExecute('DELETE FROM languages WHERE LgUsID = ?', [$userId]);
+        Connection::preparedExecute('DELETE FROM languages WHERE user_id = ?', [$userId]);
 
         // Level 3: Per-user settings entry (keep admin/global settings).
         Connection::preparedExecute(
@@ -494,7 +494,7 @@ class Restore
         // (text_id → texts, word_id → words, etc.) and don't need rewriting.
         foreach (
             [
-                'languages'          => 'LgUsID',
+                'languages'          => 'user_id',
                 'texts'              => 'user_id',
                 'words'              => 'user_id',
                 'tags'                => 'user_id',

@@ -181,9 +181,9 @@ class QueryBuilderUserScopeTest extends TestCase
         Globals::setMultiUserEnabled(true);
         Globals::setCurrentUserId(5);
 
-        // languages table should use LgUsID
+        // languages table should use user_id
         $this->assertTrue(UserScopedQuery::isUserScopedTable('languages'));
-        $this->assertEquals('LgUsID', UserScopedQuery::getUserIdColumn('languages'));
+        $this->assertEquals('user_id', UserScopedQuery::getUserIdColumn('languages'));
     }
 
     public function testUserScopeAppliedToTextsTable(): void
@@ -385,7 +385,7 @@ class QueryBuilderUserScopeTest extends TestCase
         $this->assertArrayHasKey('news_feeds', $tables);
         $this->assertArrayHasKey('settings', $tables);
 
-        $this->assertEquals('LgUsID', $tables['languages']);
+        $this->assertEquals('user_id', $tables['languages']);
         $this->assertEquals('user_id', $tables['texts']);
         $this->assertEquals('user_id', $tables['words']);
         $this->assertEquals('user_id', $tables['tags']);

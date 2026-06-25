@@ -4,7 +4,7 @@
  * New Feed Form View
  *
  * Variables expected:
- * - $languages: array of language data [{LgID, LgName}, ...]
+ * - $languages: array of language data [{id, name}, ...]
  * - $currentLang: int current language ID (for pre-selection)
  *
  * PHP version 8.1
@@ -25,7 +25,7 @@ use Lukaisu\Shared\UI\Helpers\IconHelper;
 use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
 
 /**
- * @var array<int, array{LgID: int, LgName: string}> $languages Language records
+ * @var array<int, array{id: int, name: string}> $languages Language records
  * @var int $currentLang Current language ID (for pre-selection)
  */
 
@@ -87,10 +87,10 @@ $actions = [
                 <div class="select is-fullwidth">
                     <select name="language_id" id="language_id">
                         <?php foreach ($languages as $lang) : ?>
-                        <option value="<?php echo $lang['LgID']; ?>"<?php if ($currentLang === $lang['LgID']) {
+                        <option value="<?php echo $lang['id']; ?>"<?php if ($currentLang === $lang['id']) {
                             echo ' selected';
                                        } ?>>
-                            <?php echo htmlspecialchars($lang['LgName'], ENT_QUOTES, 'UTF-8'); ?>
+                            <?php echo htmlspecialchars($lang['name'], ENT_QUOTES, 'UTF-8'); ?>
                         </option>
                         <?php endforeach; ?>
                     </select>

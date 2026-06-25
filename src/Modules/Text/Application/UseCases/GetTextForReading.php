@@ -55,12 +55,13 @@ class GetTextForReading
     {
         $bindings = [$textId];
         return Connection::preparedFetchOne(
-            "SELECT LgName, language_id, text, title, audio_uri, source_uri, audio_position
+            "SELECT languages.name, texts.language_id, texts.text, texts.title,
+                texts.audio_uri, texts.source_uri, texts.audio_position
             FROM texts
-            JOIN languages ON language_id = LgID
-            WHERE id = ?"
-            . UserScopedQuery::forTablePrepared('texts', $bindings)
-            . UserScopedQuery::forTablePrepared('languages', $bindings),
+            JOIN languages ON texts.language_id = languages.id
+            WHERE texts.id = ?"
+            . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts')
+            . UserScopedQuery::forTablePrepared('languages', $bindings, 'languages'),
             $bindings
         );
     }
@@ -76,10 +77,10 @@ class GetTextForReading
     {
         $bindings = [$languageId];
         return Connection::preparedFetchOne(
-            "SELECT LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI,
-                LgTextSize, LgRegexpWordCharacters, LgRemoveSpaces, LgRightToLeft
+            "SELECT name, dict1_uri, dict2_uri, google_translate_uri,
+                text_size, regexp_word_characters, remove_spaces, right_to_left
             FROM languages
-            WHERE LgID = ?"
+            WHERE id = ?"
             . UserScopedQuery::forTablePrepared('languages', $bindings),
             $bindings
         );
@@ -99,10 +100,10 @@ class GetTextForReading
  * @var string|null $result
 */
         $result = Connection::preparedFetchValue(
-            "SELECT LgTTSVoiceAPI FROM languages WHERE LgID = ?"
+            "SELECT tts_voice_api FROM languages WHERE id = ?"
             . UserScopedQuery::forTablePrepared('languages', $bindings),
             $bindings,
-            'LgTTSVoiceAPI'
+            'tts_voice_api'
         );
         return $result ?? '';
     }
@@ -121,10 +122,10 @@ class GetTextForReading
  * @var int|string|null $result
 */
         $result = Connection::preparedFetchValue(
-            "SELECT LgID FROM languages WHERE LgName = ?"
+            "SELECT id FROM languages WHERE name = ?"
             . UserScopedQuery::forTablePrepared('languages', $bindings),
             $bindings,
-            'LgID'
+            'id'
         );
         return $result !== null ? (int) $result : null;
     }
@@ -154,14 +155,14 @@ class GetTextForReading
     {
         $bindings = [];
         $rows = Connection::preparedFetchAll(
-            "SELECT LgID, LgGoogleTranslateURI FROM languages WHERE 1=1"
+            "SELECT id, google_translate_uri FROM languages WHERE 1=1"
             . UserScopedQuery::forTablePrepared('languages', $bindings),
             $bindings
         );
 
         $result = [];
         foreach ($rows as $row) {
-            $result[(int) $row['LgID']] = (string) $row['LgGoogleTranslateURI'];
+            $result[(int) $row['id']] = (string) $row['google_translate_uri'];
         }
         return $result;
     }

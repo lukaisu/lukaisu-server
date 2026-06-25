@@ -113,7 +113,7 @@ class LanguageController extends BaseController
         // Handle update operation
         $op = $this->param('op');
         if ($op === 'Change') {
-            $lgId = $this->paramInt('LgID', 0) ?? 0;
+            $lgId = $this->paramInt('id', 0) ?? 0;
             $result = $this->languageFacade->update($lgId);
             if ($result['error'] !== null) {
                 $message = $result['error'];

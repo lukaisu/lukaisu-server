@@ -69,14 +69,14 @@ class LanguageUseCasesTest extends TestCase
             $this->assertIsArray($data);
 
             $expectedKeys = [
-                'LgName', 'LgDict1URI', 'LgDict2URI', 'LgGoogleTranslateURI',
-                'LgDict1PopUp', 'LgDict2PopUp', 'LgGoogleTranslatePopUp',
-                'LgSourceLang', 'LgTargetLang', 'LgExportTemplate',
-                'LgTextSize', 'LgCharacterSubstitutions',
-                'LgRegexpSplitSentences', 'LgExceptionsSplitSentences',
-                'LgRegexpWordCharacters', 'LgParserType', 'LgRemoveSpaces',
-                'LgSplitEachChar', 'LgRightToLeft', 'LgTTSVoiceAPI',
-                'LgShowRomanization', 'LgLocalDictMode',
+                'name', 'dict1_uri', 'dict2_uri', 'google_translate_uri',
+                'dict1_popup', 'dict2_popup', 'google_translate_popup',
+                'source_lang', 'target_lang', 'export_template',
+                'text_size', 'character_substitutions',
+                'regexp_split_sentences', 'exceptions_split_sentences',
+                'regexp_word_characters', 'parser_type', 'remove_spaces',
+                'split_each_char', 'right_to_left', 'tts_voice_api',
+                'show_romanization', 'local_dict_mode',
             ];
 
             foreach ($expectedKeys as $key) {
@@ -100,13 +100,13 @@ class LanguageUseCasesTest extends TestCase
             $data = $useCase->getLanguageDataFromRequest();
 
             // Boolean fields should be false when not in request
-            $this->assertFalse($data['LgDict1PopUp']);
-            $this->assertFalse($data['LgDict2PopUp']);
-            $this->assertFalse($data['LgGoogleTranslatePopUp']);
-            $this->assertFalse($data['LgRemoveSpaces']);
-            $this->assertFalse($data['LgSplitEachChar']);
-            $this->assertFalse($data['LgRightToLeft']);
-            $this->assertFalse($data['LgShowRomanization']);
+            $this->assertFalse($data['dict1_popup']);
+            $this->assertFalse($data['dict2_popup']);
+            $this->assertFalse($data['google_translate_popup']);
+            $this->assertFalse($data['remove_spaces']);
+            $this->assertFalse($data['split_each_char']);
+            $this->assertFalse($data['right_to_left']);
+            $this->assertFalse($data['show_romanization']);
         } finally {
             $_REQUEST = $originalRequest;
         }
@@ -119,42 +119,42 @@ class LanguageUseCasesTest extends TestCase
     {
         $originalRequest = $_REQUEST;
         $_REQUEST = [
-            'LgName' => 'French',
-            'LgDict1URI' => 'https://dict.example.com/###',
-            'LgDict2URI' => '',
-            'LgGoogleTranslateURI' => 'https://translate.example.com',
-            'LgDict1PopUp' => '1',
-            'LgDict2PopUp' => '',
-            'LgGoogleTranslatePopUp' => '',
-            'LgSourceLang' => 'fr',
-            'LgTargetLang' => 'en',
-            'LgExportTemplate' => '$w\\t$t',
-            'LgTextSize' => '150',
-            'LgCharacterSubstitutions' => '',
-            'LgRegexpSplitSentences' => '.!?',
-            'LgExceptionsSplitSentences' => 'Mr.',
-            'LgRegexpWordCharacters' => 'a-zA-Z\x{00C0}-\x{00FF}',
-            'LgParserType' => '',
-            'LgRemoveSpaces' => '',
-            'LgSplitEachChar' => '',
-            'LgRightToLeft' => '',
-            'LgTTSVoiceAPI' => '',
-            'LgShowRomanization' => '',
-            'LgLocalDictMode' => '0',
+            'name' => 'French',
+            'dict1_uri' => 'https://dict.example.com/###',
+            'dict2_uri' => '',
+            'google_translate_uri' => 'https://translate.example.com',
+            'dict1_popup' => '1',
+            'dict2_popup' => '',
+            'google_translate_popup' => '',
+            'source_lang' => 'fr',
+            'target_lang' => 'en',
+            'export_template' => '$w\\t$t',
+            'text_size' => '150',
+            'character_substitutions' => '',
+            'regexp_split_sentences' => '.!?',
+            'exceptions_split_sentences' => 'Mr.',
+            'regexp_word_characters' => 'a-zA-Z\x{00C0}-\x{00FF}',
+            'parser_type' => '',
+            'remove_spaces' => '',
+            'split_each_char' => '',
+            'right_to_left' => '',
+            'tts_voice_api' => '',
+            'show_romanization' => '',
+            'local_dict_mode' => '0',
         ];
 
         try {
             $useCase = new CreateLanguage();
             $data = $useCase->getLanguageDataFromRequest();
 
-            $this->assertSame('French', $data['LgName']);
-            $this->assertSame('https://dict.example.com/###', $data['LgDict1URI']);
-            $this->assertTrue($data['LgDict1PopUp']);
-            $this->assertSame('fr', $data['LgSourceLang']);
-            $this->assertSame('en', $data['LgTargetLang']);
-            $this->assertSame('150', $data['LgTextSize']);
-            $this->assertSame('.!?', $data['LgRegexpSplitSentences']);
-            $this->assertSame(0, $data['LgLocalDictMode']);
+            $this->assertSame('French', $data['name']);
+            $this->assertSame('https://dict.example.com/###', $data['dict1_uri']);
+            $this->assertTrue($data['dict1_popup']);
+            $this->assertSame('fr', $data['source_lang']);
+            $this->assertSame('en', $data['target_lang']);
+            $this->assertSame('150', $data['text_size']);
+            $this->assertSame('.!?', $data['regexp_split_sentences']);
+            $this->assertSame(0, $data['local_dict_mode']);
         } finally {
             $_REQUEST = $originalRequest;
         }
@@ -173,16 +173,16 @@ class LanguageUseCasesTest extends TestCase
             $data = $useCase->getLanguageDataFromRequest();
 
             // Source/target lang default to null when empty
-            $this->assertNull($data['LgSourceLang']);
-            $this->assertNull($data['LgTargetLang']);
-            $this->assertNull($data['LgParserType']);
+            $this->assertNull($data['source_lang']);
+            $this->assertNull($data['target_lang']);
+            $this->assertNull($data['parser_type']);
         } finally {
             $_REQUEST = $originalRequest;
         }
     }
 
     /**
-     * Test getLanguageDataFromRequest default for LgTextSize.
+     * Test getLanguageDataFromRequest default for text_size.
      */
     public function testGetLanguageDataFromRequestTextSizeDefault(): void
     {
@@ -193,26 +193,26 @@ class LanguageUseCasesTest extends TestCase
             $useCase = new CreateLanguage();
             $data = $useCase->getLanguageDataFromRequest();
 
-            $this->assertSame('100', $data['LgTextSize']);
+            $this->assertSame('100', $data['text_size']);
         } finally {
             $_REQUEST = $originalRequest;
         }
     }
 
     /**
-     * Test getLanguageDataFromRequest LgLocalDictMode is int.
+     * Test getLanguageDataFromRequest local_dict_mode is int.
      */
     public function testGetLanguageDataFromRequestLocalDictModeIsInt(): void
     {
         $originalRequest = $_REQUEST;
-        $_REQUEST = ['LgLocalDictMode' => '2'];
+        $_REQUEST = ['local_dict_mode' => '2'];
 
         try {
             $useCase = new CreateLanguage();
             $data = $useCase->getLanguageDataFromRequest();
 
-            $this->assertIsInt($data['LgLocalDictMode']);
-            $this->assertSame(2, $data['LgLocalDictMode']);
+            $this->assertIsInt($data['local_dict_mode']);
+            $this->assertSame(2, $data['local_dict_mode']);
         } finally {
             $_REQUEST = $originalRequest;
         }

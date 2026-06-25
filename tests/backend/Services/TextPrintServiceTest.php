@@ -49,16 +49,16 @@ class TextPrintServiceTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language if it doesn't exist
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM languages WHERE LgName = 'TextPrintTestLang' LIMIT 1"
+                "SELECT id AS value FROM languages WHERE name = 'TextPrintTestLang' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 Connection::query(
-                    "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-                    "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                    "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+                    "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
                     "VALUES ('TextPrintTestLang', 'http://test.com/###', '', " .
                     "'http://translate.google.com/?sl=en&tl=fr&###', " .
                     "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
@@ -99,7 +99,7 @@ class TextPrintServiceTest extends TestCase
         Connection::query("DELETE FROM word_occurrences WHERE text_id = " . self::$testTextId);
         Connection::query("DELETE FROM sentences WHERE text_id = " . self::$testTextId);
         Connection::query("DELETE FROM texts WHERE title = 'TextPrintTestText'");
-        Connection::query("DELETE FROM languages WHERE LgName = 'TextPrintTestLang'");
+        Connection::query("DELETE FROM languages WHERE name = 'TextPrintTestLang'");
     }
 
     // ===== Constructor tests =====
@@ -156,8 +156,8 @@ class TextPrintServiceTest extends TestCase
         $data = $service->getLanguageData(self::$testLangId);
 
         $this->assertIsArray($data);
-        $this->assertArrayHasKey('LgTextSize', $data);
-        $this->assertArrayHasKey('LgRightToLeft', $data);
+        $this->assertArrayHasKey('text_size', $data);
+        $this->assertArrayHasKey('right_to_left', $data);
     }
 
     public function testGetLanguageDataReturnsNullForNonExistentLanguage(): void

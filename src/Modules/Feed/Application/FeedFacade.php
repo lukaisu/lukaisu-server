@@ -1054,9 +1054,9 @@ class FeedFacade
     public function getLanguages(): array
     {
         return \Lukaisu\Shared\Infrastructure\Database\QueryBuilder::table('languages')
-            ->select(['LgID', 'LgName'])
-            ->where('LgName', '<>', '')
-            ->orderBy('LgName', 'ASC')
+            ->select(['id', 'name'])
+            ->where('name', '<>', '')
+            ->orderBy('name', 'ASC')
             ->getPrepared();
     }
 }

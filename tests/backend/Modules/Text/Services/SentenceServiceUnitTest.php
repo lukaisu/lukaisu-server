@@ -169,7 +169,7 @@ class SentenceServiceUnitTest extends TestCase
     public function executeSentencesContainingWordQueryHandlesRemoveSpaces(): void
     {
         $src = self::methodSource('executeSentencesContainingWordQuery');
-        $this->assertStringContainsString('LgRemoveSpaces', $src);
+        $this->assertStringContainsString('remove_spaces', $src);
         $this->assertStringContainsString('removeSpaces', $src);
     }
 
@@ -224,7 +224,7 @@ class SentenceServiceUnitTest extends TestCase
     public function formatSentenceHandlesRemoveSpacesLanguage(): void
     {
         $src = self::methodSource('formatSentence');
-        $this->assertStringContainsString('LgRemoveSpaces', $src);
+        $this->assertStringContainsString('remove_spaces', $src);
         $this->assertStringContainsString('removeSpaces', $src);
     }
 
@@ -285,7 +285,7 @@ class SentenceServiceUnitTest extends TestCase
     public function formatSentenceHandlesSplitEachChar(): void
     {
         $src = self::methodSource('formatSentence');
-        $this->assertStringContainsString('LgSplitEachChar', $src);
+        $this->assertStringContainsString('split_each_char', $src);
         $this->assertStringContainsString('splitEachChar', $src);
     }
 
@@ -416,7 +416,7 @@ class SentenceServiceUnitTest extends TestCase
     public function getSentenceAtPositionReadsSplitSentencesConfig(): void
     {
         $src = self::methodSource('getSentenceAtPosition');
-        $this->assertStringContainsString('LgRegexpSplitSentences', $src);
+        $this->assertStringContainsString('regexp_split_sentences', $src);
     }
 
     // =========================================================================

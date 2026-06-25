@@ -118,7 +118,7 @@ class Migrations
         // Only reparse texts that have a valid language reference
         $rows = QueryBuilder::table('texts')
             ->select(['texts.id', 'texts.language_id'])
-            ->join('languages', 'texts.language_id', '=', 'languages.LgID')
+            ->join('languages', 'texts.language_id', '=', 'languages.id')
             ->getPrepared();
         foreach ($rows as $record) {
             $id = (int) $record['id'];

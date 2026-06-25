@@ -431,7 +431,7 @@ class BookControllerTest extends TestCase
     #[Test]
     public function processImportAcceptsTxLgIdAliasFromTextsNew(): void
     {
-        // The /texts/new form posts the language under language_id, not LgID. The
+        // The /texts/new form posts the language under language_id, not id. The
         // controller has to fall back to that name so the inline EPUB flow
         // works without renaming any client-side fields.
         $source = file_get_contents(

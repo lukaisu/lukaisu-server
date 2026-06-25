@@ -1015,7 +1015,7 @@ class TermCrudApiHandlerTest extends TestCase
         $source = $this->getMethodSource('getTermForEdit');
 
         $this->assertStringContainsString("table('languages')", $source);
-        $this->assertStringContainsString("'LgName'", $source);
+        $this->assertStringContainsString("'name'", $source);
     }
 
     public function testGetTermForEditCallsGetAllTermTags(): void

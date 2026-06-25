@@ -104,10 +104,10 @@ class FeedCrudApiHandler
 
         // Get feeds with language names and article counts. The same
         // $where covers the user-scope filter we appended above.
-        $sql = "SELECT nf.*, lg.LgName,
-                       (SELECT COUNT(*) FROM feed_links WHERE feed_id = id) AS articleCount
+        $sql = "SELECT nf.*, lg.name AS language_name,
+                       (SELECT COUNT(*) FROM feed_links WHERE feed_id = nf.id) AS articleCount
                 FROM news_feeds nf
-                LEFT JOIN languages lg ON lg.LgID = nf.language_id
+                LEFT JOIN languages lg ON lg.id = nf.language_id
                 WHERE $where
                 ORDER BY $orderBy
                 LIMIT ?, ?";
@@ -157,7 +157,7 @@ class FeedCrudApiHandler
             'name' => (string)$row['name'],
             'sourceUri' => (string)$row['source_uri'],
             'langId' => (int)$row['language_id'],
-            'langName' => (string)($row['LgName'] ?? ''),
+            'langName' => (string)($row['language_name'] ?? ''),
             'articleSectionTags' => (string)$row['article_section_tags'],
             'filterTags' => (string)$row['filter_tags'],
             'options' => is_array($options) ? $options : [],
@@ -178,14 +178,14 @@ class FeedCrudApiHandler
         $languages = [];
 
         $rows = QueryBuilder::table('languages')
-            ->select(['LgID', 'LgName'])
-            ->orderBy('LgName', 'ASC')
+            ->select(['id', 'name'])
+            ->orderBy('name', 'ASC')
             ->getPrepared();
 
         foreach ($rows as $row) {
             $languages[] = [
-                'id' => (int)$row['LgID'],
-                'name' => (string)$row['LgName']
+                'id' => (int)$row['id'],
+                'name' => (string)$row['name']
             ];
         }
 
@@ -206,16 +206,16 @@ class FeedCrudApiHandler
             return ['error' => 'Feed not found'];
         }
 
-        $feed['LgName'] = '';
+        $feed['language_name'] = '';
         $feed['articleCount'] = 0;
 
         // Get language name
         $langResult = QueryBuilder::table('languages')
-            ->select(['LgName'])
-            ->where('LgID', '=', $feed['language_id'])
+            ->select(['name'])
+            ->where('id', '=', $feed['language_id'])
             ->firstPrepared();
         if ($langResult !== null) {
-            $feed['LgName'] = (string)$langResult['LgName'];
+            $feed['language_name'] = (string)$langResult['name'];
         }
 
         // Get article count
@@ -248,7 +248,7 @@ class FeedCrudApiHandler
         }
         // Multi-user mass-assignment fence: language_id is a client-supplied
         // reference into `languages`, so without an ownership check an
-        // attacker can pin their feed to another user's LgID.
+        // attacker can pin their feed to another user's id.
         if (!\Lukaisu\Shared\Infrastructure\Globals::languageBelongsToCurrentUser($langId)) {
             return ['success' => false, 'error' => 'Language not found or access denied'];
         }
@@ -289,7 +289,7 @@ class FeedCrudApiHandler
             return ['success' => false, 'error' => 'Feed not found'];
         }
 
-        // If the request reassigns language_id, the new LgID must also
+        // If the request reassigns language_id, the new id must also
         // belong to the caller — otherwise an attacker who owns one
         // feed could rotate it into another user's language.
         if (isset($data['langId'])) {

@@ -44,10 +44,10 @@ class ParseText
         // Get language parsing settings
         $bindings = [$languageId];
         $langSettings = Connection::preparedFetchOne(
-            "SELECT LgName, LgRemoveSpaces, LgSplitEachChar,
-                LgRegexpSplitSentences, LgExceptionsSplitSentences,
-                LgRegexpWordCharacters
-            FROM languages WHERE LgID = ?"
+            "SELECT name, remove_spaces, split_each_char,
+                regexp_split_sentences, exceptions_split_sentences,
+                regexp_word_characters
+            FROM languages WHERE id = ?"
             . UserScopedQuery::forTablePrepared('languages', $bindings),
             $bindings
         );

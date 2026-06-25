@@ -814,9 +814,9 @@ class TextFacadeTest extends TestCase
     public function testGetLanguageSettingsForReadingDelegatesToGetTextForReading(): void
     {
         $expected = [
-            'LgID' => 1,
-            'LgName' => 'English',
-            'LgDict1URI' => 'https://dict.com'
+            'id' => 1,
+            'name' => 'English',
+            'dict1_uri' => 'https://dict.com'
         ];
 
         $this->getTextForReading
@@ -828,7 +828,7 @@ class TextFacadeTest extends TestCase
         $result = $this->facade->getLanguageSettingsForReading(1);
 
         $this->assertIsArray($result);
-        $this->assertEquals('English', $result['LgName']);
+        $this->assertEquals('English', $result['name']);
     }
 
     public function testGetLanguageSettingsForReadingReturnsNullForNotFound(): void
@@ -951,8 +951,8 @@ class TextFacadeTest extends TestCase
     public function testGetLanguageDataForFormDelegatesToGetTextForEdit(): void
     {
         $expected = [
-            ['LgID' => 1, 'LgName' => 'English'],
-            ['LgID' => 2, 'LgName' => 'German']
+            ['id' => 1, 'name' => 'English'],
+            ['id' => 2, 'name' => 'German']
         ];
 
         $this->getTextForEdit

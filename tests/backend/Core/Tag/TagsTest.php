@@ -806,7 +806,7 @@ class TagsTest extends TestCase
 
         // Create a test language and word for the FK constraint
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgGoogleTranslateURI)
+            "INSERT INTO languages (name, dict1_uri, google_translate_uri)
              VALUES ('DupTagTestLang', 'http://test', 'http://test')"
         );
         $langId = (int)Connection::lastInsertId();
@@ -850,7 +850,7 @@ class TagsTest extends TestCase
                 [$uniqueTagName]
             );
             Connection::query("DELETE FROM words WHERE id = $wordId");
-            Connection::query("DELETE FROM languages WHERE LgID = $langId");
+            Connection::query("DELETE FROM languages WHERE id = $langId");
         }
     }
 }

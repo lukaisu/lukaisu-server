@@ -227,14 +227,14 @@ class TextStatisticsService
 
         // Get language codes directly from language columns
         $bindings = [$textId];
-        $sql = "SELECT LgSourceLang, LgTargetLang
+        $sql = "SELECT source_lang, target_lang
             FROM languages, texts
-            WHERE LgID = language_id and id = ?"
+            WHERE id = language_id and id = ?"
             . UserScopedQuery::forTablePrepared('languages', $bindings, 'languages')
             . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
         $langRow = Connection::preparedFetchOne($sql, $bindings);
-        $sl = (string)($langRow['LgSourceLang'] ?? '');
-        $tl = (string)($langRow['LgTargetLang'] ?? '');
+        $sl = (string)($langRow['source_lang'] ?? '');
+        $tl = (string)($langRow['target_lang'] ?? '');
 
         $bulkTranslateUrl = 'bulk_translate_words.php?tid=' . $textId .
             '&offset=0&sl=' . $sl . '&tl=' . $tl;

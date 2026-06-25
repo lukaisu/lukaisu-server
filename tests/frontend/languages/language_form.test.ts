@@ -222,7 +222,7 @@ describe('language_form.ts', () => {
 
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgGoogleTranslateURI" value="">
+          <input name="google_translate_uri" value="">
         </form>
         <div id="LgTranslatorKeyWrapper" style="display: none;"></div>
       `;
@@ -236,7 +236,7 @@ describe('language_form.ts', () => {
       languageForm.reloadDictURLs('en', 'es');
       languageForm.multiWordsTranslateChange('google_translate');
 
-      const input = document.querySelector('[name="LgGoogleTranslateURI"]') as HTMLInputElement;
+      const input = document.querySelector('[name="google_translate_uri"]') as HTMLInputElement;
       expect(input.value).toContain('translate.google.com');
     });
 
@@ -244,7 +244,7 @@ describe('language_form.ts', () => {
       languageForm.reloadDictURLs('en', 'es');
       languageForm.multiWordsTranslateChange('libretranslate');
 
-      const input = document.querySelector('[name="LgGoogleTranslateURI"]') as HTMLInputElement;
+      const input = document.querySelector('[name="google_translate_uri"]') as HTMLInputElement;
       expect(input.value).toContain('localhost:5000');
       // style.display = 'inherit' may be normalized by browser to 'block' or similar
       const wrapper = document.getElementById('LgTranslatorKeyWrapper') as HTMLElement;
@@ -254,7 +254,7 @@ describe('language_form.ts', () => {
     it('does not change URL for unknown option', () => {
       // Old options like 'ggl' and 'glosbe' have been removed
       // The function only handles 'google_translate' and 'libretranslate' now
-      const input = document.querySelector('[name="LgGoogleTranslateURI"]') as HTMLInputElement;
+      const input = document.querySelector('[name="google_translate_uri"]') as HTMLInputElement;
       input.value = 'original_url';
 
       languageForm.multiWordsTranslateChange('unknown_option');
@@ -310,13 +310,13 @@ describe('language_form.ts', () => {
     it('sets mecab value for mecab option', () => {
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgRegexpWordCharacters" value="">
+          <input name="regexp_word_characters" value="">
         </form>
       `;
 
       languageForm.wordCharChange('mecab');
 
-      const input = document.querySelector('[name="LgRegexpWordCharacters"]') as HTMLInputElement;
+      const input = document.querySelector('[name="regexp_word_characters"]') as HTMLInputElement;
       expect(input.value).toBe('mecab');
     });
 
@@ -328,13 +328,13 @@ describe('language_form.ts', () => {
 
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgRegexpWordCharacters" value="">
+          <input name="regexp_word_characters" value="">
         </form>
       `;
 
       languageForm.wordCharChange('regexp');
 
-      const input = document.querySelector('[name="LgRegexpWordCharacters"]') as HTMLInputElement;
+      const input = document.querySelector('[name="regexp_word_characters"]') as HTMLInputElement;
       expect(input.value).toBe('\\p{Han}');
     });
   });
@@ -352,18 +352,18 @@ describe('language_form.ts', () => {
     it('does not modify URL when popup checkbox is changed', () => {
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgDict1URI" value="https://dict.com?q=test">
-          <input type="checkbox" name="LgDict1PopUp">
+          <input name="dict1_uri" value="https://dict.com?q=test">
+          <input type="checkbox" name="dict1_popup">
         </form>
       `;
 
-      const checkbox = document.querySelector('[name="LgDict1PopUp"]') as HTMLInputElement;
+      const checkbox = document.querySelector('[name="dict1_popup"]') as HTMLInputElement;
       checkbox.checked = true;
 
       // Should not throw and should not modify URL
       languageForm.changePopUpState(checkbox);
 
-      const input = document.querySelector('[name="LgDict1URI"]') as HTMLInputElement;
+      const input = document.querySelector('[name="dict1_uri"]') as HTMLInputElement;
       // URL should remain unchanged - popup is now stored in database
       expect(input.value).toBe('https://dict.com?q=test');
     });
@@ -371,11 +371,11 @@ describe('language_form.ts', () => {
     it('accepts the checkbox element without error', () => {
       document.body.innerHTML = `
         <form name="lg_form">
-          <input type="checkbox" name="LgDict2PopUp">
+          <input type="checkbox" name="dict2_popup">
         </form>
       `;
 
-      const checkbox = document.querySelector('[name="LgDict2PopUp"]') as HTMLInputElement;
+      const checkbox = document.querySelector('[name="dict2_popup"]') as HTMLInputElement;
       expect(() => languageForm.changePopUpState(checkbox)).not.toThrow();
     });
   });
@@ -389,23 +389,23 @@ describe('language_form.ts', () => {
     it('does not modify checkbox state from URL', () => {
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgDict1URI" value="https://dict.com?q=test">
-          <input type="checkbox" name="LgDict1PopUp">
+          <input name="dict1_uri" value="https://dict.com?q=test">
+          <input type="checkbox" name="dict1_popup">
         </form>
       `;
 
       languageForm.checkDictionaryChanged();
 
       // Popup setting is now in database, not detected from URL
-      const checkbox = document.querySelector('[name="LgDict1PopUp"]') as HTMLInputElement;
+      const checkbox = document.querySelector('[name="dict1_popup"]') as HTMLInputElement;
       expect(checkbox.checked).toBe(false);
     });
 
     it('accepts input element without error', () => {
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgDict1URI" value="https://dict.com?q=test">
-          <input type="checkbox" name="LgDict1PopUp">
+          <input name="dict1_uri" value="https://dict.com?q=test">
+          <input type="checkbox" name="dict1_popup">
         </form>
       `;
 
@@ -416,14 +416,14 @@ describe('language_form.ts', () => {
     it('does nothing when input is empty', () => {
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgDict1URI" value="">
-          <input type="checkbox" name="LgDict1PopUp">
+          <input name="dict1_uri" value="">
+          <input type="checkbox" name="dict1_popup">
         </form>
       `;
 
       languageForm.checkDictionaryChanged();
 
-      const checkbox = document.querySelector('[name="LgDict1PopUp"]') as HTMLInputElement;
+      const checkbox = document.querySelector('[name="dict1_popup"]') as HTMLInputElement;
       expect(checkbox.checked).toBe(false);
     });
   });
@@ -578,7 +578,7 @@ describe('language_form.ts', () => {
       languageForm.allLanguages = { 'English': 1 };
 
       document.body.innerHTML = `
-        <input id="LgName" value="Spanish">
+        <input id="name" value="Spanish">
       `;
 
       const result = checkDuplicateLanguage();
@@ -591,7 +591,7 @@ describe('language_form.ts', () => {
       languageForm.allLanguages = { 'English': 1 };
 
       document.body.innerHTML = `
-        <input id="LgName" value="English">
+        <input id="name" value="English">
       `;
 
       const result = checkDuplicateLanguage();
@@ -604,7 +604,7 @@ describe('language_form.ts', () => {
       languageForm.allLanguages = { 'English': 1 };
 
       document.body.innerHTML = `
-        <input id="LgName" value="English">
+        <input id="name" value="English">
       `;
 
       const result = checkDuplicateLanguage();
@@ -615,7 +615,7 @@ describe('language_form.ts', () => {
 
     it('accepts custom language ID and languages map', () => {
       document.body.innerHTML = `
-        <input id="LgName" value="French">
+        <input id="name" value="French">
       `;
 
       const result = checkDuplicateLanguage(2, { 'French': 2 });
@@ -635,15 +635,15 @@ describe('language_form.ts', () => {
 
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgGoogleTranslateURI" value="https://translate.com">
-          <input type="checkbox" name="LgGoogleTranslatePopUp">
+          <input name="google_translate_uri" value="https://translate.com">
+          <input type="checkbox" name="google_translate_popup">
           <select name="LgTranslatorName">
             <option value="google_translate">Google</option>
           </select>
         </form>
       `;
 
-      const input = document.querySelector('[name="LgGoogleTranslateURI"]') as HTMLInputElement;
+      const input = document.querySelector('[name="google_translate_uri"]') as HTMLInputElement;
       checkTranslatorChanged(input);
 
       expect(statusSpy).toHaveBeenCalledWith('https://translate.com');
@@ -663,14 +663,14 @@ describe('language_form.ts', () => {
 
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgName" value="Japanese">
-          <input name="LgDict1URI" value="https://dict1.com">
-          <input name="LgDict2URI" value="https://dict2.com">
-          <input name="LgGoogleTranslateURI" value="https://translate.com">
-          <input name="LgRegexpWordCharacters" value="mecab">
-          <input type="checkbox" name="LgDict1PopUp">
-          <input type="checkbox" name="LgDict2PopUp">
-          <input type="checkbox" name="LgGoogleTranslatePopUp">
+          <input name="name" value="Japanese">
+          <input name="dict1_uri" value="https://dict1.com">
+          <input name="dict2_uri" value="https://dict2.com">
+          <input name="google_translate_uri" value="https://translate.com">
+          <input name="regexp_word_characters" value="mecab">
+          <input type="checkbox" name="dict1_popup">
+          <input type="checkbox" name="dict2_popup">
+          <input type="checkbox" name="google_translate_popup">
           <select name="LgTranslatorName">
             <option value="google_translate">Google</option>
           </select>
@@ -707,7 +707,7 @@ describe('language_form.ts', () => {
           }
         </script>
         <form name="lg_form">
-          <input name="LgName" value="German">
+          <input name="name" value="German">
         </form>
       `;
 
@@ -720,7 +720,7 @@ describe('language_form.ts', () => {
     it('does nothing when config element is missing', () => {
       document.body.innerHTML = `
         <form name="lg_form">
-          <input name="LgName" value="German">
+          <input name="name" value="German">
         </form>
       `;
 
@@ -761,7 +761,7 @@ describe('language_form.ts', () => {
           }
         </script>
         <form name="lg_form">
-          <input id="LgName" name="LgName" value="English">
+          <input id="name" name="name" value="English">
           <button type="submit">Save</button>
         </form>
       `;
@@ -794,7 +794,7 @@ describe('language_form.ts', () => {
           }
         </script>
         <form name="lg_form">
-          <input name="LgName" value="Test">
+          <input name="name" value="Test">
         </form>
         <button data-action="cancel-form" data-redirect="/my-languages">Cancel</button>
       `;

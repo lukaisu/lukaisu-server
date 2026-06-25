@@ -27,7 +27,7 @@ use RuntimeException;
  * flipping `MULTI_USER_ENABLED=true` in `.env`, the
  * `add_user_id_columns.sql` migration's backfill is a no-op (it looks for
  * a `users.UsUsername='admin'` row that doesn't exist on a fresh users
- * table). Every legacy row stays at `LgUsID/user_id/user_id = NULL`, and
+ * table). Every legacy row stays at `user_id/user_id/user_id = NULL`, and
  * once user-scope filters kick in those rows become invisible to
  * everyone — looks like total data loss.
  *
@@ -49,7 +49,7 @@ class ClaimOrphanRows
      * @var array<string, string>
      */
     private const TABLES = [
-        'languages'           => 'LgUsID',
+        'languages'           => 'user_id',
         'texts'               => 'user_id',
         'words'               => 'user_id',
         'tags'                => 'user_id',

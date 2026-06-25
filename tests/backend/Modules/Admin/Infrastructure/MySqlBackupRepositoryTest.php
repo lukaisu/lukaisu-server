@@ -122,7 +122,7 @@ class MySqlBackupRepositoryTest extends TestCase
         Globals::setCurrentUserId(7);
 
         $cases = [
-            'languages' => 'LgUsID',
+            'languages' => 'user_id',
             'texts'     => 'user_id',
             'words'     => 'user_id',
             'tags'      => 'user_id',
@@ -196,10 +196,10 @@ class MySqlBackupRepositoryTest extends TestCase
 
         $scope = $this->callOfficialBackupUserScope();
 
-        // languages already carries `WHERE LgName<>""` upstream, so the
+        // languages already carries `WHERE name<>""` upstream, so the
         // user filter must extend that clause with AND, not start a new
         // WHERE.
-        $this->assertSame(' AND LgUsID = 42', $scope['languages']);
+        $this->assertSame(' AND user_id = 42', $scope['languages']);
         $this->assertSame(' WHERE user_id = 42', $scope['texts']);
         $this->assertSame(' WHERE user_id = 42', $scope['words']);
         $this->assertSame(' WHERE user_id = 42', $scope['tags']);

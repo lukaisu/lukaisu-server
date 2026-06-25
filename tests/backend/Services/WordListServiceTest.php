@@ -45,21 +45,21 @@ class WordListServiceTest extends TestCase
 
         if (self::$dbConnected) {
             // Reset auto_increment
-            $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM languages");
+            $maxId = Connection::fetchValue("SELECT COALESCE(MAX(id), 0) AS value FROM languages");
             Connection::query("ALTER TABLE languages AUTO_INCREMENT = " . ((int)$maxId + 1));
 
             // Create a test language
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM languages WHERE LgName = 'WordListTestLang' LIMIT 1"
+                "SELECT id AS value FROM languages WHERE name = 'WordListTestLang' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 Connection::query(
-                    "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-                    "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                    "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+                    "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
                     "VALUES ('WordListTestLang', 'http://test.com/###', '', 'http://translate.test/###', " .
                     "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
                 );
@@ -76,10 +76,10 @@ class WordListServiceTest extends TestCase
 
         // Clean up test words and language
         Connection::query("DELETE FROM words WHERE language_id = " . self::$testLangId);
-        Connection::query("DELETE FROM languages WHERE LgName = 'WordListTestLang'");
+        Connection::query("DELETE FROM languages WHERE name = 'WordListTestLang'");
 
         // Reset auto_increment
-        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(LgID), 0) AS value FROM languages");
+        $maxId = Connection::fetchValue("SELECT COALESCE(MAX(id), 0) AS value FROM languages");
         Connection::query("ALTER TABLE languages AUTO_INCREMENT = " . ((int)$maxId + 1));
     }
 
@@ -567,7 +567,7 @@ class WordListServiceTest extends TestCase
 
         $this->assertArrayHasKey('showRoman', $result);
         $this->assertArrayHasKey('scrdir', $result);
-        $this->assertTrue($result['showRoman']); // Our test lang has LgShowRomanization=1
+        $this->assertTrue($result['showRoman']); // Our test lang has show_romanization=1
     }
 
     public function testGetEditFormDataWithExistingWord(): void
@@ -653,7 +653,7 @@ class WordListServiceTest extends TestCase
         $result = $service->getFlexibleExportSql([1, 2, 3], '', '', '', '', '');
 
         $this->assertIsArray($result);
-        $this->assertStringContainsString('LgExportTemplate', $result['sql']);
+        $this->assertStringContainsString('export_template', $result['sql']);
         $this->assertStringContainsString('?', $result['sql']);
         $this->assertSame([1, 2, 3], $result['params']);
     }

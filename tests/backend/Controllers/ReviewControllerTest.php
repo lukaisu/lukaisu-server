@@ -636,7 +636,7 @@ class ReviewControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
 
-        $sql = "SELECT LgID, LgName, LgTextSize, LgRegexpWordCharacters, LgRightToLeft
+        $sql = "SELECT id, name, text_size, regexp_word_characters, right_to_left
                 FROM " . Globals::table('languages') . " LIMIT 5";
         $result = Connection::query($sql);
 

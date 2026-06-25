@@ -140,7 +140,7 @@ class WordListExportBuilderTest extends TestCase
         $result = $this->builder->getTsvExportSql([], '', '', '', '', '');
         $this->assertStringContainsString('text', $result['sql']);
         $this->assertStringContainsString('status', $result['sql']);
-        $this->assertStringContainsString('LgName', $result['sql']);
+        $this->assertStringContainsString('name', $result['sql']);
         $this->assertStringContainsString('taglist', $result['sql']);
     }
 
@@ -161,7 +161,7 @@ class WordListExportBuilderTest extends TestCase
     {
         $result = $this->builder->getFlexibleExportSql([], '', ' and language_id = ?', '', '', '', [3]);
         $this->assertIsArray($result);
-        $this->assertStringContainsString('LgExportTemplate', $result['sql']);
+        $this->assertStringContainsString('export_template', $result['sql']);
         $this->assertStringContainsString('language_id = ?', $result['sql']);
         $this->assertStringNotContainsString('word_occurrences', $result['sql']);
         $this->assertSame([3], $result['params']);
@@ -173,7 +173,7 @@ class WordListExportBuilderTest extends TestCase
         $result = $this->builder->getFlexibleExportSql([5, 6], '', '', '', '', '');
         $this->assertStringContainsString('id in', $result['sql']);
         $this->assertSame([5, 6], $result['params']);
-        $this->assertStringContainsString('LgExportTemplate', $result['sql']);
+        $this->assertStringContainsString('export_template', $result['sql']);
     }
 
     #[Test]
@@ -188,8 +188,8 @@ class WordListExportBuilderTest extends TestCase
     public function getFlexibleExportSqlSelectsExportTemplate(): void
     {
         $result = $this->builder->getFlexibleExportSql([], '', '', '', '', '');
-        $this->assertStringContainsString('LgExportTemplate', $result['sql']);
-        $this->assertStringContainsString('LgRightToLeft', $result['sql']);
+        $this->assertStringContainsString('export_template', $result['sql']);
+        $this->assertStringContainsString('right_to_left', $result['sql']);
         $this->assertStringContainsString('text_lc', $result['sql']);
     }
 

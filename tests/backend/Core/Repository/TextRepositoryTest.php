@@ -58,9 +58,9 @@ class TextRepositoryTest extends TestCase
             $prefix = '';
             Connection::query(
                 "INSERT INTO {$prefix}languages (
-                    LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI,
-                    LgTextSize, LgRegexpSplitSentences, LgRegexpWordCharacters,
-                    LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization
+                    name, dict1_uri, dict2_uri, google_translate_uri,
+                    text_size, regexp_split_sentences, regexp_word_characters,
+                    remove_spaces, split_each_char, right_to_left, show_romanization
                 ) VALUES (
                     'TextRepoTest_Language', 'https://dict.test/lukaisu_term', '', '',
                     100, '.!?', 'a-zA-Z',
@@ -82,7 +82,7 @@ class TextRepositoryTest extends TestCase
         Connection::query("DELETE FROM {$prefix}texts WHERE title LIKE 'TextRepoTest_%'");
         // Clean up test language
         if (self::$testLanguageId > 0) {
-            Connection::query("DELETE FROM {$prefix}languages WHERE LgID = " . self::$testLanguageId);
+            Connection::query("DELETE FROM {$prefix}languages WHERE id = " . self::$testLanguageId);
         }
     }
 

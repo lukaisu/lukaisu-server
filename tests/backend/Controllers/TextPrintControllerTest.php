@@ -55,8 +55,8 @@ class TextPrintControllerTest extends TestCase
             // Create a test language if it doesn't exist
             $langTable = Globals::table('languages');
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM " . $langTable .
-                " WHERE LgName = 'PrintControllerTestLang' LIMIT 1"
+                "SELECT id AS value FROM " . $langTable .
+                " WHERE name = 'PrintControllerTestLang' LIMIT 1"
             );
 
             if ($existingLang) {
@@ -64,10 +64,10 @@ class TextPrintControllerTest extends TestCase
             } else {
                 Connection::query(
                     "INSERT INTO " . $langTable .
-                    " (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, " .
-                    "LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, " .
-                    "LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                    " (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, " .
+                    "exceptions_split_sentences, regexp_word_characters, remove_spaces, " .
+                    "split_each_char, right_to_left, show_romanization) " .
                     "VALUES ('PrintControllerTestLang', 'http://test.com/###', '', " .
                     "'http://translate.google.com/?sl=en&tl=fr&###', " .
                     "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
@@ -124,7 +124,7 @@ class TextPrintControllerTest extends TestCase
             "DELETE FROM " . $textsTable . " WHERE title = 'PrintControllerTestText'"
         );
         Connection::query(
-            "DELETE FROM " . $languagesTable . " WHERE LgName = 'PrintControllerTestLang'"
+            "DELETE FROM " . $languagesTable . " WHERE name = 'PrintControllerTestLang'"
         );
     }
 

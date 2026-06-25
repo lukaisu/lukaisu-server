@@ -98,8 +98,8 @@ class TextPrintService
     public function getLanguageData(int $langId): ?array
     {
         $result = QueryBuilder::table('languages')
-            ->select(['LgTextSize', 'LgRemoveSpaces', 'LgRightToLeft', 'LgGoogleTranslateURI'])
-            ->where('LgID', '=', $langId)
+            ->select(['text_size', 'remove_spaces', 'right_to_left', 'google_translate_uri'])
+            ->where('id', '=', $langId)
             ->getPrepared();
         return !empty($result) ? $result[0] : null;
     }
@@ -546,8 +546,8 @@ class TextPrintService
             'sourceUri' => (string) $textData['source_uri'],
             'audioUri' => trim((string) ($textData['audio_uri'] ?? '')),
             'langId' => (int) $textData['language_id'],
-            'textSize' => (int) $langData['LgTextSize'],
-            'rtlScript' => (bool) $langData['LgRightToLeft'],
+            'textSize' => (int) $langData['text_size'],
+            'rtlScript' => (bool) $langData['right_to_left'],
             'hasAnnotation' => $this->hasAnnotation($textId)
         ];
     }
@@ -572,7 +572,7 @@ class TextPrintService
         }
 
         $annotation = $this->getAnnotatedText($textId);
-        $ttsClass = $this->getTtsClass((string) ($langData['LgGoogleTranslateURI'] ?? ''));
+        $ttsClass = $this->getTtsClass((string) ($langData['google_translate_uri'] ?? ''));
 
         return [
             'textId' => $textId,
@@ -580,8 +580,8 @@ class TextPrintService
             'sourceUri' => (string) $textData['source_uri'],
             'audioUri' => trim((string) ($textData['audio_uri'] ?? '')),
             'langId' => (int) $textData['language_id'],
-            'textSize' => (int) $langData['LgTextSize'],
-            'rtlScript' => (bool) $langData['LgRightToLeft'],
+            'textSize' => (int) $langData['text_size'],
+            'rtlScript' => (bool) $langData['right_to_left'],
             'annotation' => $annotation,
             'hasAnnotation' => $annotation !== null,
             'ttsClass' => $ttsClass

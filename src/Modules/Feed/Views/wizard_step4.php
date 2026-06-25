@@ -31,7 +31,7 @@ use Lukaisu\Shared\UI\Helpers\IconHelper;
  * @var array{rss_url: string, feed: array<int|string, mixed>, lang?: int,
  *     options?: string, redirect?: string, article_section?: string,
  *     edit_feed?: int} $wizardData Wizard session data
- * @var array<int, array{LgID: int, LgName: string}> $languages Language records
+ * @var array<int, array{id: int, name: string}> $languages Language records
  * @var string|null $autoUpdI Auto update interval value
  * @var string|null $autoUpdV Auto update interval unit
  * @var \Lukaisu\Modules\Feed\Application\FeedFacade $service Feed service
@@ -39,9 +39,9 @@ use Lukaisu\Shared\UI\Helpers\IconHelper;
 
 // Prepare languages array for JSON
 $languagesJson = array_map(
-    /** @param array{LgID: int|string, LgName: string} $lang */
+    /** @param array{id: int|string, name: string} $lang */
     function (array $lang): array {
-        return ['id' => (int)$lang['LgID'], 'name' => $lang['LgName']];
+        return ['id' => (int)$lang['id'], 'name' => $lang['name']];
     },
     $languages
 );

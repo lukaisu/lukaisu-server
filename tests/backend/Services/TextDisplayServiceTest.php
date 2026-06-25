@@ -31,16 +31,16 @@ class TextDisplayServiceTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language if it doesn't exist
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM languages WHERE LgName = 'TestDisplayLanguage' LIMIT 1"
+                "SELECT id AS value FROM languages WHERE name = 'TestDisplayLanguage' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 Connection::query(
-                    "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-                    "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                    "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+                    "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
                     "VALUES ('TestDisplayLanguage', 'http://test.com/###', '', 'http://translate.test/###', " .
                     "120, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
                 );
@@ -151,8 +151,8 @@ class TextDisplayServiceTest extends TestCase
         $this->assertArrayHasKey('textSize', $result);
         $this->assertArrayHasKey('rtlScript', $result);
 
-        $this->assertEquals(120, $result['textSize']); // We set LgTextSize = 120
-        $this->assertFalse($result['rtlScript']); // We set LgRightToLeft = 0
+        $this->assertEquals(120, $result['textSize']); // We set text_size = 120
+        $this->assertFalse($result['rtlScript']); // We set right_to_left = 0
     }
 
     public function testGetTextDisplaySettingsReturnsNullForNonExistent(): void
@@ -359,9 +359,9 @@ class TextDisplayServiceTest extends TestCase
 
         // Create an RTL language
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-            "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-            "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+            "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+            "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+            "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
             "VALUES ('TestRTLLanguage', 'http://test.com/###', '', '', " .
             "100, '', '.!?', '', 'a-zA-Z', 0, 0, 1, 0)"
         );
@@ -382,7 +382,7 @@ class TextDisplayServiceTest extends TestCase
 
         // Cleanup
         Connection::query("DELETE FROM texts WHERE id = " . $rtlTextId);
-        Connection::query("DELETE FROM languages WHERE LgID = " . $rtlLangId);
+        Connection::query("DELETE FROM languages WHERE id = " . $rtlLangId);
     }
 
     public function testParseAnnotationItemWithWordId(): void

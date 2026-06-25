@@ -130,7 +130,7 @@ class DictionaryApiHandler implements ApiRoutableInterface
         // another user's language. The DB column `LdLgID` has no
         // foreign-key constraint that fences cross-user references,
         // so an authenticated user could otherwise plant rows pinned
-        // to a stranger's LgID.
+        // to a stranger's id.
         if (!\Lukaisu\Shared\Infrastructure\Globals::languageBelongsToCurrentUser($langId)) {
             return ['success' => false, 'error' => 'Language not found or access denied'];
         }
@@ -177,7 +177,7 @@ class DictionaryApiHandler implements ApiRoutableInterface
         }
         if (!\Lukaisu\Shared\Infrastructure\Globals::languageBelongsToCurrentUser($langId)) {
             // Same fence as createDictionary — keep it consistent so
-            // both paths refuse cross-user LgID references.
+            // both paths refuse cross-user id references.
             return ['success' => false, 'error' => 'Language not found or access denied'];
         }
         if ($url === '') {

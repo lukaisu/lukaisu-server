@@ -158,8 +158,8 @@ class HomeFacade
     {
         /** @var mixed $resultRaw */
         $resultRaw = \Lukaisu\Shared\Infrastructure\Database\QueryBuilder::table('languages')
-            ->where('LgID', '=', $languageId)
-            ->valuePrepared('LgName');
+            ->where('id', '=', $languageId)
+            ->valuePrepared('name');
 
         return is_string($resultRaw) ? $resultRaw : '';
     }

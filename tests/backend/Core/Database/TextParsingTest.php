@@ -61,28 +61,28 @@ class TextParsingTest extends TestCase
         $langName = 'Test TextParsing Language';
         Connection::query(
             "DELETE FROM $word_occurrences WHERE language_id IN " .
-            "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
+            "(SELECT id FROM $languages WHERE name = '$langName')"
         );
         Connection::query(
             "DELETE FROM $sentences WHERE language_id IN " .
-            "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
+            "(SELECT id FROM $languages WHERE name = '$langName')"
         );
         Connection::query(
             "DELETE FROM $texts WHERE language_id IN " .
-            "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
+            "(SELECT id FROM $languages WHERE name = '$langName')"
         );
         Connection::query(
             "DELETE FROM $words WHERE language_id IN " .
-            "(SELECT LgID FROM $languages WHERE LgName = '$langName')"
+            "(SELECT id FROM $languages WHERE name = '$langName')"
         );
-        Connection::query("DELETE FROM $languages WHERE LgName = '$langName'");
+        Connection::query("DELETE FROM $languages WHERE name = '$langName'");
 
         // Create test language
         $sql = "INSERT INTO $languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test TextParsing Language',
             'https://en.wiktionary.org/wiki/###',
@@ -111,7 +111,7 @@ class TextParsingTest extends TestCase
             Connection::query("DELETE FROM $sentences WHERE language_id = " . self::$testLanguageId);
             Connection::query("DELETE FROM $texts WHERE language_id = " . self::$testLanguageId);
             Connection::query("DELETE FROM $words WHERE language_id = " . self::$testLanguageId);
-            Connection::query("DELETE FROM $languages WHERE LgID = " . self::$testLanguageId);
+            Connection::query("DELETE FROM $languages WHERE id = " . self::$testLanguageId);
         }
     }
 
@@ -531,10 +531,10 @@ class TextParsingTest extends TestCase
 
         // Create language with character substitutions
         $sql = "INSERT INTO $languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test German Substitutions',
             'https://de.wiktionary.org/wiki/###',
@@ -551,7 +551,7 @@ class TextParsingTest extends TestCase
         $this->assertNotEmpty($result);
 
         // Clean up
-        Connection::query("DELETE FROM $languages WHERE LgID = $germanLangId");
+        Connection::query("DELETE FROM $languages WHERE id = $germanLangId");
     }
 
     // ===== Split each char language tests =====
@@ -566,10 +566,10 @@ class TextParsingTest extends TestCase
 
         // Create language with split each char enabled
         $sql = "INSERT INTO $languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test Split Char',
             'https://example.com/###',
@@ -585,7 +585,7 @@ class TextParsingTest extends TestCase
         $this->assertIsArray($result);
 
         // Clean up
-        Connection::query("DELETE FROM $languages WHERE LgID = $splitLangId");
+        Connection::query("DELETE FROM $languages WHERE id = $splitLangId");
     }
 
     // ===== RTL language tests =====
@@ -600,10 +600,10 @@ class TextParsingTest extends TestCase
 
         // Create RTL language
         $sql = "INSERT INTO $languages (
-            LgName, LgDict1URI, LgGoogleTranslateURI, LgTextSize,
-            LgCharacterSubstitutions, LgRegexpSplitSentences,
-            LgExceptionsSplitSentences, LgRegexpWordCharacters,
-            LgRemoveSpaces, LgSplitEachChar, LgRightToLeft
+            name, dict1_uri, google_translate_uri, text_size,
+            character_substitutions, regexp_split_sentences,
+            exceptions_split_sentences, regexp_word_characters,
+            remove_spaces, split_each_char, right_to_left
         ) VALUES (
             'Test Arabic',
             'https://example.com/###',
@@ -619,7 +619,7 @@ class TextParsingTest extends TestCase
         $this->assertIsArray($result);
 
         // Clean up
-        Connection::query("DELETE FROM $languages WHERE LgID = $rtlLangId");
+        Connection::query("DELETE FROM $languages WHERE id = $rtlLangId");
     }
 
     // ===== checkText() tests =====

@@ -545,8 +545,8 @@ class LocalDictionaryService
         $currentMode = $this->getLocalDictMode($languageId);
         if ($currentMode === 0) {
             QueryBuilder::table('languages')
-                ->where('LgID', '=', $languageId)
-                ->updatePrepared(['LgLocalDictMode' => 1]);
+                ->where('id', '=', $languageId)
+                ->updatePrepared(['local_dict_mode' => 1]);
         }
     }
 
@@ -560,11 +560,11 @@ class LocalDictionaryService
     public function getLocalDictMode(int $languageId): int
     {
         $result = QueryBuilder::table('languages')
-            ->select(['LgLocalDictMode'])
-            ->where('LgID', '=', $languageId)
+            ->select(['local_dict_mode'])
+            ->where('id', '=', $languageId)
             ->firstPrepared();
 
-        return (int) ($result['LgLocalDictMode'] ?? 0);
+        return (int) ($result['local_dict_mode'] ?? 0);
     }
 
     /**

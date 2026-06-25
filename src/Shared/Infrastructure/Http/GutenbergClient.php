@@ -47,7 +47,7 @@ class GutenbergClient
     /**
      * Common language name to ISO 639-1 code mapping.
      *
-     * Used as fallback when LgSourceLang is not set.
+     * Used as fallback when source_lang is not set.
      *
      * @var array<string, string>
      */

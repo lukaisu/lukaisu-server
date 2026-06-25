@@ -319,11 +319,11 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
     {
         $record = QueryBuilder::table('languages')
             ->select([
-                'LgName', 'LgDict1URI', 'LgDict2URI', 'LgGoogleTranslateURI',
-                'LgTextSize', 'LgRemoveSpaces', 'LgRegexpWordCharacters',
-                'LgRightToLeft', 'LgTTSVoiceAPI'
+                'name', 'dict1_uri', 'dict2_uri', 'google_translate_uri',
+                'text_size', 'remove_spaces', 'regexp_word_characters',
+                'right_to_left', 'tts_voice_api'
             ])
-            ->where('LgID', '=', $langId)
+            ->where('id', '=', $langId)
             ->firstPrepared();
 
         if ($record === null) {
@@ -341,23 +341,23 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
         }
 
         /** @var mixed $nameVal */
-        $nameVal = $record['LgName'] ?? '';
+        $nameVal = $record['name'] ?? '';
         /** @var mixed $regexVal */
-        $regexVal = $record['LgRegexpWordCharacters'] ?? '';
+        $regexVal = $record['regexp_word_characters'] ?? '';
         /** @var mixed $ttsVal */
-        $ttsVal = $record['LgTTSVoiceAPI'] ?? null;
+        $ttsVal = $record['tts_voice_api'] ?? null;
 
         return [
             'name' => is_string($nameVal) ? $nameVal : '',
-            'dict1Uri' => is_string($record['LgDict1URI'] ?? '') ? (string) ($record['LgDict1URI'] ?? '') : '',
-            'dict2Uri' => is_string($record['LgDict2URI'] ?? '') ? (string) ($record['LgDict2URI'] ?? '') : '',
-            'translateUri' => is_string($record['LgGoogleTranslateURI'] ?? '')
-                ? (string) ($record['LgGoogleTranslateURI'] ?? '')
+            'dict1Uri' => is_string($record['dict1_uri'] ?? '') ? (string) ($record['dict1_uri'] ?? '') : '',
+            'dict2Uri' => is_string($record['dict2_uri'] ?? '') ? (string) ($record['dict2_uri'] ?? '') : '',
+            'translateUri' => is_string($record['google_translate_uri'] ?? '')
+                ? (string) ($record['google_translate_uri'] ?? '')
                 : '',
-            'textSize' => (int) $record['LgTextSize'],
-            'removeSpaces' => (bool) $record['LgRemoveSpaces'],
+            'textSize' => (int) $record['text_size'],
+            'removeSpaces' => (bool) $record['remove_spaces'],
             'regexWord' => is_string($regexVal) ? $regexVal : '',
-            'rtl' => (bool) $record['LgRightToLeft'],
+            'rtl' => (bool) $record['right_to_left'],
             'ttsVoiceApi' => is_string($ttsVal) ? $ttsVal : null
         ];
     }
@@ -418,19 +418,19 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
         if ($config->reviewKey === ReviewConfiguration::KEY_LANG) {
             /** @var mixed $name */
             $name = QueryBuilder::table('languages')
-                ->where('LgID', '=', $config->selection)
-                ->valuePrepared('LgName');
+                ->where('id', '=', $config->selection)
+                ->valuePrepared('name');
             return $name !== null ? (string) $name : 'L2';
         }
 
         if ($config->reviewKey === ReviewConfiguration::KEY_TEXT) {
             $row = QueryBuilder::table('texts')
-                ->select(['LgName'])
-                ->join('languages', 'language_id', '=', 'LgID')
+                ->select(['name'])
+                ->join('languages', 'language_id', '=', 'id')
                 ->where('id', '=', $config->selection)
                 ->firstPrepared();
             /** @var mixed $name */
-            $name = $row['LgName'] ?? null;
+            $name = $row['name'] ?? null;
             return is_string($name) ? $name : 'L2';
         }
 
@@ -444,12 +444,12 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
             $userScope = UserScopedQuery::forTablePrepared('words', $bindings);
             /** @var mixed $name */
             $name = Connection::preparedFetchValue(
-                "SELECT LgName
-                FROM languages, {$reviewsql} AND LgID = language_id"
+                "SELECT name
+                FROM languages, {$reviewsql} AND id = language_id"
                 . $userScope . "
                 LIMIT 1",
                 array_merge($params, $bindings),
-                'LgName'
+                'name'
             );
             return $name !== null ? (string) $name : 'L2';
         }

@@ -48,7 +48,7 @@ assert(is_string($scrdir));
  * @var string $tagName
  * @var int $nfId
  * @var int $maxTexts
- * @var array<int, array{LgID: int, LgName: string}> $languages
+ * @var array<int, array{id: int, name: string}> $languages
  * @var string $scrdir
  */
 
@@ -102,13 +102,13 @@ foreach ($texts as $text) :
                             <select name="feed[<?php echo $count; ?>][language_id]" class="notempty setfocus">
                                 <?php
                                 foreach ($languages as $rowLang) :
-                                    /** @var array{LgID: int, LgName: string} $rowLang */
+                                    /** @var array{id: int, name: string} $rowLang */
                                     ?>
-                                <option value="<?php echo $rowLang['LgID']; ?>"<?php
-                                if ($row['language_id'] === $rowLang['LgID']) {
+                                <option value="<?php echo $rowLang['id']; ?>"<?php
+                                if ($row['language_id'] === $rowLang['id']) {
                                     echo ' selected';
                                 }
-                                ?>><?php echo htmlspecialchars($rowLang['LgName'], ENT_QUOTES, 'UTF-8'); ?></option>
+                                ?>><?php echo htmlspecialchars($rowLang['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

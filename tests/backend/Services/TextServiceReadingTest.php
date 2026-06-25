@@ -49,17 +49,17 @@ class TextServiceReadingTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM languages WHERE LgName = 'TestReadingLanguage' LIMIT 1"
+                "SELECT id AS value FROM languages WHERE name = 'TestReadingLanguage' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 Connection::query(
-                    "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-                    "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization, " .
-                    "LgTTSVoiceAPI) " .
+                    "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+                    "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization, " .
+                    "tts_voice_api) " .
                     "VALUES ('TestReadingLanguage', 'http://dict1.test/###', 'http://dict2.test/###', " .
                     "'http://translate.test/?sl=en&tl=fr&text=###', " .
                     "150, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1, 'Google')"
@@ -95,7 +95,7 @@ class TextServiceReadingTest extends TestCase
             Connection::query("DELETE FROM texts WHERE id = " . self::$testTextId);
         }
         if (self::$testLangId > 0) {
-            Connection::query("DELETE FROM languages WHERE LgName = 'TestReadingLanguage'");
+            Connection::query("DELETE FROM languages WHERE name = 'TestReadingLanguage'");
         }
     }
 
@@ -115,7 +115,7 @@ class TextServiceReadingTest extends TestCase
         $result = $this->service->getTextForReading(self::$testTextId);
 
         $this->assertIsArray($result);
-        $this->assertArrayHasKey('LgName', $result);
+        $this->assertArrayHasKey('name', $result);
         $this->assertArrayHasKey('language_id', $result);
         $this->assertArrayHasKey('text', $result);
         $this->assertArrayHasKey('title', $result);
@@ -123,7 +123,7 @@ class TextServiceReadingTest extends TestCase
         $this->assertArrayHasKey('source_uri', $result);
         $this->assertArrayHasKey('audio_position', $result);
 
-        $this->assertEquals('TestReadingLanguage', $result['LgName']);
+        $this->assertEquals('TestReadingLanguage', $result['name']);
         $this->assertEquals(self::$testLangId, (int)$result['language_id']);
         $this->assertEquals('Hello world.', $result['text']);
         $this->assertEquals('Test Reading Text', $result['title']);
@@ -198,23 +198,23 @@ class TextServiceReadingTest extends TestCase
         $result = $this->service->getLanguageSettingsForReading(self::$testLangId);
 
         $this->assertIsArray($result);
-        $this->assertArrayHasKey('LgName', $result);
-        $this->assertArrayHasKey('LgDict1URI', $result);
-        $this->assertArrayHasKey('LgDict2URI', $result);
-        $this->assertArrayHasKey('LgGoogleTranslateURI', $result);
-        $this->assertArrayHasKey('LgTextSize', $result);
-        $this->assertArrayHasKey('LgRegexpWordCharacters', $result);
-        $this->assertArrayHasKey('LgRemoveSpaces', $result);
-        $this->assertArrayHasKey('LgRightToLeft', $result);
+        $this->assertArrayHasKey('name', $result);
+        $this->assertArrayHasKey('dict1_uri', $result);
+        $this->assertArrayHasKey('dict2_uri', $result);
+        $this->assertArrayHasKey('google_translate_uri', $result);
+        $this->assertArrayHasKey('text_size', $result);
+        $this->assertArrayHasKey('regexp_word_characters', $result);
+        $this->assertArrayHasKey('remove_spaces', $result);
+        $this->assertArrayHasKey('right_to_left', $result);
 
-        $this->assertEquals('TestReadingLanguage', $result['LgName']);
-        $this->assertEquals('http://dict1.test/###', $result['LgDict1URI']);
-        $this->assertEquals('http://dict2.test/###', $result['LgDict2URI']);
-        $this->assertStringContainsString('translate.test', $result['LgGoogleTranslateURI']);
-        $this->assertEquals(150, (int)$result['LgTextSize']);
-        $this->assertEquals('a-zA-Z', $result['LgRegexpWordCharacters']);
-        $this->assertEquals(0, (int)$result['LgRemoveSpaces']);
-        $this->assertEquals(0, (int)$result['LgRightToLeft']);
+        $this->assertEquals('TestReadingLanguage', $result['name']);
+        $this->assertEquals('http://dict1.test/###', $result['dict1_uri']);
+        $this->assertEquals('http://dict2.test/###', $result['dict2_uri']);
+        $this->assertStringContainsString('translate.test', $result['google_translate_uri']);
+        $this->assertEquals(150, (int)$result['text_size']);
+        $this->assertEquals('a-zA-Z', $result['regexp_word_characters']);
+        $this->assertEquals(0, (int)$result['remove_spaces']);
+        $this->assertEquals(0, (int)$result['right_to_left']);
     }
 
     public function testGetLanguageSettingsForReadingReturnsNullForNonExistent(): void
@@ -236,9 +236,9 @@ class TextServiceReadingTest extends TestCase
 
         // Create an RTL language
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-            "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-            "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+            "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+            "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+            "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
             "VALUES ('TestRTLReadingLang', 'http://test.com/###', '', '', " .
             "100, '', '.!?', '', 'a-zA-Z', 0, 0, 1, 0)"
         );
@@ -247,10 +247,10 @@ class TextServiceReadingTest extends TestCase
         $result = $this->service->getLanguageSettingsForReading($rtlLangId);
 
         $this->assertIsArray($result);
-        $this->assertEquals(1, (int)$result['LgRightToLeft']);
+        $this->assertEquals(1, (int)$result['right_to_left']);
 
         // Cleanup
-        Connection::query("DELETE FROM languages WHERE LgID = " . $rtlLangId);
+        Connection::query("DELETE FROM languages WHERE id = " . $rtlLangId);
     }
 
     // ===== getTtsVoiceApi() tests =====
@@ -285,9 +285,9 @@ class TextServiceReadingTest extends TestCase
 
         // Create a language without TTS voice API
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-            "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-            "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+            "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+            "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+            "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
             "VALUES ('TestNoTtsLang', 'http://test.com/###', '', '', " .
             "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 0)"
         );
@@ -299,7 +299,7 @@ class TextServiceReadingTest extends TestCase
         $this->assertTrue($result === null || $result === '');
 
         // Cleanup
-        Connection::query("DELETE FROM languages WHERE LgID = " . $noTtsLangId);
+        Connection::query("DELETE FROM languages WHERE id = " . $noTtsLangId);
     }
 
     // ===== getLanguageIdByName() tests =====
@@ -369,15 +369,15 @@ class TextServiceReadingTest extends TestCase
         // Step 3: Get language settings
         $langSettings = $this->service->getLanguageSettingsForReading($langId);
         $this->assertNotNull($langSettings);
-        $this->assertEquals(150, (int)$langSettings['LgTextSize']);
+        $this->assertEquals(150, (int)$langSettings['text_size']);
 
         // Step 4: Get TTS voice API
         $voiceApi = $this->service->getTtsVoiceApi($langId);
         $this->assertEquals('Google', $voiceApi);
 
         // Verify all data is consistent
-        $this->assertEquals('TestReadingLanguage', $headerData['LgName']);
-        $this->assertEquals('TestReadingLanguage', $langSettings['LgName']);
+        $this->assertEquals('TestReadingLanguage', $headerData['name']);
+        $this->assertEquals('TestReadingLanguage', $langSettings['name']);
     }
 
     public function testTextWithEmptyAudioUri(): void
@@ -459,9 +459,9 @@ class TextServiceReadingTest extends TestCase
 
         // Create a language with remove spaces enabled (like Japanese)
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-            "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-            "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+            "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+            "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+            "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
             "VALUES ('TestRemoveSpacesLang', 'http://test.com/###', '', '', " .
             "100, '', '.!?', '', 'a-zA-Z', 1, 0, 0, 0)"
         );
@@ -470,10 +470,10 @@ class TextServiceReadingTest extends TestCase
         $result = $this->service->getLanguageSettingsForReading($removeSpacesLangId);
 
         $this->assertIsArray($result);
-        $this->assertEquals(1, (int)$result['LgRemoveSpaces']);
+        $this->assertEquals(1, (int)$result['remove_spaces']);
 
         // Cleanup
-        Connection::query("DELETE FROM languages WHERE LgID = " . $removeSpacesLangId);
+        Connection::query("DELETE FROM languages WHERE id = " . $removeSpacesLangId);
     }
 
     // ===== Edge case tests =====

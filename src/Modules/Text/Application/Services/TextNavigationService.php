@@ -165,7 +165,7 @@ class TextNavigationService
                 )
                 LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id
             ), languages
-            WHERE LgID = texts.language_id AND LENGTH(texts.annotated_text) > 0 '
+            WHERE languages.id = texts.language_id AND LENGTH(texts.annotated_text) > 0 '
             . $wh_lang . $wh_query . $textScope . '
             GROUP BY texts.id ' . $wh_tag . '
             ORDER BY ' . $sorts[$currentsort - 1];
@@ -177,7 +177,7 @@ class TextNavigationService
                 )
                 LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id
             ), languages
-            WHERE LgID = texts.language_id ' . $wh_lang . $wh_query . $textScope . '
+            WHERE languages.id = texts.language_id ' . $wh_lang . $wh_query . $textScope . '
             GROUP BY texts.id ' . $wh_tag . '
             ORDER BY ' . $sorts[$currentsort - 1];
         }

@@ -109,8 +109,8 @@ class GetDashboardData
     {
         /** @var mixed $result */
         $result = QueryBuilder::table('languages')
-            ->where('LgID', '=', $languageId)
-            ->valuePrepared('LgName');
+            ->where('id', '=', $languageId)
+            ->valuePrepared('name');
 
         return $result !== null ? (string)$result : '';
     }

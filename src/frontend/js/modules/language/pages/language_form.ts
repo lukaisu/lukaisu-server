@@ -135,7 +135,7 @@ export const languageForm = {
     if (result) {
       const lgForm = document.forms.namedItem('lg_form') as HTMLFormElement | null;
       if (lgForm) {
-        const translatorUri = lgForm.elements.namedItem('LgGoogleTranslateURI') as HTMLInputElement | null;
+        const translatorUri = lgForm.elements.namedItem('google_translate_uri') as HTMLInputElement | null;
         if (translatorUri) {
           translatorUri.value = result;
         }
@@ -246,7 +246,7 @@ export const languageForm = {
     if (result) {
       const lgForm = document.forms.namedItem('lg_form') as HTMLFormElement | null;
       if (lgForm) {
-        const regexpWordChars = lgForm.elements.namedItem('LgRegexpWordCharacters') as HTMLInputElement | null;
+        const regexpWordChars = lgForm.elements.namedItem('regexp_word_characters') as HTMLInputElement | null;
         if (regexpWordChars) {
           regexpWordChars.value = result;
         }
@@ -366,7 +366,7 @@ export const languageForm = {
     const lgForm = document.forms.namedItem('lg_form') as HTMLFormElement | null;
     if (!lgForm) return;
 
-    const apiValue = (lgForm.elements.namedItem('LgTTSVoiceAPI') as HTMLTextAreaElement)?.value || '';
+    const apiValue = (lgForm.elements.namedItem('tts_voice_api') as HTMLTextAreaElement)?.value || '';
     const term = (lgForm.elements.namedItem('LgVoiceAPIDemo') as HTMLInputElement)?.value || '';
     readTextWithExternal(term, apiValue, this.languageName);
   },
@@ -406,11 +406,11 @@ export function checkTranslatorChanged(translatorInput: HTMLInputElement): void 
  * @param lgForm - The language form element
  */
 export function checkLanguageForm(lgForm: HTMLFormElement): void {
-  const lgName = lgForm.elements.namedItem('LgName') as HTMLInputElement | null;
-  const lgDict1URI = lgForm.elements.namedItem('LgDict1URI') as HTMLInputElement | null;
-  const lgDict2URI = lgForm.elements.namedItem('LgDict2URI') as HTMLInputElement | null;
-  const lgGoogleTranslateURI = lgForm.elements.namedItem('LgGoogleTranslateURI') as HTMLInputElement | null;
-  const lgRegexpWordCharacters = lgForm.elements.namedItem('LgRegexpWordCharacters') as HTMLInputElement | null;
+  const lgName = lgForm.elements.namedItem('name') as HTMLInputElement | null;
+  const lgDict1URI = lgForm.elements.namedItem('dict1_uri') as HTMLInputElement | null;
+  const lgDict2URI = lgForm.elements.namedItem('dict2_uri') as HTMLInputElement | null;
+  const lgGoogleTranslateURI = lgForm.elements.namedItem('google_translate_uri') as HTMLInputElement | null;
+  const lgRegexpWordCharacters = lgForm.elements.namedItem('regexp_word_characters') as HTMLInputElement | null;
 
   if (lgName) {
     languageForm.checkLanguageChanged(lgName.value);
@@ -442,7 +442,7 @@ export function checkDuplicateLanguage(
 ): boolean {
   const langId = curr ?? languageForm.languageId;
   const allLangs = languages ?? languageForm.allLanguages;
-  const lgNameEl = document.getElementById('LgName') as HTMLInputElement | null;
+  const lgNameEl = document.getElementById('name') as HTMLInputElement | null;
   const lgName = lgNameEl?.value ?? '';
 
   if (lgName in allLangs) {
@@ -498,7 +498,7 @@ function applyWizardPreset(): void {
     if (!lgForm) return;
 
     // Set the language name
-    const nameInput = lgForm.elements.namedItem('LgName') as HTMLInputElement | null;
+    const nameInput = lgForm.elements.namedItem('name') as HTMLInputElement | null;
     if (nameInput) {
       nameInput.value = data.l2;
       nameInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -507,13 +507,13 @@ function applyWizardPreset(): void {
     // Set dictionary URL (Glosbe)
     const l1Code = l1Def?.glosbeIso || 'en';
     const l2Code = l2Def.glosbeIso;
-    const dict1Input = lgForm.elements.namedItem('LgDict1URI') as HTMLInputElement | null;
+    const dict1Input = lgForm.elements.namedItem('dict1_uri') as HTMLInputElement | null;
     if (dict1Input) {
       dict1Input.value = `https://glosbe.com/${l2Code}/${l1Code}/lukaisu_term`;
     }
 
     // Set dictionary popup (enabled by default for wizard)
-    const dict1PopUp = lgForm.elements.namedItem('LgDict1PopUp') as HTMLInputElement | null;
+    const dict1PopUp = lgForm.elements.namedItem('dict1_popup') as HTMLInputElement | null;
     if (dict1PopUp) {
       dict1PopUp.checked = true;
     }
@@ -522,30 +522,30 @@ function applyWizardPreset(): void {
     const l1GoogleCode = l1Def?.googleIso || 'en';
     const l2GoogleCode = l2Def.googleIso;
     const translatorInput = lgForm.elements.namedItem(
-      'LgGoogleTranslateURI'
+      'google_translate_uri'
     ) as HTMLInputElement | null;
     if (translatorInput) {
       translatorInput.value = `https://translate.google.com/?sl=${l2GoogleCode}&tl=${l1GoogleCode}&text=lukaisu_term&op=translate`;
     }
 
     // Set translator popup (enabled by default for wizard)
-    const translatorPopUp = lgForm.elements.namedItem('LgGoogleTranslatePopUp') as HTMLInputElement | null;
+    const translatorPopUp = lgForm.elements.namedItem('google_translate_popup') as HTMLInputElement | null;
     if (translatorPopUp) {
       translatorPopUp.checked = true;
     }
 
     // Set source/target language codes
-    const sourceLangInput = lgForm.elements.namedItem('LgSourceLang') as HTMLInputElement | null;
+    const sourceLangInput = lgForm.elements.namedItem('source_lang') as HTMLInputElement | null;
     if (sourceLangInput) {
       sourceLangInput.value = l2GoogleCode;
     }
-    const targetLangInput = lgForm.elements.namedItem('LgTargetLang') as HTMLInputElement | null;
+    const targetLangInput = lgForm.elements.namedItem('target_lang') as HTMLInputElement | null;
     if (targetLangInput) {
       targetLangInput.value = l1GoogleCode;
     }
 
     // Set text size based on language
-    const textSizeInput = lgForm.elements.namedItem('LgTextSize') as HTMLInputElement | null;
+    const textSizeInput = lgForm.elements.namedItem('text_size') as HTMLInputElement | null;
     if (textSizeInput) {
       textSizeInput.value = l2Def.biggerFont ? '150' : '100';
       textSizeInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -553,14 +553,14 @@ function applyWizardPreset(): void {
 
     // Set parsing rules
     const regexpSentInput = lgForm.elements.namedItem(
-      'LgRegexpSplitSentences'
+      'regexp_split_sentences'
     ) as HTMLInputElement | null;
     if (regexpSentInput) {
       regexpSentInput.value = l2Def.sentSplRegExp;
     }
 
     const regexpWordInput = lgForm.elements.namedItem(
-      'LgRegexpWordCharacters'
+      'regexp_word_characters'
     ) as HTMLInputElement | null;
     if (regexpWordInput) {
       regexpWordInput.value = l2Def.wordCharRegExp;
@@ -568,20 +568,20 @@ function applyWizardPreset(): void {
 
     // Set checkboxes
     const splitEachCharInput = lgForm.elements.namedItem(
-      'LgSplitEachChar'
+      'split_each_char'
     ) as HTMLInputElement | null;
     if (splitEachCharInput) {
       splitEachCharInput.checked = l2Def.makeCharacterWord;
     }
 
     const removeSpacesInput = lgForm.elements.namedItem(
-      'LgRemoveSpaces'
+      'remove_spaces'
     ) as HTMLInputElement | null;
     if (removeSpacesInput) {
       removeSpacesInput.checked = l2Def.removeSpaces;
     }
 
-    const rtlInput = lgForm.elements.namedItem('LgRightToLeft') as HTMLInputElement | null;
+    const rtlInput = lgForm.elements.namedItem('right_to_left') as HTMLInputElement | null;
     if (rtlInput) {
       rtlInput.checked = l2Def.rightToLeft;
     }
@@ -628,7 +628,7 @@ export function initLanguageForm(): void {
   });
 
   // Language name input
-  const lgName = lgForm.elements.namedItem('LgName') as HTMLInputElement | null;
+  const lgName = lgForm.elements.namedItem('name') as HTMLInputElement | null;
   if (lgName) {
     lgName.addEventListener('input', function () {
       languageForm.checkLanguageChanged(this.value);
@@ -636,7 +636,7 @@ export function initLanguageForm(): void {
   }
 
   // Dictionary inputs
-  const dictInputs = ['LgDict1URI', 'LgDict2URI'];
+  const dictInputs = ['dict1_uri', 'dict2_uri'];
   dictInputs.forEach(name => {
     const input = lgForm.elements.namedItem(name) as HTMLInputElement | null;
     if (input) {
@@ -647,7 +647,7 @@ export function initLanguageForm(): void {
   });
 
   // Translator URL input
-  const translatorUri = lgForm.elements.namedItem('LgGoogleTranslateURI') as HTMLInputElement | null;
+  const translatorUri = lgForm.elements.namedItem('google_translate_uri') as HTMLInputElement | null;
   if (translatorUri) {
     translatorUri.addEventListener('input', function () {
       checkTranslatorChanged(this);
@@ -663,7 +663,7 @@ export function initLanguageForm(): void {
   }
 
   // Popup checkboxes
-  const popupCheckboxes = ['LgDict1PopUp', 'LgDict2PopUp', 'LgGoogleTranslatePopUp'];
+  const popupCheckboxes = ['dict1_popup', 'dict2_popup', 'google_translate_popup'];
   popupCheckboxes.forEach(name => {
     const checkbox = lgForm.elements.namedItem(name) as HTMLInputElement | null;
     if (checkbox) {
@@ -674,7 +674,7 @@ export function initLanguageForm(): void {
   });
 
   // Text size input
-  const textSize = lgForm.elements.namedItem('LgTextSize') as HTMLInputElement | null;
+  const textSize = lgForm.elements.namedItem('text_size') as HTMLInputElement | null;
   if (textSize) {
     textSize.addEventListener('change', function () {
       languageForm.changeLanguageTextSize(this.value);
@@ -690,7 +690,7 @@ export function initLanguageForm(): void {
   }
 
   // Voice API textarea
-  const voiceApi = lgForm.elements.namedItem('LgTTSVoiceAPI') as HTMLTextAreaElement | null;
+  const voiceApi = lgForm.elements.namedItem('tts_voice_api') as HTMLTextAreaElement | null;
   if (voiceApi) {
     voiceApi.addEventListener('change', function () {
       languageForm.checkVoiceAPI(this.value);
@@ -701,7 +701,7 @@ export function initLanguageForm(): void {
   const checkVoiceBtn = document.querySelector('[data-action="check-voice-api"]');
   if (checkVoiceBtn) {
     checkVoiceBtn.addEventListener('click', () => {
-      const voiceApiEl = lgForm.elements.namedItem('LgTTSVoiceAPI') as HTMLTextAreaElement | null;
+      const voiceApiEl = lgForm.elements.namedItem('tts_voice_api') as HTMLTextAreaElement | null;
       if (voiceApiEl) {
         languageForm.checkVoiceAPI(voiceApiEl.value);
       }

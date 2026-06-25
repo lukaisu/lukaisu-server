@@ -148,7 +148,7 @@ class TtsServiceTest extends TestCase
         // This test doesn't actually set cookies (would need to mock headers)
         // Just verifies the method can be called without errors
         $formData = [
-            'LgName' => 'en',
+            'name' => 'en',
             'LgVoice' => 'default',
             'LgTTSRate' => '1.0',
             'LgPitch' => '1.0'

@@ -156,11 +156,11 @@ class ListTexts
 
         $bindings = array_merge($tagJoinBindings, $params);
         $textScope = UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
-        $langScope = UserScopedQuery::forTablePrepared('languages', $bindings);
+        $langScope = UserScopedQuery::forTablePrepared('languages', $bindings, 'languages');
         $bindings[] = $offset;
         $bindings[] = $perPage;
 
-        $sql = "SELECT texts.id, texts.title, LgName, texts.audio_uri, texts.source_uri,
+        $sql = "SELECT texts.id, texts.title, languages.name, texts.audio_uri, texts.source_uri,
             LENGTH(texts.annotated_text) AS annotlen,
             (SELECT COUNT(*) FROM sentences WHERE sentences.text_id = texts.id) AS sentnum,
             IFNULL(GROUP_CONCAT(DISTINCT text_tags.text ORDER BY text_tags.text SEPARATOR ','), '') AS taglist
@@ -169,7 +169,7 @@ class ListTexts
                 LEFT JOIN text_tag_map ON texts.id = text_tag_map.text_id)
                 LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id{$tagJoinScope}
             ), languages
-            WHERE LgID=texts.language_id AND texts.archived_at IS NULL {$whLang}{$whQuery}{$textScope}{$langScope}
+            WHERE languages.id=texts.language_id AND texts.archived_at IS NULL {$whLang}{$whQuery}{$textScope}{$langScope}
             GROUP BY texts.id {$whTag}
             ORDER BY {$sortColumn}
             LIMIT ?, ?";
@@ -237,11 +237,11 @@ class ListTexts
 
         $bindings = array_merge($tagJoinBindings, $params);
         $textScope = UserScopedQuery::forTablePrepared('texts', $bindings, 'texts');
-        $langScope = UserScopedQuery::forTablePrepared('languages', $bindings);
+        $langScope = UserScopedQuery::forTablePrepared('languages', $bindings, 'languages');
         $bindings[] = $offset;
         $bindings[] = $perPage;
 
-        $sql = "SELECT texts.id, texts.title, LgName, texts.audio_uri, texts.source_uri,
+        $sql = "SELECT texts.id, texts.title, languages.name, texts.audio_uri, texts.source_uri,
             LENGTH(texts.annotated_text) AS annotlen,
             IFNULL(GROUP_CONCAT(DISTINCT text_tags.text ORDER BY text_tags.text SEPARATOR ','), '') AS taglist
             FROM (
@@ -249,7 +249,7 @@ class ListTexts
                 LEFT JOIN text_tag_map ON texts.id = text_tag_map.text_id)
                 LEFT JOIN text_tags ON text_tags.id = text_tag_map.text_tag_id{$tagJoinScope}
             ), languages
-            WHERE LgID=texts.language_id AND texts.archived_at IS NOT NULL {$whLang}{$whQuery}{$textScope}{$langScope}
+            WHERE languages.id=texts.language_id AND texts.archived_at IS NOT NULL {$whLang}{$whQuery}{$textScope}{$langScope}
             GROUP BY texts.id {$whTag}
             ORDER BY {$sortColumn}
             LIMIT ?, ?";

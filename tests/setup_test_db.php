@@ -292,13 +292,13 @@ if (!in_array($fkMigration, $appliedMigrations)) {
     $fkConstraints = [
         // Language references
         "ALTER TABLE texts ADD CONSTRAINT fk_texts_language " .
-            "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
+            "FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE",
         "ALTER TABLE words ADD CONSTRAINT fk_words_language " .
-            "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
+            "FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE",
         "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_language " .
-            "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
+            "FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE",
         "ALTER TABLE news_feeds ADD CONSTRAINT fk_news_feeds_language " .
-            "FOREIGN KEY (language_id) REFERENCES languages(LgID) ON DELETE CASCADE",
+            "FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE CASCADE",
         // Text references
         "ALTER TABLE sentences ADD CONSTRAINT fk_sentences_text " .
             "FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE",
@@ -359,10 +359,10 @@ if (!in_array($columnDefaultsMigration, $appliedMigrations)) {
 
     // These columns need explicit defaults for STRICT_ALL_TABLES mode
     $columnDefaults = [
-        "ALTER TABLE languages MODIFY COLUMN LgCharacterSubstitutions varchar(500) NOT NULL DEFAULT ''",
-        "ALTER TABLE languages MODIFY COLUMN LgRegexpSplitSentences varchar(500) NOT NULL DEFAULT '.!?'",
-        "ALTER TABLE languages MODIFY COLUMN LgExceptionsSplitSentences varchar(500) NOT NULL DEFAULT ''",
-        "ALTER TABLE languages MODIFY COLUMN LgRegexpWordCharacters varchar(500) NOT NULL DEFAULT 'a-zA-ZÀ-ÖØ-öø-ȳ'",
+        "ALTER TABLE languages MODIFY COLUMN character_substitutions varchar(500) NOT NULL DEFAULT ''",
+        "ALTER TABLE languages MODIFY COLUMN regexp_split_sentences varchar(500) NOT NULL DEFAULT '.!?'",
+        "ALTER TABLE languages MODIFY COLUMN exceptions_split_sentences varchar(500) NOT NULL DEFAULT ''",
+        "ALTER TABLE languages MODIFY COLUMN regexp_word_characters varchar(500) NOT NULL DEFAULT 'a-zA-ZÀ-ÖØ-öø-ȳ'",
         "ALTER TABLE texts MODIFY COLUMN annotated_text longtext NOT NULL DEFAULT ''",
         "ALTER TABLE feed_links MODIFY COLUMN audio varchar(200) NOT NULL DEFAULT ''",
         "ALTER TABLE feed_links MODIFY COLUMN text longtext NOT NULL DEFAULT ''",

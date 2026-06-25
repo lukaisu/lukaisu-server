@@ -67,22 +67,22 @@ class ParserRegistryTest extends TestCase
     public function testResolveParserTypeFromRow(): void
     {
         // Test explicit parser type
-        $row = ['LgParserType' => 'character'];
+        $row = ['parser_type' => 'character'];
         $this->assertEquals('character', $this->registry->resolveParserTypeFromRow($row));
 
         // Test MeCab magic word
-        $row = ['LgRegexpWordCharacters' => 'MECAB'];
+        $row = ['regexp_word_characters' => 'MECAB'];
         $this->assertEquals('mecab', $this->registry->resolveParserTypeFromRow($row));
 
-        $row = ['LgRegexpWordCharacters' => 'mecab'];
+        $row = ['regexp_word_characters' => 'mecab'];
         $this->assertEquals('mecab', $this->registry->resolveParserTypeFromRow($row));
 
         // Test splitEachChar flag
-        $row = ['LgSplitEachChar' => 1];
+        $row = ['split_each_char' => 1];
         $this->assertEquals('character', $this->registry->resolveParserTypeFromRow($row));
 
         // Test default fallback
-        $row = ['LgRegexpWordCharacters' => 'a-zA-Z'];
+        $row = ['regexp_word_characters' => 'a-zA-Z'];
         $this->assertEquals('regex', $this->registry->resolveParserTypeFromRow($row));
     }
 

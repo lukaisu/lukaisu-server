@@ -71,16 +71,16 @@ class TextControllerEditTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM languages WHERE LgName = 'EditControllerTestLang' LIMIT 1"
+                "SELECT id AS value FROM languages WHERE name = 'EditControllerTestLang' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 Connection::query(
-                    "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-                    "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                    "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+                    "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
                     "VALUES ('EditControllerTestLang', 'http://dict1.test/###', 'http://dict2.test/###', " .
                     "'http://translate.test/?sl=en&tl=fr&text=###', " .
                     "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
@@ -124,7 +124,7 @@ class TextControllerEditTest extends TestCase
         Connection::query("DELETE FROM word_occurrences WHERE text_id IN (" . $textIds . ")");
         Connection::query("DELETE FROM sentences WHERE text_id IN (" . $textIds . ")");
         Connection::query("DELETE FROM texts WHERE id IN (" . $textIds . ")");
-        Connection::query("DELETE FROM languages WHERE LgName = 'EditControllerTestLang'");
+        Connection::query("DELETE FROM languages WHERE name = 'EditControllerTestLang'");
     }
 
     protected function setUp(): void
@@ -624,7 +624,7 @@ class TextControllerEditTest extends TestCase
 
         $this->assertIsArray($result);
 
-        // Check that our test language is included (keyed by LgID)
+        // Check that our test language is included (keyed by id)
         $this->assertArrayHasKey(self::$testLangId, $result);
     }
 

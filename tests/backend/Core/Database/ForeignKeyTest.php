@@ -54,13 +54,13 @@ class ForeignKeyTest extends TestCase
         if (self::$dbConnected) {
             // Create a test language for all tests
             Connection::query(
-                "INSERT INTO languages (LgName, LgDict1URI, LgCharacterSubstitutions,
-                 LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters)
+                "INSERT INTO languages (name, dict1_uri, character_substitutions,
+                 regexp_split_sentences, exceptions_split_sentences, regexp_word_characters)
                  VALUES ('FK_Test_Language', 'https://test.com/###', '', '.!?', '', 'a-zA-Z')"
             );
             self::$testLangId = (int) Connection::fetchValue(
-                "SELECT LgID FROM languages WHERE LgName = 'FK_Test_Language'",
-                'LgID'
+                "SELECT id FROM languages WHERE name = 'FK_Test_Language'",
+                'id'
             );
 
             // Check if FK constraints are present by querying INFORMATION_SCHEMA
@@ -79,7 +79,7 @@ class ForeignKeyTest extends TestCase
     {
         if (self::$dbConnected && self::$testLangId > 0) {
             // Cleanup - CASCADE should handle related records
-            Connection::query("DELETE FROM languages WHERE LgName LIKE 'FK_Test_%'");
+            Connection::query("DELETE FROM languages WHERE name LIKE 'FK_Test_%'");
         }
     }
 
@@ -381,13 +381,13 @@ class ForeignKeyTest extends TestCase
         $this->requireForeignKeys();
         // Create a separate language for this test
         Connection::query(
-            "INSERT INTO languages (LgName, LgDict1URI, LgCharacterSubstitutions,
-             LgRegexpSplitSentences, LgExceptionsSplitSentences, LgRegexpWordCharacters)
+            "INSERT INTO languages (name, dict1_uri, character_substitutions,
+             regexp_split_sentences, exceptions_split_sentences, regexp_word_characters)
              VALUES ('FK_Test_Cascade_Lang', 'https://test.com/###', '', '.!?', '', 'a-zA-Z')"
         );
         $langId = (int) Connection::fetchValue(
-            "SELECT LgID FROM languages WHERE LgName = 'FK_Test_Cascade_Lang'",
-            'LgID'
+            "SELECT id FROM languages WHERE name = 'FK_Test_Cascade_Lang'",
+            'id'
         );
 
         Connection::query(
@@ -428,7 +428,7 @@ class ForeignKeyTest extends TestCase
         ));
 
         // Delete language - should cascade through entire chain
-        Connection::query("DELETE FROM languages WHERE LgID = $langId");
+        Connection::query("DELETE FROM languages WHERE id = $langId");
 
         // Verify all were deleted
         $this->assertEquals(0, (int) Connection::fetchValue(

@@ -134,15 +134,15 @@ class GutenbergSuggestionService
     private function resolveLanguageCode(int $languageId): ?string
     {
         $row = QueryBuilder::table('languages')
-            ->select(['LgSourceLang', 'LgName'])
-            ->where('LgID', '=', $languageId)
+            ->select(['source_lang', 'name'])
+            ->where('id', '=', $languageId)
             ->firstPrepared();
 
         if ($row === null) {
             return null;
         }
 
-        $sourceLang = (string) ($row['LgSourceLang'] ?? '');
+        $sourceLang = (string) ($row['source_lang'] ?? '');
         if ($sourceLang !== '') {
             // Gutendex uses bare ISO 639-1 codes (e.g. "zh"), not BCP 47
             // subtags like "zh-CN" or "zh-Hans". Strip everything after
@@ -151,7 +151,7 @@ class GutenbergSuggestionService
             return strtolower($parts[0]);
         }
 
-        $name = (string) ($row['LgName'] ?? '');
+        $name = (string) ($row['name'] ?? '');
         return GutenbergClient::guessLanguageCode($name);
     }
 

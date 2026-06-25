@@ -56,16 +56,16 @@ class TranslationServiceTest extends TestCase
     {
         // Create a test language
         $existingLang = Connection::fetchValue(
-            "SELECT LgID AS value FROM languages WHERE LgName = 'TranslationServiceTestLang' LIMIT 1"
+            "SELECT id AS value FROM languages WHERE name = 'TranslationServiceTestLang' LIMIT 1"
         );
 
         if ($existingLang) {
             self::$testLangId = (int)$existingLang;
         } else {
             Connection::query(
-                "INSERT INTO languages (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, LgExceptionsSplitSentences, " .
-                "LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, LgRightToLeft, LgShowRomanization) " .
+                "INSERT INTO languages (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                "text_size, character_substitutions, regexp_split_sentences, exceptions_split_sentences, " .
+                "regexp_word_characters, remove_spaces, split_each_char, right_to_left, show_romanization) " .
                 "VALUES ('TranslationServiceTestLang', 'http://dict1.test/lukaisu_term', " .
                 "'http://dict2.test/###', 'ggl.php?text=lukaisu_term&sl=es&tl=en', " .
                 "100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
@@ -105,7 +105,7 @@ class TranslationServiceTest extends TestCase
         Connection::query("DELETE FROM sentences WHERE language_id = " . self::$testLangId);
         Connection::query("DELETE FROM texts WHERE title = 'TranslationServiceTestText'");
         Connection::query("DELETE FROM words WHERE language_id = " . self::$testLangId);
-        Connection::query("DELETE FROM languages WHERE LgName = 'TranslationServiceTestLang'");
+        Connection::query("DELETE FROM languages WHERE name = 'TranslationServiceTestLang'");
     }
 
     protected function setUp(): void

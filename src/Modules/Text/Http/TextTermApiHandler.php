@@ -63,10 +63,10 @@ class TextTermApiHandler
 
         $langInfo = QueryBuilder::table('languages')
             ->select(
-                ['LgID', 'LgName', 'LgDict1URI', 'LgDict2URI', 'LgGoogleTranslateURI',
-                'LgTextSize', 'LgRightToLeft', 'LgRegexpWordCharacters', 'LgRemoveSpaces']
+                ['id', 'name', 'dict1_uri', 'dict2_uri', 'google_translate_uri',
+                'text_size', 'right_to_left', 'regexp_word_characters', 'remove_spaces']
             )
-            ->where('LgID', '=', $langId)
+            ->where('id', '=', $langId)
             ->firstPrepared();
 
         if ($langInfo === null) {
@@ -187,7 +187,7 @@ class TextTermApiHandler
         $displayStatTrans = (int)Settings::getWithDefault('set-display-text-frame-term-translation');
         $modeTrans = (int)Settings::getWithDefault('set-text-frame-annotation-position');
         $termDelimiter = Settings::getWithDefault('set-term-translation-delimiters');
-        $textSize = (int)$langInfo['LgTextSize'];
+        $textSize = (int)$langInfo['text_size'];
         $readerWidth = (int)Settings::getWithDefault('set-reader-width');
         $readerTextSize = (int)Settings::getWithDefault(
             'set-reader-text-size'
@@ -203,13 +203,13 @@ class TextTermApiHandler
             'audioUri' => $textInfo['audio_uri'],
             'sourceUri' => $textInfo['source_uri'],
             'audioPosition' => (int)$textInfo['audio_position'],
-            'rightToLeft' => (int)$langInfo['LgRightToLeft'] === 1,
+            'rightToLeft' => (int)$langInfo['right_to_left'] === 1,
             'textSize' => $textSize,
-            'removeSpaces' => (int)$langInfo['LgRemoveSpaces'] === 1,
+            'removeSpaces' => (int)$langInfo['remove_spaces'] === 1,
             'dictLinks' => [
-                'dict1' => $langInfo['LgDict1URI'] ?? '',
-                'dict2' => $langInfo['LgDict2URI'] ?? '',
-                'translator' => $langInfo['LgGoogleTranslateURI'] ?? '',
+                'dict1' => $langInfo['dict1_uri'] ?? '',
+                'dict2' => $langInfo['dict2_uri'] ?? '',
+                'translator' => $langInfo['google_translate_uri'] ?? '',
             ],
             'showLearning' => $showLearning,
             'displayStatTrans' => $displayStatTrans,

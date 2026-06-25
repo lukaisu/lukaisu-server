@@ -138,9 +138,9 @@ class TranslationService
     public function getTranslatorUrl(int $textId, int $order): array
     {
         $result = QueryBuilder::table('word_occurrences')
-            ->select(['sentences.text', 'languages.LgGoogleTranslateURI'])
+            ->select(['sentences.text', 'languages.google_translate_uri'])
             ->join('sentences', 'word_occurrences.sentence_id', '=', 'sentences.id')
-            ->join('languages', 'word_occurrences.language_id', '=', 'languages.LgID')
+            ->join('languages', 'word_occurrences.language_id', '=', 'languages.id')
             ->where('word_occurrences.text_id', '=', $textId)
             ->where('word_occurrences.position', '=', $order)
             ->getPrepared();
@@ -156,8 +156,8 @@ class TranslationService
         }
 
         $sentence = isset($record['text']) ? (string) $record['text'] : '';
-        $trans = isset($record['LgGoogleTranslateURI']) ?
-            (string) $record['LgGoogleTranslateURI'] : "";
+        $trans = isset($record['google_translate_uri']) ?
+            (string) $record['google_translate_uri'] : "";
 
         // Remove leading asterisk (deprecated popup marker)
         if (substr($trans, 0, 1) === '*') {
@@ -217,12 +217,12 @@ class TranslationService
         }
 
         $result = QueryBuilder::table('languages')
-            ->select(['LgTTSVoiceAPI'])
-            ->where('LgID', '=', $lgId)
+            ->select(['tts_voice_api'])
+            ->where('id', '=', $lgId)
             ->getPrepared();
 
         /** @var string|null $ttsVoice */
-        $ttsVoice = $result[0]['LgTTSVoiceAPI'] ?? null;
+        $ttsVoice = $result[0]['tts_voice_api'] ?? null;
         return $ttsVoice;
     }
 

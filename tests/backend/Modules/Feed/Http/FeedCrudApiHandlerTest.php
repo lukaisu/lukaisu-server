@@ -90,7 +90,7 @@ class FeedCrudApiHandlerTest extends TestCase
 
     public function testFormatFeedRecordNullLangName(): void
     {
-        $row = $this->makeFeedRow(['LgName' => null]);
+        $row = $this->makeFeedRow(['language_name' => null]);
 
         $this->feedFacade->method('getNfOption')->willReturn([]);
         $this->feedFacade->method('formatLastUpdate')->willReturn('last update: 1 hour ago');
@@ -824,7 +824,7 @@ class FeedCrudApiHandlerTest extends TestCase
             'name' => 'Test Feed',
             'source_uri' => 'https://example.com/feed',
             'language_id' => 1,
-            'LgName' => 'English',
+            'language_name' => 'English',
             'article_section_tags' => 'article',
             'filter_tags' => 'div.content',
             'options' => 'charset=utf8',

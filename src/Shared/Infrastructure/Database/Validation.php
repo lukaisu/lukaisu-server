@@ -47,7 +47,7 @@ class Validation
         // Cast to integer for safety against SQL injection
         $currentlang_int = (int)$currentlang;
         $count = QueryBuilder::table('languages')
-            ->where('LgID', '=', $currentlang_int)
+            ->where('id', '=', $currentlang_int)
             ->count();
         if ($count == 0) {
             return '';

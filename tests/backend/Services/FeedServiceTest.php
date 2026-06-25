@@ -52,17 +52,17 @@ class FeedServiceTest extends TestCase
             // Create a test language if it doesn't exist
             $langTable = Globals::table('languages');
             $existingLang = Connection::fetchValue(
-                "SELECT LgID AS value FROM $langTable WHERE LgName = 'FeedServiceTestLang' LIMIT 1"
+                "SELECT id AS value FROM $langTable WHERE name = 'FeedServiceTestLang' LIMIT 1"
             );
 
             if ($existingLang) {
                 self::$testLangId = (int)$existingLang;
             } else {
                 Connection::query(
-                    "INSERT INTO $langTable (LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI, " .
-                    "LgTextSize, LgCharacterSubstitutions, LgRegexpSplitSentences, " .
-                    "LgExceptionsSplitSentences, LgRegexpWordCharacters, LgRemoveSpaces, LgSplitEachChar, " .
-                    "LgRightToLeft, LgShowRomanization) VALUES ('FeedServiceTestLang', 'http://test.com/###', " .
+                    "INSERT INTO $langTable (name, dict1_uri, dict2_uri, google_translate_uri, " .
+                    "text_size, character_substitutions, regexp_split_sentences, " .
+                    "exceptions_split_sentences, regexp_word_characters, remove_spaces, split_each_char, " .
+                    "right_to_left, show_romanization) VALUES ('FeedServiceTestLang', 'http://test.com/###', " .
                     "'', 'http://translate.test/###', 100, '', '.!?', '', 'a-zA-Z', 0, 0, 0, 1)"
                 );
                 self::$testLangId = (int)Connection::fetchValue(
@@ -87,7 +87,7 @@ class FeedServiceTest extends TestCase
             "(SELECT id FROM $newsFeedsTable WHERE name LIKE 'Test Feed%')"
         );
         Connection::query("DELETE FROM $newsFeedsTable WHERE name LIKE 'Test Feed%'");
-        Connection::query("DELETE FROM $langTable WHERE LgName = 'FeedServiceTestLang'");
+        Connection::query("DELETE FROM $langTable WHERE name = 'FeedServiceTestLang'");
     }
 
     protected function setUp(): void
@@ -547,7 +547,7 @@ class FeedServiceTest extends TestCase
 
         $this->assertIsArray($languages);
         // Should contain our test language
-        $foundTestLang = array_filter($languages, fn($l) => $l['LgName'] === 'FeedServiceTestLang');
+        $foundTestLang = array_filter($languages, fn($l) => $l['name'] === 'FeedServiceTestLang');
         $this->assertNotEmpty($foundTestLang);
     }
 

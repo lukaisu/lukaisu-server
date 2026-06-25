@@ -80,16 +80,16 @@ class WordContextService
     {
         $bindings = [$langId];
         $row = Connection::preparedFetchOne(
-            "SELECT LgShowRomanization, LgGoogleTranslateURI, LgName
-             FROM languages WHERE LgID = ?"
+            "SELECT show_romanization, google_translate_uri, name
+             FROM languages WHERE id = ?"
              . UserScopedQuery::forTablePrepared('languages', $bindings),
             $bindings
         );
 
         return [
-            'showRoman' => (bool) ($row['LgShowRomanization'] ?? false),
-            'translateUri' => (string) ($row['LgGoogleTranslateURI'] ?? ''),
-            'name' => (string) ($row['LgName'] ?? '')
+            'showRoman' => (bool) ($row['show_romanization'] ?? false),
+            'translateUri' => (string) ($row['google_translate_uri'] ?? ''),
+            'name' => (string) ($row['name'] ?? '')
         ];
     }
 
@@ -104,19 +104,19 @@ class WordContextService
     {
         $bindings = [$textId];
         $record = Connection::preparedFetchOne(
-            "SELECT LgName, LgDict1URI, LgDict2URI, LgGoogleTranslateURI
+            "SELECT name, dict1_uri, dict2_uri, google_translate_uri
              FROM languages, texts
-             WHERE LgID = language_id AND id = ?"
+             WHERE languages.id = texts.language_id AND texts.id = ?"
              . UserScopedQuery::forTablePrepared('languages', $bindings, 'languages')
              . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts'),
             $bindings
         );
 
         return [
-            'name' => (string) ($record['LgName'] ?? ''),
-            'dict1' => (string) ($record['LgDict1URI'] ?? ''),
-            'dict2' => (string) ($record['LgDict2URI'] ?? ''),
-            'translate' => (string) ($record['LgGoogleTranslateURI'] ?? ''),
+            'name' => (string) ($record['name'] ?? ''),
+            'dict1' => (string) ($record['dict1_uri'] ?? ''),
+            'dict2' => (string) ($record['dict2_uri'] ?? ''),
+            'translate' => (string) ($record['google_translate_uri'] ?? ''),
         ];
     }
 
@@ -131,13 +131,13 @@ class WordContextService
     {
         $bindings = [$textId];
         return (bool) Connection::preparedFetchValue(
-            "SELECT LgShowRomanization
-             FROM languages JOIN texts ON language_id = LgID
+            "SELECT show_romanization
+             FROM languages JOIN texts ON language_id = id
              WHERE id = ?"
              . UserScopedQuery::forTablePrepared('languages', $bindings, 'languages')
              . UserScopedQuery::forTablePrepared('texts', $bindings, 'texts'),
             $bindings,
-            'LgShowRomanization'
+            'show_romanization'
         );
     }
 

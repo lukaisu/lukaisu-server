@@ -66,7 +66,7 @@ class GetFrequencyStatistics
         $languageStats = [];
 
         foreach ($languages as $language) {
-            $lgId = (int) $language['LgID'];
+            $lgId = (int) $language['id'];
 
             $stats = $this->calculateFrequencyForLanguage(
                 $termCreated[$lgId] ?? [],
@@ -75,7 +75,7 @@ class GetFrequencyStatistics
             );
 
             $stats['id'] = $lgId;
-            $stats['name'] = (string) ($language['LgName'] ?? '');
+            $stats['name'] = (string) ($language['name'] ?? '');
             $languageStats[] = $stats;
 
             foreach ($stats as $key => $value) {
