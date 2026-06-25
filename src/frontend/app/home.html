@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Lukaisu — Home</title>
+  <!-- Mounts the existing home dashboard component (js/home/home_app.ts). The
+       boot entry assembles its config (continue-reading text + counts) on-device;
+       the server-enhanced discovery surfaces (Gutenberg/GDL suggestions, library
+       search/import) are Job B and omitted from the offline dashboard. -->
+  <meta name="lukaisu-modules" content="home" />
+  <style>[x-cloak]{display:none !important}</style>
+</head>
+<body>
+  <div id="navbar-root" data-navbar-root data-current-page=""></div>
+  <section class="section">
+    <div class="container">
+
+      <!-- Welcome -->
+      <section class="hero is-small is-primary is-bold mb-5">
+        <div class="hero-body py-4">
+          <p class="title is-4 has-text-centered">Welcome to Lukaisu</p>
+        </div>
+      </section>
+
+      <!-- No languages yet: send the user to add one. Toggled by the boot entry
+           (offline the DB is always seeded, so this is the empty-install guard). -->
+      <div id="home-no-languages" class="has-text-centered" style="display:none">
+        <a href="/languages/new" class="button is-large is-primary">
+          <span class="icon"><i data-lucide="languages"></i></span>
+          <span>Add your first language</span>
+        </a>
+      </div>
+
+      <!-- Dashboard (mounts home_app). Hidden until the boot entry resolves the
+           current language + continue-reading text and injects the config. -->
+      <div id="home-content" x-data="homeApp" x-cloak style="display:none">
+
+        <!-- System notifications (offline these stay inert: no PHP, no update
+             check; the cookie check is harmless and client-side). -->
+        <div class="notification is-danger is-light" x-show="warnings.phpOutdated.visible" x-transition>
+          <p x-text="warnings.phpOutdated.message"></p>
+        </div>
+        <div class="notification is-warning is-light" x-show="warnings.cookiesDisabled.visible" x-transition>
+          <p x-text="warnings.cookiesDisabled.message"></p>
+        </div>
+
+        <!-- Language change notification -->
+        <div class="notification is-success is-light" x-show="languageNotification.visible" x-transition>
+          <button class="delete" @click="languageNotification.visible = false"></button>
+          <p x-text="languageNotification.message"></p>
+        </div>
+
+        <!-- Text cards (single row, horizontal scroll) -->
+        <div style="display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem;">
+
+          <!-- Continue reading / current text -->
+          <div style="flex-shrink: 0;">
+            <template x-if="lastText">
+              <div class="box has-background-link-light" style="width: 280px; min-height: 180px;">
+                <p class="title is-5 mb-3" x-text="lastText.title"></p>
+                <!-- Statistics bar — colours match the reader's word-status highlights. -->
+                <div class="mb-3" x-show="lastText.stats && lastText.stats.total > 0" :title="getStatsTitle()">
+                  <div style="display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #ddd;">
+                    <div style="background: #5ABAFF;" :style="{ width: getStatPercent('unknown') + '%' }"></div>
+                    <div style="background: #E85A3C;" :style="{ width: getStatPercent('s1') + '%' }"></div>
+                    <div style="background: #E8893C;" :style="{ width: getStatPercent('s2') + '%' }"></div>
+                    <div style="background: #E8B83C;" :style="{ width: getStatPercent('s3') + '%' }"></div>
+                    <div style="background: #E8E23C;" :style="{ width: getStatPercent('s4') + '%' }"></div>
+                    <div style="background: #66CC66;" :style="{ width: getStatPercent('s5') + '%' }"></div>
+                    <div style="background: #CCFFCC;" :style="{ width: getStatPercent('s99') + '%' }"></div>
+                    <div style="background: #888888;" :style="{ width: getStatPercent('s98') + '%' }"></div>
+                  </div>
+                </div>
+                <div class="buttons">
+                  <a :href="basePath + '/text/' + lastText.id + '/read'" class="button is-link is-medium">
+                    <span class="icon"><i data-lucide="book-open"></i></span>
+                    <span>Read</span>
+                  </a>
+                  <a :href="basePath + '/review?text=' + lastText.id" class="button is-info is-light is-medium">
+                    <span class="icon"><i data-lucide="circle-help"></i></span>
+                    <span>Review</span>
+                  </a>
+                </div>
+              </div>
+            </template>
+            <template x-if="!lastText">
+              <div class="box has-background-light" style="width: 280px; min-height: 180px;
+                  display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <span class="icon is-large has-text-grey-light mb-2">
+                  <i data-lucide="book-open" style="width: 36px; height: 36px;"></i>
+                </span>
+                <p class="has-text-grey is-size-7 has-text-centered">
+                  No text yet — add one to start reading.
+                </p>
+              </div>
+            </template>
+          </div>
+
+          <!-- New text -->
+          <div style="flex-shrink: 0;">
+            <a href="/texts/new" class="box has-background-primary-light has-text-centered"
+               style="width: 180px; min-height: 180px; display: flex;
+                  flex-direction: column; justify-content: center; align-items: center;">
+              <span class="icon is-large has-text-primary">
+                <i data-lucide="plus" style="width: 48px; height: 48px;"></i>
+              </span>
+              <p class="mt-3 has-text-weight-semibold">New text</p>
+            </a>
+          </div>
+
+          <!-- Browse your library (offline replacement for the server's
+               Gutenberg/GDL discovery search — that stays server-enhanced). -->
+          <div style="flex-shrink: 0;">
+            <a href="/texts" class="box has-background-warning-light has-text-centered"
+               style="width: 180px; min-height: 180px; display: flex;
+                  flex-direction: column; justify-content: center; align-items: center;">
+              <span class="icon is-large has-text-warning-dark">
+                <i data-lucide="book-marked" style="width: 48px; height: 48px;"></i>
+              </span>
+              <p class="mt-3 has-text-weight-semibold">Browse your library</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+  <script type="module" src="./home.ts"></script>
+</body>
+</html>

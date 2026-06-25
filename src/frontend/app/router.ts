@@ -24,6 +24,9 @@ export const pageUrl = {
   connect(): string {
     return 'index.html';
   },
+  home(): string {
+    return 'home.html';
+  },
   library(): string {
     return 'library.html';
   },
@@ -81,7 +84,14 @@ export function bundledPageFor(path: string): string | null {
   // Strip query/hash for matching; keep the original for param extraction.
   const [pathname, query = ''] = path.split('?');
 
-  if (pathname === '/' || pathname === '/texts' || pathname === '/index.php') {
+  // The home route ('/' and '/index.php') renders the bundled dashboard, the
+  // same as the server. The texts list keeps its own route ('/texts' ->
+  // library), so the navbar logo lands on the dashboard while the Texts nav goes
+  // to the library — matching the server's two surfaces.
+  if (pathname === '/' || pathname === '/index.php') {
+    return pageUrl.home();
+  }
+  if (pathname === '/texts') {
     return pageUrl.library();
   }
   if (pathname === '/connect') {

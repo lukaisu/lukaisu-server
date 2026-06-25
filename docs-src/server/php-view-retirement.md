@@ -9,19 +9,20 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Pages 1–9 and 11 landed
-> 2026-06-25:** the terms list (`words.html`), the term **edit** form
+> (`read`/`review`/`library`/connect + minimal create). **All Job-A pages (1–11)
+> landed 2026-06-25:** the terms list (`words.html`), the term **edit** form
 > (`word.html`), the languages list (`languages.html`), the language
 > **settings** form (`language-edit.html`), the **archived texts** page
 > (`texts.html`), the **text edit** form (`text-edit.html`), the **tags**
-> management page (`tags.html`), the **preferences** page (`settings.html`), and
-> the **parse-preview** tool (`text-check.html`), and the **plain-print** page
-> (`text-print.html`). Pages 5–8 completed **the critical path to the
-> cut-over**; pages 9 and 11 are *optional* Job-A pages (print is plain-only
-> offline — the Improved Annotated Text is server-only), leaving only **page
-> 10** (the dashboard). (Page 2's "new term" and page 4's standalone wizard
-> halves are deferred — see their table notes; page 5's *active* manage half was
-> already bundled as `library.html` — see its subsection.)
+> management page (`tags.html`), the **preferences** page (`settings.html`), the
+> **parse-preview** tool (`text-check.html`), the **home dashboard**
+> (`home.html`), and the **plain-print** page (`text-print.html`). Pages 5–8 were
+> **the critical path to the cut-over**; pages 9–11 were the *optional* Job-A
+> pages (print is plain-only offline — the Improved Annotated Text is
+> server-only). **Job A is complete — the cut-over is now unblocked.** (Page 2's
+> "new term" and page 4's standalone wizard halves are deferred — see their table
+> notes; page 5's *active* manage half was already bundled as `library.html` —
+> see its subsection.)
 
 ## The shape of the problem
 
@@ -100,7 +101,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 | 7 ✅ | `tags.html` (term + text tags) — **landed** | `Tags/tag_list`, `tag_form` | purpose-built form (legacy `tag_list.ts` is native-nav, not mountable) | ✅ added local `GET /tags/manage` + `PUT`/`DELETE /tags/{term,text}/{id}` (rename/delete; create-on-tagging keeps working) | form + data |
 | 8 ✅ | `settings.html` (preferences) — **landed** | `User/preferences` (`Admin/settings_form` is server-only) | purpose-built form (like `language-edit.ts`; `settings_form.ts` is form-glue, not data-binding) | ✅ default language fully offline (`POST /settings` `currentlanguage`→`setCurrentLanguageId`); interface language server-only (offline ships English); the rest of `preferences.php` is server-consumed (deferred) | form |
 | 9 ✅ | `text-check.html` (parse preview) — **landed** | `Text/check_form` | purpose-built page (legacy `text_check_display.ts` is a server-driven auto-init reader, not mountable) | ✅ added local `POST /texts/check` → `checkText` (on-device tokenizer); multi-word matching stays server-enhanced | form + data |
-| 10 | `home.html` (dashboard) | `Home/index`, `helpers` | `js/home/home_app.ts` | ✅ `navbar`, `activity/streak`; content suggestions are server-enhanced | mount (optional) |
+| 10 ✅ | `home.html` (dashboard) — **landed** | `Home/index`, `helpers` | `js/home/home_app.ts` (mounted; offline-safe sections only) | ✅ dashboard assembled on-device from `GET /languages` + `/texts/by-language` + `/texts/statistics`; Gutenberg/GDL/library-search are server-enhanced (omitted) | mount + data |
 | 11 ✅ | `text-print.html` (plain print) — **landed** | `Text/print_alpine` (plain mode) | `text/pages/text_print_app.ts` (reused; +`getConfigRtl`) | ✅ added local `GET /texts/{id}/print-items` → `getPrintItems` (same word/occurrence data the reader uses); the annotated/edit "Improved Annotated Text" is server-only — no on-device store | mount |
 
 **Reader/review partials already replaced** (delete when their parent route
@@ -417,6 +418,37 @@ already know (saved with a translation) are highlighted, mirroring the server's
   path (the navbar surfaces no "Check" link), like `tags.html`.
 - **PHP deletion deferred** to the cut-over, same as pages 1–8.
 
+### Page 10: `home.html` (dashboard) — ✅ done 2026-06-25
+
+A **mount** page that reuses the existing `homeApp` Alpine component
+(`js/home/home_app.ts`), but with a **hand-built, offline-trimmed** shell rather
+than a full prerender — `index.php` is dominated by **server-enhanced (Job B)**
+content that can't run offline: the Gutenberg + GDL "suggested reads" rows and
+the library-search/import modal all reach outbound discovery APIs. Prerendering
+the whole view would ship those as dead controls, so the bundled dashboard keeps
+only the offline-safe core: the welcome hero, the **continue-reading** card (with
+the reader-coloured status bar), a **new-text** card, and a **browse-your-library**
+card (the offline stand-in for the discovery search — it just links to the
+bundled library).
+
+- **Data assembled on-device, no new arms.** The PHP controller injected the
+  dashboard config at request time; the boot entry rebuilds it from existing
+  local endpoints — `GET /languages` (current language + name),
+  `GET /texts/by-language/{id}` newest-first (the continue-reading text + total
+  count), and `GET /texts/statistics` (that text's status breakdown, mapped to
+  the component's `TextStats`). So page 10 needed **zero** local-router changes.
+- **Inert warnings offline.** `homeApp` also drives the PHP-version / update /
+  cookie warnings; the config passes `phpVersion: ''` (the version check no-ops)
+  and `checkForUpdates: false` (no outbound GitHub call), so only the harmless
+  client-side cookie check can ever fire.
+- **Reachability = the home route.** Unlike the other optional pages, this one
+  has a natural entry: `bundledPageFor` now maps `/` and `/index.php` →
+  `home.html` (the server's home route), with `/texts` kept on `library.html`.
+  So the navbar logo lands on the dashboard while the Texts nav opens the
+  library — matching the server's two surfaces. (First-run/connect still drops
+  the user straight in the library, unchanged.)
+- **PHP deletion deferred** to the cut-over, same as pages 1–9.
+
 ### Page 11: `text-print.html` (plain print) — ✅ done 2026-06-25
 
 A **mount** page that reuses the existing `textPrintApp` Alpine component
@@ -451,10 +483,10 @@ Reached from the reader's and library's printer links (`/text/{id}/print-plain`)
   degradation, same as the other server-only features.
 - **PHP deletion deferred** to the cut-over, same as pages 1–9.
 
-## The cut-over (the payoff — do after Job A pages 1–8)
+## The cut-over (the payoff — do after Job A)
 
-> **Now unblocked (2026-06-25):** pages 1–8 have all landed, so this is the next
-> step. Pages 9–11 are optional and can follow the cut-over.
+> **Now unblocked (2026-06-25):** **all of Job A (pages 1–11) has landed**, so
+> this is the next step.
 
 Once the management pages are bundled, the PHP server no longer needs to *render*
 anything user-facing. Cut its own browser UI over to the bundle:
@@ -527,9 +559,11 @@ Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
 - **Data-layer gaps — all closed.** ~~tag write repositories (page 7)~~,
   ~~single-text edit `GET`/`PUT /texts/{id}` (page 6)~~, ~~single-text
   delete/archive/unarchive (page 5)~~ — each landed in its page's PR. Page 8
-  needed none (the offline `POST /settings` arm already existed). The optional
-  pages 9–11 add no new data layer (parser preview / dashboard / print read
-  existing arms).
+  needed none (the offline `POST /settings` arm already existed). Of the optional
+  pages: 9 added `POST /texts/check` (`checkText`) and 11 added
+  `GET /texts/{id}/print-items` (`getPrintItems`); **page 10 (dashboard) added
+  none** — it reads existing arms (`/languages`, `/texts/by-language`,
+  `/texts/statistics`).
 - **Navbar targets:** the bundled navbar (`GET /api/v1/navbar`) links to several
   of these pages; until each lands, those are dead links offline (today they
   fall through to the remote server). Track navbar link coverage as pages ship.
