@@ -9,11 +9,12 @@
 > (mission), `lukaisu/BRIEFING.md` (the client side).
 >
 > **Status:** plan written 2026-06-25. The read/learn loop is already bundled
-> (`read`/`review`/`library`/connect + minimal create). **Pages 1–5 landed
+> (`read`/`review`/`library`/connect + minimal create). **Pages 1–6 landed
 > 2026-06-25:** the terms list (`words.html`), the term **edit** form
 > (`word.html`), the languages list (`languages.html`), the language
-> **settings** form (`language-edit.html`), and the **archived texts** page
-> (`texts.html`). Pages 6–11 are the remaining Job-A work. (Page 2's "new term"
+> **settings** form (`language-edit.html`), the **archived texts** page
+> (`texts.html`), and the **text edit** form (`text-edit.html`). Pages 7–11 are
+> the remaining Job-A work. (Page 2's "new term"
 > and page 4's standalone wizard halves are deferred — see their table notes;
 > page 5's *active* manage half was already bundled as `library.html` — see its
 > subsection.)
@@ -91,7 +92,7 @@ Ordered by value. Build top-down; ship + delete the PHP view as each lands.
 | 3 ✅ | `languages.html` (list) — **landed** | `Language/index` | `languageList` component (`language_list_component.ts`) | ✅ list/set-default/reparse/delete all in local router | mount |
 | 4 ✅ | `language-edit.html` (settings) — landed; **wizard deferred** | `Language/form` (`wizard` → see note) | purpose-built form (like `word.ts`) | ✅ load+save offline (`GET`/`PUT /languages/{id}`) | form |
 | 5 ✅ | `texts.html` (archived) — **landed**; *active manage* = `library.html` | `Text/archived_list` (active `edit_list` already in `library.html`) | `text/pages/archived_texts_grouped_app.ts` (+ `texts_grouped_app.ts` for `library.html`) | ✅ added `GET /languages/with-archived-texts` + single-text `POST /texts/{id}/archive`·`/unarchive` + `DELETE /texts/{id}` to the local router | mount + data |
-| 6 | `text-edit.html` (full edit) | `Text/edit_form` (full), `archived_form` | `text/pages/*` | ✅ `texts` PUT; importers stay server | form |
+| 6 ✅ | `text-edit.html` (full edit) — **landed** | `Text/edit_form` (full), `archived_form` | purpose-built form (like `word.ts`) | ✅ added local `GET`/`PUT /texts/{id}` (re-parse on body/lang change); importers stay server | form |
 | 7 | `tags.html` (term + text tags) | `Tags/tag_list`, `tag_form` | `tags/pages/tag_list.ts` | ⚠️ **tags repo is read-only — add create/rename/delete + POST/PUT/DELETE `/tags` arms** | mount + data |
 | 8 | `settings.html` (preferences) | `User/preferences` (+ local subset of `Admin/settings_form`) | `admin/pages/settings_form.ts` (scoped) | ✅ `settings` read/write | form |
 | 9 | `text-check.html` (parse preview) | `Text/check_form` | `text/pages/text_check_display.ts` | ✅ uses local parser (`text-assembly.ts`) directly | mount (optional) |
@@ -278,6 +279,35 @@ IndexedDB → unarchive it there → it leaves the list, all at `apiAttempts ===
   counterpart; the JSON path there is `bulk-action`) — a pre-existing limitation,
   since those web-route actions already targeted the bundle origin, not the
   configured server. **PHP deletion deferred** to the cut-over, same as pages 1–4.
+
+### Page 6: `text-edit.html` (text edit form) — ✅ done 2026-06-25
+
+A **purpose-built API-client form** (like `word.ts` / `language-edit.ts`) — the
+PHP `edit_form.php` / `archived_form.php` do native POSTs, so they can't run
+offline. A **single page handles both** the active and archived cases: it's reached
+from both lists' Edit links (`/texts/{id}/edit` from `library.html` and
+`/text/archived/{id}/edit` from `texts.html`), loads the record, and uses its
+`archived` flag to pick the post-save redirect (active list vs archived page). Edits
+title / language / body / source / audio / tags; the offline E2E rewrites the body
+and asserts the **reader re-renders the new tokens** at `apiAttempts === 0`.
+
+- **Data-layer gap closed.** The doc's "✅ `texts` PUT" was optimistic — the local
+  router had **no** `GET /texts/{id}` or `PUT /texts/{id}`, and the texts repo had no
+  `getText`/`updateText` (the server exposes single-text edit only as a *web-route*
+  form via the `UpdateText` use case; its `/api/v1` `texts` verbs are
+  collection/`bulk-action`). Added `getText()` + `updateText()` to the texts repo and
+  the two router arms. `updateText` **re-parses** (rebuilds sentences + occurrences,
+  re-linking word statuses by `textLc`) when the body or language changed, so the
+  reader reflects the edit; an unchanged body leaves the parsed structures untouched.
+  `TextsApi` gained `get()` / `update()`.
+- **Local-first only**, like page 5's per-text arms: there is **no remote
+  `/api/v1/texts/{id}` GET/PUT** (PHP frozen), so in server-backed mode the lists'
+  Edit links still reach the server's own form. Offline — the milestone path — is
+  fully served.
+- **Importers stay server.** The PHP edit form's file / URL / Gutenberg / GDL /
+  transcription import panels are genuinely server-side (outbound bucket, Job B) and
+  are **not** part of this offline editor; they remain on the server-rendered form.
+- **PHP deletion deferred** to the cut-over, same as pages 1–5.
 
 ## The cut-over (the payoff — do after Job A pages 1–8)
 

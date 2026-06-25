@@ -123,6 +123,35 @@ describe('local-first seam', () => {
     expect((await localDb.texts.get(textId))?.deletedAt).toBeTruthy();
   });
 
+  it('loads and saves a single text through TextsApi.get / .update', async () => {
+    setLocalFirst(true);
+    await seedIfNeeded();
+    const text = await localDb.texts.toCollection().first();
+    const textId = text!.id as number;
+    const langId = text!.langId;
+
+    // GET /texts/{id} returns the editable fields.
+    const loaded = await TextsApi.get(textId);
+    expect(loaded.error).toBeUndefined();
+    expect(loaded.data?.id).toBe(textId);
+    expect(loaded.data?.langId).toBe(langId);
+
+    // PUT /texts/{id} saves a new title + body and reports the re-parse.
+    const saved = await TextsApi.update(textId, {
+      title: 'Edited offline',
+      langId,
+      text: 'Brand new body sentence one. Body sentence two.',
+      tags: ['edited'],
+    });
+    expect(saved.error).toBeUndefined();
+    expect(saved.data?.updated).toBe(true);
+    expect(saved.data?.reparsed).toBe(true);
+
+    const reloaded = await TextsApi.get(textId);
+    expect(reloaded.data?.title).toBe('Edited offline');
+    expect(reloaded.data?.tags).toEqual(['edited']);
+  });
+
   it('serves the global navbar chrome from the local DB', async () => {
     setLocalFirst(true);
     await seedIfNeeded();

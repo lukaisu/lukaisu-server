@@ -184,6 +184,50 @@ export interface DisplayModeResponse {
 }
 
 /**
+ * One text's editable fields, as returned by GET /texts/{id}.
+ *
+ * Note: the PHP server exposes single-text edit only as a web-route form
+ * (`/texts/{id}/edit`, a native POST) — there is no `/api/v1/texts/{id}` GET/PUT.
+ * These are local-router-only arms served from IndexedDB, the same pattern as the
+ * per-text archive/unarchive/delete helpers above. They power the bundled
+ * `text-edit.html` form offline; in server-backed mode there is no remote
+ * counterpart (a pre-existing server gap, PHP being frozen).
+ */
+export interface TextRecord {
+  id: number;
+  langId: number;
+  title: string;
+  text: string;
+  sourceUri: string;
+  audioUri: string;
+  tags: string[];
+  /** True when the text is archived (drives the post-save redirect target). */
+  archived: boolean;
+}
+
+/**
+ * Text update request (same editable fields as create).
+ */
+export interface TextUpdateRequest {
+  title: string;
+  langId: number;
+  text: string;
+  sourceUri?: string;
+  audioUri?: string;
+  tags?: string[];
+}
+
+/**
+ * Text update response. `reparsed` is true when the body or language changed and
+ * the text was re-tokenized.
+ */
+export interface TextUpdateResponse {
+  updated?: boolean;
+  reparsed?: boolean;
+  error?: string;
+}
+
+/**
  * Word data returned from mark-all operations.
  */
 export interface MarkedWordData {
@@ -307,6 +351,34 @@ export const TextsApi = {
       audio_uri: data.audioUri,
       tags: data.tags
     });
+  },
+
+  /**
+   * Get one text's editable fields (local-first only — see {@link TextRecord}).
+   *
+   * @param textId Text ID
+   * @returns Promise with the text record or an error
+   */
+  async get(textId: number): Promise<ApiResponse<TextRecord>> {
+    return apiGet<TextRecord>(`/texts/${textId}`);
+  },
+
+  /**
+   * Update one text's editable fields, re-parsing if the body/language changed
+   * (local-first only — see {@link TextRecord}).
+   *
+   * @param textId Text ID
+   * @param data   Updated fields
+   * @returns Promise with the update result
+   */
+  async update(
+    textId: number,
+    data: TextUpdateRequest
+  ): Promise<ApiResponse<TextUpdateResponse>> {
+    return apiPut<TextUpdateResponse>(
+      `/texts/${textId}`,
+      data as unknown as Record<string, unknown>
+    );
   },
 
   /**

@@ -14,6 +14,8 @@ import {
 } from '@shared/offline/local/repositories/languages';
 import {
   createText,
+  getText,
+  updateText,
   getTextWords,
   getStatistics,
   markAllWellKnown,
@@ -188,6 +190,82 @@ describe('text management (archive / unarchive / delete)', () => {
     expect(withArchived.languages).toHaveLength(1);
     expect(withArchived.languages[0].id).toBe(langId);
     expect(withArchived.languages[0].text_count).toBe(1);
+  });
+});
+
+describe('single text edit (text-edit.html)', () => {
+  it('loads a text\'s editable fields, with tags and archived flag', async () => {
+    const { textId } = await setupEnglishText();
+    await archiveText(textId);
+
+    const rec = await getText(textId);
+    if ('error' in rec) throw new Error(rec.error);
+    expect(rec.title).toBe('Sample');
+    expect(rec.text).toBe('The cat sat. The cat ran.');
+    expect(rec.archived).toBe(true);
+    expect(rec.tags).toEqual([]);
+  });
+
+  it('errors when loading a missing text', async () => {
+    expect('error' in (await getText(999999))).toBe(true);
+  });
+
+  it('updates fields without re-parsing when the body is unchanged', async () => {
+    const { langId, textId } = await setupEnglishText();
+    const occBefore = await localDb.occurrences.where('textId').equals(textId).toArray();
+
+    const res = await updateText(textId, {
+      title: 'Renamed',
+      langId,
+      text: 'The cat sat. The cat ran.',
+      tags: ['news'],
+    });
+    expect(res.updated).toBe(true);
+    expect(res.reparsed).toBe(false);
+
+    const rec = await getText(textId);
+    if ('error' in rec) throw new Error(rec.error);
+    expect(rec.title).toBe('Renamed');
+    expect(rec.tags).toEqual(['news']);
+    // Occurrence rows are untouched (ids stable) when the body didn't change.
+    const occAfter = await localDb.occurrences.where('textId').equals(textId).toArray();
+    expect(occAfter.map((o) => o.id)).toEqual(occBefore.map((o) => o.id));
+  });
+
+  it('re-parses (rebuilds sentences + occurrences) when the body changes', async () => {
+    const { langId, textId } = await setupEnglishText();
+    const sentBefore = await localDb.sentences.where('textId').equals(textId).count();
+
+    const res = await updateText(textId, {
+      title: 'Sample',
+      langId,
+      text: 'A dog barks. A dog runs. A dog sleeps.',
+    });
+    expect(res.updated).toBe(true);
+    expect(res.reparsed).toBe(true);
+
+    // The reader now reflects the new body.
+    const rendered = words(await getTextWords(textId));
+    expect(rendered.words.some((w) => w.text === 'dog')).toBe(true);
+    expect(rendered.words.some((w) => w.text === 'cat')).toBe(false);
+    const sentAfter = await localDb.sentences.where('textId').equals(textId).count();
+    expect(sentAfter).toBeGreaterThan(sentBefore);
+  });
+
+  it('clears tags when an empty tag list is saved', async () => {
+    const { langId, textId } = await setupEnglishText();
+    const body = 'The cat sat. The cat ran.';
+    await updateText(textId, { title: 'Sample', langId, text: body, tags: ['keep'] });
+    await updateText(textId, { title: 'Sample', langId, text: body, tags: [] });
+    const rec = await getText(textId);
+    if ('error' in rec) throw new Error(rec.error);
+    expect(rec.tags).toEqual([]);
+  });
+
+  it('errors when updating a missing text', async () => {
+    const res = await updateText(999999, { title: 'x', langId: 1, text: 'y' });
+    expect(res.updated).toBe(false);
+    expect(res.error).toBeTruthy();
   });
 });
 

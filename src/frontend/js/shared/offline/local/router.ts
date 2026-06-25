@@ -29,6 +29,8 @@ import {
 import {
   getTextWords,
   getAudioInfo,
+  getText,
+  updateText,
   createText,
   getStatistics,
   getTextsByLanguage,
@@ -204,6 +206,10 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
       .map((s) => parseInt(s, 10))
       .filter((n) => !Number.isNaN(n));
     return wrap(await getStatistics(ids));
+  }
+  m = path.match(/^\/texts\/(\d+)$/);
+  if (m) {
+    return wrap(await getText(num(m[1])));
   }
   if (path === '/terms/for-edit') {
     return wrap(
@@ -420,6 +426,22 @@ async function routePut(path: string, p: Record<string, unknown>): Promise<Local
   m = path.match(/^\/terms\/(\d+)$/);
   if (m) {
     return wrap(await updateFull(num(m[1]), p as unknown as TermUpdateFullRequest));
+  }
+  m = path.match(/^\/texts\/(\d+)$/);
+  if (m) {
+    // TextsApi.update sends camelCase; accept snake_case too, like POST /texts.
+    const sourceUri = p.source_uri ?? p.sourceUri;
+    const audioUri = p.audio_uri ?? p.audioUri;
+    return wrap(
+      await updateText(num(m[1]), {
+        title: str(p.title),
+        langId: num(p.language_id ?? p.langId),
+        text: str(p.text),
+        sourceUri: sourceUri != null ? str(sourceUri) : undefined,
+        audioUri: audioUri != null ? str(audioUri) : undefined,
+        tags: Array.isArray(p.tags) ? (p.tags as string[]) : undefined,
+      })
+    );
   }
   return NOT_HANDLED;
 }

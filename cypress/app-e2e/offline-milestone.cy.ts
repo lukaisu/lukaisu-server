@@ -267,6 +267,45 @@ describe('offline milestone — bundled app, no server', () => {
     });
   });
 
+  it('edits a text (title + body) and the reader re-renders it, with no server', () => {
+    const newTitle = `Edited ${Date.now()}`;
+
+    // 1. Boot offline -> library; open the first text's Edit form from its
+    //    per-card dropdown (/texts/{id}/edit -> text-edit.html?id={id}).
+    cy.clearLocalStorage();
+    cy.visit('/index.html');
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+    cy.get('.text-card', { timeout: 20000 }).its('length').should('be.greaterThan', 0);
+    cy.get('.text-card').first().find('.dropdown-trigger-link').click();
+    cy.get('.text-card').first().find('.dropdown-menu').should('be.visible');
+    cy.get('.text-card').first().contains('.dropdown-item', 'Edit').click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'text-edit.html');
+
+    // 2. The form loaded the text from IndexedDB (GET /texts/{id}); the title
+    //    prefilled. Rewrite the title and body, then save (PUT /texts/{id} ->
+    //    updateText, which re-parses the new body), all on-device.
+    cy.get('#text-edit-form', { timeout: 20000 }).should('be.visible');
+    cy.get('#te-title').invoke('val').should('not.be.empty');
+    cy.get('#te-title').clear().type(newTitle);
+    cy.get('#te-text').clear().type('A zebrastripe appears. A zebrastripe vanishes.');
+    cy.get('#te-submit').click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+
+    // 3. The renamed text shows in the library; open its reader and confirm the
+    //    new body re-tokenized (the made-up word renders as a token offline).
+    cy.contains('.text-card .card-header-title', newTitle, { timeout: 20000 }).should('exist');
+    cy.contains('.text-card', newTitle).find('a[href*="/read"]').first().click();
+    cy.location('pathname', { timeout: 20000 }).should('include', 'read.html');
+    cy.contains('.word', 'zebrastripe', { timeout: 20000 }).should('exist');
+    cy.screenshot('10-text-edited', { capture: 'viewport' });
+
+    // 4. The whole edit -> reparse -> read flow ran on-device.
+    cy.then(() => {
+      cy.log(`/api/v1 calls attempted during the text edit flow: ${apiAttempts}`);
+      expect(apiAttempts, 'no /api/v1 calls — the text edit form is fully on-device').to.equal(0);
+    });
+  });
+
   it('creates a language and pastes a text with no server', () => {
     cy.clearLocalStorage();
     // Unique name so the spec is re-runnable against a persisted IndexedDB.

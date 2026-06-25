@@ -26,6 +26,9 @@ import { setTextTags, getTextTagNames, clearTextTags } from './tags';
 import type {
   TextCreateRequest,
   TextCreateResponse,
+  TextRecord,
+  TextUpdateRequest,
+  TextUpdateResponse,
   TextWordsResponse,
   MarkAllResponse,
   MarkedWordData,
@@ -109,6 +112,66 @@ export async function createText(
   await storeParsedText(id, language, req.text);
   await setTextTags(id as number, req.tags);
   return { id };
+}
+
+/**
+ * Load one text's editable fields for the bundled edit form (local-first only —
+ * the server has no `/api/v1/texts/{id}` GET; see TextRecord).
+ */
+export async function getText(
+  id: number
+): Promise<TextRecord | { error: string }> {
+  const t = await localDb.texts.get(id);
+  if (!t || t.deletedAt != null) {
+    return { error: 'Text not found' };
+  }
+  return {
+    id: t.id ?? id,
+    langId: t.langId,
+    title: t.title,
+    text: t.text,
+    sourceUri: t.sourceUri ?? '',
+    audioUri: t.audioUri ?? '',
+    tags: await getTextTagNames(id),
+    archived: t.archivedAt != null,
+  };
+}
+
+/**
+ * Update one text's editable fields. Re-parses (rebuilds sentences +
+ * occurrences) when the body or language changed, so the reader reflects the
+ * edit. Mirrors the server's web-route "save text and reparse"; local-first only.
+ */
+export async function updateText(
+  id: number,
+  req: TextUpdateRequest
+): Promise<TextUpdateResponse> {
+  const t = await localDb.texts.get(id);
+  if (!t || t.deletedAt != null) {
+    return { updated: false, error: 'Text not found' };
+  }
+  const langId = req.langId || t.langId;
+  const language = await localDb.languages.get(langId);
+  if (!language) {
+    return { updated: false, error: 'Language not found' };
+  }
+  const now = nowMs();
+  const reparse = req.text !== t.text || langId !== t.langId;
+  await localDb.texts.update(id, {
+    langId,
+    title: req.title,
+    text: req.text,
+    sourceUri: req.sourceUri ?? null,
+    audioUri: req.audioUri ?? null,
+    updatedAt: now,
+  });
+  if (reparse) {
+    await storeParsedText(id, language, req.text);
+  }
+  // Always pass an array (even empty) so cleared tags are actually removed —
+  // setTextTags only no-ops on `undefined`.
+  await setTextTags(id, req.tags ?? []);
+  return { updated: true, reparsed: reparse };
 }
 
 /** Re-parse every text in a language (after parsing settings change). */

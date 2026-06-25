@@ -50,6 +50,9 @@ export const pageUrl = {
   archivedTexts(): string {
     return 'texts.html';
   },
+  editText(textId: number | string): string {
+    return `text-edit.html?id=${encodeURIComponent(String(textId))}`;
+  },
   words(query = ''): string {
     return query ? `words.html?${query}` : 'words.html';
   },
@@ -82,11 +85,17 @@ export function bundledPageFor(path: string): string | null {
     return pageUrl.newText();
   }
   // Archived texts list — reached from the active list's "Archived Texts" action
-  // card (/text/archived?query=&page=1) and the navbar. The per-archived-text
-  // edit form (/text/archived/{id}/edit) is page 6, so it is intentionally left
-  // to fall through to the remote server for now.
+  // card (/text/archived?query=&page=1) and the navbar.
   if (pathname === '/text/archived') {
     return pageUrl.archivedTexts();
+  }
+  // Single-text edit form, reached from both lists' Edit links: /texts/{id}/edit
+  // (active, from library.html) and /text/archived/{id}/edit (archived, from
+  // texts.html) both render the same bundled form (it detects archived itself).
+  const textEditMatch = pathname.match(/^\/texts\/(\d+)\/edit$/)
+    ?? pathname.match(/^\/text\/archived\/(\d+)\/edit$/);
+  if (textEditMatch) {
+    return pageUrl.editText(textEditMatch[1]);
   }
   // Languages list, and the per-language settings form reached from its Edit
   // links (/languages/{id}/edit -> language-edit.html?id={id}).
