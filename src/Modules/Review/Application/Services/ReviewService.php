@@ -286,7 +286,7 @@ class ReviewService
         $due = (int) Connection::preparedFetchValue(
             "SELECT COUNT(DISTINCT id) AS cnt
             FROM $reviewsql AND status BETWEEN 1 AND 5
-            AND translation != '' AND translation != '*' AND today_score < 0",
+            AND translation != '' AND translation != '*' AND due_at <= NOW()",
             $params,
             'cnt'
         );
@@ -315,7 +315,8 @@ class ReviewService
         return (int) Connection::preparedFetchValue(
             "SELECT COUNT(DISTINCT id) AS cnt
             FROM $reviewsql AND status BETWEEN 1 AND 5
-            AND translation != '' AND translation != '*' AND tomorrow_score < 0",
+            AND translation != '' AND translation != '*'
+            AND due_at <= NOW() + INTERVAL 1 DAY",
             $params,
             'cnt'
         );
@@ -331,28 +332,19 @@ class ReviewService
      */
     public function getNextWord(string $reviewsql, array $params = []): ?array
     {
-        $pass = 0;
-        while ($pass < 2) {
-            $pass++;
-            $sql = "SELECT DISTINCT words.id, words.text, text_lc, translation,
-                romanization, sentence, words.language_id,
-                (IFNULL(sentence, '') NOT LIKE CONCAT('%{', words.text, '}%')) AS notvalid,
-                status,
-                DATEDIFF(NOW(), status_changed_at) AS Days, today_score AS Score
-                FROM $reviewsql AND status BETWEEN 1 AND 5
-                AND translation != '' AND translation != '*' AND today_score < 0 " .
-                ($pass == 1 ? 'AND random > RAND()' : '') . '
-                ORDER BY today_score, random
-                LIMIT 1';
+        // FSRS (issue #238): the next word is the most overdue learning term.
+        $sql = "SELECT DISTINCT words.id, words.text, text_lc, translation,
+            romanization, sentence, words.language_id,
+            (IFNULL(sentence, '') NOT LIKE CONCAT('%{', words.text, '}%')) AS notvalid,
+            status,
+            DATEDIFF(NOW(), status_changed_at) AS Days, stability AS Score
+            FROM $reviewsql AND status BETWEEN 1 AND 5
+            AND translation != '' AND translation != '*' AND due_at <= NOW()
+            ORDER BY due_at, RAND()
+            LIMIT 1";
 
-            $rows = Connection::preparedFetchAll($sql, $params);
-            $record = $rows[0] ?? null;
-
-            if ($record !== null) {
-                return $record;
-            }
-        }
-        return null;
+        $rows = Connection::preparedFetchAll($sql, $params);
+        return $rows[0] ?? null;
     }
 
     /**
@@ -469,9 +461,9 @@ class ReviewService
 
         $oldScore = (int) QueryBuilder::table('words')
             ->where('id', '=', $wordId)
-            ->valuePrepared('GREATEST(0, ROUND(today_score, 0))');
+            ->valuePrepared('GREATEST(0, ROUND(stability, 0))');
 
-        // Complex UPDATE with dynamic score calculation
+        // Re-seed the FSRS card from the new status (issue #238).
         Connection::preparedExecute(
             "UPDATE words
             SET status = ?, status_changed_at = NOW(), " .
@@ -482,7 +474,7 @@ class ReviewService
 
         $newScore = (int) QueryBuilder::table('words')
             ->where('id', '=', $wordId)
-            ->valuePrepared('GREATEST(0, ROUND(today_score, 0))');
+            ->valuePrepared('GREATEST(0, ROUND(stability, 0))');
 
         return [
             'oldStatus' => $oldStatus,
@@ -606,10 +598,10 @@ class ReviewService
     public function getTableReviewWords(string $reviewsql, array $params = []): array
     {
         $sql = "SELECT DISTINCT words.id, words.text, translation, romanization,
-            sentence, status, today_score AS Score
+            sentence, status, stability AS Score
             FROM $reviewsql AND status BETWEEN 1 AND 5
             AND translation != '' AND translation != '*'
-            ORDER BY today_score, random * RAND()";
+            ORDER BY due_at, RAND()";
 
         return Connection::preparedFetchAll($sql, $params);
     }

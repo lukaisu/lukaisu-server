@@ -516,14 +516,14 @@ class LocalDictionaryService
         $userColumn = UserScopedQuery::insertColumn('words');
         $userValue = UserScopedQuery::insertValuePrepared('words', $bindings);
 
+        // New learning terms (status 1) get FSRS column defaults: a new card
+        // due now (issue #238). No legacy score columns.
         $sql = "INSERT IGNORE INTO {$wordsTable} (
                     language_id, text_lc, text, status, translation,
-                    sentence, romanization, status_changed_at,
-                    today_score, tomorrow_score, random{$userColumn}
+                    sentence, romanization, status_changed_at{$userColumn}
                 )
                 SELECT ?, le.term_lc, le.term, 1, le.definition,
-                       '', '', NOW(),
-                       0, -7, RAND(){$userValue}
+                       '', '', NOW(){$userValue}
                 FROM {$entriesTable} le
                 WHERE le.local_dictionary_id = ?";
 

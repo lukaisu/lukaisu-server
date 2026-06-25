@@ -114,8 +114,7 @@ class MySqlTermRepositoryTest extends TestCase
         $expectedKeys = [
             'id', 'languageId', 'text', 'textLowercase', 'lemma', 'lemmaLc',
             'status', 'translation', 'sentence', 'notes', 'romanization',
-            'wordCount', 'createdAt', 'statusChangedAt', 'todayScore',
-            'tomorrowScore', 'random',
+            'wordCount', 'createdAt', 'statusChangedAt',
         ];
 
         foreach ($expectedKeys as $key) {
@@ -399,7 +398,6 @@ class MySqlTermRepositoryTest extends TestCase
             'updateSentence'          => ['updateSentence', 2, 'bool'],
             'updateNotes'             => ['updateNotes', 2, 'bool'],
             'updateLemma'             => ['updateLemma', 2, 'bool'],
-            'updateScores'            => ['updateScores', 3, 'bool'],
             'getLanguagesWithTerms'   => ['getLanguagesWithTerms', 0, 'array'],
             'getStatistics'           => ['getStatistics', 1, 'array'],
             'getStatusDistribution'   => ['getStatusDistribution', 1, 'array'],
@@ -445,16 +443,6 @@ class MySqlTermRepositoryTest extends TestCase
         $params = $method->getParameters();
         $this->assertTrue($params[1]->allowsNull());
         $this->assertSame('lemma', $params[1]->getName());
-    }
-
-    #[Test]
-    public function updateScoresHasThreeParams(): void
-    {
-        $method = new ReflectionMethod(MySqlTermRepository::class, 'updateScores');
-        $params = $method->getParameters();
-        $this->assertSame('int', $params[0]->getType()?->getName());
-        $this->assertSame('float', $params[1]->getType()?->getName());
-        $this->assertSame('float', $params[2]->getType()?->getName());
     }
 
     #[Test]
@@ -537,7 +525,6 @@ class MySqlTermRepositoryTest extends TestCase
             'updateSentence'      => ['updateSentence'],
             'updateNotes'         => ['updateNotes'],
             'updateLemma'         => ['updateLemma'],
-            'updateScores'        => ['updateScores'],
         ];
     }
 

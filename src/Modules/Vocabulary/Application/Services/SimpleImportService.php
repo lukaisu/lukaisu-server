@@ -262,9 +262,9 @@ class SimpleImportService
         if ($fields["se"] != 0) {
             $rowPlaceholders .= ', ?';
         }
-        $rowPlaceholders .= ', ?, ?, NOW(), ' .  // language_id, status, status_changed_at
-            TermStatusService::SCORE_FORMULA_TODAY . ', ' .
-            TermStatusService::SCORE_FORMULA_TOMORROW . ', RAND()';
+        // language_id, status, status_changed_at. FSRS columns default to a new
+        // card due now (issue #238); no legacy score columns.
+        $rowPlaceholders .= ', ?, ?, NOW()';
 
         if ($userId !== null) {
             $rowPlaceholders .= ', ?';
@@ -288,8 +288,7 @@ class SimpleImportService
                 ($fields["tr"] != 0 ? 'translation, ' : '') .
                 ($fields["ro"] != 0 ? 'romanization, ' : '') .
                 ($fields["se"] != 0 ? 'sentence, ' : '') .
-                "language_id, status, status_changed_at,
-                today_score, tomorrow_score, random"
+                "language_id, status, status_changed_at"
                 . UserScopedQuery::insertColumn('words')
             . ")
             VALUES " . implode(',', $placeholders);

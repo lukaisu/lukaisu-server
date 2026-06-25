@@ -134,27 +134,6 @@ trait TermStatsMethods
     }
 
     /**
-     * Update review scores for a term.
-     *
-     * @param int   $termId        Term ID
-     * @param float $todayScore    Today's score
-     * @param float $tomorrowScore Tomorrow's score
-     *
-     * @return bool True if updated
-     */
-    public function updateScores(int $termId, float $todayScore, float $tomorrowScore): bool
-    {
-        $affected = $this->query()
-            ->where('id', '=', $termId)
-            ->updatePrepared([
-                'today_score' => $todayScore,
-                'tomorrow_score' => $tomorrowScore,
-            ]);
-
-        return $affected > 0;
-    }
-
-    /**
      * Get language IDs that have terms.
      *
      * @return int[] Array of language IDs

@@ -1377,21 +1377,22 @@ class DatabaseConnectTest extends TestCase
      */
     public function testMakeScoreRandomInsertUpdate(): void
     {
-        // Test insert variable mode (column names)
+        // Insert variable mode now emits the FSRS columns (issue #238).
         $result = TermStatusService::makeScoreRandomInsertUpdate('iv');
         $this->assertIsString($result);
-        $this->assertStringContainsString('today_score', $result);
-        $this->assertStringContainsString('random', $result);
+        $this->assertStringContainsString('stability', $result);
+        $this->assertStringContainsString('due_at', $result);
+        $this->assertStringContainsString('fsrs_state', $result);
 
-        // Test insert data mode (values)
+        // Insert data mode (seed values) is a non-empty fragment.
         $result = TermStatusService::makeScoreRandomInsertUpdate('id');
         $this->assertIsString($result);
-        $this->assertStringContainsString('RAND()', $result);
+        $this->assertNotEmpty($result);
 
-        // Test update mode
+        // Update mode sets the FSRS columns.
         $result = TermStatusService::makeScoreRandomInsertUpdate('u');
         $this->assertIsString($result);
-        $this->assertStringContainsString('today_score', $result);
+        $this->assertStringContainsString('stability =', $result);
 
         // Test with invalid mode (should return empty string)
         $result = TermStatusService::makeScoreRandomInsertUpdate('x');

@@ -30,56 +30,6 @@ use Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermStatus;
 class TermStatusService
 {
     /**
-     * SQL formula for computing today's score.
-     *
-     * Formula: {{{2.4^{Status}+Status-Days-1} over Status -2.4} over 0.14325248}
-     */
-    public const SCORE_FORMULA_TODAY = '
-        GREATEST(-125, CASE
-            WHEN status > 5 THEN 100
-            WHEN status = 1 THEN ROUND(-7 * DATEDIFF(NOW(),status_changed_at))
-            WHEN status = 2 THEN ROUND(6.9 - 3.5 * DATEDIFF(NOW(),status_changed_at))
-            WHEN status = 3 THEN ROUND(20 - 2.3 * DATEDIFF(NOW(),status_changed_at))
-            WHEN status = 4 THEN ROUND(46.4 - 1.75 * DATEDIFF(NOW(),status_changed_at))
-            WHEN status = 5 THEN ROUND(100 - 1.4 * DATEDIFF(NOW(),status_changed_at))
-        END)';
-
-    /**
-     * SQL formula for computing tomorrow's score.
-     */
-    public const SCORE_FORMULA_TOMORROW = '
-        GREATEST(-125, CASE
-            WHEN status > 5 THEN 100
-            WHEN status = 1 THEN ROUND(-7 -7 * DATEDIFF(NOW(),status_changed_at))
-            WHEN status = 2 THEN ROUND(3.4 - 3.5 * DATEDIFF(NOW(),status_changed_at))
-            WHEN status = 3 THEN ROUND(17.7 - 2.3 * DATEDIFF(NOW(),status_changed_at))
-            WHEN status = 4 THEN ROUND(44.65 - 1.75 * DATEDIFF(NOW(),status_changed_at))
-            WHEN status = 5 THEN ROUND(98.6 - 1.4 * DATEDIFF(NOW(),status_changed_at))
-        END)';
-
-    /**
-     * Decay rates per status level (score decrease per day).
-     */
-    private const DECAY_RATES = [
-        1 => 7.0,
-        2 => 3.5,
-        3 => 2.3,
-        4 => 1.75,
-        5 => 1.4,
-    ];
-
-    /**
-     * Base scores for each status level (day 0).
-     */
-    private const BASE_SCORES = [
-        1 => 0.0,
-        2 => 6.9,
-        3 => 20.0,
-        4 => 46.4,
-        5 => 100.0,
-    ];
-
-    /**
      * Return an associative array of all possible statuses.
      *
      * Names are localized via the i18n translator (common.status_*).
@@ -213,46 +163,6 @@ class TermStatusService
     {
         $statuses = self::getStatuses();
         return $statuses[$status]['abbr'] ?? '';
-    }
-
-    /**
-     * Calculate the current score for a term based on status and days since status change.
-     *
-     * @param int $status          Term status (1-5)
-     * @param int $daysSinceChange Days since status was changed
-     *
-     * @return float Score value (-125 to 100)
-     */
-    public static function calculateScore(int $status, int $daysSinceChange): float
-    {
-        // Special statuses always return 100
-        if ($status > 5) {
-            return 100.0;
-        }
-
-        if (!isset(self::BASE_SCORES[$status]) || !isset(self::DECAY_RATES[$status])) {
-            return 0.0;
-        }
-
-        $baseScore = self::BASE_SCORES[$status];
-        $decayRate = self::DECAY_RATES[$status];
-
-        $score = $baseScore - ($decayRate * $daysSinceChange);
-
-        return max(-125.0, $score);
-    }
-
-    /**
-     * Calculate tomorrow's score for a term.
-     *
-     * @param int $status          Term status (1-5)
-     * @param int $daysSinceChange Days since status was changed
-     *
-     * @return float Tomorrow's score value (-125 to 100)
-     */
-    public static function calculateTomorrowScore(int $status, int $daysSinceChange): float
-    {
-        return self::calculateScore($status, $daysSinceChange + 1);
     }
 
     /**

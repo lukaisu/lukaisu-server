@@ -124,11 +124,10 @@ class TermRepositoryTest extends TestCase
         Connection::query(
             "INSERT INTO {$prefix}words (
                 language_id, text, text_lc, status, translation, sentence,
-                romanization, word_count, created_at, status_changed_at,
-                today_score, tomorrow_score, random
+                romanization, word_count, created_at, status_changed_at
             ) VALUES (
                 " . self::$testLanguageId . ", '$escapedText', '$escapedTextLc', $status,
-                '$escapedTranslation', '', '', $wordCount, NOW(), NOW(), 0, 0, RAND()
+                '$escapedTranslation', '', '', $wordCount, NOW(), NOW()
             )"
         );
         $id = (int) mysqli_insert_id($conn);

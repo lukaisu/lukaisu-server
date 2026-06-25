@@ -393,10 +393,10 @@ class ReviewFacade
     public function getTableReviewWords(string $reviewsql, array $params = []): array
     {
         $sql = "SELECT DISTINCT id, text, translation, romanization,
-            sentence, status, today_score AS Score
+            sentence, status, stability AS Score
             FROM $reviewsql AND status BETWEEN 1 AND 5
             AND translation != '' AND translation != '*'
-            ORDER BY today_score, random * RAND()";
+            ORDER BY due_at, RAND()";
 
         return Connection::preparedFetchAll($sql, $params);
     }

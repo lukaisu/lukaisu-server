@@ -212,77 +212,6 @@ class TermStatusServiceTest extends TestCase
     }
 
     // =========================================================================
-    // calculateScore()
-    // =========================================================================
-
-    #[Test]
-    public function calculateScoreReturnsBaseScoreAtDayZero(): void
-    {
-        $this->assertEqualsWithDelta(0.0, TermStatusService::calculateScore(1, 0), 0.01);
-        $this->assertEqualsWithDelta(6.9, TermStatusService::calculateScore(2, 0), 0.01);
-        $this->assertEqualsWithDelta(20.0, TermStatusService::calculateScore(3, 0), 0.01);
-        $this->assertEqualsWithDelta(46.4, TermStatusService::calculateScore(4, 0), 0.01);
-        $this->assertEqualsWithDelta(100.0, TermStatusService::calculateScore(5, 0), 0.01);
-    }
-
-    #[Test]
-    public function calculateScoreDecaysOverTime(): void
-    {
-        // Status 1 decays at 7 per day
-        $this->assertEqualsWithDelta(-7.0, TermStatusService::calculateScore(1, 1), 0.01);
-        $this->assertEqualsWithDelta(-14.0, TermStatusService::calculateScore(1, 2), 0.01);
-
-        // Status 2 decays at 3.5 per day
-        $this->assertEqualsWithDelta(3.4, TermStatusService::calculateScore(2, 1), 0.01);
-
-        // Status 5 decays at 1.4 per day
-        $this->assertEqualsWithDelta(98.6, TermStatusService::calculateScore(5, 1), 0.01);
-    }
-
-    #[Test]
-    public function calculateScoreNeverBelowMinusOneTwentyFive(): void
-    {
-        // Even at extreme days, score is clamped at -125
-        $this->assertSame(-125.0, TermStatusService::calculateScore(1, 100));
-    }
-
-    #[Test]
-    public function calculateScoreReturnsHundredForSpecialStatuses(): void
-    {
-        // Status > 5 always returns 100
-        $this->assertSame(100.0, TermStatusService::calculateScore(98, 0));
-        $this->assertSame(100.0, TermStatusService::calculateScore(99, 50));
-        $this->assertSame(100.0, TermStatusService::calculateScore(6, 10));
-    }
-
-    #[Test]
-    public function calculateScoreReturnsZeroForInvalidStatus(): void
-    {
-        $this->assertSame(0.0, TermStatusService::calculateScore(0, 0));
-        $this->assertSame(0.0, TermStatusService::calculateScore(-1, 5));
-    }
-
-    // =========================================================================
-    // calculateTomorrowScore()
-    // =========================================================================
-
-    #[Test]
-    public function calculateTomorrowScoreIsOneDayAhead(): void
-    {
-        // Tomorrow's score should equal today's score at days+1
-        for ($status = 1; $status <= 5; $status++) {
-            $today = TermStatusService::calculateScore($status, 10);
-            $tomorrow = TermStatusService::calculateTomorrowScore($status, 9);
-            $this->assertEqualsWithDelta(
-                $today,
-                $tomorrow,
-                0.01,
-                "Tomorrow score for status $status at day 9 should equal today's at day 10"
-            );
-        }
-    }
-
-    // =========================================================================
     // getStatusColor()
     // =========================================================================
 
@@ -378,35 +307,5 @@ class TermStatusServiceTest extends TestCase
         $this->assertFalse(TermStatusService::isIgnoredStatus(1));
         $this->assertFalse(TermStatusService::isIgnoredStatus(5));
         $this->assertFalse(TermStatusService::isIgnoredStatus(99));
-    }
-
-    // =========================================================================
-    // SQL constant sanity checks
-    // =========================================================================
-
-    #[Test]
-    public function scoreFormulaTodayContainsExpectedSqlFragments(): void
-    {
-        $formula = TermStatusService::SCORE_FORMULA_TODAY;
-        $this->assertStringContainsString('GREATEST(-125', $formula);
-        $this->assertStringContainsString('WHEN status > 5 THEN 100', $formula);
-        $this->assertStringContainsString('DATEDIFF(NOW(),status_changed_at)', $formula);
-    }
-
-    #[Test]
-    public function scoreFormulaTomorrowContainsExpectedSqlFragments(): void
-    {
-        $formula = TermStatusService::SCORE_FORMULA_TOMORROW;
-        $this->assertStringContainsString('GREATEST(-125', $formula);
-        $this->assertStringContainsString('WHEN status > 5 THEN 100', $formula);
-    }
-
-    #[Test]
-    public function scoreFormulaTomorrowDiffersFromToday(): void
-    {
-        $this->assertNotSame(
-            TermStatusService::SCORE_FORMULA_TODAY,
-            TermStatusService::SCORE_FORMULA_TOMORROW
-        );
     }
 }

@@ -90,7 +90,7 @@ final class ReviewWord
             is_string($sentence) ? $sentence : null,
             (int) $record['language_id'],
             (int) $record['status'],
-            (int) ($record['Score'] ?? $record['today_score'] ?? 0),
+            (int) ($record['Score'] ?? 0),
             (int) ($record['Days'] ?? 0),
             self::fsrsFromRecord($record)
         );

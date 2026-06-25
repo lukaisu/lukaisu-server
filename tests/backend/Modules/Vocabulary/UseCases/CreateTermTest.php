@@ -433,33 +433,6 @@ class CreateTermTest extends TestCase
         $this->assertLessThanOrEqual($after, $term->statusChangedAt());
     }
 
-    public function testExecuteSetsInitialScores(): void
-    {
-        $this->repository->method('termExists')->willReturn(false);
-        $this->repository->method('save')->willReturn(1);
-
-        $term = $this->useCase->execute(
-            languageId: 1,
-            text: 'test'
-        );
-
-        $this->assertEquals(0.0, $term->todayScore());
-        $this->assertEquals(0.0, $term->tomorrowScore());
-    }
-
-    public function testExecuteSetsRandomValue(): void
-    {
-        $this->repository->method('termExists')->willReturn(false);
-        $this->repository->method('save')->willReturn(1);
-
-        $term = $this->useCase->execute(
-            languageId: 1,
-            text: 'test'
-        );
-
-        $this->assertGreaterThanOrEqual(0.0, $term->random());
-        $this->assertLessThanOrEqual(1.0, $term->random());
-    }
     #[DataProvider('wordCountProvider')]
     public function testExecuteCalculatesWordCountCorrectly(string $text, int $expectedCount): void
     {

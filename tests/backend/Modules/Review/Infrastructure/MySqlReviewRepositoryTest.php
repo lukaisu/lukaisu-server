@@ -742,25 +742,6 @@ class MySqlReviewRepositoryTest extends TestCase
     // ReviewWord Edge Cases
     // =========================================================================
 
-    public function testReviewWordFromRecordWithTodayScore(): void
-    {
-        $record = [
-            'id' => 1,
-            'text' => 'test',
-            'text_lc' => 'test',
-            'translation' => 'trans',
-            'romanization' => null,
-            'sentence' => null,
-            'language_id' => 1,
-            'status' => 1,
-            'today_score' => 75, // Alternative score field
-            'Days' => 0
-        ];
-
-        $word = ReviewWord::fromRecord($record);
-
-        $this->assertSame(75, $word->score);
-    }
 
     public function testReviewWordFromRecordWithMissingOptionalFields(): void
     {

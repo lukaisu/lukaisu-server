@@ -458,9 +458,6 @@ class WordCrudService
             'word_count' => $term->wordCount(),
             'created_at' => $term->createdAt()->format('Y-m-d H:i:s'),
             'status_changed_at' => $term->statusChangedAt()->format('Y-m-d H:i:s'),
-            'today_score' => $term->todayScore(),
-            'tomorrow_score' => $term->tomorrowScore(),
-            'random' => $term->random(),
         ];
     }
 }

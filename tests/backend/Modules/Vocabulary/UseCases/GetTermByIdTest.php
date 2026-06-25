@@ -51,10 +51,7 @@ class GetTermByIdTest extends TestCase
             'romanization',
             1,
             new DateTimeImmutable('2024-01-15 10:30:00'),
-            new DateTimeImmutable('2024-01-16 11:00:00'),
-            0.5,
-            0.7,
-            0.3
+            new DateTimeImmutable('2024-01-16 11:00:00')
         );
     }
 
@@ -133,9 +130,6 @@ class GetTermByIdTest extends TestCase
         $this->assertEquals(1, $result['word_count']);
         $this->assertEquals('2024-01-15 10:30:00', $result['created_at']);
         $this->assertEquals('2024-01-16 11:00:00', $result['status_changed_at']);
-        $this->assertEquals(0.5, $result['today_score']);
-        $this->assertEquals(0.7, $result['tomorrow_score']);
-        $this->assertEquals(0.3, $result['random']);
     }
 
     public function testExecuteAsArrayReturnsNullWhenNotFound(): void
@@ -181,9 +175,6 @@ class GetTermByIdTest extends TestCase
             'word_count',
             'created_at',
             'status_changed_at',
-            'today_score',
-            'tomorrow_score',
-            'random',
         ];
 
         foreach ($expectedKeys as $key) {

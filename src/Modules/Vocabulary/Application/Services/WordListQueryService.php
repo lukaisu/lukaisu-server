@@ -98,7 +98,7 @@ class WordListQueryService
             'words.id desc',
             'words.id asc',
             'words.status, words.text_lc',
-            'words.today_score',
+            'words.stability',
             'textswordcount desc, words.text_lc asc'
         ];
 
@@ -133,14 +133,13 @@ class WordListQueryService
                 $bindings[] = $perPage;
                 $sql = 'select words.id, words.text, translation, romanization, sentence,
                         SentOK, status, name, right_to_left, google_translate_uri, Days,
-                        today_score AS Score, tomorrow_score AS Score2,
+                        stability AS Score, 0 AS Score2,
                         ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist
                         from (select words.id, text_lc, text, translation, romanization,
                         sentence,
                         ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
                         status, name, right_to_left, google_translate_uri,
-                        DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score,
-                        tomorrow_score
+                        DATEDIFF( NOW( ) , status_changed_at ) AS Days, stability
                         from words, languages
                         where words.language_id = languages.id ' . $whLang . $whStat . $whQuery . $wordScope . $langScope . '
                         group by words.id
@@ -158,8 +157,7 @@ class WordListQueryService
                 $sql = 'select words.id, words.text, translation, romanization, sentence,
                         ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
                         status, name, right_to_left, google_translate_uri,
-                        DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
-                        tomorrow_score AS Score2,
+                        DATEDIFF( NOW( ) , status_changed_at ) AS Days, stability AS Score, 0 AS Score2,
                         ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist
                         from ((words left JOIN word_tag_map
                         ON words.id = word_id) left join tags
@@ -180,8 +178,7 @@ class WordListQueryService
             $sql = 'select distinct words.id, words.text, translation, romanization,
                     sentence, ifnull(sentence,\'\') like \'%{%}%\' as SentOK, status,
                     name, right_to_left, google_translate_uri,
-                    DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
-                    tomorrow_score AS Score2,
+                    DATEDIFF( NOW( ) , status_changed_at ) AS Days, stability AS Score, 0 AS Score2,
                     ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist
                     from ((words
                     left JOIN word_tag_map ON words.id = word_id)
@@ -228,10 +225,9 @@ class WordListQueryService
                     romanization, sentence,
                     ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
                     status, name, right_to_left, google_translate_uri,
-                    DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
-                    tomorrow_score AS Score2,
+                    DATEDIFF( NOW( ) , status_changed_at ) AS Days, stability AS Score, 0 AS Score2,
                     ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist,
-                    text_lc, today_score
+                    text_lc, stability
                     from ((words left JOIN word_tag_map
                     ON words.id = word_id)
                     left join tags on tags.id = tag_id),
@@ -261,10 +257,9 @@ class WordListQueryService
                     romanization, sentence,
                     ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
                     status, name, right_to_left, google_translate_uri,
-                    DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
-                    tomorrow_score AS Score2,
+                    DATEDIFF( NOW( ) , status_changed_at ) AS Days, stability AS Score, 0 AS Score2,
                     ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist,
-                    text_lc, today_score
+                    text_lc, stability
                     from ((words left JOIN word_tag_map
                     ON words.id = word_id)
                     left join tags on tags.id = tag_id),
@@ -278,10 +273,9 @@ class WordListQueryService
                     romanization, sentence,
                     ifnull(sentence,\'\') like concat(\'%{\',words.text,\'}%\') as SentOK,
                     status, name, right_to_left, google_translate_uri,
-                    DATEDIFF( NOW( ) , status_changed_at ) AS Days, today_score AS Score,
-                    tomorrow_score AS Score2,
+                    DATEDIFF( NOW( ) , status_changed_at ) AS Days, stability AS Score, 0 AS Score2,
                     ifnull(group_concat(distinct tags.text order by tags.text separator \',\'),\'\') as taglist,
-                    text_lc, today_score
+                    text_lc, stability
                     from ((words left JOIN word_tag_map
                     ON words.id = word_id)
                     left join tags on tags.id = tag_id),

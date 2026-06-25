@@ -158,9 +158,9 @@ class FrequencyImportService
             return 0;
         }
 
-        $rowPlaceholder = '(?, ?, ?, ?, NOW(), '
-            . TermStatusService::SCORE_FORMULA_TODAY . ', '
-            . TermStatusService::SCORE_FORMULA_TOMORROW . ', RAND()'
+        // FSRS columns default to a new card due now (issue #238); no legacy
+        // score columns.
+        $rowPlaceholder = '(?, ?, ?, ?, NOW()'
             . ($userId !== null ? ', ?' : '')
             . ')';
 
@@ -179,8 +179,7 @@ class FrequencyImportService
         }
 
         $sql = "INSERT IGNORE INTO words (
-                text, text_lc, language_id, status, status_changed_at,
-                today_score, tomorrow_score, random"
+                text, text_lc, language_id, status, status_changed_at"
             . UserScopedQuery::insertColumn('words')
             . ") VALUES " . implode(',', $placeholders);
 

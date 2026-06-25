@@ -95,10 +95,7 @@ class VocabularyFacadeTest extends TestCase
             'romanization',
             1,
             new DateTimeImmutable(),
-            new DateTimeImmutable(),
-            0.0,
-            0.0,
-            0.5
+            new DateTimeImmutable()
         );
     }
 

@@ -100,9 +100,9 @@ class ReviewServiceTest extends TestCase
         for ($i = 1; $i <= 5; $i++) {
             Connection::query(
                 "INSERT INTO words (language_id, text, text_lc, status, translation, " .
-                "status_changed_at, today_score, tomorrow_score) " .
+                "status_changed_at) " .
                 "VALUES (" . self::$testLangId . ", 'testword{$i}', 'testword{$i}', {$i}, 'translation{$i}', " .
-                "NOW(), -1.0, -0.5)"
+                "NOW())"
             );
             self::$testWordIds[] = (int)Connection::fetchValue(
                 "SELECT LAST_INSERT_ID() AS value"

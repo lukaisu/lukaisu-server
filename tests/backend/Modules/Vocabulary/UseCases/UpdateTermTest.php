@@ -51,10 +51,7 @@ class UpdateTermTest extends TestCase
             '',
             1,
             new DateTimeImmutable(),
-            new DateTimeImmutable(),
-            0.0,
-            0.0,
-            0.5
+            new DateTimeImmutable()
         );
     }
 

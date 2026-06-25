@@ -210,7 +210,7 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
 
         $oldScore = (int) QueryBuilder::table('words')
             ->where('id', '=', $wordId)
-            ->valuePrepared('GREATEST(0, ROUND(today_score, 0))');
+            ->valuePrepared('GREATEST(0, ROUND(stability, 0))');
 
         // Update with score recalculation
         $bindings = [$newStatus, $wordId];
@@ -227,7 +227,7 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
 
         $newScore = (int) QueryBuilder::table('words')
             ->where('id', '=', $wordId)
-            ->valuePrepared('GREATEST(0, ROUND(today_score, 0))');
+            ->valuePrepared('GREATEST(0, ROUND(stability, 0))');
 
         return [
             'oldStatus' => $oldStatus,

@@ -298,6 +298,10 @@ trait TermQueryMethods
         float $scoreThreshold = 0.0,
         int $limit = 100
     ): array {
+        // FSRS (issue #238): a term is due when its due_at has passed. The
+        // legacy $scoreThreshold is retained for interface compatibility but no
+        // longer used — due-ness is the absolute due_at, not a decaying score.
+        unset($scoreThreshold);
         $query = $this->query()
             ->whereIn('status', [
                 TermStatus::NEW,
@@ -306,9 +310,8 @@ trait TermQueryMethods
                 TermStatus::LEARNING_4,
                 TermStatus::LEARNED
             ])
-            ->where('today_score', '<=', $scoreThreshold)
-            ->orderBy('today_score', 'ASC')
-            ->orderBy('random', 'ASC')
+            ->whereRaw('due_at <= NOW()')
+            ->orderBy('due_at', 'ASC')
             ->limit($limit);
 
         if ($languageId !== null) {

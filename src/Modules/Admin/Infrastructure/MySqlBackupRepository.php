@@ -170,10 +170,13 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                     source_uri FROM ' . $table . $scope['texts']
                 );
             } elseif ($table == 'words') {
+                // The FSRS scheduling state is reconstructed from status on
+                // restore (the migration backfill), so the portable format
+                // carries only the durable term data (issue #238).
                 $result = Connection::querySelect(
                     'SELECT id, language_id, text, text_lc, status, translation,
-                    romanization, sentence, created_at, status_changed_at, today_score,
-                    tomorrow_score, random FROM ' . $table . $scope['words']
+                    romanization, sentence, created_at, status_changed_at
+                    FROM ' . $table . $scope['words']
                 );
             } elseif ($table == 'languages') {
                 $result = Connection::querySelect(
@@ -383,9 +386,6 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 `sentence` varchar(1000) DEFAULT NULL,
                 `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 `status_changed_at` timestamp NOT NULL DEFAULT '1970-01-01 01:00:01',
-                `today_score` double NOT NULL DEFAULT '0',
-                `tomorrow_score` double NOT NULL DEFAULT '0',
-                `random` double NOT NULL DEFAULT '0',
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `WoLgIDTextLC` (`language_id`,`text_lc`),
                 KEY `language_id` (`language_id`),
@@ -393,10 +393,7 @@ class MySqlBackupRepository implements BackupRepositoryInterface
                 KEY `text_lc` (`text_lc`),
                 KEY `translation` (`translation`(333)),
                 KEY `created_at` (`created_at`),
-                KEY `status_changed_at` (`status_changed_at`),
-                KEY `today_score` (`today_score`),
-                KEY `tomorrow_score` (`tomorrow_score`),
-                KEY `random` (`random`)
+                KEY `status_changed_at` (`status_changed_at`)
             ) ENGINE=MyISAM DEFAULT CHARSET=utf8;\n",
             'word_tag_map' => "CREATE TABLE `word_tag_map` (
                 `word_id` int(11) unsigned NOT NULL,

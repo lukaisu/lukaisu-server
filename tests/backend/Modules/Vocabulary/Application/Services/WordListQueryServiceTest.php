@@ -139,7 +139,7 @@ class WordListQueryServiceTest extends TestCase
         $source = $this->getMethodSource($method);
 
         $this->assertStringContainsString('text_lc', $source);
-        $this->assertStringContainsString('today_score', $source);
+        $this->assertStringContainsString('stability', $source);
         $this->assertStringContainsString('textswordcount desc', $source);
     }
 
