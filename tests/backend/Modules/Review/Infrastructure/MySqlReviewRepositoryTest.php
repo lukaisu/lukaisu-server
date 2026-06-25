@@ -315,6 +315,91 @@ class MySqlReviewRepositoryTest extends TestCase
         $this->assertSame('tesuto', $word->romanization);
     }
 
+    public function testReviewWordFromRecordWithoutFsrsColumns(): void
+    {
+        $record = [
+            'id' => 1,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'testing',
+            'romanization' => null,
+            'sentence' => null,
+            'language_id' => 1,
+            'status' => 3,
+            'Score' => 50,
+            'Days' => 5
+        ];
+
+        $word = ReviewWord::fromRecord($record);
+
+        // No FSRS columns selected -> no card carried.
+        $this->assertNull($word->fsrs);
+    }
+
+    public function testReviewWordFromRecordBuildsFsrsCard(): void
+    {
+        // due_ts/last_review_ts are epoch SECONDS (UNIX_TIMESTAMP); the card
+        // exposes epoch MILLISECONDS to match the client ReviewCard.
+        $record = [
+            'id' => 1,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'testing',
+            'romanization' => null,
+            'sentence' => null,
+            'language_id' => 1,
+            'status' => 3,
+            'Score' => 50,
+            'Days' => 5,
+            'stability' => 15.5,
+            'difficulty' => 6.25,
+            'reps' => 4,
+            'lapses' => 1,
+            'fsrs_state' => 2,
+            'due_ts' => 1750000000,
+            'last_review_ts' => 1749000000
+        ];
+
+        $word = ReviewWord::fromRecord($record);
+
+        $this->assertIsArray($word->fsrs);
+        $this->assertSame(15.5, $word->fsrs['stability']);
+        $this->assertSame(6.25, $word->fsrs['difficulty']);
+        $this->assertSame(1750000000000, $word->fsrs['due']);
+        $this->assertSame(1749000000000, $word->fsrs['lastReview']);
+        $this->assertSame(4, $word->fsrs['reps']);
+        $this->assertSame(1, $word->fsrs['lapses']);
+        $this->assertSame(2, $word->fsrs['state']);
+    }
+
+    public function testReviewWordFromRecordFsrsNullLastReview(): void
+    {
+        $record = [
+            'id' => 1,
+            'text' => 'test',
+            'text_lc' => 'test',
+            'translation' => 'testing',
+            'romanization' => null,
+            'sentence' => null,
+            'language_id' => 1,
+            'status' => 1,
+            'Score' => 0,
+            'Days' => 0,
+            'stability' => 0.5,
+            'difficulty' => 5.0,
+            'reps' => 0,
+            'lapses' => 0,
+            'fsrs_state' => 0,
+            'due_ts' => 1750000000,
+            'last_review_ts' => null
+        ];
+
+        $word = ReviewWord::fromRecord($record);
+
+        $this->assertIsArray($word->fsrs);
+        $this->assertNull($word->fsrs['lastReview']);
+    }
+
     public function testReviewWordHasSentence(): void
     {
         $wordWith = new ReviewWord(1, 'test', 'test', 'trans', null, 'A {test} sentence.', 1, 1, 0, 0);

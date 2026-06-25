@@ -64,11 +64,18 @@ class MySqlReviewRepository implements ReviewRepositoryInterface
         // FSRS (issue #238): the next word is the most overdue learning term.
         $params = [];
         $reviewsql = $config->toSqlProjectionPrepared($params);
+        // The FSRS columns travel with the word so the client can compute the
+        // next card when graded (issue #238). due_at/last_reviewed_at are exposed
+        // as epoch-second columns (UNIX_TIMESTAMP is the inverse of the
+        // FROM_UNIXTIME used by gradeWord, so they round-trip across timezones).
         $sql = "SELECT DISTINCT id, text, text_lc, translation,
             romanization, sentence, language_id,
             (IFNULL(sentence, '') NOT LIKE CONCAT('%{', text, '}%')) AS notvalid,
             status,
-            DATEDIFF(NOW(), status_changed_at) AS Days, stability AS Score
+            DATEDIFF(NOW(), status_changed_at) AS Days, stability AS Score,
+            stability, difficulty, reps, lapses, fsrs_state,
+            UNIX_TIMESTAMP(due_at) AS due_ts,
+            UNIX_TIMESTAMP(last_reviewed_at) AS last_review_ts
             FROM $reviewsql AND status BETWEEN 1 AND 5
             AND translation != '' AND translation != '*' AND due_at <= NOW()
             ORDER BY due_at, RAND()

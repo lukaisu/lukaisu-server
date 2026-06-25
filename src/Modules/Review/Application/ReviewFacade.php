@@ -229,7 +229,8 @@ class ReviewFacade
             'status' => $word->status,
             'Days' => $word->daysOld,
             'Score' => $word->score,
-            'notvalid' => $word->needsNewSentence() ? 1 : 0
+            'notvalid' => $word->needsNewSentence() ? 1 : 0,
+            'fsrs' => $word->fsrs
         ];
     }
 

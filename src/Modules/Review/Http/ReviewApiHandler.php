@@ -66,7 +66,14 @@ class ReviewApiHandler implements ApiRoutableInterface
      * @param bool            $wordMode  Test is in word mode
      * @param int             $testtype  Test type
      *
-     * @return array{term_id: int|string, solution?: string, term_text: string, group: string, error?: string}
+     * @return array{
+     *     term_id: int|string,
+     *     solution?: string,
+     *     term_text: string,
+     *     group: string,
+     *     error?: string,
+     *     fsrs?: array<array-key, mixed>
+     * }
      */
     public function getWordReviewData(string $reviewsql, array $params, bool $wordMode, int $testtype): array
     {
@@ -139,12 +146,20 @@ class ReviewApiHandler implements ApiRoutableInterface
             $save
         );
 
-        return [
+        $response = [
             "term_id" => is_numeric($wordRecord['id']) ? (int) $wordRecord['id'] : 0,
             "solution" => $solution,
             "term_text" => $save,
             "group" => $htmlSentence
         ];
+
+        // Carry the FSRS card so the client can compute the next card on grade
+        // (issue #238). Absent in error/empty paths and when not selected.
+        if (isset($wordRecord['fsrs']) && is_array($wordRecord['fsrs'])) {
+            $response["fsrs"] = $wordRecord['fsrs'];
+        }
+
+        return $response;
     }
 
     /**
@@ -315,7 +330,14 @@ class ReviewApiHandler implements ApiRoutableInterface
      *
      * @param array<string, mixed> $params Request parameters
      *
-     * @return array{term_id: int|string, solution?: string, term_text: string, group: string, error?: string}
+     * @return array{
+     *     term_id: int|string,
+     *     solution?: string,
+     *     term_text: string,
+     *     group: string,
+     *     error?: string,
+     *     fsrs?: array<array-key, mixed>
+     * }
      */
     public function wordTestAjax(array $params): array
     {
@@ -416,7 +438,14 @@ class ReviewApiHandler implements ApiRoutableInterface
      *
      * @param array<string, mixed> $params Request parameters
      *
-     * @return array{term_id: int|string, solution?: string, term_text: string, group: string, error?: string}
+     * @return array{
+     *     term_id: int|string,
+     *     solution?: string,
+     *     term_text: string,
+     *     group: string,
+     *     error?: string,
+     *     fsrs?: array<array-key, mixed>
+     * }
      */
     public function formatNextWord(array $params): array
     {

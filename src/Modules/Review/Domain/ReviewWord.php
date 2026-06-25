@@ -42,6 +42,15 @@ final class ReviewWord
      * @param int         $status        Current status (1-5, 98, 99)
      * @param int         $score         Today's score
      * @param int         $daysOld       Days since status changed
+     * @param array{
+     *     stability: float,
+     *     difficulty: float,
+     *     due: int,
+     *     lastReview: int|null,
+     *     reps: int,
+     *     lapses: int,
+     *     state: int
+     * }|null $fsrs FSRS scheduling card (epoch-ms timestamps), or null when not loaded
      */
     public function __construct(
         public readonly int $id,
@@ -53,7 +62,8 @@ final class ReviewWord
         public readonly int $languageId,
         public readonly int $status,
         public readonly int $score,
-        public readonly int $daysOld
+        public readonly int $daysOld,
+        public readonly ?array $fsrs = null
     ) {
     }
 
@@ -81,8 +91,49 @@ final class ReviewWord
             (int) $record['language_id'],
             (int) $record['status'],
             (int) ($record['Score'] ?? $record['today_score'] ?? 0),
-            (int) ($record['Days'] ?? 0)
+            (int) ($record['Days'] ?? 0),
+            self::fsrsFromRecord($record)
         );
+    }
+
+    /**
+     * Build the FSRS card from a record (issue #238). The query exposes the
+     * `due_at`/`last_reviewed_at` datetimes as epoch-second columns
+     * (`due_ts`/`last_review_ts`) so they round-trip with the client's epoch-ms
+     * `ReviewCard`. Returns null when the FSRS columns weren't selected.
+     *
+     * @param array<string, mixed> $record Database record
+     *
+     * @return array{
+     *     stability: float,
+     *     difficulty: float,
+     *     due: int,
+     *     lastReview: int|null,
+     *     reps: int,
+     *     lapses: int,
+     *     state: int
+     * }|null
+     */
+    private static function fsrsFromRecord(array $record): ?array
+    {
+        if (!array_key_exists('due_ts', $record)) {
+            return null;
+        }
+
+        /** @var mixed $lastReviewTs */
+        $lastReviewTs = $record['last_review_ts'] ?? null;
+
+        return [
+            'stability' => (float) ($record['stability'] ?? 0),
+            'difficulty' => (float) ($record['difficulty'] ?? 0),
+            'due' => (int) round(((float) ($record['due_ts'] ?? 0)) * 1000),
+            'lastReview' => $lastReviewTs !== null
+                ? (int) round(((float) $lastReviewTs) * 1000)
+                : null,
+            'reps' => (int) ($record['reps'] ?? 0),
+            'lapses' => (int) ($record['lapses'] ?? 0),
+            'state' => (int) ($record['fsrs_state'] ?? 0),
+        ];
     }
 
     /**
@@ -175,7 +226,8 @@ final class ReviewWord
             'languageId' => $this->languageId,
             'status' => $this->status,
             'score' => $this->score,
-            'daysOld' => $this->daysOld
+            'daysOld' => $this->daysOld,
+            'fsrs' => $this->fsrs
         ];
     }
 }
