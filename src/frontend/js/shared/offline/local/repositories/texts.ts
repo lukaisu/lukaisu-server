@@ -7,7 +7,8 @@
  */
 
 import { localDb, type LocalLanguage, type LocalText, type LocalWord } from '../schema';
-import { parseText } from '../parser';
+import { parseText, type ParserResult } from '../parser';
+import { remoteParse, serverParserFor } from '@shared/offline/nlp/parse';
 import {
   buildStructures,
   toLocalOccurrences,
@@ -41,6 +42,28 @@ import type {
 import { toClassName } from '../class-name';
 
 /**
+ * Tokenize a text with the best tokenizer available: the optional server parser
+ * for languages whose on-device tokenizer is coarse (Korean → Kiwi morphemes),
+ * falling back to the on-device parser when there is no server or the server
+ * result can't be trusted. Never blocks the offline path — `remoteParse` fails
+ * soft and times out.
+ */
+async function parseBest(
+  rawText: string,
+  language: LocalLanguage
+): Promise<ParserResult> {
+  const config = languageToParserConfig(language);
+  const parser = serverParserFor(language.code);
+  if (parser && rawText.trim() !== '') {
+    const remote = await remoteParse(rawText, parser);
+    if (remote) {
+      return remote;
+    }
+  }
+  return parseText(rawText, config);
+}
+
+/**
  * (Re)parse a text's body into sentences + occurrences, linking occurrences to
  * any existing words. Replaces previously stored structures for the text.
  */
@@ -50,7 +73,7 @@ async function storeParsedText(
   rawText: string
 ): Promise<void> {
   const langId = language.id ?? 0;
-  const parse = parseText(rawText, languageToParserConfig(language));
+  const parse = await parseBest(rawText, language);
   const built = buildStructures(parse);
 
   const words = await localDb.words
