@@ -73,14 +73,21 @@ The end state is a small Python service. Get there in this order:
 > - **Step 4 — DESIGNED, not built** (`docs-src/server/auth.md`). Gated on sync.
 > - **Step 5 — standing policy.** PHP is frozen; no new features added.
 >
-> **The F-Droid milestone is met and proven.** The bundled app does the whole
-> create-language → paste-text → read → save → review flow fully offline, making
-> **zero `/api/v1` calls** — asserted (`apiAttempts === 0`) by the browser E2E in
-> `cypress/app-e2e/`. The create surfaces are bundled as
-> `src/frontend/app/{language,text}.html` (purpose-built, API-client-driven — the
-> server-rendered forms do native POSTs and can't run offline). CJK still falls
-> back to the on-device character parser when no server is connected, per the
-> degradation rule.
+> **The F-Droid milestone is met, proven, and device-QA'd (2026-06-26).** The
+> bundled app does the whole create-language → paste-text → read → save → review
+> flow fully offline, making **zero `/api/v1` calls** — asserted
+> (`apiAttempts === 0`) by the browser E2E in `cypress/app-e2e/` — and the full
+> offline slice has now been QA'd on physical hardware (Pixel 8a). The client-side
+> first-run flip shipped too: the packaged app **opens to the local library** (a
+> neutral launch splash covers the first-run seed, then redirects — no connect-form
+> flash), **"connect a server" is an optional Preferences → Server action** (with
+> "Disconnect"), and a failed server-step connect **surfaces the CORS requirement**
+> (`CORS_ALLOWED_ORIGINS=https://localhost`; the server already honours it via
+> `src/Shared/Infrastructure/Http/Cors.php` — no server change). The create surfaces
+> are bundled as `src/frontend/app/{language,text}.html` (purpose-built,
+> API-client-driven — the server-rendered forms do native POSTs and can't run
+> offline). CJK still falls back to the on-device character parser when no server is
+> connected, per the degradation rule.
 >
 > **Rendering hollow-out underway (Job A).** The first management pages are now
 > bundled: the **terms list** (`src/frontend/app/words.html`, prerendered from the
