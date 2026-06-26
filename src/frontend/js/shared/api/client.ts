@@ -66,8 +66,11 @@ function readStoredApiServer(): string {
  * Returning '' keeps every existing same-origin install byte-for-byte
  * identical; a non-empty value lets a packaged client (e.g. a Capacitor shell
  * for F-Droid) point at a user-chosen Lukaisu Server server.
+ *
+ * Exported so the optional NLP edge client can default its base URL to the same
+ * connected server (the Python-first server hosts the NLP endpoints at its root).
  */
-function getConfiguredApiServer(): string {
+export function getConfiguredApiServer(): string {
   if (overrideApiServer !== null) {
     return overrideApiServer;
   }

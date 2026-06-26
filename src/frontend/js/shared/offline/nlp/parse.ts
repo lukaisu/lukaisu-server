@@ -4,8 +4,8 @@
  * For languages whose on-device tokenizer is coarse, re-parse the text with a
  * server-side tokenizer (Korean → Kiwi morphemes, vs. the on-device eojeol-level
  * regex parser) and adapt the result back into the local `ParserResult` the
- * reader consumes. Reached through the connected server's `/api/v1`, the same
- * transport as the TTS/lemmatize clients.
+ * reader consumes. Calls the standalone NLP edge directly (see `endpoint.ts`),
+ * gated on its `/capabilities`, so it never POSTs to a server without a parser.
  *
  * An *enhancement, never a dependency*: any failure (no server, offline,
  * timeout, malformed or untrustworthy response) returns null so the caller
@@ -15,8 +15,7 @@
  */
 
 import type { ParserResult, Token } from '@shared/offline/local/parser';
-import { url } from '@shared/utils/url';
-import { getCsrfToken } from '@shared/api/client';
+import { nlpUrl, nlpCapable } from './endpoint';
 
 /** Map a language code to the server tokenizer that improves on the on-device
  * one, or null when on-device is already adequate. Korean only for now; add
@@ -100,22 +99,15 @@ export async function remoteParse(
   parser: 'kiwi' | 'mecab' | 'jieba',
   timeoutMs: number = DEFAULT_TIMEOUT_MS
 ): Promise<ParserResult | null> {
-  if (text.trim() === '') {
+  if (text.trim() === '' || !(await nlpCapable('parse'))) {
     return null;
   }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    const csrf = getCsrfToken();
-    if (csrf) {
-      headers['X-CSRF-TOKEN'] = csrf;
-    }
-    const response = await fetch(url('/api/v1/parse'), {
+    const response = await fetch(nlpUrl('/parse/'), {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, parser }),
       signal: controller.signal,
     });

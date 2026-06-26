@@ -2,13 +2,15 @@
  * End-to-end: a Korean text imported with a server connected stores Kiwi
  * morphemes; with no server it falls back to the on-device eojeol parser. Proves
  * the import path (createText → storeParsedText → parseBest) actually swaps the
- * tokenizer and degrades gracefully.
+ * tokenizer and degrades gracefully. fetch is dispatched by URL because a
+ * `/capabilities` probe precedes the `/parse/` call.
  */
 
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { localDb, type LocalLanguage } from '@shared/offline/local/schema';
 import { createText, getTextWords } from '@shared/offline/local/repositories/texts';
+import { resetCapabilitiesCache, setNlpServer } from '@shared/offline/nlp/endpoint';
 
 function koreanLanguage(): LocalLanguage {
   return {
@@ -62,22 +64,29 @@ function wordTexts(res: unknown): string[] {
 }
 
 describe('Korean text re-parse via the server (Kiwi)', () => {
-  const mockFetch = vi.fn();
   const originalFetch = global.fetch;
   let langId: number;
 
   beforeEach(async () => {
     await Promise.all(localDb.tables.map((t) => t.clear()));
     langId = (await localDb.languages.add(koreanLanguage())) as number;
-    mockFetch.mockReset();
-    global.fetch = mockFetch;
+    setNlpServer(null);
+    resetCapabilitiesCache();
   });
   afterEach(() => {
     global.fetch = originalFetch;
+    setNlpServer(null);
+    resetCapabilitiesCache();
   });
 
-  it('stores Kiwi morphemes when the server parses the text', async () => {
-    mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve(KIWI_RESPONSE) });
+  it('stores Kiwi morphemes when the edge advertises and parses the text', async () => {
+    global.fetch = vi.fn((input: RequestInfo | URL) => {
+      const u = String(input);
+      if (u.endsWith('/capabilities')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ capabilities: { parse: { available: true } } }) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(KIWI_RESPONSE) });
+    }) as unknown as typeof fetch;
 
     const created = await createText({ title: 'K', langId, text: TEXT, tags: [] });
     const words = wordTexts(await getTextWords((created as { id: number }).id));
@@ -87,11 +96,10 @@ describe('Korean text re-parse via the server (Kiwi)', () => {
     expect(words).toContain('학교');
     expect(words).toContain('저');
     expect(words).not.toContain('학교에');
-    expect(String(mockFetch.mock.calls[0][0])).toMatch(/\/api\/v1\/parse$/);
   });
 
   it('falls back to the on-device eojeol parser when there is no server', async () => {
-    mockFetch.mockRejectedValue(new Error('offline'));
+    global.fetch = vi.fn(() => Promise.reject(new Error('offline'))) as unknown as typeof fetch;
 
     const created = await createText({ title: 'K', langId, text: TEXT, tags: [] });
     const words = wordTexts(await getTextWords((created as { id: number }).id));

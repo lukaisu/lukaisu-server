@@ -2,12 +2,13 @@
  * Tests for the server-enhanced tokenization client. `adaptParse` is the
  * delicate part — it reassembles per-token sentence indices from the server's
  * flat token stream — so it gets focused coverage, including the bail-out cases
- * that protect the reader from a misaligned parse. fetch is mocked for
- * `remoteParse` to assert the request shape and the soft-fail contract.
+ * that protect the reader from a misaligned parse. fetch is mocked (dispatched
+ * by URL, since a `/capabilities` probe precedes the call) for `remoteParse`.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { adaptParse, remoteParse, serverParserFor } from '@shared/offline/nlp/parse';
+import { resetCapabilitiesCache, setNlpServer } from '@shared/offline/nlp/endpoint';
 
 describe('serverParserFor', () => {
   it('routes Korean to Kiwi and nothing else (for now)', () => {
@@ -40,7 +41,6 @@ describe('adaptParse', () => {
       ['학생', 0, 3, true],
       ['.', 0, 4, false],
     ]);
-    // Reconstructs the input, and word tokens carry the morpheme split.
     expect(result!.tokens.map((t) => t.text).join('')).toBe('저는 학생.');
   });
 
@@ -85,59 +85,82 @@ describe('adaptParse', () => {
   });
 });
 
+/** A fetch mock that answers /capabilities and the /parse/ POST by URL. */
+function mockNlp(opts: { parse?: boolean; response?: unknown; postOk?: boolean; reject?: boolean } = {}) {
+  const fn = vi.fn((input: RequestInfo | URL) => {
+    const u = String(input);
+    if (u.endsWith('/capabilities')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ capabilities: { parse: { available: opts.parse ?? true } } }),
+      });
+    }
+    if (opts.reject) {
+      return Promise.reject(new Error('offline'));
+    }
+    return Promise.resolve({ ok: opts.postOk ?? true, json: () => Promise.resolve(opts.response ?? {}) });
+  });
+  global.fetch = fn as unknown as typeof fetch;
+  return fn;
+}
+
 describe('remoteParse', () => {
-  const mockFetch = vi.fn();
   const originalFetch = global.fetch;
 
   beforeEach(() => {
-    mockFetch.mockReset();
-    global.fetch = mockFetch;
+    setNlpServer(null);
+    resetCapabilitiesCache();
   });
   afterEach(() => {
     global.fetch = originalFetch;
+    setNlpServer(null);
+    resetCapabilitiesCache();
   });
 
-  function ok(body: unknown) {
-    return { ok: true, json: () => Promise.resolve(body) };
-  }
-
-  it('POSTs {text, parser} to /api/v1/parse and adapts the result', async () => {
-    mockFetch.mockResolvedValue(
-      ok({
+  it('POSTs {text, parser} to the NLP /parse/ and adapts the result', async () => {
+    const fn = mockNlp({
+      response: {
         sentences: ['공부하다.'],
         tokens: [
           { text: '공부하다', is_word: true },
           { text: '.', is_word: false },
         ],
-      })
-    );
+      },
+    });
 
     const result = await remoteParse('공부하다.', 'kiwi');
 
     expect(result).not.toBeNull();
     expect(result!.tokens[0]).toMatchObject({ text: '공부하다', isWord: true, sentenceIndex: 0 });
-    const [calledUrl, init] = mockFetch.mock.calls[0];
-    expect(String(calledUrl)).toMatch(/\/api\/v1\/parse$/);
-    expect(JSON.parse(init.body)).toEqual({ text: '공부하다.', parser: 'kiwi' });
+    const post = fn.mock.calls.find((c) => String(c[0]).endsWith('/parse/'));
+    expect(post).toBeTruthy();
+    expect(JSON.parse((post![1] as RequestInit).body as string)).toEqual({ text: '공부하다.', parser: 'kiwi' });
   });
 
-  it('accepts a PHP-style wrapped { data } payload', async () => {
-    mockFetch.mockResolvedValue(
-      ok({ data: { sentences: ['가.'], tokens: [{ text: '가', is_word: true }, { text: '.', is_word: false }] } })
-    );
+  it('skips the call when the edge does not advertise parse', async () => {
+    const fn = mockNlp({ parse: false, response: { sentences: ['가.'], tokens: [{ text: '가', is_word: true }] } });
+    expect(await remoteParse('가.', 'kiwi')).toBeNull();
+    expect(fn.mock.calls.some((c) => String(c[0]).endsWith('/parse/'))).toBe(false);
+  });
+
+  it('accepts a wrapped { data } payload', async () => {
+    mockNlp({
+      response: { data: { sentences: ['가.'], tokens: [{ text: '가', is_word: true }, { text: '.', is_word: false }] } },
+    });
     const result = await remoteParse('가.', 'kiwi');
     expect(result!.tokens.map((t) => t.text)).toEqual(['가', '.']);
   });
 
   it('returns null on non-OK, rejection, or empty text (soft fail)', async () => {
-    mockFetch.mockResolvedValue({ ok: false, json: () => Promise.resolve({}) });
+    mockNlp({ postOk: false });
     expect(await remoteParse('가.', 'kiwi')).toBeNull();
 
-    mockFetch.mockRejectedValue(new Error('offline'));
+    resetCapabilitiesCache();
+    mockNlp({ reject: true });
     await expect(remoteParse('가.', 'kiwi')).resolves.toBeNull();
 
-    mockFetch.mockClear();
+    const fn = mockNlp();
     expect(await remoteParse('   ', 'kiwi')).toBeNull();
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(fn).not.toHaveBeenCalled();
   });
 });

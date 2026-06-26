@@ -2,9 +2,9 @@
  * Server-enhanced lemmatization client.
  *
  * Reduces an inflected surface form to its dictionary headword via the optional
- * NLP edge, reached through the connected server's `/api/v1` — the same
- * transport the Piper TTS client uses (`readTextWithPiper`). Korean is routed to
- * Kiwi (morphological analysis), every other language to spaCy.
+ * NLP edge, called directly (see `endpoint.ts`) and gated on its
+ * `/capabilities`. Korean is routed to Kiwi (morphological analysis), every
+ * other language to spaCy.
  *
  * This is an *enhancement, never a dependency*: every call fails soft (returns
  * null) on no-server / offline / timeout / error, so the on-device save path is
@@ -14,8 +14,7 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import { url } from '@shared/utils/url';
-import { getCsrfToken } from '@shared/api/client';
+import { nlpUrl, nlpCapable } from './endpoint';
 
 /** The two-letter base of a (possibly regioned) code, e.g. `ko-KR` -> `ko`. */
 function baseCode(languageCode: string): string {
@@ -53,22 +52,15 @@ export async function remoteLemmatize(
   timeoutMs: number = DEFAULT_TIMEOUT_MS
 ): Promise<string | null> {
   const term = word.trim();
-  if (!term) {
+  if (!term || !(await nlpCapable('lemmatize'))) {
     return null;
   }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    const csrf = getCsrfToken();
-    if (csrf) {
-      headers['X-CSRF-TOKEN'] = csrf;
-    }
-    const response = await fetch(url('/api/v1/lemmatize'), {
+    const response = await fetch(nlpUrl('/lemmatize/'), {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         word: term,
         language: baseCode(languageCode),
