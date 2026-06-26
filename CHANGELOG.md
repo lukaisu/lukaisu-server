@@ -71,6 +71,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   bundled page. E2E covers both states (gated-offline + mounts-connected). The
   feed wizard and per-feed edit routes remain server-rendered (fall through when
   connected).
+* **Bundled text importers (server-enhanced, Job B surface 2 — first slice).** The
+  packaged "Add a text" page (`text.html`) gained import panels that fill the
+  Title/Text fields, after which the normal create path lands the text on-device:
+  **File / subtitle** (read on-device, `.srt`/`.vtt` stripped to plain text — works
+  **offline**), **Web page** (`POST /api/v1/texts/extract-url`), and **YouTube**
+  (`GET /api/v1/youtube/video`). The web-page and YouTube panels go through the
+  **api client** (so they reach the *connected* server — the legacy components used
+  raw relative `fetch` and only worked same-origin) and are **gated**: hidden
+  offline, shown when a server is connected. The imported source URL is saved with
+  the text. Whisper audio transcription is deferred to a follow-up. E2E covers both
+  states (file-on-device + gated offline; web-page + YouTube fill the form
+  connected).
 
 ### Changed
 

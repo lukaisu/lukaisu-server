@@ -2,18 +2,31 @@
  * "Add a text" page entry for the bundled client.
  *
  * The server-rendered text form (`Modules/Text/Views/edit_form.php`) does a
- * native multipart POST to `/texts/new` and bundles server-only importers
- * (EPUB / web page / YouTube / Gutenberg…), so it cannot work offline. This is a
- * purpose-built offline-first replacement for the core case — paste a text — that
- * creates it through the API client (`TextsApi.create` -> `POST /api/v1/texts`),
- * which the local-first router parses on-device. Content discovery / file import
- * stay as enhanced-when-connected features reached via a server.
+ * native multipart POST to `/texts/new` and bundles same-origin-only importers
+ * (raw `fetch('/api/v1/…')` against the page's own origin), so it cannot work in
+ * the packaged app. This is a purpose-built replacement: the core case — paste a
+ * text — creates it through the API client (`TextsApi.create` -> `POST
+ * /api/v1/texts`), which the local-first router parses on-device.
+ *
+ * It also carries **bundle-native import panels** (Job B, surface 2) that fill
+ * the Title/Text fields, after which the normal create path lands the result
+ * on-device and reads offline like any pasted text:
+ *
+ *   - **File / subtitle** — read on-device (FileReader), with `.srt`/`.vtt`
+ *     stripped to plain text. No server; available offline.
+ *   - **Web page** — `POST /api/v1/texts/extract-url` via the api client (so it
+ *     reaches the *connected* server, unlike the legacy relative-fetch
+ *     component). Gated: shown only when a server is connected.
+ *   - **YouTube** — `GET /api/v1/youtube/video` via the api client. Gated, same.
+ *
+ * Whisper audio transcription is deferred to a follow-up.
  *
  * @license Unlicense <http://unlicense.org/>
  */
 
 import { bootAppPage, initDataMode } from './boot';
 import { pageUrl } from './router';
+import { apiGet, apiPost } from '@shared/api/client';
 import { LanguagesApi } from '@modules/language/api/languages_api';
 import { TextsApi } from '@modules/text/api/texts_api';
 
@@ -22,10 +35,17 @@ interface LanguageOption {
   name: string;
 }
 
-function showError(el: HTMLElement | null, message: string): void {
-  if (el) {
-    el.textContent = message;
-    el.style.display = '';
+/** Mutable bits an import fills in for the create submit to read back. */
+const importState = { sourceUri: null as string | null };
+
+function el<T extends HTMLElement>(id: string): T | null {
+  return document.getElementById(id) as T | null;
+}
+
+function showError(target: HTMLElement | null, message: string): void {
+  if (target) {
+    target.textContent = message;
+    target.style.display = '';
   }
 }
 
@@ -36,15 +56,188 @@ function parseTags(raw: string): string[] {
     .filter((t) => t !== '');
 }
 
+// ---------------------------------------------------------------------------
+// Import helpers (fill the Title/Text fields, then the user reviews and saves)
+// ---------------------------------------------------------------------------
+
+function setStatus(target: HTMLElement | null, msg: string, isError = false): void {
+  if (!target) return;
+  target.textContent = msg;
+  target.classList.remove('has-text-danger', 'has-text-success');
+  if (isError) target.classList.add('has-text-danger');
+  else if (msg) target.classList.add('has-text-success');
+}
+
+/** Drop the imported title/text/source into the form for review. */
+function fillImported(title: string | undefined, text: string | undefined, source: string | null): void {
+  const titleInput = el<HTMLInputElement>('nt-title');
+  const textInput = el<HTMLTextAreaElement>('nt-text');
+  if (text != null && textInput) textInput.value = text;
+  if (title && titleInput) titleInput.value = title;
+  importState.sourceUri = source && source !== '' ? source : null;
+}
+
+/** True for files whose contents are WebVTT/SRT subtitles. */
+function looksLikeSubtitles(name: string, content: string): boolean {
+  return (
+    /\.(srt|vtt)$/i.test(name) ||
+    /^\uFEFF?WEBVTT/.test(content) ||
+    /\d{2}:\d{2}:\d{2}[.,]\d{3}\s*-->/.test(content)
+  );
+}
+
+/** Strip subtitle cues (numbers, timestamps, tags) to plain, de-duplicated text. */
+function stripSubtitles(content: string): string {
+  const kept: string[] = [];
+  for (const raw of content.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line === '') continue;
+    if (/^\uFEFF?WEBVTT/.test(line)) continue;
+    if (/^(NOTE|STYLE|REGION)\b/.test(line)) continue;
+    if (/^\d+$/.test(line)) continue; // cue index
+    if (line.includes('-->')) continue; // timestamp line
+    const clean = line.replace(/<[^>]+>/g, '').trim(); // inline <c>/<00:00.000> tags
+    if (clean !== '') kept.push(clean);
+  }
+  // Auto-captions repeat lines across cues; collapse consecutive duplicates.
+  const out: string[] = [];
+  for (const line of kept) {
+    if (out[out.length - 1] !== line) out.push(line);
+  }
+  return out.join('\n');
+}
+
+function titleFromFilename(name: string): string {
+  return name.replace(/\.[^.]+$/, '').replace(/[._]+/g, ' ').trim();
+}
+
+function importFromFile(file: File): void {
+  const status = el<HTMLElement>('nt-file-status');
+  const titleInput = el<HTMLInputElement>('nt-title');
+  setStatus(status, `Reading "${file.name}"…`);
+  const reader = new FileReader();
+  reader.onerror = () => setStatus(status, 'Could not read the file.', true);
+  reader.onload = () => {
+    const content = String(reader.result ?? '');
+    const text = looksLikeSubtitles(file.name, content) ? stripSubtitles(content) : content;
+    const title = titleInput && titleInput.value.trim() === '' ? titleFromFilename(file.name) : undefined;
+    fillImported(title, text, null);
+    setStatus(status, `Loaded "${file.name}" — review the text below, then save.`);
+  };
+  reader.readAsText(file);
+}
+
+/** Extract a YouTube video id from a watch/share URL, or return the raw id. */
+function extractVideoId(input: string): string {
+  const s = input.trim();
+  const m = s.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : s;
+}
+
+async function importFromUrl(): Promise<void> {
+  const urlInput = el<HTMLInputElement>('nt-url');
+  const titleInput = el<HTMLInputElement>('nt-title');
+  const status = el<HTMLElement>('nt-url-status');
+  const btn = el<HTMLButtonElement>('nt-url-fetch');
+  const url = urlInput?.value.trim() ?? '';
+  if (url === '') {
+    setStatus(status, 'Enter a URL to import.', true);
+    return;
+  }
+  try {
+    new URL(url);
+  } catch {
+    setStatus(status, 'Enter a valid URL (e.g. https://example.com/article).', true);
+    return;
+  }
+  btn?.classList.add('is-loading');
+  setStatus(status, 'Fetching page content…');
+  const titleHint = titleInput?.value.trim() ?? '';
+  const res = await apiPost<{ title?: string; text?: string; sourceUri?: string; error?: string }>(
+    '/texts/extract-url',
+    { url, titleHint }
+  );
+  btn?.classList.remove('is-loading');
+  const err = res.error || res.data?.error;
+  if (err || !res.data) {
+    setStatus(status, err || 'Could not import that page.', true);
+    return;
+  }
+  fillImported(res.data.title, res.data.text, res.data.sourceUri ?? url);
+  setStatus(status, `Imported "${res.data.title ?? url}" — review the text below, then save.`);
+}
+
+async function importFromYouTube(): Promise<void> {
+  const ytInput = el<HTMLInputElement>('nt-yt');
+  const status = el<HTMLElement>('nt-yt-status');
+  const btn = el<HTMLButtonElement>('nt-yt-fetch');
+  const videoId = extractVideoId(ytInput?.value ?? '');
+  if (videoId === '') {
+    setStatus(status, 'Enter a YouTube URL or video ID.', true);
+    return;
+  }
+  btn?.classList.add('is-loading');
+  setStatus(status, 'Fetching YouTube data…');
+  const res = await apiGet<{
+    data?: { success: boolean; data?: { title: string; description: string; source_url: string }; error?: string };
+  }>('/youtube/video', { video_id: videoId });
+  btn?.classList.remove('is-loading');
+  const proxy = res.data?.data;
+  if (res.error || !proxy?.success) {
+    setStatus(status, res.error || proxy?.error || 'Could not fetch that video.', true);
+    return;
+  }
+  fillImported(proxy.data?.title, proxy.data?.description, proxy.data?.source_url ?? null);
+  setStatus(status, `Imported "${proxy.data?.title ?? videoId}" — review the text below, then save.`);
+}
+
+/**
+ * Wire the import-source toolbar: a button reveals its panel (hiding the
+ * others). The web-page / YouTube sources need a connected server, so their
+ * buttons stay hidden offline; file/subtitle import is always available.
+ */
+function setupImportSources(localFirst: boolean): void {
+  const root = el<HTMLElement>('nt-import');
+  if (!root) return;
+
+  if (!localFirst) {
+    root.querySelectorAll<HTMLElement>('[data-import="url"], [data-import="youtube"]')
+      .forEach((b) => b.removeAttribute('hidden'));
+  }
+
+  const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-import]'));
+  const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-import-panel]'));
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      const source = button.getAttribute('data-import');
+      const panel = panels.find((p) => p.getAttribute('data-import-panel') === source);
+      const opening = panel?.hasAttribute('hidden') ?? false;
+      panels.forEach((p) => p.setAttribute('hidden', ''));
+      buttons.forEach((b) => b.classList.remove('is-link', 'is-selected'));
+      if (opening && panel) {
+        panel.removeAttribute('hidden');
+        button.classList.add('is-link', 'is-selected');
+      }
+    });
+  }
+
+  el<HTMLInputElement>('nt-file')?.addEventListener('change', (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) importFromFile(file);
+  });
+  el<HTMLButtonElement>('nt-url-fetch')?.addEventListener('click', () => void importFromUrl());
+  el<HTMLButtonElement>('nt-yt-fetch')?.addEventListener('click', () => void importFromYouTube());
+}
+
 function setupForm(languages: LanguageOption[]): void {
-  const langSelect = document.getElementById('nt-lang') as HTMLSelectElement | null;
-  const titleInput = document.getElementById('nt-title') as HTMLInputElement | null;
-  const textInput = document.getElementById('nt-text') as HTMLTextAreaElement | null;
-  const tagsInput = document.getElementById('nt-tags') as HTMLInputElement | null;
-  const form = document.getElementById('new-text-form') as HTMLFormElement | null;
-  const errorEl = document.getElementById('nt-error');
-  const submit = document.getElementById('nt-submit') as HTMLButtonElement | null;
-  const noLang = document.getElementById('nt-no-lang');
+  const langSelect = el<HTMLSelectElement>('nt-lang');
+  const titleInput = el<HTMLInputElement>('nt-title');
+  const textInput = el<HTMLTextAreaElement>('nt-text');
+  const tagsInput = el<HTMLInputElement>('nt-tags');
+  const form = el<HTMLFormElement>('new-text-form');
+  const errorEl = el<HTMLElement>('nt-error');
+  const submit = el<HTMLButtonElement>('nt-submit');
+  const noLang = el<HTMLElement>('nt-no-lang');
   if (!langSelect || !titleInput || !textInput || !form) {
     return;
   }
@@ -79,7 +272,8 @@ function setupForm(languages: LanguageOption[]): void {
     }
     submit?.classList.add('is-loading');
     const tags = parseTags(tagsInput?.value ?? '');
-    void TextsApi.create({ langId, title, text, tags }).then((res) => {
+    const sourceUri = importState.sourceUri ?? undefined;
+    void TextsApi.create({ langId, title, text, tags, sourceUri }).then((res) => {
       const id = res.data?.id;
       if (res.error || !id) {
         showError(errorEl, res.error || 'Could not create the text.');
@@ -94,11 +288,15 @@ function setupForm(languages: LanguageOption[]): void {
 
 async function start(): Promise<void> {
   // Become local-first (and seed on first run) before listing languages or
-  // POSTing, so everything is served on-device.
-  await initDataMode();
+  // POSTing, so the core paste/save path is served on-device. The return flag
+  // gates the server-only importers.
+  const localFirst = await initDataMode();
   const res = await LanguagesApi.list();
   const languages = (res.data?.languages ?? []).map((l) => ({ id: l.id, name: l.name }));
   setupForm(languages);
+  if (languages.length > 0) {
+    setupImportSources(localFirst);
+  }
   await bootAppPage({ requireAuth: true });
 }
 
