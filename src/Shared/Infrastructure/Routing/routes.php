@@ -619,7 +619,6 @@ function registerRoutes(Router $router): void
     $router->get('/profile', 'Lukaisu\\Modules\\User\\Http\\UserController@profileForm', AUTH_MIDDLEWARE);
     $router->post('/profile', 'Lukaisu\\Modules\\User\\Http\\UserController@updateProfile', AUTH_MIDDLEWARE);
     $router->post('/profile/password', 'Lukaisu\\Modules\\User\\Http\\UserController@changePassword', AUTH_MIDDLEWARE);
-    $router->get('/profile/preferences', 'Lukaisu\\Modules\\User\\Http\\UserController@preferencesForm', AUTH_MIDDLEWARE);
     $router->post('/profile/preferences', 'Lukaisu\\Modules\\User\\Http\\UserController@savePreferences', AUTH_MIDDLEWARE);
     $router->get(
         '/profile/statistics',

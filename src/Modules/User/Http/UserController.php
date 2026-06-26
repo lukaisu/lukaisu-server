@@ -19,9 +19,6 @@ namespace Lukaisu\Modules\User\Http;
 use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Shared\Infrastructure\Exception\AuthException;
 use Lukaisu\Shared\Infrastructure\Globals;
-use Lukaisu\Shared\Infrastructure\Language\LanguagePresets;
-use Lukaisu\Modules\Admin\Application\Services\TtsService;
-use Lukaisu\Modules\Admin\Application\UseCases\Theme\GetAvailableThemes;
 use Lukaisu\Modules\User\Application\UserFacade;
 use Lukaisu\Modules\User\Application\Services\AltchaService;
 use Lukaisu\Modules\User\Infrastructure\AuthFormDataManager;
@@ -508,51 +505,6 @@ class UserController extends BaseController
     // =========================================================================
     // Preferences Methods
     // =========================================================================
-
-    /**
-     * Display the user preferences form.
-     *
-     * GET /profile/preferences
-     *
-     * @param array<string, string> $params Route parameters
-     *
-     * @return void
-     *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
-     * @psalm-suppress UnresolvableInclude View path is constructed at runtime
-     */
-    public function preferencesForm(array $params = []): void
-    {
-        $errorMessages = $this->flash->getByTypeAndClear(FlashMessageService::TYPE_ERROR);
-        $error = !empty($errorMessages) ? $errorMessages[0]['message'] : null;
-
-        $successMessages = $this->flash->getByTypeAndClear(FlashMessageService::TYPE_SUCCESS);
-        $success = !empty($successMessages) ? $successMessages[0]['message'] : null;
-
-        $settings = $this->userFacade->getUserPreferences();
-
-        // Theme data for appearance section
-        $themes = (new GetAvailableThemes())->execute();
-
-        // TTS data
-        $ttsService = new TtsService();
-        $languageOptions = $ttsService->getLanguageOptions(LanguagePresets::getAll());
-        $currentLanguageCode = json_encode(
-            $ttsService->getCurrentLanguageCode(LanguagePresets::getAll())
-        );
-
-        $this->render(__('preferences.page_title'), true);
-
-        if ($success !== null && $success !== '') {
-            $this->message($success, true);
-        }
-        if ($error !== null && $error !== '') {
-            $this->message($error, true);
-        }
-
-        require __DIR__ . '/../Views/preferences.php';
-        $this->endRender();
-    }
 
     /**
      * Save user preferences.
