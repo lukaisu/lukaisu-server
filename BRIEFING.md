@@ -54,15 +54,19 @@ chose the **Hybrid** option, so this bucket now splits:
 - **Client (CORS-free via `CapacitorHttp`):** Gutendex (Project Gutenberg) and
   Global Digital Library browse/search, difficulty tiers + reader-level computed
   against on-device vocabulary, Gutenberg **plain-text** import (fetch → strip
-  boilerplate → parse on-device), and the **coverage preview** for Gutenberg
-  books (sample the text + measure it against the on-device vocabulary). Lives in
+  boilerplate → parse on-device), **GDL EPUB** import (download → unzip via
+  fflate → walk the OPF spine → HTML→text → parse on-device, `content/epub.ts`),
+  and the **coverage preview** for Gutenberg books (sample the text + measure it
+  against the on-device vocabulary). Lives in
   `src/frontend/js/shared/offline/local/content/` + `repositories/content.ts`,
   wired through `routeLocal` and surfaced behind the home "Discover books" toggle.
 - **Optional server (Python), unchanged:** Internet Archive, RSS feeds, YouTube
-  transcripts, **arbitrary web-URL** extraction (incl. coverage preview for
-  non-Gutenberg URLs), and **EPUB** parsing/import. These keep the SSRF guard and
-  stay "enhanced-when-connected." The Python `content`/`feeds`/`extract` routers
-  remain the implementation for the server's own UI and for these.
+  transcripts, and **arbitrary web-URL** extraction (incl. coverage preview for
+  non-Gutenberg URLs). These keep the SSRF guard and stay
+  "enhanced-when-connected." The server also keeps its own **EPUB** upload/URL
+  import flow for its web UI; only the *catalog* EPUB path (GDL) now runs
+  client-side. The Python `content`/`feeds`/`extract` routers remain the
+  implementation for the server's own UI and for these.
 
 Two parsers are **pure PHP today and must be ported to TS by the client agent**
 so they run with no server: `RegexParser` (space-separated + RTL languages) and

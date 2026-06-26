@@ -6,9 +6,10 @@
  * early-grade readers (StoryWeaver, African Storybook, …), reading the "Level N"
  * label from each book's `topic[]` terms and mapping it to a difficulty tier.
  *
- * Browse/suggest only. GDL books are EPUB, and EPUB import stays deferred /
- * server-enhanced — so this client supplies the catalog row but not on-device
- * import (see both repos' BRIEFING.md seam).
+ * Browse/suggest only: this client supplies the catalog row. The EPUB books it
+ * links to are imported on-device by the sibling `epub.ts` module (download →
+ * unzip → extract → parse), wired through the content repository's
+ * `importEpubText` (see both repos' BRIEFING.md seam).
  *
  * @license Unlicense <http://unlicense.org/>
  */

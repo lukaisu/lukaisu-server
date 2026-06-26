@@ -5,10 +5,10 @@
  * Browse/search reach the external catalogs (Gutendex, Global Digital Library)
  * CORS-free via the native-HTTP helper; difficulty tiers and the beginner flag
  * are computed against the on-device vocabulary, so the whole suggestion
- * experience works with no server. Arbitrary-URL/RSS extraction, coverage
- * preview and EPUB import are intentionally NOT handled here — they stay
- * server-enhanced (the router leaves them unrouted so they fall through to the
- * server when one is connected).
+ * experience works with no server. Gutenberg plain-text and GDL EPUB books are
+ * also imported on-device here (download → extract → parse). Arbitrary-URL/RSS
+ * extraction is intentionally NOT handled here — it stays server-enhanced (the
+ * router leaves it unrouted so it falls through to the server when connected).
  *
  * @license Unlicense <http://unlicense.org/>
  */
@@ -19,6 +19,7 @@ import { searchGutenberg, fetchGutenbergText, type GutenbergBook, type CatalogPa
 import { searchGdl, type GdlBook } from '../content/gdl';
 import { computeQuickTier, sortByTier, isBeginnerVocabulary } from '../content/difficulty';
 import { computeCoverage, type CoveragePreview } from '../content/coverage';
+import { fetchEpub, parseEpub } from '../content/epub';
 import { createText } from './texts';
 import type { TextCreateResponse } from '@modules/text/api/texts_api';
 
@@ -157,4 +158,36 @@ export async function importGutenbergText(
     return { error: 'Could not fetch the book text. The site may be unreachable.' };
   }
   return createText({ title: title || 'Imported text', langId, text, sourceUri: url });
+}
+
+/**
+ * Import an EPUB book on-device: download it CORS-free, unzip + walk its spine
+ * + extract plain text, and parse into the local DB. Backs the GDL early-grade
+ * readers (and any other EPUB URL). Returns the new text id (or `{ error }`).
+ */
+export async function importEpubText(
+  url: string,
+  title: string,
+  langId: number
+): Promise<TextCreateResponse> {
+  if (!url) {
+    return { error: 'url is required' };
+  }
+  if (langId <= 0) {
+    return { error: 'language is required' };
+  }
+  const bytes = await fetchEpub(url);
+  if (!bytes) {
+    return { error: 'Could not download the book. The site may be unreachable.' };
+  }
+  const parsed = parseEpub(bytes);
+  if ('error' in parsed) {
+    return { error: parsed.error };
+  }
+  return createText({
+    title: title || parsed.title,
+    langId,
+    text: parsed.text,
+    sourceUri: url,
+  });
 }

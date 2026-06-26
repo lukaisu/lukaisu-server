@@ -16,8 +16,10 @@
  * documented for the connect-probe in the lukaisu shell (`src/main.ts`).
  *
  * Scope note: this is deliberately limited to the structured, low-SSRF-risk
- * catalog sources. Arbitrary-URL extraction, RSS and EPUB stay server-enhanced
- * (see both repos' BRIEFING.md seam).
+ * catalog sources — the catalog APIs (Gutendex, GDL) plus the plain-text /
+ * EPUB downloads they link to ({@link corsFreeGetBytes} fetches the EPUB
+ * bytes for on-device import). Arbitrary-URL extraction and RSS stay
+ * server-enhanced (see both repos' BRIEFING.md seam).
  *
  * @license Unlicense <http://unlicense.org/>
  */
@@ -118,4 +120,75 @@ export async function corsFreeGetJson<T>(url: string, timeoutMs?: number): Promi
     throw new Error(`HTTP ${res.status}`);
   }
   return JSON.parse(res.text) as T;
+}
+
+/** A normalized binary response, decoupled from fetch vs. CapacitorHttp. */
+export interface FetchBytesResult {
+  status: number;
+  ok: boolean;
+  bytes: Uint8Array;
+}
+
+const EMPTY_BYTES = new Uint8Array(0);
+
+/**
+ * Decode a base64 payload to bytes (no native Buffer dependency). Tolerates a
+ * `data:<mime>;base64,` prefix, which some `CapacitorHttp` versions prepend to
+ * blob/arraybuffer responses.
+ */
+function base64ToBytes(b64: string): Uint8Array {
+  const comma = b64.startsWith('data:') ? b64.indexOf(',') : -1;
+  const bin = atob(comma === -1 ? b64 : b64.slice(comma + 1));
+  const len = bin.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = bin.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
+ * GET a URL as raw bytes, CORS-free when possible — used to download EPUBs for
+ * on-device import. The native bridge is JSON-only, so `CapacitorHttp` hands
+ * binary payloads back base64-encoded in `data`; we decode them. The web
+ * fallback uses `fetch(...).arrayBuffer()` (and obeys CORS, like the rest of
+ * this module).
+ */
+export async function corsFreeGetBytes(
+  url: string,
+  opts: { accept?: string; timeoutMs?: number } = {}
+): Promise<FetchBytesResult> {
+  const accept = opts.accept ?? 'application/octet-stream';
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
+  const native = nativeHttp();
+  if (native) {
+    const res = await native.request({
+      url,
+      method: 'GET',
+      headers: { Accept: accept },
+      connectTimeout: timeoutMs,
+      readTimeout: timeoutMs,
+      responseType: 'arraybuffer',
+    });
+    let bytes: Uint8Array;
+    if (typeof res.data === 'string') {
+      bytes = base64ToBytes(res.data);
+    } else if (res.data instanceof ArrayBuffer) {
+      bytes = new Uint8Array(res.data);
+    } else {
+      bytes = EMPTY_BYTES;
+    }
+    return { status: res.status, ok: res.status >= 200 && res.status < 300, bytes };
+  }
+
+  const controller = new AbortController();
+  const timer: ReturnType<typeof setTimeout> = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { headers: { Accept: accept }, signal: controller.signal });
+    const buf = await res.arrayBuffer();
+    return { status: res.status, ok: res.ok, bytes: new Uint8Array(buf) };
+  } finally {
+    clearTimeout(timer);
+  }
 }

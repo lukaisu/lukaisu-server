@@ -12,7 +12,7 @@
 
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
-import { apiGet } from '@shared/api/client';
+import { apiGet, apiPost } from '@shared/api/client';
 import { isLocalFirst } from '@shared/offline/local/router';
 
 interface GdlSuggestedBook {
@@ -49,7 +49,7 @@ interface GdlSuggestionsData {
   fetchReaderLevel(): Promise<void>;
   fetchSuggestions(page: number): Promise<void>;
   loadMore(): Promise<void>;
-  importBook(book: GdlSuggestedBook): void;
+  importBook(book: GdlSuggestedBook): Promise<void>;
   formatMeta(book: GdlSuggestedBook): string;
   hasLevel(book: GdlSuggestedBook): boolean;
   bookLevel(book: GdlSuggestedBook): string;
@@ -145,16 +145,35 @@ export function gdlSuggestionsData(): GdlSuggestionsData {
       await this.fetchSuggestions(this.page + 1);
     },
 
-    importBook(book: GdlSuggestedBook) {
-      // GDL books are EPUB. On-device EPUB import is deferred, and the import UI
-      // is server-rendered (not bundled), so import needs a connected server.
-      // Local-first: surface that rather than navigate to a missing page.
+    async importBook(book: GdlSuggestedBook) {
+      if (this.importing !== null) return;
+
+      // Local-first: import the EPUB on-device (download CORS-free, unzip,
+      // extract spine text, parse) and open the reader — no server.
       if (isLocalFirst()) {
-        this.error = 'Importing these readers needs a connected server (offline EPUB import is coming soon).';
+        if (!book.epubUrl) {
+          this.error = 'This reader has no downloadable EPUB.';
+          return;
+        }
+        this.importing = book.id;
+        this.error = '';
+        const { data, error } = await apiPost<{ id?: number }>('/texts/import-epub', {
+          url: book.epubUrl,
+          title: book.title,
+          language_id: this.languageId,
+        });
+        if (data?.id) {
+          window.location.href = `${this.basePath}/text/${data.id}/read`;
+          return;
+        }
+        this.error = error || 'Could not import this book.';
+        this.importing = null;
         return;
       }
+
       this.importing = book.id;
-      // GDL books are ePUB; the new-text page imports via extract-epub-url.
+      // Server mode: GDL books are EPUB; the new-text page imports via
+      // extract-epub-url.
       const params = new URLSearchParams({
         import_epub_url: book.epubUrl,
         import_title: book.title,

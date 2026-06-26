@@ -93,6 +93,7 @@ import {
   readerLevel,
   analyzeCoverage,
   importGutenbergText,
+  importEpubText,
 } from './repositories/content';
 import { getI18nBundle } from './i18n';
 import type {
@@ -232,8 +233,8 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   }
   // Content discovery (catalog browse/search + reader level + Gutenberg coverage
   // preview). These reach the external catalogs CORS-free and measure results
-  // against on-device vocabulary; arbitrary-URL/RSS extraction and EPUB import
-  // stay unrouted here so they fall through to a server when one is connected.
+  // against on-device vocabulary; arbitrary-URL/RSS extraction stays unrouted
+  // here so it falls through to a server when one is connected.
   if (path === '/texts/gutenberg-suggestions') {
     return wrap(await gutenbergSuggestions(num(p.language_id), num(p.page) || 1));
   }
@@ -383,6 +384,18 @@ async function routePost(path: string, p: Record<string, unknown>): Promise<Loca
     // own URL-extract import flow), so this is local-first only.
     return wrap(
       await importGutenbergText(
+        str(p.url),
+        str(p.title),
+        num(p.language_id ?? p.langId)
+      )
+    );
+  }
+  if (path === '/texts/import-epub') {
+    // Local-first EPUB import (backs the GDL readers): download CORS-free,
+    // unzip + extract spine text, parse on-device. The server has its own
+    // upload/URL-extract EPUB flow, so this path is local-first only.
+    return wrap(
+      await importEpubText(
         str(p.url),
         str(p.title),
         num(p.language_id ?? p.langId)
