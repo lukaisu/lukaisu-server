@@ -30,7 +30,36 @@ const MAX_ENTRIES = 2000; // refuse archives with implausibly many files
 /** The plain-text book extracted from an EPUB. */
 export interface ParsedEpub {
   title: string;
+  /** Every chapter joined (kept for coverage previews). */
   text: string;
+  /** The spine's chapters in order — the per-chapter import splits on these. */
+  chapters: string[];
+}
+
+/** A per-chapter text payload to create from a parsed EPUB. */
+export interface EpubChapterText {
+  title: string;
+  text: string;
+  tags?: string[];
+}
+
+/**
+ * Turn a parsed EPUB's chapters into per-chapter text payloads — the settled
+ * on-device book model (Option A): an EPUB becomes one normal text per chapter,
+ * grouped in the library by a shared tag (the book title), with no persistent
+ * book entity. A single-chapter book stays one untagged text.
+ */
+export function epubChapterTexts(bookTitle: string, chapters: string[]): EpubChapterText[] {
+  const nonEmpty = chapters.filter((c) => c.trim() !== '');
+  const total = nonEmpty.length;
+  if (total <= 1) {
+    return [{ title: bookTitle, text: nonEmpty[0] ?? chapters.join('\n\n') }];
+  }
+  return nonEmpty.map((text, index) => ({
+    title: `${bookTitle} — ${index + 1}/${total}`,
+    text,
+    tags: [bookTitle],
+  }));
 }
 
 // --- HTML → plain text (port of EpubParserService::cleanHtmlContent) ---------
@@ -286,7 +315,7 @@ export function parseEpub(bytes: Uint8Array): ParsedEpub | { error: string } {
     };
   }
 
-  return { title: title || 'Imported book', text: fullText };
+  return { title: title || 'Imported book', text: fullText, chapters };
 }
 
 /**

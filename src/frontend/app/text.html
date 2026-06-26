@@ -64,9 +64,12 @@
           <div data-import-panel="file" class="box p-3" hidden>
             <div class="control">
               <input id="nt-file" class="input" type="file"
-                     accept=".txt,.srt,.vtt,text/plain,text/vtt,application/x-subrip" />
+                     accept=".txt,.srt,.vtt,.epub,text/plain,text/vtt,application/x-subrip,application/epub+zip" />
             </div>
-            <p class="help">Plain text (.txt) or subtitles (.srt/.vtt). Parsed on your device — no server needed.</p>
+            <p class="help">
+              Plain text (.txt), subtitles (.srt/.vtt) or an EPUB book (.epub). Parsed on your
+              device — no server needed; an EPUB imports as one text per chapter.
+            </p>
             <p id="nt-file-status" class="help"></p>
           </div>
 

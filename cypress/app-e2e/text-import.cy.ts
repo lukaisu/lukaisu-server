@@ -70,11 +70,37 @@ describe('add-text importers — bundled app, no server (file offline + gated)',
       expect(apiAttempts, 'file import is on-device — no /api/v1 fall-through').to.equal(0);
     });
   });
+
+  it('imports an EPUB file into per-chapter texts on-device (surface 4)', () => {
+    cy.clearLocalStorage();
+    cy.visit('/index.html');
+    cy.location('pathname', { timeout: 20000 }).should('include', 'library.html');
+
+    cy.visit('/text.html');
+    cy.get('#new-text-form', { timeout: 20000 }).should('be.visible');
+
+    // EPUB is parsed on-device and imported as per-chapter texts, then the
+    // reader opens at chapter 1 — all with no server.
+    cy.get('#nt-import [data-import="file"]').click();
+    cy.get('#nt-file').selectFile('cypress/fixtures/sample-book.epub', { force: true });
+    cy.location('pathname', { timeout: 20000 }).should('include', 'read.html');
+
+    cy.then(() => {
+      expect(apiAttempts, 'EPUB import is on-device — no /api/v1 fall-through').to.equal(0);
+    });
+  });
 });
 
 describe('add-text importers — bundled app, server connected (web page + YouTube)', () => {
+  let nextTextId: number;
+
   beforeEach(() => {
+    nextTextId = 0;
     cy.intercept('**/api/v1/**', { statusCode: 200, body: {} });
+    cy.intercept('POST', '**/api/v1/texts', (req) => {
+      nextTextId += 1;
+      req.reply({ statusCode: 200, body: { id: nextTextId } });
+    }).as('createText');
     cy.intercept('GET', '**/api/v1/i18n**', { statusCode: 200, body: {} });
     cy.intercept('GET', '**/api/v1/navbar', {
       statusCode: 200,
@@ -132,5 +158,17 @@ describe('add-text importers — bundled app, server connected (web page + YouTu
     cy.wait('@ytVideo');
     cy.get('#nt-title').should('have.value', 'A YouTube Video');
     cy.get('#nt-text').should('contain.value', 'The video description text.');
+  });
+
+  it('imports an EPUB file as per-chapter texts via the connected server (surface 4)', () => {
+    visitConnected();
+    cy.get('#nt-import [data-import="file"]').click();
+    cy.get('#nt-file').selectFile('cypress/fixtures/sample-book.epub', { force: true });
+
+    // Two chapters -> two text creates against the server, then open chapter 1.
+    cy.wait('@createText');
+    cy.wait('@createText');
+    cy.location('search', { timeout: 20000 }).should('include', 'text=1');
+    cy.location('pathname').should('include', 'read.html');
   });
 });

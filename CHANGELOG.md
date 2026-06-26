@@ -94,6 +94,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   lookups (no on-device dictionary store). Reached from a gated "Manage local
   dictionaries" link on the language-edit page. E2E covers gated-offline +
   connected (list / curated import / delete).
+* **EPUB books → per-chapter texts (server-enhanced, Job B surface 4).** Settled the
+  on-device book data model as **Option A**: an imported EPUB becomes **one text per
+  chapter**, grouped in the library by a tag (the book title), with no persistent
+  book entity. The on-device EPUB parser now exposes its chapters (previously joined
+  + discarded); `importEpubText` (GDL / URL) creates per-chapter texts and opens
+  chapter 1. The "Add a text" page's File panel now accepts **`.epub`** and imports
+  it **on-device** (parsed in the browser) as per-chapter texts — works offline and
+  server-backed. The reader treats chapters as standalone texts (offline chapter-nav
+  + reading-progress remain a deferred Option-B upgrade); the server's PHP book pages
+  are unaffected and still serve server-backed users.
 
 ### Changed
 

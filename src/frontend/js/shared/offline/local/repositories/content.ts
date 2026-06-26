@@ -21,7 +21,7 @@ import { searchGutenberg, fetchGutenbergText, type GutenbergBook, type CatalogPa
 import { searchGdl, type GdlBook } from '../content/gdl';
 import { computeQuickTier, sortByTier, isBeginnerVocabulary } from '../content/difficulty';
 import { computeCoverage, type CoveragePreview } from '../content/coverage';
-import { fetchEpub, parseEpub } from '../content/epub';
+import { fetchEpub, parseEpub, epubChapterTexts } from '../content/epub';
 import { createText } from './texts';
 import type { TextCreateResponse } from '@modules/text/api/texts_api';
 
@@ -208,7 +208,10 @@ export async function importGutenbergText(
 /**
  * Import an EPUB book on-device: download it CORS-free, unzip + walk its spine
  * + extract plain text, and parse into the local DB. Backs the GDL early-grade
- * readers (and any other EPUB URL). Returns the new text id (or `{ error }`).
+ * readers (and any other EPUB URL). Under the settled book model (Option A) the
+ * book becomes **one text per chapter**, grouped in the library by a shared tag
+ * (the book title); the returned id is the **first chapter's**, so callers open
+ * the book at chapter 1 (or `{ error }`).
  */
 export async function importEpubText(
   url: string,
@@ -229,10 +232,21 @@ export async function importEpubText(
   if ('error' in parsed) {
     return { error: parsed.error };
   }
-  return createText({
-    title: title || parsed.title,
-    langId,
-    text: parsed.text,
-    sourceUri: url,
-  });
+  let firstId: number | undefined;
+  for (const chapter of epubChapterTexts(title || parsed.title, parsed.chapters)) {
+    const res = await createText({
+      title: chapter.title,
+      langId,
+      text: chapter.text,
+      sourceUri: url,
+      tags: chapter.tags,
+    });
+    if (res.error || res.id == null) {
+      return { error: res.error || 'Could not import the book.' };
+    }
+    if (firstId === undefined) {
+      firstId = res.id;
+    }
+  }
+  return firstId !== undefined ? { id: firstId } : { error: 'The book had no readable chapters.' };
 }

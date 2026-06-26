@@ -12,8 +12,9 @@
  * the Title/Text fields, after which the normal create path lands the result
  * on-device and reads offline like any pasted text:
  *
- *   - **File / subtitle** — read on-device (FileReader), with `.srt`/`.vtt`
- *     stripped to plain text. No server; available offline.
+ *   - **File / subtitle / EPUB** — read on-device, with `.srt`/`.vtt` stripped to
+ *     plain text and `.epub` parsed in the browser into one text per chapter
+ *     (settled book model — surface 4). No server; available offline.
  *   - **Web page** — `POST /api/v1/texts/extract-url` via the api client (so it
  *     reaches the *connected* server, unlike the legacy relative-fetch
  *     component). Gated: shown only when a server is connected.
@@ -29,6 +30,7 @@ import { pageUrl } from './router';
 import { apiGet, apiPost } from '@shared/api/client';
 import { LanguagesApi } from '@modules/language/api/languages_api';
 import { TextsApi } from '@modules/text/api/texts_api';
+import { parseEpub, epubChapterTexts } from '@shared/offline/local/content/epub';
 
 interface LanguageOption {
   id: number;
@@ -111,7 +113,66 @@ function titleFromFilename(name: string): string {
   return name.replace(/\.[^.]+$/, '').replace(/[._]+/g, ' ').trim();
 }
 
+/** True for EPUB books — they take the multi-chapter on-device import path. */
+function isEpubFile(file: File): boolean {
+  return /\.epub$/i.test(file.name) || file.type === 'application/epub+zip';
+}
+
+/**
+ * Import an EPUB **file** on-device: parse it in the browser (`parseEpub`) and
+ * create one text per chapter (settled book model, Option A), grouped by a tag =
+ * the book title. Uses the api client so it works offline *and* server-backed,
+ * then opens chapter 1. No book entity, no server EPUB upload needed.
+ */
+async function importEpubFile(file: File): Promise<void> {
+  const status = el<HTMLElement>('nt-file-status');
+  const langId = Number(el<HTMLSelectElement>('nt-lang')?.value);
+  if (!langId) {
+    setStatus(status, 'Choose a language first.', true);
+    return;
+  }
+  setStatus(status, `Reading "${file.name}"…`);
+  let parsed: ReturnType<typeof parseEpub>;
+  try {
+    parsed = parseEpub(new Uint8Array(await file.arrayBuffer()));
+  } catch {
+    setStatus(status, 'Could not read that EPUB file.', true);
+    return;
+  }
+  if ('error' in parsed) {
+    setStatus(status, parsed.error, true);
+    return;
+  }
+  const bookTitle =
+    parsed.title && parsed.title !== 'Imported book' ? parsed.title : titleFromFilename(file.name);
+  const chapters = epubChapterTexts(bookTitle, parsed.chapters);
+  setStatus(status, `Importing "${bookTitle}" (${chapters.length} chapter(s))…`);
+  let firstId: number | undefined;
+  for (const chapter of chapters) {
+    const res = await TextsApi.create({
+      langId,
+      title: chapter.title,
+      text: chapter.text,
+      tags: chapter.tags,
+    });
+    if (res.error || res.data?.id == null) {
+      setStatus(status, res.error || 'Could not import the book.', true);
+      return;
+    }
+    if (firstId === undefined) {
+      firstId = res.data.id;
+    }
+  }
+  if (firstId !== undefined) {
+    window.location.assign(pageUrl.read(firstId, langId));
+  }
+}
+
 function importFromFile(file: File): void {
+  if (isEpubFile(file)) {
+    void importEpubFile(file);
+    return;
+  }
   const status = el<HTMLElement>('nt-file-status');
   const titleInput = el<HTMLInputElement>('nt-title');
   setStatus(status, `Reading "${file.name}"…`);
