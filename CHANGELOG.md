@@ -53,6 +53,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   to the library. Connecting a server is demoted to an optional action under
   Preferences → Server ("Connect a server"), which also offers "Disconnect" once
   connected; the section is hidden in same-origin server mode.
+* **CORS connect-onboarding (client).** When connecting a server fails on the
+  server step, the connect screen now shows an actionable help block: the bundle
+  loads from `https://localhost`, so a self-hosted server must allow that origin
+  with `CORS_ALLOWED_ORIGINS=https://localhost` (shown verbatim, copyable). A
+  failed `fetch` can't distinguish a CORS rejection from an unreachable host, so
+  the copy covers both. `.env.example` now documents the app's origin. The
+  server already honours `CORS_ALLOWED_ORIGINS` (`Cors.php`) — no server change.
 
 ### Changed
 

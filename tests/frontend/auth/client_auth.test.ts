@@ -159,6 +159,19 @@ describe('modules/auth/client_auth.ts', () => {
       expect(c.step).toBe('server');
       expect(c.error).not.toBe('');
     });
+
+    it('shows the CORS/reachability help only after a failed connect', async () => {
+      const c = clientAuthData();
+      expect(c.showServerHelp).toBe(false); // nothing tried yet
+
+      mockFetch.mockRejectedValue(new Error('Failed to fetch'));
+      c.serverUrl = 'https://nope.example';
+      await c.connect();
+
+      expect(c.step).toBe('server');
+      expect(c.error).not.toBe('');
+      expect(c.showServerHelp).toBe(true);
+    });
   });
 
   // ---------------------------------------------------------------------------

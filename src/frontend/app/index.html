@@ -67,6 +67,25 @@
                     <span x-text="error"></span>
                 </div>
 
+                <!-- Connection help: shown after a failed connect. The packaged
+                     app loads from https://localhost, so a remote server must
+                     allow-list that origin (CORS) for the cross-origin API calls
+                     to work. A failed fetch can't tell CORS from unreachable, so
+                     this covers both. -->
+                <div class="notification is-warning is-light" x-show="showServerHelp" x-cloak>
+                    <p class="mb-2">
+                        <strong>Connecting to your own Lukaisu Server?</strong>
+                        It has to allow this app. Add this to the server’s
+                        environment and restart it:
+                    </p>
+                    <pre class="mb-2" style="white-space:pre-wrap;word-break:break-all"><code>CORS_ALLOWED_ORIGINS=https://localhost</code></pre>
+                    <p class="is-size-7 mb-0">
+                        Also check the address is reachable from this device — on a
+                        home network use the server’s IP, e.g.
+                        <code>http://192.168.1.20:8010</code>.
+                    </p>
+                </div>
+
                 <!-- Step 1: choose server -->
                 <form @submit.prevent="connect()" x-show="onServerStep" x-cloak>
                     <div class="field">

@@ -69,6 +69,9 @@ interface ClientAuthData {
   readonly onRecoveryStep: boolean;
   readonly onLoginMode: boolean;
   readonly onRegisterMode: boolean;
+  /** True on the server step once a connect attempt has failed — gates the
+   *  CORS/reachability help block in the template. */
+  readonly showServerHelp: boolean;
   init(): void;
   normalizeServerUrl(input: string): string;
   connect(): Promise<void>;
@@ -146,6 +149,13 @@ export function clientAuthData(): ClientAuthData {
       return this.authMode === 'register';
     },
 
+    // A failed connect on the server step is usually one of two things: the
+    // address is unreachable, or the server hasn't allow-listed this app's
+    // origin (CORS). Show the actionable help only once that has happened.
+    get showServerHelp(): boolean {
+      return this.step === 'server' && this.error !== '';
+    },
+
     init(): void {
       const config = readConfig();
       this.homeUrl = config.homeUrl;
@@ -207,8 +217,9 @@ export function clientAuthData(): ClientAuthData {
         this.loading = false;
         setApiServer(null); // roll back the bad choice
         this.error =
-          'Could not reach an Lukaisu Server server at that address. Check the URL and '
-          + 'that the server allows this app.';
+          "Couldn't reach a Lukaisu Server at that address. Check the URL and that "
+          + 'the server is running — and, if it’s your own server, that it allows '
+          + 'this app (see below).';
         return;
       }
 
