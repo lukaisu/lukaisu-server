@@ -332,11 +332,6 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // ==================== REVIEW ROUTES (PROTECTED) ====================
-
-    // Review interface (Review module)
-    $router->registerWithMiddleware('/review', 'Lukaisu\\Modules\\Review\\Http\\ReviewController@index', AUTH_MIDDLEWARE);
-
     // ==================== LANGUAGE ROUTES (PROTECTED) ====================
 
     // New language form (RESTful route): GET/POST /languages/new

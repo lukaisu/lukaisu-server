@@ -54,7 +54,6 @@
                 <directory name="src/Modules/Dictionary/Views" />
                 <directory name="src/Modules/Feed/Views" />
                 <directory name="src/Modules/Language/Views" />
-                <directory name="src/Modules/Review/Views" />
                 <directory name="src/Modules/Tags/Views" />
                 <directory name="src/Modules/Text/Views" />
                 <directory name="src/Modules/User/Views" />
@@ -102,7 +101,6 @@
                 <directory name="src/Modules/Feed/Http" />
                 <directory name="src/Modules/Feed/Views" />
                 <directory name="src/Modules/Language/Views" />
-                <directory name="src/Modules/Review/Views" />
                 <directory name="src/Modules/Tags/Views" />
                 <directory name="src/Modules/Text/Http" />
                 <directory name="src/Modules/Text/Views" />
@@ -119,7 +117,6 @@
                 <directory name="src/Modules/Feed/Views" />
                 <directory name="src/Modules/Feed/Application" />
                 <directory name="src/Modules/Language/Views" />
-                <directory name="src/Modules/Review/Views" />
                 <directory name="src/Modules/Tags/Views" />
                 <directory name="src/Modules/Text/Views" />
                 <directory name="src/Modules/User/Views" />
@@ -148,7 +145,6 @@
                 <directory name="src/Modules/Feed/Application" />
                 <directory name="src/Modules/Feed/Http" />
                 <directory name="src/Modules/Language/Views" />
-                <directory name="src/Modules/Review/Views" />
                 <directory name="src/Modules/Tags/Views" />
                 <directory name="src/Modules/Text/Views" />
                 <directory name="src/Modules/Text/Application" />

@@ -35,7 +35,6 @@ use Lukaisu\Modules\Review\Application\UseCases\SubmitAnswer;
 // Application
 use Lukaisu\Modules\Review\Application\ReviewFacade;
 // Http
-use Lukaisu\Modules\Review\Http\ReviewController;
 use Lukaisu\Modules\Review\Http\ReviewApiHandler;
 // Application Services
 use Lukaisu\Modules\Review\Application\Services\ReviewService;
@@ -44,7 +43,7 @@ use Lukaisu\Modules\Review\Application\Services\ReviewService;
  * Service provider for the Review module.
  *
  * Registers the ReviewRepositoryInterface, all use cases,
- * ReviewFacade, ReviewController, and ReviewApiHandler.
+ * ReviewFacade and ReviewApiHandler.
  */
 class ReviewServiceProvider implements ServiceProviderInterface
 {
@@ -87,13 +86,6 @@ class ReviewServiceProvider implements ServiceProviderInterface
                 $c->getTyped(GetTomorrowCount::class),
                 $c->getTyped(StartReviewSession::class),
                 $c->getTyped(SubmitAnswer::class)
-            );
-        });
-
-        // Register Controller
-        $container->singleton(ReviewController::class, function (Container $c) {
-            return new ReviewController(
-                $c->getTyped(ReviewFacade::class)
             );
         });
 
