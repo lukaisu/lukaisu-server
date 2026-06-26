@@ -19,6 +19,7 @@ import {
   type WordFields,
 } from './helpers';
 import { getWordTagNames } from './tags';
+import { remoteLemmatize, lemmatizerFor } from '@shared/offline/nlp/lemmatize';
 import type {
   Term,
   TermStatusResponse,
@@ -30,6 +31,28 @@ import type {
   TermFullResponse,
   TermForEditResponse,
 } from '@modules/vocabulary/api/terms_api';
+
+/**
+ * Best-effort dictionary form for a new term. A user-provided lemma always
+ * wins; otherwise, for Korean (Kiwi), ask the optional NLP server. Returns ''
+ * when none is available so the save never blocks on the network. Scoped to
+ * Korean for now — dropping the `lemmatizerFor` guard would extend it to the
+ * spaCy languages too.
+ */
+async function resolveLemma(
+  langId: number,
+  text: string,
+  provided?: string
+): Promise<string> {
+  if (provided && provided.trim() !== '') {
+    return provided;
+  }
+  const language = await localDb.languages.get(langId);
+  if (!language || lemmatizerFor(language.code) !== 'kiwi') {
+    return '';
+  }
+  return (await remoteLemmatize(text, language.code)) ?? '';
+}
 
 /** Fetch a single occurrence by text + position. */
 async function getOccurrence(
@@ -186,8 +209,9 @@ export async function addWithTranslation(
     await localDb.words.update(existing.id, { translation, updatedAt: nowMs() });
     return { update: translation, term_id: existing.id, term_lc: textLc };
   }
+  const lemma = await resolveLemma(langId, text);
   const id = (await localDb.words.add(
-    buildWordRow(langId, text, 1, { translation })
+    buildWordRow(langId, text, 1, { translation, lemma })
   )) as number;
   await linkWordOccurrences(id, langId, textLc);
   return { add: translation, term_id: id, term_lc: textLc };
@@ -206,7 +230,7 @@ export async function createFull(
     romanization: req.romanization,
     sentence: req.sentence,
     notes: req.notes,
-    lemma: req.lemma,
+    lemma: await resolveLemma(occ.langId, occ.text, req.lemma),
   };
   const existing = await findWord(occ.langId, occ.textLc);
   const row = buildWordRow(occ.langId, occ.text, req.status, fields);
