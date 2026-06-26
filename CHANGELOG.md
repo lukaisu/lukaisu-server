@@ -60,6 +60,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   failed `fetch` can't distinguish a CORS rejection from an unreachable host, so
   the copy covers both. `.env.example` now documents the app's origin. The
   server already honours `CORS_ALLOWED_ORIGINS` (`Cors.php`) — no server change.
+* **Bundled Feeds page (server-enhanced, Job B surface 1).** The packaged client
+  now has a Feeds page (`feeds.html`) that mounts the existing feed-manager SPA.
+  It is **gated**: with a server connected (server-backed or same-origin) the SPA
+  loads and manages feeds against `/api/v1/feeds*`; **offline (local-first) it is
+  removed before it can mount** — so its calls never fall through to an absent
+  network — and a "connect a server" notice is shown instead. RSS/Atom fetching
+  needs a server's egress, so feeds stays enhanced-when-connected (no on-device
+  feed store yet). The languages page's `/feeds?…` links now resolve to this
+  bundled page. E2E covers both states (gated-offline + mounts-connected). The
+  feed wizard and per-feed edit routes remain server-rendered (fall through when
+  connected).
 
 ### Changed
 

@@ -70,6 +70,9 @@ export const pageUrl = {
   tags(): string {
     return 'tags.html';
   },
+  feeds(): string {
+    return 'feeds.html';
+  },
   settings(): string {
     return 'settings.html';
   },
@@ -159,6 +162,15 @@ export function bundledPageFor(path: string): string | null {
   // they never reach here.)
   if (pathname === '/tags' || pathname === '/tags/term' || pathname === '/tags/text') {
     return pageUrl.tags();
+  }
+  // Feeds — the first server-enhanced (Job B) surface. The languages page links
+  // to /feeds?filterlang=… and the server serves the SPA at /feeds and
+  // /feeds/manage; the bundle shows both on feeds.html, gated to a connected
+  // server. The query (filterlang, …) is dropped — the SPA has its own filter UI.
+  // The wizard (/feeds/new) and per-feed edit routes are not bundled, so they
+  // fall through to the connected server's web UI (only reachable when connected).
+  if (pathname === '/feeds' || pathname === '/feeds/manage') {
+    return pageUrl.feeds();
   }
   // Preferences: the navbar's "Preferences" link targets the server's
   // /profile/preferences form; route it to the bundled settings page so it
