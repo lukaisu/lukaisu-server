@@ -108,7 +108,6 @@ export default defineConfig({
           items: [
             { text: 'API Reference', link: '/developer/api' },
             { text: 'Contributing', link: '/developer/contributing' },
-            { text: 'V3 Changes', link: '/developer/v3-changes' },
             { text: 'Security Followups', link: '/developer/security-followups' }
           ]
         },
