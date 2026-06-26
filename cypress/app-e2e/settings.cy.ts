@@ -54,6 +54,12 @@ describe('settings page — bundled app, no server', () => {
     cy.get('#st-locale').should('be.disabled');
     cy.get('#st-locale-note').should('be.visible');
 
+    // 4b. The optional Server section offers "Connect a server" (local-first);
+    //     the "Disconnect" branch stays hidden since no server is connected.
+    cy.get('#st-server-section').should('be.visible');
+    cy.get('#st-connect-server').should('be.visible');
+    cy.get('#st-server-connected').should('not.be.visible');
+
     // 5. Change the default language to a different seeded one and save
     //    (POST /settings currentlanguage -> setCurrentLanguageId, on-device).
     cy.get('#st-default-lang').then(($sel) => {

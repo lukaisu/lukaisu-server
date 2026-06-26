@@ -18,12 +18,18 @@ import { pageUrl } from './router';
 const forceConnect = new URLSearchParams(window.location.search).has('connect');
 
 if (!getApiServer() && !forceConnect) {
-  // First run / no server: become local-first, seed, and open the library.
+  // First run / no server: stay on the neutral splash, become local-first, seed,
+  // and open the library — the connect/auth UI never shows.
   void (async () => {
     await initDataMode();
     window.location.replace(pageUrl.library());
   })();
 } else {
+  // Connecting a server (explicit ?connect from Settings, or resuming a
+  // configured one): swap the splash for the connect/auth UI before booting.
+  document.getElementById('entry-splash')?.setAttribute('hidden', '');
+  document.getElementById('connect-ui')?.removeAttribute('hidden');
+
   injectConfig('client-auth-config', {
     defaultServer: '',
     // clientAuth navigates here after login (and on auto-skip when already

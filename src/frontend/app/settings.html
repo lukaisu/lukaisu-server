@@ -51,6 +51,38 @@
           </p>
         </div>
 
+        <!-- Server (optional). Lukaisu is local-first; connecting a server is an
+             opt-in that unlocks server-enhanced extras. Hidden when the bundle is
+             served by a Lukaisu Server as its own UI (same-origin mode). -->
+        <section id="st-server-section" style="display:none">
+          <hr class="my-5" />
+          <h2 class="title is-5">Server</h2>
+
+          <!-- Local-first: no server connected. -->
+          <div id="st-server-disconnected" style="display:none">
+            <p class="help mb-3">
+              Lukaisu works fully on this device with no account. Connecting a
+              Lukaisu Server is optional — it adds high-quality parsing for
+              Japanese and Chinese, text-to-speech, transcription, and content
+              discovery.
+            </p>
+            <button id="st-connect-server" class="button is-link is-light" type="button">
+              Connect a server
+            </button>
+          </div>
+
+          <!-- A remote server is connected. -->
+          <div id="st-server-connected" style="display:none">
+            <p class="help mb-3">
+              Connected to <strong id="st-server-addr"></strong>. Your library is
+              served from this device; the server adds the enhanced features.
+            </p>
+            <button id="st-disconnect-server" class="button is-light" type="button">
+              Disconnect
+            </button>
+          </div>
+        </section>
+
         <p id="st-error" class="help is-danger" style="display:none"></p>
         <div id="st-success" class="notification is-success is-light mt-4" style="display:none">
           Preferences saved.

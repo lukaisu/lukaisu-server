@@ -24,6 +24,14 @@ export const pageUrl = {
   connect(): string {
     return 'index.html';
   },
+  /**
+   * The connect/server-picker page forced open (`?connect`), skipping the
+   * local-first auto-redirect to the library. This is the entry point for the
+   * optional "Connect a server" action in Settings.
+   */
+  connectChooser(): string {
+    return 'index.html?connect';
+  },
   home(): string {
     return 'home.html';
   },

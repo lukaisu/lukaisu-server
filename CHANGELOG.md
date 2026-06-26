@@ -47,6 +47,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `POST /texts/check` (parse preview). These bring the server's `/api/v1` to
   parity with the bundle's needs for the cut-over (a deliberate exception to the
   PHP-frozen policy, scoped to enabling it).
+* **Bundled client first-run UX (local-first).** The packaged app now opens to
+  the on-device library instead of a server picker: the launch page shows a
+  neutral splash while the local DB seeds (no connect-form flash), then redirects
+  to the library. Connecting a server is demoted to an optional action under
+  Preferences → Server ("Connect a server"), which also offers "Disconnect" once
+  connected; the section is hidden in same-origin server mode.
 
 ### Changed
 

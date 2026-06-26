@@ -35,6 +35,9 @@ import { bootAppPage, initDataMode } from './boot';
 import { LanguagesApi } from '@modules/language/api/languages_api';
 import { SettingsApi } from '@modules/admin/api/settings_api';
 import { loadI18nFromApi, getStoredLocale } from '@shared/i18n/translator';
+import { getApiServer, setApiServer, setAuthToken } from '@shared/api/client';
+import { setLocalFirst } from '@shared/offline/local/router';
+import { pageUrl } from './router';
 
 /** The UI locales the catalog ships (`locale/<code>/`), with native names. */
 const LOCALES: ReadonlyArray<{ code: string; name: string }> = [
@@ -58,6 +61,43 @@ function showError(target: HTMLElement | null, message: string): void {
     target.textContent = message;
     target.style.display = '';
   }
+}
+
+/**
+ * Render the optional "Server" section. Three states, distinguished without any
+ * extra probing:
+ *   - local-first (packaged app, no server)  -> offer "Connect a server"
+ *   - a remote server is connected           -> show it + "Disconnect"
+ *   - same-origin server mode (the bundle is a Lukaisu Server's own UI:
+ *     `localFirst` is false yet no server URL is configured) -> hide the section
+ *     entirely; connecting/disconnecting makes no sense there.
+ */
+function initServerSection(localFirst: boolean): void {
+  const section = el<HTMLElement>('st-server-section');
+  const disconnected = el<HTMLElement>('st-server-disconnected');
+  const connected = el<HTMLElement>('st-server-connected');
+  const server = getApiServer();
+
+  if (localFirst) {
+    if (section) section.style.display = '';
+    if (disconnected) disconnected.style.display = '';
+    el<HTMLButtonElement>('st-connect-server')?.addEventListener('click', () => {
+      window.location.assign(pageUrl.connectChooser());
+    });
+  } else if (server) {
+    if (section) section.style.display = '';
+    if (connected) connected.style.display = '';
+    const addr = el<HTMLElement>('st-server-addr');
+    if (addr) addr.textContent = server.replace(/^https?:\/\//, '');
+    el<HTMLButtonElement>('st-disconnect-server')?.addEventListener('click', () => {
+      // Forget the server + token and go back to the on-device library.
+      setApiServer(null);
+      setAuthToken(null);
+      setLocalFirst(true);
+      window.location.assign(pageUrl.library());
+    });
+  }
+  // else: same-origin server mode — leave the whole section hidden.
 }
 
 async function start(): Promise<void> {
@@ -112,6 +152,9 @@ async function start(): Promise<void> {
       if (localeNote) localeNote.style.display = '';
     }
   }
+
+  // 3. Server section — the optional "Connect a server" / "Disconnect" action.
+  initServerSection(localFirst);
 
   if (loading) loading.style.display = 'none';
   if (form) form.style.display = '';
