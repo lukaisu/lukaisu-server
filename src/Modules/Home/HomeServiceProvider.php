@@ -24,10 +24,6 @@ use Lukaisu\Shared\Infrastructure\Container\ServiceProviderInterface;
 use Lukaisu\Modules\Home\Application\HomeFacade;
 use Lukaisu\Modules\Home\Application\UseCases\GetDashboardData;
 use Lukaisu\Modules\Home\Application\UseCases\GetTextStatistics;
-// Http
-use Lukaisu\Modules\Home\Http\HomeController;
-// Dependencies
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 
 /**
  * Service provider for the Home module.
@@ -47,14 +43,6 @@ class HomeServiceProvider implements ServiceProviderInterface
         // Register Facade
         $container->singleton(HomeFacade::class, function (Container $_c) {
             return new HomeFacade();
-        });
-
-        // Register Controller
-        $container->bind(HomeController::class, function (Container $c) {
-            return new HomeController(
-                $c->getTyped(HomeFacade::class),
-                $c->getTyped(LanguageFacade::class)
-            );
         });
     }
 

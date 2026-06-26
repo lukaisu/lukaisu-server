@@ -181,7 +181,6 @@
                 <directory name="src/Modules/Dictionary/Infrastructure" />
                 <directory name="src/Modules/Feed/Http" />
                 <directory name="src/Modules/Feed/Application" />
-                <directory name="src/Modules/Home/Http" />
                 <directory name="src/Modules/Language/Http" />
                 <directory name="src/Modules/Language/Views" />
                 <directory name="src/Modules/Review/Application" />

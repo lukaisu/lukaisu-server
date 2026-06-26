@@ -54,11 +54,6 @@ const ADMIN_MIDDLEWARE = [AdminMiddleware::class, CsrfMiddleware::class];
  */
 function registerRoutes(Router $router): void
 {
-    // ==================== HOME PAGE (PROTECTED) ====================
-
-    $router->registerWithMiddleware('/', 'Lukaisu\\Modules\\Home\\Http\\HomeController@index', AUTH_MIDDLEWARE);
-    $router->registerWithMiddleware('/index.php', 'Lukaisu\\Modules\\Home\\Http\\HomeController@index', AUTH_MIDDLEWARE);
-
     // ==================== BUNDLED CLIENT (PROTECTED) ====================
 
     // The reading/learning UI is served from dist-app/ (built by
