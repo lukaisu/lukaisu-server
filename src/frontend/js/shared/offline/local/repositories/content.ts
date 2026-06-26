@@ -6,9 +6,11 @@
  * CORS-free via the native-HTTP helper; difficulty tiers and the beginner flag
  * are computed against the on-device vocabulary, so the whole suggestion
  * experience works with no server. Gutenberg plain-text and GDL EPUB books are
- * also imported on-device here (download → extract → parse). Arbitrary-URL/RSS
- * extraction is intentionally NOT handled here — it stays server-enhanced (the
- * router leaves it unrouted so it falls through to the server when connected).
+ * also imported on-device here (download → extract → parse), and the coverage
+ * preview — which samples a book against the on-device vocabulary — runs here for
+ * both sources. Arbitrary-URL/RSS extraction is intentionally NOT handled here —
+ * it stays server-enhanced (the router leaves it unrouted so it falls through to
+ * the server when connected).
  *
  * @license Unlicense <http://unlicense.org/>
  */
@@ -94,10 +96,34 @@ export async function readerLevel(
 }
 
 /**
- * Coverage preview for a Gutenberg book: fetch + sample its text and measure
- * how much of its vocabulary the reader already knows. "Known" here is any word
- * in the local vocabulary (no status filter, matching the server's lookup) —
- * broader than {@link readerLevel}'s 5/98/99 count. Gutenberg URLs only; other
+ * Coverage core: measure how much of an already-extracted book sample the reader
+ * knows. "Known" is any word in the local vocabulary (no status filter, matching
+ * the server's lookup) — broader than {@link readerLevel}'s 5/98/99 count.
+ * Shared by the Gutenberg (plain-text) and GDL (EPUB) previews.
+ */
+async function coverageFromSample(
+  text: string,
+  langId: number,
+  wordChars: string,
+  splitEachChar: boolean
+): Promise<CoveragePreview | { error: string }> {
+  const words = await localDb.words
+    .where('langId')
+    .equals(langId)
+    .and((w) => w.deletedAt == null)
+    .toArray();
+  const knownLc = new Set(words.map((w) => w.textLc));
+
+  const result = computeCoverage(text, knownLc, wordChars, splitEachChar);
+  if (!result) {
+    return { error: 'No words could be extracted from the text sample.' };
+  }
+  return result;
+}
+
+/**
+ * Coverage preview for a Gutenberg book: fetch + sample its text and measure how
+ * much of its vocabulary the reader already knows. Gutenberg URLs only; other
  * sources stay server-enhanced.
  */
 export async function analyzeCoverage(
@@ -118,24 +144,43 @@ export async function analyzeCoverage(
   if (!text) {
     return { error: 'Could not fetch text. The site may be unreachable.' };
   }
+  return coverageFromSample(text, langId, language.regexpWordCharacters, language.splitEachChar);
+}
 
-  const words = await localDb.words
-    .where('langId')
-    .equals(langId)
-    .and((w) => w.deletedAt == null)
-    .toArray();
-  const knownLc = new Set(words.map((w) => w.textLc));
-
-  const result = computeCoverage(
-    text,
-    knownLc,
+/**
+ * Coverage preview for a GDL (EPUB) book: download + unzip + extract the spine
+ * text on-device, then measure vocabulary coverage like {@link analyzeCoverage}.
+ * EPUB parsing only exists on the client, so this is local-first only (the GDL
+ * UI exposes the preview action only when local-first is active).
+ */
+export async function analyzeEpubCoverage(
+  url: string,
+  langId: number
+): Promise<CoveragePreview | { error: string }> {
+  if (!url) {
+    return { error: 'url is required' };
+  }
+  if (langId <= 0) {
+    return { error: 'language is required' };
+  }
+  const language = await localDb.languages.get(langId);
+  if (!language) {
+    return { error: 'Language not found.' };
+  }
+  const bytes = await fetchEpub(url);
+  if (!bytes) {
+    return { error: 'Could not download the book. The site may be unreachable.' };
+  }
+  const parsed = parseEpub(bytes);
+  if ('error' in parsed) {
+    return { error: parsed.error };
+  }
+  return coverageFromSample(
+    parsed.text,
+    langId,
     language.regexpWordCharacters,
     language.splitEachChar
   );
-  if (!result) {
-    return { error: 'No words could be extracted from the text sample.' };
-  }
-  return result;
 }
 
 /**

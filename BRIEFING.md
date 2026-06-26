@@ -56,8 +56,9 @@ chose the **Hybrid** option, so this bucket now splits:
   against on-device vocabulary, Gutenberg **plain-text** import (fetch → strip
   boilerplate → parse on-device), **GDL EPUB** import (download → unzip via
   fflate → walk the OPF spine → HTML→text → parse on-device, `content/epub.ts`),
-  and the **coverage preview** for Gutenberg books (sample the text + measure it
-  against the on-device vocabulary). Lives in
+  and the **coverage preview** for both Gutenberg (plain-text) and GDL (EPUB)
+  books (sample the book + measure it against the on-device vocabulary; the GDL
+  variant downloads + parses the EPUB, so it is local-first only). Lives in
   `src/frontend/js/shared/offline/local/content/` + `repositories/content.ts`,
   wired through `routeLocal` and surfaced behind the home "Discover books" toggle.
 - **Optional server (Python), unchanged:** Internet Archive, RSS feeds, YouTube

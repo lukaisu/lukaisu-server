@@ -12,6 +12,7 @@
 
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
+import { t } from '@shared/i18n/translator';
 import { apiGet, apiPost } from '@shared/api/client';
 import { isLocalFirst } from '@shared/offline/local/router';
 
@@ -34,6 +35,16 @@ interface GdlCatalogResponse {
   next: boolean;
 }
 
+/** On-device coverage-preview result (the server's `library-preview` shape). */
+interface PreviewData {
+  total_unique_words: number;
+  known_words: number;
+  unknown_words: number;
+  coverage_percent: number;
+  difficulty_label: string;
+  sample_unknown_words: string[];
+}
+
 interface GdlSuggestionsData {
   books: GdlSuggestedBook[];
   hasMore: boolean;
@@ -44,12 +55,17 @@ interface GdlSuggestionsData {
   basePath: string;
   importing: number | null;
   beginner: boolean;
+  previewBookId: number | null;
+  previewLoading: boolean;
+  previewData: PreviewData | null;
+  previewError: string;
 
   init(): void;
   fetchReaderLevel(): Promise<void>;
   fetchSuggestions(page: number): Promise<void>;
   loadMore(): Promise<void>;
   importBook(book: GdlSuggestedBook): Promise<void>;
+  previewBook(book: GdlSuggestedBook): Promise<void>;
   formatMeta(book: GdlSuggestedBook): string;
   hasLevel(book: GdlSuggestedBook): boolean;
   bookLevel(book: GdlSuggestedBook): string;
@@ -57,6 +73,10 @@ interface GdlSuggestionsData {
   importingClass(book: GdlSuggestedBook): string;
   isImporting(): boolean;
   showRow(): boolean;
+  canPreview(): boolean;
+  isPreviewing(book: GdlSuggestedBook): boolean;
+  coverageClass(label: string): string;
+  coverageLabel(data: PreviewData): string;
 }
 
 export function gdlSuggestionsData(): GdlSuggestionsData {
@@ -70,6 +90,10 @@ export function gdlSuggestionsData(): GdlSuggestionsData {
     basePath: '',
     importing: null,
     beginner: false,
+    previewBookId: null,
+    previewLoading: false,
+    previewData: null,
+    previewError: '',
 
     init() {
       const configEl = document.getElementById('home-warnings-config');
@@ -91,6 +115,9 @@ export function gdlSuggestionsData(): GdlSuggestionsData {
           this.books = [];
           this.page = 1;
           this.error = '';
+          this.previewBookId = null;
+          this.previewData = null;
+          this.previewError = '';
           this.fetchReaderLevel();
           this.fetchSuggestions(1);
         }
@@ -181,6 +208,53 @@ export function gdlSuggestionsData(): GdlSuggestionsData {
       window.location.href = `${this.basePath}/texts/new?${params}`;
     },
 
+    async previewBook(book: GdlSuggestedBook) {
+      // Toggle off if already previewing this book.
+      if (this.previewBookId === book.id) {
+        this.previewBookId = null;
+        this.previewData = null;
+        this.previewError = '';
+        return;
+      }
+
+      this.previewBookId = book.id;
+      this.previewData = null;
+      this.previewError = '';
+      this.previewLoading = false;
+
+      if (!book.epubUrl) {
+        this.previewError = 'This reader has no downloadable EPUB.';
+        return;
+      }
+
+      this.previewLoading = true;
+      try {
+        // On-device coverage: download + parse the EPUB and measure how much of
+        // its vocabulary the reader knows. EPUB parsing only exists on the
+        // client, so this is local-first only (the button is gated by
+        // canPreview()); the request is routed to the on-device analyzer.
+        const { data, error } = await apiGet<PreviewData>('/texts/library-preview-epub', {
+          url: book.epubUrl,
+          language_id: this.languageId,
+        });
+
+        if (this.previewBookId !== book.id) return;
+
+        if (error || !data) {
+          this.previewError = error || 'Could not analyze this book.';
+          return;
+        }
+
+        this.previewData = data;
+      } catch {
+        if (this.previewBookId === book.id) {
+          this.previewError = 'Could not analyze this book.';
+        }
+      } finally {
+        this.previewLoading = false;
+      }
+    },
+
     formatMeta(book: GdlSuggestedBook): string {
       return book.publisher || '';
     },
@@ -210,6 +284,27 @@ export function gdlSuggestionsData(): GdlSuggestionsData {
 
     showRow(): boolean {
       return this.books.length > 0 || this.loading;
+    },
+
+    // The coverage preview needs to download + unzip the EPUB on-device, which
+    // only works in local-first mode; hide the action otherwise (the server's
+    // library-preview can't parse EPUB binaries).
+    canPreview(): boolean {
+      return isLocalFirst();
+    },
+
+    isPreviewing(book: GdlSuggestedBook): boolean {
+      return this.previewBookId === book.id;
+    },
+
+    coverageClass(label: string): string {
+      if (label === 'easy') return 'is-success';
+      if (label === 'hard') return 'is-danger';
+      return 'is-warning';
+    },
+
+    coverageLabel(data: PreviewData): string {
+      return t('home.you_know_x_of_unique_words', { percent: data.coverage_percent });
     },
   };
 }

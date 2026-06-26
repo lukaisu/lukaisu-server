@@ -92,6 +92,7 @@ import {
   gdlSuggestions,
   readerLevel,
   analyzeCoverage,
+  analyzeEpubCoverage,
   importGutenbergText,
   importEpubText,
 } from './repositories/content';
@@ -231,10 +232,10 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
       .filter((n) => !Number.isNaN(n));
     return wrap(await getStatistics(ids));
   }
-  // Content discovery (catalog browse/search + reader level + Gutenberg coverage
-  // preview). These reach the external catalogs CORS-free and measure results
-  // against on-device vocabulary; arbitrary-URL/RSS extraction stays unrouted
-  // here so it falls through to a server when one is connected.
+  // Content discovery (catalog browse/search + reader level + the Gutenberg /
+  // GDL-EPUB coverage previews). These reach the external catalogs CORS-free and
+  // measure results against on-device vocabulary; arbitrary-URL/RSS extraction
+  // stays unrouted here so it falls through to a server when one is connected.
   if (path === '/texts/gutenberg-suggestions') {
     return wrap(await gutenbergSuggestions(num(p.language_id), num(p.page) || 1));
   }
@@ -249,6 +250,11 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   }
   if (path === '/texts/library-preview') {
     return wrap(await analyzeCoverage(str(p.url), num(p.language_id)));
+  }
+  if (path === '/texts/library-preview-epub') {
+    // GDL coverage preview — local-first only (EPUB parsing exists only on the
+    // client); the GDL UI shows the preview action only when local-first is on.
+    return wrap(await analyzeEpubCoverage(str(p.url), num(p.language_id)));
   }
   m = path.match(/^\/texts\/(\d+)$/);
   if (m) {
