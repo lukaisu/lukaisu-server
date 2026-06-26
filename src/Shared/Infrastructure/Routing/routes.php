@@ -334,27 +334,10 @@ function registerRoutes(Router $router): void
 
     // ==================== LANGUAGE ROUTES (PROTECTED) ====================
 
-    // New language form (RESTful route): GET/POST /languages/new
-    $router->get('/languages/new', 'Lukaisu\\Modules\\Language\\Http\\LanguageController@new', AUTH_MIDDLEWARE);
-    $router->post('/languages/new', 'Lukaisu\\Modules\\Language\\Http\\LanguageController@new', AUTH_MIDDLEWARE);
-
-    // Edit language form (RESTful route): /languages/123/edit
-    $router->get('/languages/{id:int}/edit', 'Lukaisu\\Modules\\Language\\Http\\LanguageController@edit', AUTH_MIDDLEWARE);
-    $router->post('/languages/{id:int}/edit', 'Lukaisu\\Modules\\Language\\Http\\LanguageController@edit', AUTH_MIDDLEWARE);
-
-    // Delete language (RESTful route): DELETE /languages/123
-    $router->delete(
-        '/languages/{id:int}',
-        'Lukaisu\\Modules\\Language\\Http\\LanguageController@delete',
-        AUTH_MIDDLEWARE
-    );
-
-    // Refresh (reparse) language texts (RESTful route): POST /languages/123/refresh
-    $router->post(
-        '/languages/{id:int}/refresh',
-        'Lukaisu\\Modules\\Language\\Http\\LanguageController@refresh',
-        AUTH_MIDDLEWARE
-    );
+    // Language create / edit / delete / refresh are served by the bundled client
+    // through the /api/v1/languages REST API (LanguageApiHandler); the legacy web
+    // form routes (LanguageController) were retired. GET /languages, /languages/new
+    // and /languages/{id}/edit are redirected to the bundle (see /app redirects).
 
     // Starter vocabulary (shown after language creation)
     $router->get(
@@ -375,13 +358,6 @@ function registerRoutes(Router $router): void
     $router->get(
         '/languages/{id:int}/starter-vocab/skip',
         'Lukaisu\\Modules\\Vocabulary\\Http\\StarterVocabController@skip',
-        AUTH_MIDDLEWARE
-    );
-
-    // Languages list (Language module)
-    $router->registerWithMiddleware(
-        '/languages',
-        'Lukaisu\\Modules\\Language\\Http\\LanguageController@index',
         AUTH_MIDDLEWARE
     );
 

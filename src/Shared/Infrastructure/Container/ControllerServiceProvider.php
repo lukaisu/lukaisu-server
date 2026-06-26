@@ -21,7 +21,7 @@ use Lukaisu\Shared\Http\BundleController;
 // Note: AuthController moved to Modules/User as UserController - registered by UserServiceProvider
 // Note: FeedsController moved to Modules/Feed as FeedController - registered by FeedServiceProvider
 // Note: HomeController moved to Modules/Home - registered by HomeServiceProvider
-use Lukaisu\Modules\Language\Http\LanguageController;
+// Note: LanguageController retired - language management served by the bundled client (LanguageApiHandler)
 // Note: TestController moved to Modules/Review - registered by ReviewServiceProvider
 use Lukaisu\Modules\Text\Http\TextController;
 // Note: TextPrintController moved to Modules/Text - registered by TextServiceProvider
@@ -30,7 +30,6 @@ use Lukaisu\Modules\Text\Http\TextController;
 // Note: WordPressController moved to Modules/User - registered by UserServiceProvider
 // Note: AuthService now primarily used via UserFacade in User module
 // Note: HomeService moved to Modules/Home as HomeFacade
-use Lukaisu\Modules\Dictionary\Application\DictionaryFacade;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 // Note: TestService now primarily used via ReviewFacade in Review module
 use Lukaisu\Modules\Text\Application\Services\TextDisplayService;
@@ -69,12 +68,8 @@ class ControllerServiceProvider implements ServiceProviderInterface
 
         // Note: AuthController removed - UserController is now registered by UserServiceProvider
 
-        $container->bind(LanguageController::class, function (Container $c) {
-            return new LanguageController(
-                $c->getTyped(LanguageFacade::class),
-                $c->getTyped(DictionaryFacade::class)
-            );
-        });
+        // Note: LanguageController retired - language management is served by the
+        // bundled client via the /api/v1/languages REST API (LanguageApiHandler)
 
         // Note: TestController removed - now registered by ReviewServiceProvider
 

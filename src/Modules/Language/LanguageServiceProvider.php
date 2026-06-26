@@ -37,10 +37,7 @@ use Lukaisu\Modules\Language\Application\UseCases\ReparseLanguageTexts;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Modules\Language\Application\Services\TextParsingService;
 // Http
-use Lukaisu\Modules\Language\Http\LanguageController;
 use Lukaisu\Modules\Language\Http\LanguageApiHandler;
-// Cross-module
-use Lukaisu\Modules\Dictionary\Application\DictionaryFacade;
 // NLP Service
 use Lukaisu\Modules\Language\Infrastructure\NlpServiceHandler;
 // Parser Infrastructure
@@ -52,7 +49,7 @@ use Lukaisu\Modules\Language\Application\Services\ParsingCoordinator;
  * Service provider for the Language module.
  *
  * Registers the LanguageRepositoryInterface, all use cases,
- * LanguageFacade, LanguageController, and LanguageApiHandler.
+ * LanguageFacade, and LanguageApiHandler.
  */
 class LanguageServiceProvider implements ServiceProviderInterface
 {
@@ -110,14 +107,6 @@ class LanguageServiceProvider implements ServiceProviderInterface
         $container->singleton(LanguageFacade::class, function (Container $c) {
             return new LanguageFacade(
                 $c->getTyped(LanguageRepositoryInterface::class)
-            );
-        });
-
-        // Register Controller
-        $container->singleton(LanguageController::class, function (Container $c) {
-            return new LanguageController(
-                $c->getTyped(LanguageFacade::class),
-                $c->getTyped(DictionaryFacade::class)
             );
         });
 
