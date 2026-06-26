@@ -12,6 +12,8 @@
 
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
+import { apiGet } from '@shared/api/client';
+import { isLocalFirst } from '@shared/offline/local/router';
 
 interface GdlSuggestedBook {
   id: number;
@@ -23,6 +25,13 @@ interface GdlSuggestedBook {
   thumbnail: string;
   sourceUri: string;
   epubUrl: string;
+}
+
+/** Catalog page envelope (`{ results, count, next }`), shared with the server. */
+interface GdlCatalogResponse {
+  results: GdlSuggestedBook[];
+  count: number;
+  next: boolean;
 }
 
 interface GdlSuggestionsData {
@@ -91,10 +100,10 @@ export function gdlSuggestionsData(): GdlSuggestionsData {
     async fetchReaderLevel() {
       if (this.languageId <= 0) return;
       try {
-        const params = new URLSearchParams({ language_id: String(this.languageId) });
-        const response = await fetch(`/api/v1/texts/reader-level?${params}`);
-        const data = await response.json();
-        if (response.ok && !data.error) {
+        const { data, error } = await apiGet<{ beginner?: boolean }>('/texts/reader-level', {
+          language_id: this.languageId,
+        });
+        if (!error && data) {
           this.beginner = !!data.beginner;
         }
       } catch {
@@ -109,24 +118,18 @@ export function gdlSuggestionsData(): GdlSuggestionsData {
       this.error = '';
 
       try {
-        const params = new URLSearchParams({
-          language_id: String(this.languageId),
-          page: String(page),
+        const { data, error } = await apiGet<GdlCatalogResponse>('/texts/gdl-search', {
+          language_id: this.languageId,
+          page,
         });
 
-        const response = await fetch(`/api/v1/texts/gdl-search?${params}`);
-        const data = await response.json();
-
-        if (!response.ok || data.error) {
-          this.error = data.error || 'Could not load suggestions.';
+        if (error || !data) {
+          this.error = error || 'Could not load suggestions.';
           return;
         }
 
-        if (page === 1) {
-          this.books = data.results || [];
-        } else {
-          this.books = this.books.concat(data.results || []);
-        }
+        const results = data.results || [];
+        this.books = page === 1 ? results : this.books.concat(results);
         this.hasMore = data.next || false;
         this.page = page;
         requestAnimationFrame(() => initIcons());
@@ -143,6 +146,13 @@ export function gdlSuggestionsData(): GdlSuggestionsData {
     },
 
     importBook(book: GdlSuggestedBook) {
+      // GDL books are EPUB. On-device EPUB import is deferred, and the import UI
+      // is server-rendered (not bundled), so import needs a connected server.
+      // Local-first: surface that rather than navigate to a missing page.
+      if (isLocalFirst()) {
+        this.error = 'Importing these readers needs a connected server (offline EPUB import is coming soon).';
+        return;
+      }
       this.importing = book.id;
       // GDL books are ePUB; the new-text page imports via extract-epub-url.
       const params = new URLSearchParams({

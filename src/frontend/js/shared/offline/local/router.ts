@@ -86,6 +86,13 @@ import {
   deleteTextTag,
 } from './repositories/tags';
 import { getStreak } from './repositories/activity';
+import {
+  gutenbergSuggestions,
+  librarySearch,
+  gdlSuggestions,
+  readerLevel,
+  importGutenbergText,
+} from './repositories/content';
 import { getI18nBundle } from './i18n';
 import type {
   LanguageCreateRequest,
@@ -222,6 +229,22 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
       .filter((n) => !Number.isNaN(n));
     return wrap(await getStatistics(ids));
   }
+  // Content discovery (catalog browse/search + reader level). These reach the
+  // external catalogs CORS-free and tier results against on-device vocabulary;
+  // arbitrary-URL/RSS extraction, coverage preview and EPUB import stay
+  // unrouted here so they fall through to a server when one is connected.
+  if (path === '/texts/gutenberg-suggestions') {
+    return wrap(await gutenbergSuggestions(num(p.language_id), num(p.page) || 1));
+  }
+  if (path === '/texts/library-search') {
+    return wrap(await librarySearch(str(p.q), num(p.language_id), num(p.page) || 1));
+  }
+  if (path === '/texts/gdl-search') {
+    return wrap(await gdlSuggestions(num(p.language_id), num(p.page) || 1));
+  }
+  if (path === '/texts/reader-level') {
+    return wrap(await readerLevel(num(p.language_id)));
+  }
   m = path.match(/^\/texts\/(\d+)$/);
   if (m) {
     return wrap(await getText(num(m[1])));
@@ -349,6 +372,18 @@ async function routePost(path: string, p: Record<string, unknown>): Promise<Loca
     // Parse-preview ("check a text"). Local-first only — the server's
     // /text/check is a native web-route form, not /api/v1.
     return wrap(await checkText({ langId: num(p.langId ?? p.language_id), text: str(p.text) }));
+  }
+  if (path === '/texts/import-gutenberg') {
+    // Local-first import of a Gutenberg plain-text book: fetch CORS-free, strip
+    // boilerplate, parse on-device. No server equivalent (the server has its
+    // own URL-extract import flow), so this is local-first only.
+    return wrap(
+      await importGutenbergText(
+        str(p.url),
+        str(p.title),
+        num(p.language_id ?? p.langId)
+      )
+    );
   }
   m = path.match(/^\/texts\/(\d+)\/archive$/);
   if (m) {

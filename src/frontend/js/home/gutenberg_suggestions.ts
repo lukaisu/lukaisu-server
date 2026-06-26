@@ -11,6 +11,8 @@
 import Alpine from 'alpinejs';
 import { initIcons } from '@shared/icons/lucide_icons';
 import { t } from '@shared/i18n/translator';
+import { apiGet, apiPost } from '@shared/api/client';
+import { isLocalFirst } from '@shared/offline/local/router';
 
 interface SuggestedBook {
   id: number;
@@ -32,6 +34,13 @@ interface PreviewData {
   sample_unknown_words: string[];
 }
 
+/** Catalog page envelope (`{ results, count, next }`), shared with the server. */
+interface CatalogResponse {
+  results: SuggestedBook[];
+  count: number;
+  next: boolean;
+}
+
 interface SuggestionsData {
   books: SuggestedBook[];
   hasMore: boolean;
@@ -50,10 +59,12 @@ interface SuggestionsData {
   fetchSuggestions(page: number): Promise<void>;
   loadMore(): Promise<void>;
   previewBook(book: SuggestedBook): Promise<void>;
-  importBook(book: SuggestedBook): void;
+  importBook(book: SuggestedBook): Promise<void>;
   formatAuthors(authors: string[]): string;
   tierLabel(tier: string): string;
   tierClass(tier: string): string;
+  importingClass(book: SuggestedBook): string;
+  isImporting(): boolean;
   coverageClass(label: string): string;
   coverageLabel(data: PreviewData): string;
 }
@@ -107,24 +118,18 @@ export function gutenbergSuggestionsData(): SuggestionsData {
       this.error = '';
 
       try {
-        const params = new URLSearchParams({
-          language_id: String(this.languageId),
-          page: String(page),
-        });
+        const { data, error } = await apiGet<CatalogResponse>(
+          '/texts/gutenberg-suggestions',
+          { language_id: this.languageId, page }
+        );
 
-        const response = await fetch(`/api/v1/texts/gutenberg-suggestions?${params}`);
-        const data = await response.json();
-
-        if (!response.ok || data.error) {
-          this.error = data.error || 'Could not load suggestions.';
+        if (error || !data) {
+          this.error = error || 'Could not load suggestions.';
           return;
         }
 
-        if (page === 1) {
-          this.books = data.results || [];
-        } else {
-          this.books = this.books.concat(data.results || []);
-        }
+        const results = data.results || [];
+        this.books = page === 1 ? results : this.books.concat(results);
         this.hasMore = data.next || false;
         this.page = page;
         requestAnimationFrame(() => initIcons());
@@ -155,22 +160,22 @@ export function gutenbergSuggestionsData(): SuggestionsData {
       this.previewError = '';
 
       try {
-        const params = new URLSearchParams({
+        // Coverage preview stays server-enhanced (it needs to fetch + sample
+        // the full text). Routed through apiGet so it targets the configured
+        // server when connected and fails gracefully when none is.
+        const { data, error } = await apiGet<PreviewData>('/texts/library-preview', {
           url: book.textUrl,
-          language_id: String(this.languageId),
+          language_id: this.languageId,
         });
-
-        const response = await fetch(`/api/v1/texts/library-preview?${params}`);
-        const data = await response.json();
 
         if (this.previewBookId !== book.id) return;
 
-        if (!response.ok || data.error) {
-          this.previewError = data.error || 'Could not analyze this text.';
+        if (error || !data) {
+          this.previewError = error || 'Could not analyze this text.';
           return;
         }
 
-        this.previewData = data as unknown as PreviewData;
+        this.previewData = data;
       } catch {
         if (this.previewBookId === book.id) {
           this.previewError = 'Could not reach the server.';
@@ -180,8 +185,28 @@ export function gutenbergSuggestionsData(): SuggestionsData {
       }
     },
 
-    importBook(book: SuggestedBook) {
+    async importBook(book: SuggestedBook) {
+      if (this.importing !== null) return;
       this.importing = book.id;
+
+      // Local-first: import the plain-text book on-device (fetch CORS-free,
+      // strip Gutenberg boilerplate, parse) and open the reader — no server.
+      if (isLocalFirst()) {
+        const { data, error } = await apiPost<{ id?: number }>('/texts/import-gutenberg', {
+          url: book.textUrl,
+          title: book.title,
+          language_id: this.languageId,
+        });
+        if (data?.id) {
+          window.location.href = `${this.basePath}/text/${data.id}/read`;
+          return;
+        }
+        this.error = error || 'Could not import this book.';
+        this.importing = null;
+        return;
+      }
+
+      // Server mode: hand off to the server's URL-import flow.
       const params = new URLSearchParams({
         import_url: book.textUrl,
         import_title: book.title,
@@ -202,6 +227,14 @@ export function gutenbergSuggestionsData(): SuggestionsData {
       if (tier === 'easy') return 'is-success is-light';
       if (tier === 'hard') return 'is-danger is-light';
       return 'is-warning is-light';
+    },
+
+    importingClass(book: SuggestedBook): string {
+      return this.importing === book.id ? 'is-loading' : '';
+    },
+
+    isImporting(): boolean {
+      return this.importing !== null;
     },
 
     coverageClass(label: string): string {
