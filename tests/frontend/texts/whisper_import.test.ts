@@ -496,7 +496,7 @@ describe('whisper_import.ts', () => {
       await new Promise(resolve => setTimeout(resolve, 50));
 
       // Check that fetch was called with FormData containing our values
-      expect(global.fetch).toHaveBeenCalledWith('/api/v1/whisper/transcribe', expect.objectContaining({
+      expect(global.fetch).toHaveBeenCalledWith('/whisper/transcribe', expect.objectContaining({
         method: 'POST',
         body: expect.any(FormData)
       }));
@@ -567,7 +567,7 @@ describe('whisper_import.ts', () => {
       await vi.runAllTimersAsync();
 
       // Should have called the delete endpoint
-      expect(global.fetch).toHaveBeenCalledWith('/api/v1/whisper/job/job-123', { method: 'DELETE' });
+      expect(global.fetch).toHaveBeenCalledWith('/whisper/job/job-123', { method: 'DELETE' });
 
       const status = document.getElementById('importFileStatus');
       expect(status?.textContent).toContain('cancelled');

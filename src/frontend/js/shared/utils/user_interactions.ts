@@ -12,6 +12,7 @@ import { getTTSSettingsWithMigration, type TTSLanguageSettings } from './tts_sto
 import { getReadingPosition } from '@modules/text/stores/reading_state';
 import { url } from './url';
 import { getCsrfToken } from '@shared/api/client';
+import { nlpUrl, nlpCapable } from '@shared/offline/nlp/endpoint';
 
 // Type for text dictionary in newExpressionInteractable
 interface TextDictionary {
@@ -390,14 +391,16 @@ export async function readTextWithPiper(
   lang: string
 ): Promise<void> {
   try {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    const csrf = getCsrfToken();
-    if (csrf) {
-      headers['X-CSRF-TOKEN'] = csrf;
+    // No Piper on the connected edge -> straight to browser TTS, no doomed POST.
+    if (!(await nlpCapable('tts'))) {
+      readRawTextAloud(text, lang);
+      return;
     }
-    const response = await fetch(url('/api/v1/tts/speak'), {
+    // The NLP edge returns raw WAV bytes (the PHP proxy used to base64-wrap
+    // them); play the blob via an object URL and release it when done.
+    const response = await fetch(nlpUrl('/tts/speak'), {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, voice_id: voiceId })
     });
 
@@ -405,13 +408,12 @@ export async function readTextWithPiper(
       throw new Error('TTS service unavailable');
     }
 
-    const data = await response.json() as { audio?: string };
-    if (data.audio) {
-      const audio = new Audio(data.audio);
-      await audio.play();
-    } else {
-      throw new Error('No audio data returned');
-    }
+    const audioUrl = URL.createObjectURL(await response.blob());
+    const audio = new Audio(audioUrl);
+    const release = (): void => URL.revokeObjectURL(audioUrl);
+    audio.addEventListener('ended', release);
+    audio.addEventListener('error', release);
+    await audio.play();
   } catch (error) {
     // Fallback to browser TTS
     console.warn('Piper TTS failed, falling back to browser:', error);

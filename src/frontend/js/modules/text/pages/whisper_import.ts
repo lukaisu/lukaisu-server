@@ -7,7 +7,7 @@
  * @since   3.0.0
  */
 
-import { getCsrfToken } from '@shared/api/client';
+import { nlpUrl } from '@shared/offline/nlp/endpoint';
 
 /**
  * Transcription job status from the API.
@@ -186,11 +186,9 @@ async function checkWhisperAvailable(): Promise<boolean> {
   }
 
   try {
-    const response = await fetch('/api/v1/whisper/available');
-    // The Lukaisu Server API returns flat objects (Response::success sends the
-    // payload directly, no `{data: …}` wrapper). Older code in this
-    // file expected the wrap and read `data.data?.X` everywhere —
-    // none of those reads ever produced a value.
+    const response = await fetch(nlpUrl('/whisper/available'));
+    // The NLP edge returns flat objects (`{ available: … }`) — same shape the
+    // PHP `/api/v1/whisper` proxy passed through, so the parsing is unchanged.
     const data = await response.json();
     whisperAvailable = data.available === true;
     return whisperAvailable;
@@ -208,7 +206,7 @@ async function loadWhisperLanguages(): Promise<void> {
   if (!select) return;
 
   try {
-    const response = await fetch('/api/v1/whisper/languages');
+    const response = await fetch(nlpUrl('/whisper/languages'));
     const data = await response.json();
     const languages: LanguageOption[] = data.languages ?? [];
 
@@ -251,21 +249,15 @@ async function startTranscription(): Promise<void> {
     if (language) formData.append('language', language);
     formData.append('model', model);
 
-    const headers: Record<string, string> = {};
-    const csrf = getCsrfToken();
-    if (csrf) {
-      headers['X-CSRF-TOKEN'] = csrf;
-    }
-    const response = await fetch('/api/v1/whisper/transcribe', {
+    const response = await fetch(nlpUrl('/whisper/transcribe'), {
       method: 'POST',
-      headers,
       body: formData,
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to start transcription');
+      throw new Error(data.detail || data.error || 'Failed to start transcription');
     }
 
     if (!data.job_id) {
@@ -300,7 +292,7 @@ function startPolling(): void {
     }
 
     try {
-      const response = await fetch(`/api/v1/whisper/status/${currentJobId}`);
+      const response = await fetch(nlpUrl(`/whisper/status/${currentJobId}`));
       const data = await response.json();
       const status: TranscriptionStatus = data;
 
@@ -343,11 +335,11 @@ async function fetchResult(): Promise<void> {
   if (!currentJobId) return;
 
   try {
-    const response = await fetch(`/api/v1/whisper/result/${currentJobId}`);
+    const response = await fetch(nlpUrl(`/whisper/result/${currentJobId}`));
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to get result');
+      throw new Error(data.detail || data.error || 'Failed to get result');
     }
 
     const result: TranscriptionResult = data;
@@ -415,12 +407,7 @@ async function cancelTranscription(): Promise<void> {
   if (!currentJobId) return;
 
   try {
-    const headers: Record<string, string> = {};
-    const csrf = getCsrfToken();
-    if (csrf) {
-      headers['X-CSRF-TOKEN'] = csrf;
-    }
-    await fetch(`/api/v1/whisper/job/${currentJobId}`, { method: 'DELETE', headers });
+    await fetch(nlpUrl(`/whisper/job/${currentJobId}`), { method: 'DELETE' });
   } catch (e) {
     console.error('Failed to cancel job:', e);
   }
