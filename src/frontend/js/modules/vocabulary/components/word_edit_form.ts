@@ -5,7 +5,6 @@
  * Integrates with the word form store for state management.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

@@ -6,7 +6,7 @@
 
 ## Mission
 
-Turn this PHP backend (a rebranded fork of Learning with Texts 3.2.0) into an
+Turn this PHP backend (a rebranded fork of Learning with Texts) into an
 **optional, Python-first server** whose only jobs are **NLP and
 network-bound work** (and, later, **multi-device sync**). The PHP backend is
 scaffolding to be progressively hollowed out: **rendering** moves to the client,

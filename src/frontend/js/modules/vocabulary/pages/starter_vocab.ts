@@ -5,7 +5,6 @@
  * choose sources -> import frequency words -> enrich -> import dicts -> done
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

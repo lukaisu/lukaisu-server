@@ -5,7 +5,6 @@
  * content extraction, then populates the text creation form.
  *
  * @license unlicense
- * @since   3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

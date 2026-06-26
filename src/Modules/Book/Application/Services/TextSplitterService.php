@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -22,8 +21,6 @@ namespace Lukaisu\Modules\Book\Application\Services;
  *
  * Splits text at paragraph boundaries, keeping chunks under a maximum
  * byte size suitable for storage in the database.
- *
- * @since 3.0.0
  */
 class TextSplitterService
 {

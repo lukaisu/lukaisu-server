@@ -5,7 +5,6 @@
  * and configuration passed from PHP via JSON.
  *
  * @license unlicense
- * @since 3.0.0 Extracted from inline PHP scripts
  */
 
 import { lukaisuFormCheck } from './unloadformcheck';

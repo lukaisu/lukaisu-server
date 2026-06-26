@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -38,8 +37,6 @@ use Lukaisu\Modules\Vocabulary\Application\Services\ExportService;
  *
  * Provides a unified interface to all review-related use cases.
  * Designed for backward compatibility with existing TestService callers.
- *
- * @since 3.0.0
  */
 class ReviewFacade
 {

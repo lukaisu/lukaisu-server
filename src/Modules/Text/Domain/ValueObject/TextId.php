@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -23,8 +22,6 @@ use InvalidArgumentException;
  * Value object representing a Text's unique identifier.
  *
  * Immutable and self-validating. A value of 0 indicates an unsaved entity.
- *
- * @since 3.0.0
  */
 final readonly class TextId
 {

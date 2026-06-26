@@ -5,7 +5,6 @@
  * and CRUD operations.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

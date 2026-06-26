@@ -7,7 +7,6 @@
  *
  * @author  HugoFara <hugo.farajallah@protonmail.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { selectToggle, multiActionGo, allActionGo } from '@shared/forms/bulk_actions';

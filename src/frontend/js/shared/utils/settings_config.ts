@@ -5,7 +5,6 @@
  * Configuration must be initialized via initSettingsConfig().
  *
  * @license Unlicense <http://unlicense.org/>
- * @since 3.1.0
  */
 
 export interface SettingsConfig {

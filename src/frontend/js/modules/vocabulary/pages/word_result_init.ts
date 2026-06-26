@@ -7,7 +7,6 @@
  * - all_wellknown_result.php (mark all as well-known/ignored)
  *
  * @license Unlicense <http://unlicense.org/>
- * @since 3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

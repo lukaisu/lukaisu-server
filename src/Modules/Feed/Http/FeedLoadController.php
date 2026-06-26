@@ -15,8 +15,6 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
  *
  * Handles feed loading, multi-load interface, and the
  * renderFeedLoadInterface method for Alpine.js feed loader.
- *
- * @since 3.0.0
  */
 class FeedLoadController
 {

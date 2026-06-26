@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use Lukaisu\Modules\Admin\Domain\SettingDefinitions;
  *
  * In multi-user mode, saves with the current user's ID.
  * In single-user mode, saves to the global row (user_id=0).
- *
- * @since 3.0.0
  */
 class SaveUserPreferences
 {

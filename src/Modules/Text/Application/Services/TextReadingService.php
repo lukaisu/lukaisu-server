@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0 Migrated from Core/Text/text_display.php
  */
 
 declare(strict_types=1);
@@ -34,7 +33,6 @@ use Lukaisu\Modules\Tags\Application\TagsFacade;
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  *
  * @psalm-suppress UnusedClass - Service class for text reading functionality
  */

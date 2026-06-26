@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -59,8 +58,6 @@ use Lukaisu\Modules\Feed\Http\FeedApiHandler;
  *
  * Registers repositories, services, use cases, facade,
  * controller, and API handler for the Feed module.
- *
- * @since 3.0.0
  */
 class FeedServiceProvider implements ServiceProviderInterface
 {

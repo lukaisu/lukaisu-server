@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -28,8 +27,6 @@ use InvalidArgumentException;
  * - 1-5: Learning stages (1=new, 5=learned)
  * - 98: Ignored words
  * - 99: Well-known words
- *
- * @since 3.0.0
  */
 final readonly class TermStatus
 {

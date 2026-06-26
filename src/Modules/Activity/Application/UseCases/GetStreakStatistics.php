@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -26,8 +25,6 @@ use Lukaisu\Modules\Activity\Domain\StreakResult;
  * A streak is a run of consecutive calendar days with any activity.
  * The current streak only counts if the most recent active day
  * is today or yesterday.
- *
- * @since 3.0.0
  */
 class GetStreakStatistics
 {

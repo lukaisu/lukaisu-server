@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -24,8 +23,6 @@ namespace Lukaisu\Modules\Vocabulary\Domain;
  *
  * Implementations can use dictionaries, rule-based stemming,
  * or external NLP services to find the base form (lemma) of words.
- *
- * @since 3.0.0
  */
 interface LemmatizerInterface
 {

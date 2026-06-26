@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * Tests pure logic methods (getPagination) thoroughly and verifies
  * repository delegation for getTextsForLanguage.
- *
  */
 #[CoversClass(ListTexts::class)]
 class ListTextsTest extends TestCase

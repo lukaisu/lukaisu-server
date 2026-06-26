@@ -22,7 +22,6 @@ use Lukaisu\Shared\Infrastructure\Bootstrap\EnvLoader;
  *
  * @author  HugoFara <hugo.farajallah@protonmail.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   3.1.1
  */
 final class Cors
 {

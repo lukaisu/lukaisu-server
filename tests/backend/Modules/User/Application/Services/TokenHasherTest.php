@@ -10,7 +10,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for the TokenHasher service.
- *
  */
 #[CoversClass(TokenHasher::class)]
 class TokenHasherTest extends TestCase

@@ -20,7 +20,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.1.0
  */
 
 declare(strict_types=1);
@@ -29,8 +28,6 @@ namespace Lukaisu\Modules\Feed\Application\Services;
 
 /**
  * Parser for OPDS navigation and acquisition feeds.
- *
- * @since 3.1.0
  */
 class OpdsParser
 {

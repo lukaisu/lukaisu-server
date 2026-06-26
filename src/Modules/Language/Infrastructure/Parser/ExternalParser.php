@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -33,8 +32,6 @@ use RuntimeException;
  *
  * Security: Binary paths come only from the server-side config file, not from
  * user input. All command arguments are properly escaped.
- *
- * @since 3.0.0
  */
 class ExternalParser implements ParserInterface
 {

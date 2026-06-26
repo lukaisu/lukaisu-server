@@ -16,7 +16,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the MySqlUserRepository class.
- *
  */
 #[CoversClass(MySqlUserRepository::class)]
 class UserRepositoryTest extends TestCase

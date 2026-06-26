@@ -18,8 +18,6 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
  *
  * Handles the main feed list page with article browsing,
  * marked item processing, and text creation from feeds.
- *
- * @since 3.0.0
  */
 class FeedIndexController
 {

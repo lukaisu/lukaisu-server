@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use Lukaisu\Shared\Infrastructure\Globals;
  * and DELETE /job/{id} would accept arbitrary job IDs, letting any
  * authenticated user read or cancel another user's transcription if
  * the UUID leaked or was guessed.
- *
- * @since 3.0.0
  */
 class WhisperJobRepository
 {

@@ -10,7 +10,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Book\Application\Services
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use InvalidArgumentException;
 
 /**
  * Unit tests for EpubParserService.
- *
- * @since 3.0.0
  */
 class EpubParserServiceTest extends TestCase
 {

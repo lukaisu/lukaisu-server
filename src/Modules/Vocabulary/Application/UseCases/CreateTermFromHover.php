@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -30,8 +29,6 @@ use Lukaisu\Modules\Vocabulary\Application\VocabularyFacade;
  *
  * When a user clicks on a word status in the reading view hover menu,
  * this use case creates the term with the specified status.
- *
- * @since 3.0.0
  */
 class CreateTermFromHover
 {

@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -35,8 +34,6 @@ use Lukaisu\Modules\Tags\Infrastructure\MySqlWordTagAssociation;
  *
  * Manages word-tag associations, HTML rendering of tag lists,
  * batch add/remove operations, and select option generation.
- *
- * @since 3.0.0
  */
 class TermTagService
 {

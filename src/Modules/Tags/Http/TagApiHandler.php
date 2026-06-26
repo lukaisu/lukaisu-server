@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -32,8 +31,6 @@ use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
  * - GET /api/v1/tags - Get all tags (both term and text)
  * - GET /api/v1/tags/term - Get term tags only
  * - GET /api/v1/tags/text - Get text tags only
- *
- * @since 3.0.0
  */
 class TagApiHandler implements ApiRoutableInterface
 {

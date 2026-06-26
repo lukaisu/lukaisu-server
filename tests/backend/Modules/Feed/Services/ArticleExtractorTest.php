@@ -14,7 +14,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * Tests article content extraction including charset detection,
  * HTML parsing, XPath extraction, and content cleaning.
- *
  */
 #[CoversClass(ArticleExtractor::class)]
 class ArticleExtractorTest extends TestCase

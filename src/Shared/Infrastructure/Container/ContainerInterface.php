@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -21,8 +20,6 @@ namespace Lukaisu\Shared\Infrastructure\Container;
  * PSR-11 compatible container interface.
  *
  * This interface follows the PSR-11 ContainerInterface specification.
- *
- * @since 3.0.0
  */
 interface ContainerInterface
 {

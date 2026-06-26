@@ -15,7 +15,6 @@ use Lukaisu\Shared\Infrastructure\Language\LanguagePresets;
 
 /**
  * Tests for LanguageController.
- *
  */
 #[CoversClass(LanguageController::class)]
 class LanguageControllerTest extends TestCase

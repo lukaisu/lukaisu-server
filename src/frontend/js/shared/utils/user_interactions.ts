@@ -3,7 +3,6 @@
  *
  * @author  HugoFara <Hugo.Farajallah@protonmail.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   2.0.3-fork
  */
 
 import { showPopup, closePopup } from '@modules/vocabulary/components/word_popup';
@@ -92,8 +91,6 @@ export function quickMenuRedirection(value: string): void {
  * @param hex          Lowercase formatted version of the text.
  * @param showallwords true: multi-word is a superscript, show mw index + words
  *                     false: only show the multiword, hide the words
- *
- * @since 2.5.2-fork Don't hide multi-word index when inserting new multi-word.
  */
 export function newExpressionInteractable(
   text: TextDictionary,
@@ -177,8 +174,6 @@ export function newExpressionInteractable(
 
 /**
  * Scroll to a specific reading position
- *
- * @since 2.0.3-fork
  */
 export function goToLastPosition(): void {
   // Last registered position to go to
@@ -218,8 +213,6 @@ export function goToLastPosition(): void {
  *
  * @param text_id Text id
  * @param position Position to save
- *
- * @since 2.9.0-fork
  */
 export function saveReadingPosition(text_id: number, position: number): void {
   const headers: Record<string, string> = {
@@ -427,8 +420,6 @@ export async function readTextWithPiper(
  *
  * @param language Language code to get TTS settings for
  * @returns TTSLanguageSettings object with rate, pitch, and voice properties
- *
- * @since 3.0.0 Changed from cookies to localStorage
  */
 export function cookieTTSSettings(language: string): TTSLanguageSettings {
   // Use the first two characters of the language code (e.g., "en" from "en-US")
@@ -447,8 +438,6 @@ export function cookieTTSSettings(language: string): TTSLanguageSettings {
  * @param voice Optional voice
  *
  * @return The spoken message object
- *
- * @since 2.9.0 Accepts "voice" as a new optional argument
  */
 export function readRawTextAloud(
   text: string,
@@ -497,8 +486,6 @@ export function readRawTextAloud(
  * @param pitch  Pitch value
  * @param voice  Optional voice, the result will depend on the browser used
  * @param convert_to_phonetic Whether to convert to phonetic first
- *
- * @since 2.9.0 Accepts "voice" as a new optional argument
  */
 export function readTextAloud(
   text: string,

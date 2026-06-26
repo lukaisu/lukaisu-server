@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Admin\Application\UseCases\Settings
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ use PHPUnit\Framework\TestCase;
  * Note: execute() uses static Settings::getWithDefault() calls and cannot
  * be fully unit-tested without a database. These tests cover the static
  * metadata methods instead.
- *
- * @since 3.0.0
  */
 class GetAllSettingsTest extends TestCase
 {

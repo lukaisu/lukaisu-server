@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -26,8 +25,6 @@ use InvalidArgumentException;
  * This class is responsible for loading and validating the external parser
  * configurations from config/parsers.php. It provides a secure way to
  * register additional parsers without allowing arbitrary code execution.
- *
- * @since 3.0.0
  */
 class ExternalParserLoader
 {

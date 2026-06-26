@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -23,8 +22,6 @@ namespace Lukaisu\Modules\Language\Domain\Parser;
  * A token can be either a word (learnable content) or a non-word
  * (punctuation, whitespace, symbols). Tokens maintain their position
  * within the text for proper reconstruction and display.
- *
- * @since 3.0.0
  */
 class Token
 {

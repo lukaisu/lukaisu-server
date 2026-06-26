@@ -2,7 +2,6 @@
  * Texts API - Type-safe wrapper for text operations.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { apiGet, apiPost, apiPut, apiDelete, type ApiResponse } from '@shared/api/client';

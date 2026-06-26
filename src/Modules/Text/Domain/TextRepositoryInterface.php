@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ namespace Lukaisu\Modules\Text\Domain;
  * This is a domain port defining the contract for text persistence.
  * Infrastructure implementations (e.g., MySqlTextRepository) provide
  * the actual database access.
- *
- * @since 3.0.0
  */
 interface TextRepositoryInterface
 {

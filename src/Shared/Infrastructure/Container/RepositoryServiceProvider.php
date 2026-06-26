@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,7 +26,6 @@ use Lukaisu\Modules\User\Infrastructure\MySqlUserRepository;
 /**
  * Service provider that registers all repository classes.
  *
- * @since 3.0.0
  *
  * @psalm-suppress UnusedClass Class will be used when container is fully integrated
  */

@@ -15,7 +15,6 @@ declare(strict_types=1);
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  *
  * @var string      $email Email address from Google
  * @var string|null $error Error message (if any)

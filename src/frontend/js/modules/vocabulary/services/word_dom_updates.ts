@@ -6,7 +6,6 @@
  * These functions are called from result views after word operations complete.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { createWordTooltip } from '@modules/vocabulary/services/word_status';

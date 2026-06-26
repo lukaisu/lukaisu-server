@@ -4,7 +4,6 @@
  * This module provides a native HTML5 audio player with custom controls.
  *
  * @license unlicense
- * @since 3.0.0
  */
 
 import { saveSetting } from '@shared/utils/ajax_utilities';

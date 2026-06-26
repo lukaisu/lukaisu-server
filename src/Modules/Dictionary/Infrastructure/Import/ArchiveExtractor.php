@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.1.2
  */
 
 declare(strict_types=1);
@@ -31,8 +30,6 @@ use ZipArchive;
  *
  * Hardened against zip-bombs (file-count cap), path traversal, and stale
  * temp files (caller-driven cleanup).
- *
- * @since 3.1.2
  */
 class ArchiveExtractor
 {

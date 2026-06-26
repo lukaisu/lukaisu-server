@@ -7,7 +7,6 @@
  * Uses dynamic imports to only load Chart.js (~200KB) when charts are actually needed.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

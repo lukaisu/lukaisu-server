@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -26,8 +25,6 @@ use Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermStatus;
  *
  * Provides methods for updating individual term fields, bulk operations
  * on multiple terms, and statistical/distribution queries.
- *
- * @since 3.0.0
  */
 trait TermStatsMethods
 {

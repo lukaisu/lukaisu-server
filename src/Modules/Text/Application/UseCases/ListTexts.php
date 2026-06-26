@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use Lukaisu\Modules\Text\Domain\TextRepositoryInterface;
  *
  * Handles both active and archived text listing with support for
  * language filtering, search queries, tag filters, and pagination.
- *
- * @since 3.0.0
  */
 class ListTexts
 {

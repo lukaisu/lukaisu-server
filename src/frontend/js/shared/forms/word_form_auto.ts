@@ -5,7 +5,6 @@
  * Handles automatic translation and romanization when creating new words.
  *
  * @license unlicense
- * @since 3.0.0
  */
 
 import { getLibreTranslateTranslation } from '@modules/vocabulary/services/translation_api';

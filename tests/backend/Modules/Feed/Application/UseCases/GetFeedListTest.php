@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Feed\Application\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -28,8 +27,6 @@ use PHPUnit\Framework\TestCase;
  *
  * Verifies paginated feed listing, article count retrieval,
  * language filtering, and dropdown select formatting.
- *
- * @since 3.0.0
  */
 class GetFeedListTest extends TestCase
 {

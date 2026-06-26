@@ -4,7 +4,6 @@
  * Extracted from Views/Text/display_header.php
  *
  * @license unlicense
- * @since 3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * cannot be mocked in unit tests, these tests verify class structure,
  * method signatures, return type contracts, and pure logic (e.g. the
  * empty-array guard in deleteMultiple/deleteArchivedTexts).
- *
  */
 #[CoversClass(DeleteText::class)]
 class DeleteTextTest extends TestCase

@@ -14,7 +14,6 @@
  * @package  Lukaisu\Modules\User\Application\UseCases
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.1.2
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use Lukaisu\Modules\User\Domain\UserRepositoryInterface;
 
 /**
  * Reset a password using a one-time recovery code.
- *
- * @since 3.1.2
  */
 class ResetPasswordWithRecoveryCode
 {

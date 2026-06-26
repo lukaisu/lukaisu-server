@@ -5,7 +5,6 @@
  * Provides type-safe wrappers for GET, POST, PUT, DELETE requests.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { routeLocal } from '@shared/offline/local/router';

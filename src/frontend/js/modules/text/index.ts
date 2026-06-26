@@ -2,7 +2,6 @@
  * Text Module - Text reading and management.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 // API

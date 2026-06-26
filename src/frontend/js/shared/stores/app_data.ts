@@ -8,7 +8,6 @@
  * - TAGS/TEXTTAGS: Fetched from API on demand with caching
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import type { WordStatus } from '@/types/globals';

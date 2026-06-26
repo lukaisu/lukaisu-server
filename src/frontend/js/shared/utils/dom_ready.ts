@@ -5,7 +5,6 @@
  * imported modules that may load after the event has already fired.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 /**

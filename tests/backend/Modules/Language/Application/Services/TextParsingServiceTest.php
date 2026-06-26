@@ -10,7 +10,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for the TextParsingService.
- *
  */
 #[CoversClass(TextParsingService::class)]
 class TextParsingServiceTest extends TestCase

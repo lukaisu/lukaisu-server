@@ -7,7 +7,6 @@
  * - Status-specific translation display
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import type { TextReadingConfig } from '@modules/text/api/texts_api';

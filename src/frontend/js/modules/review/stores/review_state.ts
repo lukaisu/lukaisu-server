@@ -4,7 +4,6 @@
  * This module provides explicit getter/setter functions for review mode operations.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since 3.1.0
  */
 
 /**

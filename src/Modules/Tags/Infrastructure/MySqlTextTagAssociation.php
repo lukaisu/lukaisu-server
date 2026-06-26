@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -29,8 +28,6 @@ use Lukaisu\Modules\Tags\Domain\TagRepositoryInterface;
  * MySQL implementation of TagAssociationInterface for text-tag links.
  *
  * Operates on the 'text_tag_map' junction table.
- *
- * @since 3.0.0
  */
 class MySqlTextTagAssociation implements TagAssociationInterface
 {

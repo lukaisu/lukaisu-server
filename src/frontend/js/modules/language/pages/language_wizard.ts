@@ -10,7 +10,6 @@
  * - Popup wizard: separate popup window that modifies opener's form
  *
  * @license Unlicense
- * @since 3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

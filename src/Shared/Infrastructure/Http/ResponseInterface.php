@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -22,8 +21,6 @@ namespace Lukaisu\Shared\Infrastructure\Http;
  *
  * Response objects encapsulate HTTP response data (status, headers, body)
  * and can be sent by the router after controller execution.
- *
- * @since 3.0.0
  */
 interface ResponseInterface
 {

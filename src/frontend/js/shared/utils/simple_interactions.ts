@@ -10,7 +10,6 @@
  * - Text word actions (know all, ignore all)
  *
  * @license unlicense
- * @since   3.0.0
  */
 
 import { lukaisuFormCheck } from '@shared/forms/unloadformcheck';
@@ -198,12 +197,12 @@ export function initSimpleInteractions(): void {
       break;
 
     case 'show-right-frames':
-      // Legacy action - right frames panel was removed in v3.2.0
+      // Legacy action - right frames panel was removed
       // This action is now a no-op
       break;
 
     case 'hide-right-frames':
-      // Legacy action - right frames panel was removed in v3.2.0
+      // Legacy action - right frames panel was removed
       // This action is now a no-op
       e.preventDefault();
       break;

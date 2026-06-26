@@ -14,7 +14,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * Tests export functionality including text normalization, term masking,
  * and various export formats (Anki, TSV, Flexible).
- *
  */
 #[CoversClass(ExportService::class)]
 class ExportServiceTest extends TestCase

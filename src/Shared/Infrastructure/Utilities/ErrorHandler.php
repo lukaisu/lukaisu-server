@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0 Split from kernel_utility.php
  */
 
 declare(strict_types=1);
@@ -30,7 +29,6 @@ namespace Lukaisu\Shared\Infrastructure\Utilities;
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 class ErrorHandler
 {
@@ -40,8 +38,6 @@ class ErrorHandler
      * @param string $text Error text to output
      *
      * @return never
-     *
-     * @since 2.5.3-fork Add a link to the Discord community
      */
     public static function die(string $text): never
     {

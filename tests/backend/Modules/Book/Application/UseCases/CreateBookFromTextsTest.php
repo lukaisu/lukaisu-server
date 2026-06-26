@@ -13,7 +13,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Book\Application\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -31,8 +30,6 @@ use RuntimeException;
 
 /**
  * Unit tests for CreateBookFromTexts use case.
- *
- * @since 3.0.0
  */
 class CreateBookFromTextsTest extends TestCase
 {

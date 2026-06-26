@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -24,8 +23,6 @@ use Lukaisu\Modules\Admin\Application\Services\SessionCleaner;
  * Use case for saving a single setting with optional session clearing.
  *
  * Used by the save_setting_redirect endpoint.
- *
- * @since 3.0.0
  */
 class SaveSetting
 {

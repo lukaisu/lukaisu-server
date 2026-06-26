@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Feed\Application\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use PHPUnit\Framework\TestCase;
  *
  * Verifies article retrieval by feed IDs, single feed, by ID,
  * and empty/edge case handling.
- *
- * @since 3.0.0
  */
 class GetArticlesTest extends TestCase
 {

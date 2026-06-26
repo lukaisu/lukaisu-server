@@ -2,7 +2,6 @@
  * Audio Feedback - Play success/failure sounds for user feedback.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since 3.2.0
  */
 
 /**

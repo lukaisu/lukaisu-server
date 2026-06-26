@@ -4,7 +4,6 @@
  * Provides local dictionary lookup functionality for the text reading interface.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 // Export API functions

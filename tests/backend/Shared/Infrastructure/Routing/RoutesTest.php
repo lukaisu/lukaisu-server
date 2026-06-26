@@ -14,8 +14,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * Tests that all routes defined in routes.php:
  * 1. Resolve correctly to their handlers
  * 2. Have existing handler files (for file handlers) or valid controller format
- *
- * @since 3.0.0 Updated to expect controller handlers instead of legacy file paths
  */
 class RoutesTest extends TestCase
 {

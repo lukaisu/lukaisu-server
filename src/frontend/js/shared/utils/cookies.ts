@@ -3,7 +3,6 @@
  *
  * @author  andreask7 <andreasks7@users.noreply.github.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   2.10.0-fork Extracted from pgm.ts
  */
 
 /**
@@ -11,8 +10,6 @@
  *
  * @param check_name Cookie name
  * @returns Value of the cookie if found, null otherwise
- *
- * @since 2.6.0-fork Use decodeURIComponent instead of deprecated unescape
  */
 export function getCookie(check_name: string): string | null {
   const a_all_cookies = document.cookie.split(';');
@@ -44,8 +41,6 @@ export function getCookie(check_name: string): string | null {
  * @param path    Cookie path
  * @param domain  Cookie domain
  * @param secure  If it should only be sent through secure connection
- *
- * @since 2.6.0-fork Use encodeURIComponent instead of deprecated escape
  */
 export function setCookie(
   name: string,

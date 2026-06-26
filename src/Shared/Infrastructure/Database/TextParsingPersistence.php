@@ -11,7 +11,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ use Lukaisu\Shared\Infrastructure\Globals;
  *
  * Handles SQL-based text saving, sentence/text-item registration,
  * statistics display, and multi-word expression checking.
- *
- * @since 3.0.0
  */
 class TextParsingPersistence
 {
@@ -436,7 +433,7 @@ class TextParsingPersistence
             $del_wo_sql .= "WHEN (@a$i := @a0) IS NULL THEN NULL ";
             $init_var .= "@a$i=0,";
         }
-        // 2.8.1-fork: @a0 is always 0? @f always '' but necessary to force code execution
+        // @a0 is always 0? @f always '' but necessary to force code execution
         Connection::query(
             "SET $init_var@a1=0, @a0=0, @se_id=0, @c='', @d=0, @f='', @ti_or=0;"
         );
@@ -466,7 +463,7 @@ class TextParsingPersistence
         Connection::query(
             "INSERT IGNORE INTO tempexprs
             (sent, word, lword, position, n)
-            -- 2.10.0-fork: straight_join may be irrelevant as the query is less skewed
+            -- straight_join may be irrelevant as the query is less skewed
             SELECT straight_join
             IF(
                 @se_id=sentence_id and @ti_or=position,

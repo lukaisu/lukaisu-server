@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * Tests repository-delegated methods (getNavigation) via mocking
  * and verifies method signatures for DB-dependent methods.
- *
  */
 #[CoversClass(GetTextForReading::class)]
 class GetTextForReadingTest extends TestCase

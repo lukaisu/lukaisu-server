@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -22,8 +21,6 @@ use Lukaisu\Modules\Feed\Domain\FeedRepositoryInterface;
 
 /**
  * Use case for deleting feeds and their articles.
- *
- * @since 3.0.0
  */
 class DeleteFeeds
 {

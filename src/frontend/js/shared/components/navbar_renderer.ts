@@ -13,7 +13,6 @@
  * list, current language, theme state, user/admin flags — comes from the API.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.1.0
  */
 
 import { escapeHtml } from '@shared/utils/html_utils';

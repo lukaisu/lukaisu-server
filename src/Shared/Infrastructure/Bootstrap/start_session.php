@@ -11,7 +11,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license Unlicense <http://unlicense.org/>
  * @link    https://hugofara.github.io/lukaisu-server/developer/api
- * @since   2.0.3-fork
  */
 
 declare(strict_types=1);

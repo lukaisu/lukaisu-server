@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -33,8 +32,6 @@ use Lukaisu\Modules\Activity\Infrastructure\MySqlActivityRepository;
  * - Text reading interface (read)
  * - Text display/print modes (display)
  * - Text checking (check)
- *
- * @since 3.0.0
  */
 class TextReadController extends BaseController
 {

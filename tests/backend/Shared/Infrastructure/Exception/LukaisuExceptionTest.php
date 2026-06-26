@@ -10,7 +10,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the base LukaisuException class.
- *
  */
 #[CoversClass(LukaisuException::class)]
 class LukaisuExceptionTest extends TestCase

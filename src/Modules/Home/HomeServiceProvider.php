@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -34,8 +33,6 @@ use Lukaisu\Modules\Language\Application\LanguageFacade;
  * Service provider for the Home module.
  *
  * Registers facade, use cases, and controller for the Home module.
- *
- * @since 3.0.0
  */
 class HomeServiceProvider implements ServiceProviderInterface
 {

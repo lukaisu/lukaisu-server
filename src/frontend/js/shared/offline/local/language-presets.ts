@@ -11,7 +11,6 @@
  * strings are embedded inside `new RegExp(..., 'u')` character classes.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 /**

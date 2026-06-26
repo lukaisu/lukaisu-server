@@ -5,7 +5,6 @@
  * to be announced to assistive technology users.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 let politeRegion: HTMLElement | null = null;

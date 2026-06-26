@@ -12,7 +12,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Text\Application\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -33,8 +32,6 @@ use PHPUnit\Framework\TestCase;
  *
  * Tests business logic in isolation using mocked repositories
  * where possible. No database access required.
- *
- * @since 3.0.0
  */
 class TextUseCasesTest extends TestCase
 {

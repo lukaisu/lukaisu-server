@@ -2,7 +2,6 @@
  * Languages API - Type-safe wrapper for language management operations.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import {

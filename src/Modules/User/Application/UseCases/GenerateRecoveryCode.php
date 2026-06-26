@@ -12,7 +12,6 @@
  * @package  Lukaisu\Modules\User\Application\UseCases
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.1.2
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ use Lukaisu\Modules\User\Domain\UserRepositoryInterface;
 
 /**
  * Issue and persist a new recovery code for a user.
- *
- * @since 3.1.2
  */
 class GenerateRecoveryCode
 {

@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -23,8 +22,6 @@ namespace Lukaisu\Modules\Admin\Domain;
  * Application setting definitions.
  *
  * Provides default values and validation rules for all application settings.
- *
- * @since 3.0.0
  */
 final class SettingDefinitions
 {

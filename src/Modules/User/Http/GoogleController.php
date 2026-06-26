@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -31,8 +30,6 @@ use Lukaisu\Shared\UI\Helpers\FormHelper;
  * - OAuth start (redirect to Google)
  * - OAuth callback (handle Google response)
  * - Account linking confirmation
- *
- * @since 3.0.0
  */
 class GoogleController extends BaseController
 {

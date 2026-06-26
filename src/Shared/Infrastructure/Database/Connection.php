@@ -11,7 +11,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use Lukaisu\Shared\Infrastructure\Database\PreparedStatement;
  *
  * This class wraps mysqli and provides methods for common database operations.
  * It uses Globals internally for backward compatibility.
- *
- * @since 3.0.0
  */
 class Connection
 {

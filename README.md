@@ -30,7 +30,7 @@ pre-enriched from [Wiktionary](https://www.wiktionary.org/).
 
 > [!NOTE]
 > **Lineage.** Lukaisu Server is a clean-cut fork of
-> [Learning with Texts (LWT)](https://github.com/HugoFara/lwt) at version 3.2.0 —
+> [Learning with Texts (LWT)](https://github.com/HugoFara/lwt) —
 > the community-maintained LWT by HugoFara, itself a modern descendant of the
 > original LWT created by
 > [lang-learn-guy](https://sourceforge.net/u/lang-learn-guy/) on

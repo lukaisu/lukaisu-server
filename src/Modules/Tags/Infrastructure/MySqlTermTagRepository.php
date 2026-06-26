@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -32,8 +31,6 @@ use Lukaisu\Modules\Tags\Domain\ValueObject\TagId;
  * MySQL implementation of TagRepositoryInterface for term tags.
  *
  * Operates on the 'tags' table for term/vocabulary tags.
- *
- * @since 3.0.0
  */
 class MySqlTermTagRepository implements TagRepositoryInterface
 {

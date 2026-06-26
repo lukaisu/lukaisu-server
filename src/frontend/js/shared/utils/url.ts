@@ -5,7 +5,6 @@
  * The base path is read from a meta tag in the HTML head.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 /**

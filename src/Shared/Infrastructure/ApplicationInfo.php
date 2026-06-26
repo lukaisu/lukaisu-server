@@ -11,7 +11,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -22,8 +21,6 @@ namespace Lukaisu\Shared\Infrastructure;
  * Application information and version utilities.
  *
  * Provides version information and utility methods for the Lukaisu Server application.
- *
- * @since 3.0.0
  */
 class ApplicationInfo
 {
@@ -40,7 +37,7 @@ class ApplicationInfo
     /**
      * Get the application version for display to humans.
      *
-     * @return string Version number with formatted date (e.g., "2.10.0-fork (April 01 2024)")
+     * @return string Version number with formatted date (e.g., "0.1.0 (June 23 2026)")
      */
     public static function getVersion(): string
     {
@@ -52,13 +49,13 @@ class ApplicationInfo
     /**
      * Get a machine-readable version number.
      *
-     * @return string Machine-readable version (e.g., "v002.010.000" for version 2.10.0)
+     * @return string Machine-readable version (e.g., "v000.001.000" for version 0.1.0)
      */
     public static function getVersionNumber(): string
     {
         $r = 'v';
         $v = self::getVersion();
-        // Escape any detail like "-fork"
+        // Escape any pre-release / build suffix (e.g. "-rc1")
         $v = \preg_replace('/-\w+\d*/', '', $v) ?? $v;
         $pos = \strpos($v, ' ', 0);
         if ($pos === false) {
@@ -82,7 +79,7 @@ class ApplicationInfo
     /**
      * Get the raw version string without formatting.
      *
-     * @return string Raw version string (e.g., "2.10.0-fork")
+     * @return string Raw version string (e.g., "0.1.0")
      */
     public static function getRawVersion(): string
     {

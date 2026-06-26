@@ -11,7 +11,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Review\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -35,8 +34,6 @@ use PHPUnit\Framework\TestCase;
  *
  * Tests business logic in isolation using mocked repositories
  * and session managers. No database access required.
- *
- * @since 3.0.0
  */
 class ReviewUseCaseTest extends TestCase
 {

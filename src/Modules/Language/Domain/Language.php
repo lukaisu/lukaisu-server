@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    2.7.0
  */
 
 declare(strict_types=1);
@@ -27,9 +26,6 @@ use Lukaisu\Modules\Language\Domain\ValueObject\LanguageId;
  * dictionary URLs for lookups, and display settings (RTL, text size).
  *
  * This class enforces domain invariants and encapsulates business logic.
- *
- * @since 2.10.0-fork Get new ttsvoiceapi, showromanization properties
- * @since 3.0.0 Refactored to rich domain model
  */
 class Language
 {

@@ -5,7 +5,6 @@
  * for the user's current language, ranked by estimated difficulty.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

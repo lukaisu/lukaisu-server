@@ -3,7 +3,6 @@
  *
  * @author  andreask7 <andreasks7@users.noreply.github.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   2.10.0-fork Extracted from pgm.ts
  */
 
 import { statusLabel, STATUS_ORDER } from '@shared/stores/statuses';
@@ -23,7 +22,7 @@ export function escapeHtml(s: string): string {
     '>': '&gt;',
     '"': '&quot;',
     "'": '&#039;',
-    '\x0d': '<br />' // This one inserts HTML, delete? (2.9.0)
+    '\x0d': '<br />' // This one inserts HTML, delete?
   };
 
   // eslint-disable-next-line no-control-regex -- intentionally matching carriage return

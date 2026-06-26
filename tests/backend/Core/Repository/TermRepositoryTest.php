@@ -18,7 +18,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the MySqlTermRepository class.
- *
  */
 #[CoversClass(MySqlTermRepository::class)]
 class TermRepositoryTest extends TestCase

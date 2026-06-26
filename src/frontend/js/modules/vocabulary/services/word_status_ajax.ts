@@ -4,7 +4,6 @@
  * Handles status change requests and DOM updates for the reading interface.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

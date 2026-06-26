@@ -2,7 +2,6 @@
  * Words API - Type-safe wrapper for word list operations.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { apiGet, apiPut, type ApiResponse } from '@shared/api/client';

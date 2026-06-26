@@ -12,8 +12,6 @@ use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
  *
  * Returns 405 Method Not Allowed for unimplemented HTTP methods.
  * Handlers should override only the methods they support.
- *
- * @since 3.0.0
  */
 trait ApiRoutableTrait
 {

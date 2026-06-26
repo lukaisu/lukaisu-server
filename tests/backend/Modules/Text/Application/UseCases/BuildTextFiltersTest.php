@@ -11,7 +11,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Unit tests for BuildTextFilters use case.
- *
  */
 #[CoversClass(BuildTextFilters::class)]
 class BuildTextFiltersTest extends TestCase

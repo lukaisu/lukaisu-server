@@ -5,7 +5,6 @@
  * Uses Map for O(1) lookups and supports reactive updates across all word instances.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

@@ -12,7 +12,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Language\Application\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -31,8 +30,6 @@ use PHPUnit\Framework\TestCase;
  * Tests business logic in isolation. Methods relying on static
  * QueryBuilder/InputValidator calls are tested for structure
  * and pure helper logic. No database access required.
- *
- * @since 3.0.0
  */
 class LanguageUseCasesTest extends TestCase
 {

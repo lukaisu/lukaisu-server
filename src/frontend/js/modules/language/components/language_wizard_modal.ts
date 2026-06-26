@@ -5,7 +5,6 @@
  * native (L1) and study (L2) languages, then auto-populating form fields.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

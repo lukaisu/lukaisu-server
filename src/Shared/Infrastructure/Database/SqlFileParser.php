@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0 Split from kernel_utility.php
  */
 
 declare(strict_types=1);
@@ -22,8 +21,6 @@ namespace Lukaisu\Shared\Infrastructure\Database;
 
 /**
  * SQL file parser for reading and splitting SQL files into individual queries.
- *
- * @since 3.0.0
  */
 class SqlFileParser
 {

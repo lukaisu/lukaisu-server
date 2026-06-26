@@ -12,7 +12,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for WebPageExtractor.
- *
  */
 #[CoversClass(WebPageExtractor::class)]
 class WebPageExtractorTest extends TestCase

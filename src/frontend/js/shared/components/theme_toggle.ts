@@ -7,7 +7,6 @@
  * based on the OS color scheme preference.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

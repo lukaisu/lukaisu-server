@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Admin\Application\UseCases\Settings
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -23,8 +22,6 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for the GetSetting use case.
- *
- * @since 3.0.0
  */
 class GetSettingTest extends TestCase
 {

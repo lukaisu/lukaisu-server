@@ -22,7 +22,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * Tests StartReviewSession, GetNextTerm, and SubmitAnswer use cases
  * which form the core review/testing workflow.
- *
  */
 #[CoversClass(StartReviewSession::class)]
 #[CoversClass(GetNextTerm::class)]

@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Tags\Application\Services
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use PHPUnit\Framework\TestCase;
  *
  * Covers boundary conditions for tag HTML rendering, batch operations
  * with empty arrays, and class structure verification.
- *
- * @since 3.0.0
  */
 class TermTagServiceTest extends TestCase
 {

@@ -12,7 +12,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for FeedCrudApiHandler.
- *
  */
 #[CoversClass(FeedCrudApiHandler::class)]
 class FeedCrudApiHandlerTest extends TestCase

@@ -6,7 +6,6 @@
  * - Glosbe translation page
  *
  * @license unlicense
- * @since 3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

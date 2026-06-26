@@ -11,7 +11,6 @@ use Lukaisu\Shared\Infrastructure\Dictionary\DictionaryAdapter;
 
 /**
  * Tests for DictionaryAdapter.
- *
  */
 #[CoversClass(DictionaryAdapter::class)]
 class DictionaryAdapterTest extends TestCase

@@ -10,7 +10,6 @@
  * - .lukaisu_highlighted_text - Currently highlighted list item selection
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { xpathQuery, getDescendantsAndSelf } from '../utils/xpath_utils';

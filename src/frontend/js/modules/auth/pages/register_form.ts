@@ -5,7 +5,6 @@
  * Validates username, email, password, and password confirmation.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

@@ -8,7 +8,6 @@
  * @category Tests
  * @package  Lukaisu\Tests\Modules\Dictionary
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);

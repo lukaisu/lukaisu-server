@@ -13,7 +13,6 @@ use Lukaisu\Modules\Language\Application\Services\TextParsingService;
 
 /**
  * Tests for ExpressionService.
- *
  */
 #[CoversClass(ExpressionService::class)]
 class ExpressionServiceTest extends TestCase

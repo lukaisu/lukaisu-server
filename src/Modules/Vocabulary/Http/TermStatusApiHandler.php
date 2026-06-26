@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -34,8 +33,6 @@ use Lukaisu\Modules\Vocabulary\Application\Helpers\StatusHelper;
  * - Incrementing/decrementing status
  * - Bulk status updates
  * - Getting status list
- *
- * @since 3.0.0
  */
 class TermStatusApiHandler
 {

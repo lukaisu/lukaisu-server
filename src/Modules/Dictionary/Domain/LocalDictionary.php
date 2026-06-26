@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ use InvalidArgumentException;
  *
  * Local dictionaries store imported dictionary data for offline lookups.
  * They are associated with a language and can have multiple entries.
- *
- * @since 3.0.0
  */
 class LocalDictionary
 {

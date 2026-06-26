@@ -193,7 +193,7 @@ php ./vendor/bin/squizlabs/phpcbf.phar [filename]
 
 ## Interact with and modify the REST API
 
-Starting from 2.9.0-fork, Lukaisu Server provides a RESTful API. The main handler for the API is `api.php`.
+Lukaisu Server provides a RESTful API. The main handler for the API is `api.php`.
 You can find a more exhaustive API documentation at [api.md](./api.md).
 
 If you plan to develop the API, please follow the RESTful standards.

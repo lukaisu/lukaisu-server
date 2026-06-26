@@ -14,7 +14,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * Tests text parsing preview and validation including sentence/word counts,
  * text length validation, and term sentence linking.
- *
  */
 #[CoversClass(ParseText::class)]
 class ParseTextUseCaseTest extends TestCase

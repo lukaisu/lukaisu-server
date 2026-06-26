@@ -5,7 +5,6 @@
  * Replaces the legacy table-based media player with a cleaner interface.
  *
  * @license Unlicense
- * @since 3.0.0
  */
 
 import Alpine from 'alpinejs';

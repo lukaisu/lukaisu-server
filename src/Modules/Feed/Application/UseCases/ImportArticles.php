@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -29,8 +28,6 @@ use Lukaisu\Modules\Feed\Domain\TextCreationInterface;
  * 1. Extracting content from article URLs
  * 2. Creating text entries with parsing
  * 3. Applying tags and archiving old texts
- *
- * @since 3.0.0
  */
 class ImportArticles
 {

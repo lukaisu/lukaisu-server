@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -29,8 +28,6 @@ use Lukaisu\Modules\User\Domain\UserRepositoryInterface;
  * Generates a secure token, stores it hashed in the database,
  * and sends the verification link via email. When email is disabled,
  * auto-verifies the user and logs the token.
- *
- * @since 3.0.0
  */
 class SendVerificationEmail
 {

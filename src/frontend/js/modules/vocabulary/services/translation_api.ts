@@ -3,7 +3,6 @@
  *
  * @author  andreask7 <andreasks7@users.noreply.github.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   1.6.16-fork
  */
 
 import { iconHtml } from '@shared/icons/icons';
@@ -100,7 +99,7 @@ export function addTranslation(s: string): void {
 }
 
 export function getGlosbeTranslation(text: string, lang: string, dest: string): void {
-  // Note from 2.9.0: make asynchronous if possible
+  // Note: make asynchronous if possible
   // Note: the Glosbe API is closed and may not be open again
   // JSONP implementation using dynamic script tag
   const params = new URLSearchParams({

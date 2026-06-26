@@ -350,8 +350,8 @@ The version must be updated in these files before tagging a release:
 
 | File | What to update |
 | --- | --- |
-| `src/Shared/Infrastructure/ApplicationInfo.php` | `VERSION` constant (e.g. `'3.0.2-fork'`) and `RELEASE_DATE` |
-| `package.json` | `version` field (without `-fork` suffix, e.g. `"3.0.2"`) |
+| `src/Shared/Infrastructure/ApplicationInfo.php` | `VERSION` constant (semver, e.g. `'0.2.0'`) and `RELEASE_DATE` |
+| `package.json` | `version` field, matching `ApplicationInfo` (e.g. `"0.2.0"`) |
 | `CHANGELOG.md` | Move `[Unreleased]` items to a new version section with the release date |
 
 `ApplicationInfo.php` is the **authoritative** version — it's what the app displays. Always update it.

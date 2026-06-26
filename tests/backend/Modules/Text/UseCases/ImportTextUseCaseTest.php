@@ -18,7 +18,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * Tests the text import pipeline including text validation,
  * creation, and long text splitting.
- *
  */
 #[CoversClass(ImportText::class)]
 class ImportTextUseCaseTest extends TestCase

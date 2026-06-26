@@ -5,7 +5,6 @@
  * using the generic modal component and TermsApi for data loading/saving.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { openModal, closeModal } from '@shared/components/modal';

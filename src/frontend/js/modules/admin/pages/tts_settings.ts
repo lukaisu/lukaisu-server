@@ -4,8 +4,6 @@
  * Manages voice selection, reading rate/pitch, and demo playback.
  *
  * @license Unlicense
- * @since 3.0.0
- * @since 3.1.0 Migrated to Alpine.js component
  */
 
 import Alpine from 'alpinejs';

@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -22,8 +21,6 @@ namespace Lukaisu\Shared\Infrastructure\Http;
  *
  * Encapsulates a redirect response with URL and status code.
  * Can be returned from controllers and sent by the router.
- *
- * @since 3.0.0
  */
 class RedirectResponse implements ResponseInterface
 {

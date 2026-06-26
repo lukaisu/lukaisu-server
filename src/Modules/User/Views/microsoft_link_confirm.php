@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  *
  * @var string $email The email address from Microsoft
  * @var string|null $error Error message if any

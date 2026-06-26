@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -26,8 +25,6 @@ use Lukaisu\Modules\Vocabulary\Domain\LemmatizerInterface;
  *
  * Dictionary files are TSV format with columns: word_form, lemma
  * Files are loaded from data/lemma-dictionaries/{lang}_lemmas.tsv
- *
- * @since 3.0.0
  */
 class DictionaryLemmatizer implements LemmatizerInterface
 {

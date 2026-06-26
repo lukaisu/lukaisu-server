@@ -17,7 +17,6 @@
  * mechanism. The server must allow the client origin via `CORS_ALLOWED_ORIGINS`.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.1.1
  */
 
 import Alpine from 'alpinejs';

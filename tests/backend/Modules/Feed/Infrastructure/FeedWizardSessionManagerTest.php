@@ -12,7 +12,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * Unit tests for FeedWizardSessionManager.
  *
  * Tests session state management for the Feed wizard workflow.
- *
  */
 #[CoversClass(FeedWizardSessionManager::class)]
 class FeedWizardSessionManagerTest extends TestCase

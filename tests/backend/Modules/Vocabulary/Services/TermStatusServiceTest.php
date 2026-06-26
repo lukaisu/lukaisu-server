@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Vocabulary\Services
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -26,8 +25,6 @@ use PHPUnit\Framework\TestCase;
  *
  * Covers status definitions, SQL fragment generation,
  * score calculations, and status classification helpers.
- *
- * @since 3.0.0
  */
 class TermStatusServiceTest extends TestCase
 {

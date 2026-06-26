@@ -10,7 +10,6 @@
  * - Generated tags: <strong>, <em>, <del>, <a>
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 /**

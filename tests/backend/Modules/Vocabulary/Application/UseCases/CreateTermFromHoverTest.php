@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Vocabulary\Application\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -29,8 +28,6 @@ use PHPUnit\Framework\TestCase;
  *
  * These tests require database connection for the Connection::preparedFetchValue
  * and Connection::preparedExecute calls within execute().
- *
- * @since 3.0.0
  */
 class CreateTermFromHoverTest extends TestCase
 {

@@ -5,7 +5,6 @@
  * Handles form data, validation, dirty state detection, and API interactions.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

@@ -2,7 +2,6 @@
  * Admin Module - Application settings, backup, and statistics.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 // API

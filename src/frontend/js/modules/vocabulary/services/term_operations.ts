@@ -3,7 +3,6 @@
  *
  * @license unlicense
  * @author  andreask7 <andreasks7@users.noreply.github.com>
- * @since   1.6.16-fork
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';
@@ -319,8 +318,6 @@ export function editTermAnnotationTranslations(trans_data: TransData, text_id: n
  * @param pagepos Position to scroll to
  * @param word    Word in lowercase to get annotations
  * @param term_id Term ID
- *
- * @since 2.9.0 The new parameter $wid is now necessary
  */
 export async function loadTermTranslations(pagepos: number, word: string, term_id: number): Promise<void> {
   const editImprTextDataEl = document.getElementById('editimprtextdata');

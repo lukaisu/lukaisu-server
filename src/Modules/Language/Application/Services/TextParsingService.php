@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0 Migrated from Core/Text/text_parsing.php
  */
 
 declare(strict_types=1);
@@ -28,7 +27,6 @@ namespace Lukaisu\Modules\Language\Application\Services;
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 class TextParsingService
 {
@@ -39,9 +37,6 @@ class TextParsingService
      * @param string $mecabArgs Arguments to add
      *
      * @return string OS-compatible command
-     *
-     * @since 2.3.1-fork Much more verifications added
-     * @since 3.0.0 Support for Mac OS added
      */
     public function getMecabPath(string $mecabArgs = ''): string
     {

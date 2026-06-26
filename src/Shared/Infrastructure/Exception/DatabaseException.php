@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -24,8 +23,6 @@ use Throwable;
  *
  * Covers connection failures, query errors, transaction issues,
  * and constraint violations.
- *
- * @since 3.0.0
  */
 class DatabaseException extends LukaisuException
 {

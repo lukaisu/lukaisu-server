@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -26,8 +25,6 @@ namespace Lukaisu\Modules\Tags\Domain;
  * - Words (word_tag_map table)
  * - Texts (text_tag_map table)
  * - Archived texts (archived_text_tag_map table)
- *
- * @since 3.0.0
  */
 interface TagAssociationInterface
 {

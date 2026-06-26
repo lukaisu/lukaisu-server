@@ -3,10 +3,7 @@
  *
  * @license unlicense
  * @author  andreask7 <andreasks7@users.noreply.github.com>
- * @since   1.6.16-fork
- * @since   2.3.1-fork You should not only include this script to check before unload
  *          but also call ask_before_exiting once.
- * @since   2.10.0-fork This file was refactored in a single object, use it instead
  */
 
 import { setupTagChangeTracking } from '@shared/components/tagify_tags';

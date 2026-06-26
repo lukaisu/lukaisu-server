@@ -6,7 +6,6 @@
  *
  * @author  HugoFara <Hugo.Farajallah@protonmail.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Dexie, { type Table } from 'dexie';

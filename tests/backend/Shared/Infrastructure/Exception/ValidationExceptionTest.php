@@ -10,7 +10,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the ValidationException class.
- *
  */
 #[CoversClass(ValidationException::class)]
 class ValidationExceptionTest extends TestCase

@@ -4,7 +4,6 @@
  * Displays server information and fetches REST API version data.
  *
  * @license unlicense
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

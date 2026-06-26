@@ -2,7 +2,6 @@
  * Feed Wizard Types - Shared TypeScript interfaces for Alpine.js feed wizard.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 /**

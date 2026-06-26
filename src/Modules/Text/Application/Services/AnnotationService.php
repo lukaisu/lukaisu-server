@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0 Migrated from Core/Text/annotation_management.php
  */
 
 declare(strict_types=1);
@@ -36,7 +35,6 @@ use Lukaisu\Shared\UI\Helpers\IconHelper;
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 class AnnotationService
 {
@@ -120,7 +118,6 @@ class AnnotationService
      *
      * @return string Annotations for the text
      *
-     * @since 2.9.0 Annotations "position" change, they are now equal to position
      *              it was shifted by one index before.
      */
     public function createAnnotation(int $textId): string

@@ -7,7 +7,6 @@
  * a `LanguagePreset.name` so it can be linked to the seeded language.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 /**

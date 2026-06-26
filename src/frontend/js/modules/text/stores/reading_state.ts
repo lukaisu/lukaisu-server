@@ -4,7 +4,6 @@
  * This module provides explicit getter/setter functions for reading position.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since 3.1.0
  */
 
 /**

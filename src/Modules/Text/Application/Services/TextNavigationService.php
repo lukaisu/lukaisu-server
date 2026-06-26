@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0 Migrated from Core/Text/text_navigation.php
  */
 
 declare(strict_types=1);
@@ -34,7 +33,6 @@ use Lukaisu\Shared\UI\Helpers\IconHelper;
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 class TextNavigationService
 {

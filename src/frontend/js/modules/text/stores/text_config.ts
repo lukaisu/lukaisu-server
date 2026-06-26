@@ -5,7 +5,6 @@
  * Configuration must be initialized via initTextConfig() or initTextConfigFromDOM().
  *
  * @license Unlicense <http://unlicense.org/>
- * @since 3.1.0
  */
 
 export type AnnotationRecord = Record<string, [unknown, string, string]>;

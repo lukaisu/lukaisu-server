@@ -10,7 +10,6 @@
  * exactly as before.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.1.0
  */
 
 import { escapeHtml } from '@shared/utils/html_utils';

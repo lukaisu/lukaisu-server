@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -23,8 +22,6 @@ namespace Lukaisu\Modules\Tags\Domain;
  * Enum representing the type of tag (term or text).
  *
  * Each type has its own database table and column naming conventions.
- *
- * @since 3.0.0
  */
 enum TagType: string
 {

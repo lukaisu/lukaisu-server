@@ -6,7 +6,6 @@
  * and form validation.
  *
  * @license Unlicense
- * @since 3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';
@@ -257,8 +256,6 @@ export const languageForm = {
   /**
    * Handle popup checkbox state change.
    * Popup setting is now stored in the database, not in the URL.
-   *
-   * @since 3.1.0 No longer modifies URLs, popup is stored in database column
    */
   changePopUpState(): void {
     // Popup is now just a form field, no URL manipulation needed
@@ -268,8 +265,6 @@ export const languageForm = {
   /**
    * Handle dictionary URL input change.
    * Validates the URL and triggers related checks.
-   *
-   * @since 3.1.0 No longer detects popup from URL (asterisk or lukaisu_popup param)
    */
   checkDictionaryChanged(): void {
     // Previously this would detect popup settings from URLs

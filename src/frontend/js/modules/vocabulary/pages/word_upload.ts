@@ -9,8 +9,6 @@
  *
  * @author  HugoFara <hugo.farajallah@protonmail.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0 Extracted from PHP inline scripts
- * @since   3.1.0 Migrated to Alpine.js component
  */
 
 import Alpine from 'alpinejs';

@@ -5,7 +5,6 @@
  * Similar to step 2 but for selecting elements to filter out.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

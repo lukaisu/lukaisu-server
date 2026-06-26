@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -24,8 +23,6 @@ namespace Lukaisu\Modules\Feed\Infrastructure;
  *
  * Abstracts $_SESSION['wizard'] access for the Feed module,
  * enabling testability and future session backend changes.
- *
- * @since 3.0.0
  */
 class FeedWizardSessionManager
 {

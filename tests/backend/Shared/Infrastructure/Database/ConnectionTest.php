@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Shared\Infrastructure\Database
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -22,8 +21,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for Connection static helper methods.
- *
- * @since  3.0.0
  */
 #[CoversClass(Connection::class)]
 class ConnectionTest extends TestCase

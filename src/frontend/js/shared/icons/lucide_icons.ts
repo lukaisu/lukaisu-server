@@ -8,7 +8,6 @@
  * bundle size (tree-shaking).
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { createIcons, type IconNode } from 'lucide';

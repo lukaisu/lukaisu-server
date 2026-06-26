@@ -13,7 +13,6 @@
  * @package  Lukaisu\Tests
  * @author   Claude <noreply@anthropic.com>
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);

@@ -5,7 +5,6 @@
  * allowing users to continue reading while viewing word details.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

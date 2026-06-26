@@ -11,7 +11,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -215,8 +214,8 @@ class ApiV1
             case 'version':
                 return Response::success([
                     // Source from ApplicationInfo (single source of truth) so this
-                    // never drifts behind the app version again. Strip the "-fork"
-                    // suffix to keep the value bare semver (X.Y.Z) for API clients.
+                    // never drifts behind the app version again. Strip any
+                    // pre-release suffix to keep the value bare semver (X.Y.Z) for API clients.
                     "version" => \explode('-', ApplicationInfo::getRawVersion())[0],
                     "release_date" => ApplicationInfo::getReleaseDate()
                 ]);

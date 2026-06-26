@@ -5,7 +5,6 @@
  * Import this file to initialize the full feed functionality.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 // Types (for re-export)

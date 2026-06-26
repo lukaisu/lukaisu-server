@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Feed\Application\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use PHPUnit\Framework\TestCase;
  *
  * Verifies that feeds and their articles are deleted correctly,
  * including the ordering constraint (articles before feeds).
- *
- * @since 3.0.0
  */
 class DeleteFeedsTest extends TestCase
 {

@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -24,8 +23,6 @@ namespace Lukaisu\Shared\Infrastructure\Http;
  *
  * Flash messages are stored in the session and cleared after being retrieved.
  * Supports multiple message types (info, success, warning, error).
- *
- * @since 3.0.0
  */
 class FlashMessageService
 {

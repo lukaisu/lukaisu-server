@@ -22,7 +22,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://altcha.org/docs/
- * @since    3.1.2
  */
 
 declare(strict_types=1);
@@ -31,8 +30,6 @@ namespace Lukaisu\Modules\User\Application\Services;
 
 /**
  * Issues and verifies ALTCHA proof-of-work challenges.
- *
- * @since 3.1.2
  */
 class AltchaService
 {

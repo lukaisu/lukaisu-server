@@ -12,7 +12,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * Unit tests for FlashMessageService.
  *
  * Tests flash message storage, retrieval, and clearing functionality.
- *
  */
 #[CoversClass(FlashMessageService::class)]
 class FlashMessageServiceTest extends TestCase

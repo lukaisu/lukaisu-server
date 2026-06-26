@@ -11,7 +11,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Tags\Application\Services
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -30,8 +29,6 @@ use PHPUnit\Framework\TestCase;
  *
  * Covers empty-array early returns for batch operations,
  * zero/negative ID branches for HTML rendering, and class structure.
- *
- * @since 3.0.0
  */
 class TextTagServiceTest extends TestCase
 {

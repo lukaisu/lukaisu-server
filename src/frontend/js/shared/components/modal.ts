@@ -5,7 +5,6 @@
  * as a modern replacement for popup windows (openEditWindow/openDictionaryPopup).
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { trapFocus, releaseFocus } from '@shared/accessibility/focus_trap';

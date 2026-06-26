@@ -14,8 +14,6 @@ use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
  * parameters, and returns a JsonResponse.
  *
  * Not all handlers need all methods — the default should return 405.
- *
- * @since 3.0.0
  */
 interface ApiRoutableInterface
 {

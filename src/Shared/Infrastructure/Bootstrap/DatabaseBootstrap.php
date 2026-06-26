@@ -11,7 +11,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -26,8 +25,6 @@ use Lukaisu\Shared\Infrastructure\Database\Configuration;
  *
  * Provides static methods for establishing the database connection
  * and initializing the required global state.
- *
- * @since 3.0.0
  */
 class DatabaseBootstrap
 {

@@ -7,7 +7,6 @@
  * Part of Phase 4: Frame Architecture Removal
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 /**

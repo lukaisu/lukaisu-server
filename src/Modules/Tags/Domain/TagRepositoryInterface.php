@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -24,8 +23,6 @@ namespace Lukaisu\Modules\Tags\Domain;
  *
  * Defines the contract for tag persistence operations.
  * Implementations handle specific tag types (term or text).
- *
- * @since 3.0.0
  */
 interface TagRepositoryInterface
 {

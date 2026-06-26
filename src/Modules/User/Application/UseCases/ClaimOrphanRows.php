@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.1.2-fork
  */
 
 declare(strict_types=1);
@@ -37,8 +36,6 @@ use RuntimeException;
  * belong to them, so we re-run the backfill against their user_id. On
  * already-migrated installs the UPDATEs match zero rows and cost
  * nothing.
- *
- * @since 3.1.2-fork
  */
 class ClaimOrphanRows
 {

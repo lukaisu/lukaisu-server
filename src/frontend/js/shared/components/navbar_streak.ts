@@ -4,7 +4,6 @@
  * Lightweight component that fetches only the streak endpoint.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

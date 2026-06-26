@@ -18,7 +18,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
  *
  * Tests feed loading/refreshing including RSS parsing, article insertion,
  * duplicate handling, and timestamp updates.
- *
  */
 #[CoversClass(LoadFeed::class)]
 class LoadFeedUseCaseTest extends TestCase

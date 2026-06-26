@@ -5,7 +5,6 @@
  * Transforms elements into editable textareas on click, with Save/Cancel buttons.
  *
  * @license unlicense
- * @since 3.0.0
  */
 
 import { spinnerHtml } from '../icons/icons';

@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -30,8 +29,6 @@ use RuntimeException;
  *
  * Uses the kiwilan/php-ebook library to read EPUB files and extract
  * metadata and chapter content for import into Lukaisu Server.
- *
- * @since 3.0.0
  */
 class EpubParserService
 {

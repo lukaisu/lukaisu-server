@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -43,8 +42,6 @@ use Lukaisu\Shared\Infrastructure\Globals;
  *    existed (or from before per-user subdirs are enforced) continue
  *    to load when their owner re-saves the text without touching the
  *    audio field. The "always reject" layer still runs.
- *
- * @since 3.0.0
  */
 final class AudioUriValidator
 {

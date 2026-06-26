@@ -14,7 +14,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -32,8 +31,6 @@ use Lukaisu\Modules\Tags\Domain\TagRepositoryInterface;
  *
  * Operates on the 'text_tag_map' junction table for archived texts
  * (texts where archived_at IS NOT NULL).
- *
- * @since 3.0.0
  */
 class MySqlArchivedTextTagAssociation implements TagAssociationInterface
 {

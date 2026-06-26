@@ -4,7 +4,6 @@
  * Provides typed functions to interact with the feeds REST API.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { apiGet, apiPost, apiPut, apiDelete, ApiResponse } from '@shared/api/client';

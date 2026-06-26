@@ -1,7 +1,7 @@
 # Local-First Migration
 
 Lukaisu Server is being turned from a full-stack PHP app (a fork of Learning
-with Texts 3.2.0) into an **optional, Python-first server**. This page is the
+with Texts) into an **optional, Python-first server**. This page is the
 map: where we're going, the rule that gets us there, and where we are now.
 
 ## The goal

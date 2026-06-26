@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Review\Application\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -28,8 +27,6 @@ use PHPUnit\Framework\TestCase;
  *
  * Tests word retrieval, sentence formatting, and solution generation
  * for the spaced repetition review interface.
- *
- * @since 3.0.0
  */
 class GetNextTermTest extends TestCase
 {

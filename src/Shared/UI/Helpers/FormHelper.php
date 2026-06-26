@@ -11,7 +11,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ use Lukaisu\Shared\Infrastructure\Http\InputValidator;
  *
  * Provides methods for generating checked/selected attributes
  * and other common form-related HTML generation.
- *
- * @since 3.0.0
  */
 class FormHelper
 {

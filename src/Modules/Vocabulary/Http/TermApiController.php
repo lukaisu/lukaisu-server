@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -29,8 +28,6 @@ use Lukaisu\Modules\Vocabulary\Application\VocabularyFacade;
  * - POST /vocabulary/term - Create term via JSON
  * - PUT /vocabulary/term - Update term via JSON
  * - DELETE /vocabulary/term/{wid} - Delete term
- *
- * @since 3.0.0
  */
 class TermApiController
 {

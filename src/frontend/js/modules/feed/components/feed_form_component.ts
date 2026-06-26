@@ -6,7 +6,6 @@
  * - Serializing options into a hidden field on form submission
  *
  * @license Unlicense
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

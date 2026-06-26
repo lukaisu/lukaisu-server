@@ -18,7 +18,6 @@
  * @package  Lukaisu\Modules\User\Application\Services
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.1.2
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ namespace Lukaisu\Modules\User\Application\Services;
 
 /**
  * Generates and verifies one-time recovery codes.
- *
- * @since 3.1.2
  */
 class RecoveryCodeService
 {

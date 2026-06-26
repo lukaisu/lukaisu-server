@@ -454,7 +454,6 @@ class LemmaServiceTest extends TestCase
 
     /**
      * Test updateWordFamilyStatus with all valid status values.
-     *
      */
     #[DataProvider('validStatusProvider')]
     public function testUpdateWordFamilyStatusAcceptsValidStatus(int $status): void
@@ -480,7 +479,6 @@ class LemmaServiceTest extends TestCase
 
     /**
      * Test bulkUpdateTermStatus with all valid status values.
-     *
      */
     #[DataProvider('validStatusProvider')]
     public function testBulkUpdateTermStatusAcceptsValidStatus(int $status): void
@@ -620,7 +618,6 @@ class LemmaServiceTest extends TestCase
 
     /**
      * Test linkTextItemsByLemmaSql returns integer.
-     *
      */
     #[Group('integration')]
     public function testLinkTextItemsByLemmaSqlReturnsInteger(): void
@@ -635,7 +632,6 @@ class LemmaServiceTest extends TestCase
 
     /**
      * Test linkTextItemsByLemmaSql with text ID.
-     *
      */
     #[Group('integration')]
     public function testLinkTextItemsByLemmaSqlWithTextId(): void

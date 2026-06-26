@@ -8,8 +8,6 @@ use Lukaisu\Shared\Infrastructure\Http\FlashMessageService;
 
 /**
  * Shared flash message rendering for Feed controllers.
- *
- * @since 3.0.0
  */
 trait FeedFlashTrait
 {

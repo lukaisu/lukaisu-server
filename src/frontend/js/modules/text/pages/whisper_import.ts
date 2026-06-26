@@ -4,7 +4,6 @@
  * Uses the NLP microservice Whisper endpoints for speech-to-text transcription.
  *
  * @license unlicense
- * @since   3.0.0
  */
 
 import { nlpUrl } from '@shared/offline/nlp/endpoint';

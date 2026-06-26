@@ -4,7 +4,6 @@
  * Handles AJAX toggle of user status/role and delete confirmation.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

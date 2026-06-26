@@ -10,7 +10,6 @@
  *
  * @license unlicense
  * @author  andreask7 <andreasks7@users.noreply.github.com>
- * @since   1.6.16-fork
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

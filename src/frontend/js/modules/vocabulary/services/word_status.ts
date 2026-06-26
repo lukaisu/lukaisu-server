@@ -5,7 +5,6 @@
  *
  * @author  andreask7 <andreasks7@users.noreply.github.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   2.10.0-fork Extracted from pgm.ts
  */
 
 import { statuses } from '@shared/stores/app_data';

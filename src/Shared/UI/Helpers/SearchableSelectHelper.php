@@ -11,7 +11,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -23,8 +22,6 @@ namespace Lukaisu\Shared\UI\Helpers;
  *
  * Provides methods for building Alpine.js searchable select dropdowns
  * that can filter options as the user types.
- *
- * @since 3.0.0
  */
 class SearchableSelectHelper
 {

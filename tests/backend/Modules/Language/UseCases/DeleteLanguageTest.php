@@ -16,7 +16,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * so full behavioral tests require integration tests with a database.
  * This file tests method signatures, return type structure, and
  * verifiable logic paths using mocked QueryBuilder where possible.
- *
  */
 #[CoversClass(DeleteLanguage::class)]
 class DeleteLanguageTest extends TestCase

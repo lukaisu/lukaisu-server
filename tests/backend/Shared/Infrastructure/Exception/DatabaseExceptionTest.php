@@ -10,7 +10,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the DatabaseException class.
- *
  */
 #[CoversClass(DatabaseException::class)]
 class DatabaseExceptionTest extends TestCase

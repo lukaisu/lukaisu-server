@@ -9,7 +9,6 @@
  * @package  Lukaisu\Tests\Modules\Dictionary
  * @author   Lukaisu Server Development Team
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);

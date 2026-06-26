@@ -5,7 +5,6 @@
  * instead of the full chart.js bundle, reducing ~203 KB to ~120 KB.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.2
  */
 
 import type { Chart as ChartType } from 'chart.js';

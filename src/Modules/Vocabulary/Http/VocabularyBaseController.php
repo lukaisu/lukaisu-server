@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -32,8 +31,6 @@ use Lukaisu\Modules\Text\Application\Services\TextStatisticsService;
  * Base controller for vocabulary-related controllers.
  *
  * Provides shared view rendering and lazy-loaded services.
- *
- * @since 3.0.0
  */
 abstract class VocabularyBaseController
 {

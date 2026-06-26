@@ -5,7 +5,6 @@
  * rendering the results in an inline panel.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { apiGet, type ApiResponse } from '@shared/api/client';

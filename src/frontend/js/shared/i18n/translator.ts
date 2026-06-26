@@ -9,7 +9,6 @@
  *     configurable/offline client that has no server-rendered shell.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { apiGet } from '@shared/api/client';

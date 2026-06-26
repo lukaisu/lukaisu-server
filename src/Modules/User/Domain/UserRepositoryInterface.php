@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use Lukaisu\Modules\User\Domain\User;
  *
  * Defines the contract for user persistence operations.
  * Implementations may use different storage backends (MySQL, memory, etc.)
- *
- * @since 3.0.0
  */
 interface UserRepositoryInterface
 {

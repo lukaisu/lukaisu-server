@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ use RuntimeException;
  *
  * Parses .ifo (info), .idx (index), and .dict (data) files.
  * Supports both compressed (.dict.dz) and uncompressed (.dict) formats.
- *
- * @since 3.0.0
  */
 class StarDictImporter implements ImporterInterface
 {

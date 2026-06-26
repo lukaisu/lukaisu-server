@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -33,8 +32,6 @@ namespace Lukaisu\Shared\Infrastructure\Utilities;
  * "treat as text" marker and is invisible in the displayed cell; it
  * does show up in plain-text consumers but that is the lesser evil
  * versus formula execution.
- *
- * @since 3.0.0
  */
 final class CsvFormulaGuard
 {

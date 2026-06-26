@@ -4,7 +4,6 @@
  * These functions are stateless and can be used independently of Alpine.js.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import type { XPathOption, AdvancedXPathOption } from '../types/feed_wizard_types';

@@ -5,7 +5,6 @@
  * and their configured RSS feeds, directly on the /texts/new page.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

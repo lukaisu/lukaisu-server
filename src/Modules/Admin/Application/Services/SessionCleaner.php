@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -23,8 +22,6 @@ use Lukaisu\Shared\Infrastructure\Database\Settings;
  * Service for clearing session filters.
  *
  * Called when changing the current language to reset all filters.
- *
- * @since 3.0.0
  */
 class SessionCleaner
 {

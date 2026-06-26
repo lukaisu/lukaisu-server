@@ -12,7 +12,6 @@
  * @category Lukaisu
  * @package  Lukaisu\Modules\Dictionary\Application\Services
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.1.2-fork
  */
 
 declare(strict_types=1);

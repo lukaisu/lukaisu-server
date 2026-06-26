@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -23,8 +22,6 @@ use Lukaisu\Modules\Activity\Domain\ActivityRepositoryInterface;
  * Returns daily activity totals for the last 365 days.
  *
  * Output is keyed by date string, ready for the frontend calendar heatmap.
- *
- * @since 3.0.0
  */
 class GetCalendarHeatmapData
 {

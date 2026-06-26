@@ -5,7 +5,6 @@
  * via a server-side proxy to keep the API key secure.
  *
  * @license unlicense
- * @since   3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

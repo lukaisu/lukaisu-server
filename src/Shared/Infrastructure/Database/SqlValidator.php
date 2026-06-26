@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ namespace Lukaisu\Shared\Infrastructure\Database;
  * - Whitelisting allowed SQL statement types
  * - Validating table names against known Lukaisu Server tables
  * - Blocking dangerous SQL patterns
- *
- * @since 3.0.0
  */
 class SqlValidator
 {

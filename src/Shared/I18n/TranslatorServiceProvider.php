@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use Lukaisu\Shared\Infrastructure\Database\Settings;
 /**
  * Registers the Translator as a singleton and sets the active locale
  * from the database during the boot phase.
- *
- * @since 3.0.0
  */
 class TranslatorServiceProvider implements ServiceProviderInterface
 {

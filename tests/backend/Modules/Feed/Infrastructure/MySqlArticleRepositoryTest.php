@@ -11,7 +11,6 @@ use Lukaisu\Modules\Feed\Domain\Article;
 
 /**
  * Tests for MySqlArticleRepository.
- *
  */
 #[CoversClass(MySqlArticleRepository::class)]
 class MySqlArticleRepositoryTest extends TestCase

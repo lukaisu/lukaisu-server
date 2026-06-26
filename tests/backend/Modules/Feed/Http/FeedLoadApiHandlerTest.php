@@ -14,7 +14,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * Unit tests for FeedLoadApiHandler.
  *
  * Tests feed loading, parsing, detection, and delegation to FeedFacade.
- *
  */
 #[CoversClass(FeedLoadApiHandler::class)]
 class FeedLoadApiHandlerTest extends TestCase

@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -55,8 +54,6 @@ use Lukaisu\Modules\User\Application\Services\PasswordHasher;
  *
  * Registers repositories, services, facade, controller,
  * and API handler for the Admin module.
- *
- * @since 3.0.0
  */
 class AdminServiceProvider implements ServiceProviderInterface
 {

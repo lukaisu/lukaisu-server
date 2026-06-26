@@ -5,7 +5,6 @@
  * current word, progress tracking, timer, and UI state.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

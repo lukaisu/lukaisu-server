@@ -9,7 +9,6 @@
  * Uses dynamic imports to only load Tagify (~75KB) when this component is used.
  *
  * @license Unlicense
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

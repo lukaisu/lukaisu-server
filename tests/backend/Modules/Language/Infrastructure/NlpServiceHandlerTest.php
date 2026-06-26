@@ -11,7 +11,6 @@ use Lukaisu\Tests\Modules\Language\Infrastructure\FakeNlpHttpClient;
 
 /**
  * Tests for NlpServiceHandler.
- *
  */
 #[CoversClass(NlpServiceHandler::class)]
 class NlpServiceHandlerTest extends TestCase

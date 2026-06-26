@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ namespace Lukaisu\Shared\I18n;
  * Keys follow the format "namespace.key", e.g. "common.save".
  * The namespace maps to a JSON file: locale/{lang}/common.json.
  * Namespaces are loaded lazily on first access.
- *
- * @since 3.0.0
  */
 class Translator
 {

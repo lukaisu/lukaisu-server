@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -24,8 +23,6 @@ namespace Lukaisu\Modules\User\Application\Services;
  *
  * This is a thin wrapper around PasswordService to provide
  * a convenient interface for common password operations.
- *
- * @since 3.0.0
  */
 class PasswordHasher
 {

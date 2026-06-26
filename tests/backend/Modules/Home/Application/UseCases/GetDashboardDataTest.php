@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Home\Application\UseCases
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use PHPUnit\Framework\TestCase;
  *
  * These tests require a database connection since the use case
  * uses static QueryBuilder and Settings calls.
- *
- * @since 3.0.0
  */
 class GetDashboardDataTest extends TestCase
 {

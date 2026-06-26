@@ -8,7 +8,6 @@
  * Uses dynamic imports to only load Tagify (~75KB) when tag inputs are needed.
  *
  * @license unlicense
- * @since 3.0.0
  */
 
 import type TagifyType from '@yaireo/tagify';

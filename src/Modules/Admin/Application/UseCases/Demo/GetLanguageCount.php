@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -23,8 +22,6 @@ use Lukaisu\Modules\Admin\Infrastructure\MySqlStatisticsRepository;
  * Use case for getting language count.
  *
  * Used to warn users before installing demo database.
- *
- * @since 3.0.0
  */
 class GetLanguageCount
 {

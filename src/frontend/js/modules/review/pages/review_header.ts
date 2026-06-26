@@ -3,7 +3,6 @@
  *
  * @license Unlicense
  * @author  HugoFara <hugo.farajallah@protonmail.com>
- * @since   3.0.0 Extracted from PHP inline scripts
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

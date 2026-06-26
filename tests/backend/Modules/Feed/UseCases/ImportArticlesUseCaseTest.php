@@ -20,7 +20,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
  *
  * Tests the feed import pipeline including article extraction,
  * text creation, deduplication, and archival.
- *
  */
 #[CoversClass(ImportArticles::class)]
 class ImportArticlesUseCaseTest extends TestCase

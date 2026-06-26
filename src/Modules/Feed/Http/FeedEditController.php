@@ -18,8 +18,6 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
  * Controller for feed CRUD operations.
  *
  * Handles feed creation, editing, deletion, and the management list.
- *
- * @since 3.0.0
  */
 class FeedEditController
 {

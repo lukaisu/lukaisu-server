@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -38,8 +37,6 @@ use Lukaisu\Api\V1\Response;
  * - POST /api/v1/auth/refresh - Refresh API token
  * - POST /api/v1/auth/logout - Invalidate token
  * - GET /api/v1/auth/me - Get current user info
- *
- * @since 3.0.0
  */
 class UserApiHandler implements ApiRoutableInterface
 {

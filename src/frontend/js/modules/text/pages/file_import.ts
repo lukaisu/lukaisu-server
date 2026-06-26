@@ -7,7 +7,6 @@
  * - Audio/Video files: Use Whisper transcription (handled by whisper_import.ts)
  *
  * @license unlicense
- * @since   3.0.0
  */
 
 type FileImportType = 'epub' | 'subtitle' | 'audio' | 'other';

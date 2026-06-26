@@ -11,7 +11,6 @@
  * @category Lukaisu
  * @package  Lukaisu\Modules\Dictionary\Application\Services
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -28,8 +27,6 @@ use RuntimeException;
  * Validates URLs against the curated registry (SSRF defense),
  * downloads the archive, extracts it, delegates to the appropriate
  * importer, and cleans up temp files.
- *
- * @since 3.0.0
  */
 class CuratedDictImportService
 {

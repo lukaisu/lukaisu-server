@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -24,8 +23,6 @@ use Lukaisu\Shared\Infrastructure\Database\Connection;
  *
  * Constructs WHERE and HAVING clauses for text list queries
  * based on search criteria and tag filters.
- *
- * @since 3.0.0
  */
 class BuildTextFilters
 {

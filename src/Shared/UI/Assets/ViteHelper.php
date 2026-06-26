@@ -15,7 +15,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -29,8 +28,6 @@ use Lukaisu\Shared\Infrastructure\Http\UrlUtilities;
  *
  * Provides methods for loading Vite-bundled assets in both
  * development mode (with HMR) and production mode (manifest-based).
- *
- * @since 3.0.0
  */
 class ViteHelper
 {

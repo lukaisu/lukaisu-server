@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -21,8 +20,6 @@ use Lukaisu\Modules\Text\Application\Services\TextStatisticsService;
 
 /**
  * Use case for retrieving text statistics for home page display.
- *
- * @since 3.0.0
  */
 class GetTextStatistics
 {

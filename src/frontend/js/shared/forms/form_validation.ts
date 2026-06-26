@@ -3,7 +3,6 @@
  *
  * @license unlicense
  * @author  andreask7 <andreasks7@users.noreply.github.com>
- * @since   1.6.16-fork
  */
 
 /**
@@ -136,7 +135,7 @@ export function check(): boolean {
     }
   });
 
-  // Note: as of Lukaisu Server 2.9.0, no field with "checkregexp" property is found in the code base
+  // Note: no field with "checkregexp" property is found in the code base
   document.querySelectorAll<HTMLInputElement>('input.checkregexp').forEach(el => {
     const regexp = el.value.trim();
     if (regexp.length > 0) {

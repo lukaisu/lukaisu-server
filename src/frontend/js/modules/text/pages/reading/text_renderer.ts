@@ -5,7 +5,6 @@
  * Generates spans with appropriate classes and data attributes for Alpine.js bindings.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import type { WordData } from '@modules/vocabulary/stores/word_store';

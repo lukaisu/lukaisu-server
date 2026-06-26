@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -33,8 +32,6 @@ use Lukaisu\Shared\Infrastructure\Bootstrap\DatabaseBootstrap;
  * - TtsService, BackupService, StatisticsService, etc. → AdminServiceProvider
  * - TranslationService → DictionaryServiceProvider
  * - TestService → ReviewServiceProvider
- *
- * @since 3.0.0
  */
 class CoreServiceProvider implements ServiceProviderInterface
 {

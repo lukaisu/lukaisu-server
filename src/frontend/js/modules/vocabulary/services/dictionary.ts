@@ -5,7 +5,6 @@
  *
  * @author  andreask7 <andreasks7@users.noreply.github.com>
  * @license Unlicense <http://unlicense.org/>
- * @since   2.10.0-fork Extracted from pgm.ts
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';
@@ -36,10 +35,6 @@ export function openDictionaryPopup(url: string): Window | null {
  * @param u Dictionary URL
  * @param w Term to be inserted in the URL
  * @returns A link to external dictionary to get a translation of the word
- *
- * @since 2.6.0-fork Internals rewrote, do no longer use PHP code.
- * @since 2.7.0-fork Use "lukaisu_term" placeholder
- * @since 3.1.0 Removed support for deprecated "###" placeholder
  */
 export function createTheDictUrl(u: string, w: string): string {
   const url = u.trim();
@@ -64,8 +59,6 @@ export function createTheDictUrl(u: string, w: string): string {
  * @param b Some other text to display before the link
  * @param popup Whether to open in popup window
  * @returns HTML-formatted link
- *
- * @since 3.1.0 Added popup parameter, removed asterisk prefix and lukaisu_popup URL detection
  */
 export function createTheDictLink(u: string, w: string, t: string, b: string, popup = false): string {
   const url = u.trim();
@@ -99,9 +92,6 @@ export function createTheDictLink(u: string, w: string, t: string, b: string, po
  * @param txt    Link text
  * @param popup  Whether to open in popup window
  * @returns HTML-formatted link.
- *
- * @since 3.1.0 Added popup parameter, removed asterisk prefix and lukaisu_popup URL detection
- * @since 3.2.0 Removed unused torder and txid parameters
  */
 export function createSentLookupLink(url: string, txt: string, popup = false): string {
   url = url.trim();
@@ -129,9 +119,6 @@ export function createSentLookupLink(url: string, txt: string, popup = false): s
  *
  * @param wblink3 Translator URL (Google Translate or LibreTranslate)
  * @returns Language code (e.g., 'en', 'fr') or empty string if not found
- *
- * @since 2.7.0 Also works with LibreTranslate URLs
- * @since 3.2.0 Clarified as fallback; prefer LanguageConfig.sourceLang
  */
 export function getLangFromDict(wblink3: string): string {
   if (wblink3.trim() === '') {

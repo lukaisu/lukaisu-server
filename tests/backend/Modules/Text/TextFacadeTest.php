@@ -28,7 +28,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * Unit tests for the TextFacade class.
  *
  * Tests text operations including CRUD, filtering, pagination, and text processing.
- *
  */
 #[CoversClass(TextFacade::class)]
 class TextFacadeTest extends TestCase

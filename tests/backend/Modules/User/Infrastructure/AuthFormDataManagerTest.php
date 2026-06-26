@@ -12,7 +12,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
  * Unit tests for AuthFormDataManager.
  *
  * Tests form field persistence for authentication forms.
- *
  */
 #[CoversClass(AuthFormDataManager::class)]
 class AuthFormDataManagerTest extends TestCase

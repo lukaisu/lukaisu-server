@@ -2,7 +2,6 @@
  * Terms API - Type-safe wrapper for term/word operations.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import {

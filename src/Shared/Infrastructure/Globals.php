@@ -15,7 +15,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -47,7 +46,6 @@ use Lukaisu\Shared\Infrastructure\Exception\AuthException;
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 class Globals
 {
@@ -230,8 +228,6 @@ class Globals
      * @param string $tableName The base table name (e.g., 'words')
      *
      * @return \Lukaisu\Shared\Infrastructure\Database\QueryBuilder
-     *
-     * @since 3.0.0
      */
     public static function query(string $tableName): \Lukaisu\Shared\Infrastructure\Database\QueryBuilder
     {
@@ -251,8 +247,6 @@ class Globals
      * @param int|null $userId The authenticated user's ID, or null to clear
      *
      * @return void
-     *
-     * @since 3.0.0
      */
     public static function setCurrentUserId(?int $userId): void
     {
@@ -265,8 +259,6 @@ class Globals
      * Returns null if no user is authenticated.
      *
      * @return int|null The current user ID or null
-     *
-     * @since 3.0.0
      */
     public static function getCurrentUserId(): ?int
     {
@@ -292,8 +284,6 @@ class Globals
      * @return int The current user ID
      *
      * @throws AuthException If no user is authenticated
-     *
-     * @since 3.0.0
      */
     public static function requireUserId(): int
     {
@@ -307,8 +297,6 @@ class Globals
      * Check if a user is currently authenticated.
      *
      * @return bool True if a user is authenticated
-     *
-     * @since 3.0.0
      */
     public static function isAuthenticated(): bool
     {
@@ -324,8 +312,6 @@ class Globals
      * @param bool $enabled Whether to enable multi-user mode
      *
      * @return void
-     *
-     * @since 3.0.0
      */
     public static function setMultiUserEnabled(bool $enabled): void
     {
@@ -336,8 +322,6 @@ class Globals
      * Check if multi-user mode is enabled.
      *
      * @return bool True if multi-user mode is enabled
-     *
-     * @since 3.0.0
      */
     public static function isMultiUserEnabled(): bool
     {
@@ -353,8 +337,6 @@ class Globals
      * @param bool $isAdmin Whether the current user is an admin
      *
      * @return void
-     *
-     * @since 3.0.0
      */
     public static function setCurrentUserIsAdmin(bool $isAdmin): void
     {
@@ -365,8 +347,6 @@ class Globals
      * Check if the current authenticated user is an admin.
      *
      * @return bool True if the current user is an admin
-     *
-     * @since 3.0.0
      */
     public static function isCurrentUserAdmin(): bool
     {
@@ -379,8 +359,6 @@ class Globals
      * @param bool|null $enabled Whether to enable backup restore, null for default
      *
      * @return void
-     *
-     * @since 3.0.0
      */
     public static function setBackupRestoreEnabled(?bool $enabled): void
     {
@@ -395,8 +373,6 @@ class Globals
      * This can be overridden by explicitly setting BACKUP_RESTORE_ENABLED.
      *
      * @return bool True if backup restore is enabled
-     *
-     * @since 3.0.0
      */
     public static function isBackupRestoreEnabled(): bool
     {

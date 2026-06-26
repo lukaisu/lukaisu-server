@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use Lukaisu\Modules\Tags\Domain\ValueObject\TagId;
  *
  * Tags are used to categorize words (term tags) or texts (text tags).
  * Both types share the same structure: ID, text, and comment.
- *
- * @since 3.0.0
  */
 class Tag
 {

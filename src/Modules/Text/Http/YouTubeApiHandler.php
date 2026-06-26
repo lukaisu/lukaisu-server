@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -29,8 +28,6 @@ use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
  * Handler for YouTube API proxy endpoints.
  *
  * Keeps the YouTube API key server-side to prevent exposure to clients.
- *
- * @since 3.0.0
  */
 class YouTubeApiHandler implements ApiRoutableInterface
 {

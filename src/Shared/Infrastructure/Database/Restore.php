@@ -14,7 +14,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0 Split from database_operations.php
  */
 
 declare(strict_types=1);
@@ -27,8 +26,6 @@ use Lukaisu\Shared\Infrastructure\Database\SqlValidator;
 
 /**
  * Database restore and truncation operations.
- *
- * @since 3.0.0
  */
 class Restore
 {
@@ -90,12 +87,6 @@ class Restore
      * @param bool     $validateSql  Whether to validate SQL statements (default true)
      *
      * @return string Human-readable status message
-     *
-     * @since 2.0.3-fork Function was broken
-     * @since 2.5.3-fork Function repaired
-     * @since 2.7.0-fork $handle should be an *uncompressed* file.
-     * @since 2.9.1-fork It can read SQL with more or less than one instruction a line
-     * @since 3.0.0 Added SQL validation for security hardening
      */
     public static function restoreFile($handle, string $title, bool $validateSql = true): string
     {

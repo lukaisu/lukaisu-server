@@ -19,7 +19,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Tests for the MySqlTextRepository class.
- *
  */
 #[CoversClass(MySqlTextRepository::class)]
 #[CoversClass(AbstractRepository::class)]

@@ -5,7 +5,6 @@
  * with a searchable interface. Supports keyboard navigation and accessibility.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

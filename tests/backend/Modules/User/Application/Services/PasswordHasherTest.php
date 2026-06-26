@@ -10,7 +10,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for the PasswordHasher service.
- *
  */
 #[CoversClass(PasswordHasher::class)]
 class PasswordHasherTest extends TestCase

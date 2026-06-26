@@ -5,7 +5,6 @@
  * Uses the word store for state and text renderer for display.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

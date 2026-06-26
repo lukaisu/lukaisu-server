@@ -5,7 +5,6 @@
  * Built via DOM API (createElementNS) for CSP compatibility.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

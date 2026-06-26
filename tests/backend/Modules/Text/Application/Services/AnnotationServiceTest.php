@@ -11,7 +11,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Text\Application\Services
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for AnnotationService.
- *
- * @since  3.0.0
  */
 #[CoversClass(AnnotationService::class)]
 class AnnotationServiceTest extends TestCase

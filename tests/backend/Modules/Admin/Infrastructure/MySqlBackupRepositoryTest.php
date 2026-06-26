@@ -13,7 +13,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Admin\Infrastructure
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.1.2-fork
  */
 
 declare(strict_types=1);
@@ -27,7 +26,6 @@ use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
 /**
- * @since 3.1.2-fork
  */
 class MySqlBackupRepositoryTest extends TestCase
 {

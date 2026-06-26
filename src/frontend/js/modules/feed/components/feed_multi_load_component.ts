@@ -5,7 +5,6 @@
  * replacing inline event handlers with Alpine.js reactive patterns.
  *
  * @license Unlicense
- * @since   3.0.0
  */
 
 import Alpine from 'alpinejs';

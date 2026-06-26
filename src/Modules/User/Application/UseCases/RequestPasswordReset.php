@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -35,8 +34,6 @@ use Lukaisu\Modules\User\Domain\UserRepositoryInterface;
  * - Only the SHA-256 hash is stored in the database
  * - Tokens expire after 1 hour
  * - Silent fail on invalid email (prevents user enumeration attacks)
- *
- * @since 3.0.0
  */
 class RequestPasswordReset
 {

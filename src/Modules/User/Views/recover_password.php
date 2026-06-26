@@ -17,7 +17,6 @@
  * @package  Lukaisu\Modules\User\Views
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.1.2
  */
 
 declare(strict_types=1);

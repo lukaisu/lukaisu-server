@@ -10,7 +10,6 @@ use Lukaisu\Modules\Feed\Application\Services\ArticleExtractor;
 
 /**
  * Tests for ArticleExtractor service.
- *
  */
 #[CoversClass(ArticleExtractor::class)]
 class ArticleExtractorTest extends TestCase

@@ -4,7 +4,6 @@
  * Provides hover tooltips for word elements in the reading interface.
  *
  * @license unlicense
- * @since 3.0.0
  */
 
 import { getDelimiter } from '@modules/language/stores/language_config';

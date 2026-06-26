@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0 Migrated from Core/Text/text_statistics.php
  */
 
 declare(strict_types=1);
@@ -34,7 +33,6 @@ use Lukaisu\Shared\UI\Helpers\IconHelper;
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 class TextStatisticsService
 {
@@ -214,8 +212,6 @@ class TextStatisticsService
      * @param int $textId Text ID
      *
      * @return string HTML result
-     *
-     * @since 2.7.0-fork Adapted to use LibreTranslate dictionary as well.
      */
     public function getTodoWordsContent(int $textId): string
     {

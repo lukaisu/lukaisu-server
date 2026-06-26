@@ -10,7 +10,6 @@ use Lukaisu\Modules\Feed\Domain\FeedOptions;
 
 /**
  * Tests for FeedOptions value object.
- *
  */
 #[CoversClass(FeedOptions::class)]
 class FeedOptionsTest extends TestCase

@@ -5,7 +5,6 @@
  * No server-side HTML generation - fully reactive SPA-style interface.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.0.0
  */
 
 import { onDomReady } from '@shared/utils/dom_ready';

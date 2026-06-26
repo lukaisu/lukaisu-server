@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Admin\Application\UseCases\ServerData
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ use PHPUnit\Framework\TestCase;
  * Note: execute() requires a database connection for several calls.
  * These tests verify the class structure and helper methods via
  * reflection where the methods are private.
- *
- * @since 3.0.0
  */
 class GetServerDataTest extends TestCase
 {

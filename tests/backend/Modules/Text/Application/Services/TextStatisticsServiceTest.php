@@ -14,7 +14,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Text\Application\Services
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -28,8 +27,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Unit tests for TextStatisticsService.
- *
- * @since  3.0.0
  */
 #[CoversClass(TextStatisticsService::class)]
 class TextStatisticsServiceTest extends TestCase

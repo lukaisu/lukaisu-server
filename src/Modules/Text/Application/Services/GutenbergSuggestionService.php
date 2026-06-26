@@ -13,7 +13,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -28,8 +27,6 @@ use Lukaisu\Shared\Infrastructure\Http\GutenbergClient;
  *
  * Uses a file-based cache (24h TTL) to avoid hitting the Gutendex API
  * on every home page load.
- *
- * @since 3.0.0
  */
 class GutenbergSuggestionService
 {

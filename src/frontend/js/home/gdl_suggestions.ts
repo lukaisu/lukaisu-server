@@ -7,7 +7,6 @@
  * and after them for advanced readers (via the flex `order` it exposes).
  *
  * @license Unlicense <http://unlicense.org/>
- * @since   3.1.0
  */
 
 import Alpine from 'alpinejs';

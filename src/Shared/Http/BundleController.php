@@ -11,7 +11,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license Unlicense <http://unlicense.org/>
  * @link    https://hugofara.github.io/lukaisu-server/developer/api
- * @since   3.0.0
  */
 
 declare(strict_types=1);
@@ -36,8 +35,6 @@ use Lukaisu\Shared\Infrastructure\Routing\Middleware\CsrfMiddleware;
  * Only HTML pages flow through here — so the CSRF token stays fresh and the
  * shell is never cached. The bundle's JS/CSS/sound assets are served statically
  * by the Router (`resolveStaticAsset()` maps `/app/*` → `dist-app/*`).
- *
- * @since 3.0.0
  */
 final class BundleController
 {

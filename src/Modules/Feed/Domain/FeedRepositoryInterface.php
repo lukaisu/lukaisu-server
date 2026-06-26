@@ -12,7 +12,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -25,8 +24,6 @@ namespace Lukaisu\Modules\Feed\Domain;
  * This is a domain port defining the contract for feed persistence.
  * Infrastructure implementations (e.g., MySqlFeedRepository) provide
  * the actual database access.
- *
- * @since 3.0.0
  */
 interface FeedRepositoryInterface
 {

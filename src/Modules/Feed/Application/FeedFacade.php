@@ -10,7 +10,6 @@
  * @author   HugoFara <hugo.farajallah@protonmail.com>
  * @license  Unlicense <http://unlicense.org/>
  * @link     https://hugofara.github.io/lukaisu-server/developer/api
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -40,8 +39,6 @@ use Lukaisu\Modules\Feed\Domain\TextCreationInterface;
  *
  * This facade wraps the use cases and services to provide a similar
  * interface to the original FeedService for gradual migration.
- *
- * @since 3.0.0
  */
 class FeedFacade
 {

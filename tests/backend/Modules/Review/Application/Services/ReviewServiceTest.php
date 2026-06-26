@@ -8,7 +8,6 @@
  * @category Testing
  * @package  Lukaisu\Tests\Modules\Review\Application\Services
  * @license  Unlicense <http://unlicense.org/>
- * @since    3.0.0
  */
 
 declare(strict_types=1);
@@ -28,8 +27,6 @@ use PHPUnit\Framework\TestCase;
  * Tests pure logic methods directly and session-dependent methods
  * via mocked SessionStateManager. DB-dependent methods are skipped
  * when no database connection is available.
- *
- * @since 3.0.0
  */
 class ReviewServiceTest extends TestCase
 {

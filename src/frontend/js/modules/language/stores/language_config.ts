@@ -5,7 +5,6 @@
  * Configuration is loaded once from DOM data attributes or initial config.
  *
  * @license Unlicense <http://unlicense.org/>
- * @since 3.1.0
  */
 
 export interface LanguageConfig {
