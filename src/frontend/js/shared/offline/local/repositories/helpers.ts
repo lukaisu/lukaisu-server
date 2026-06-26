@@ -14,6 +14,7 @@ import type { ParserConfig } from '../parser';
 export function languageToParserConfig(language: LocalLanguage): ParserConfig {
   return {
     languageId: language.id ?? 0,
+    languageCode: language.code,
     regexpSplitSentences: language.regexpSplitSentences,
     exceptionsSplitSentences: language.exceptionsSplitSentences,
     regexpWordCharacters: language.regexpWordCharacters,

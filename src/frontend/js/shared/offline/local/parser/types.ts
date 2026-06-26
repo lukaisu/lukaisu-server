@@ -36,6 +36,12 @@ export interface ParserConfig {
   splitEachChar: boolean;
   /** Right-to-left script (display hint; does not change tokenization). */
   rightToLeft: boolean;
+  /**
+   * BCP-47 code of the language being learned (e.g. `zh`, `ja`). Optional; used
+   * by the Intl.Segmenter tokenizer to select the word-break dictionary. When
+   * omitted the engine default locale is used (still script-driven for CJK).
+   */
+  languageCode?: string;
 }
 
 /**

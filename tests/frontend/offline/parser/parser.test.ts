@@ -13,6 +13,7 @@ import { describe, it, expect } from 'vitest';
 import fixtures from './parser-fixtures.json';
 import {
   parseText,
+  characterParser,
   type ParserConfig,
   type ParserResult,
 } from '@shared/offline/local/parser';
@@ -134,9 +135,14 @@ describe('right-to-left text (corrected vs PHP)', () => {
   });
 });
 
-describe('character parser (CJK)', () => {
+// The character parser is the CJK *fallback* (used when the engine lacks
+// Intl.Segmenter). `parseText` now prefers the segmenter for splitEachChar
+// languages, so exercise the fallback directly to keep its char-by-char
+// behaviour covered. Substitutions are empty for these fixtures, so calling
+// `parse` directly matches what `parseText` would feed it.
+describe('character parser (CJK fallback)', () => {
   it('tokenizes Chinese one character per word with clean sentences', () => {
-    const r = parseText(F.chinese_char.text, CONFIGS.chinese_char);
+    const r = characterParser.parse(F.chinese_char.text, CONFIGS.chinese_char);
     expect(r.sentences).toEqual(['你好世界。', '我爱学习。']);
     expect(r.tokens.filter((t) => t.isWord).map((t) => t.text)).toEqual([
       '你', '好', '世', '界', '我', '爱', '学', '习',
@@ -147,7 +153,7 @@ describe('character parser (CJK)', () => {
   });
 
   it('keeps kana and kanji as words and punctuation as non-words', () => {
-    const r = parseText(F.japanese_char.text, CONFIGS.japanese_char);
+    const r = characterParser.parse(F.japanese_char.text, CONFIGS.japanese_char);
     expect(r.sentences).toEqual(['日本語を話します。', 'はい、少し。']);
     expect(r.tokens.filter((t) => !t.isWord).map((t) => t.text)).toEqual(['。', '、', '。']);
   });
