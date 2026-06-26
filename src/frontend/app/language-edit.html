@@ -46,6 +46,15 @@
         <!-- Dictionaries & translation -->
         <h2 class="title is-5">Dictionaries &amp; translation</h2>
 
+        <!-- Imported (local) dictionaries are server-enhanced (Job B); the link is
+             revealed by language-edit.ts only when a server is connected. -->
+        <p id="le-local-dicts-wrap" class="block" hidden>
+          <a id="le-local-dicts" class="button is-small is-link is-light" href="#">
+            <span class="icon"><i data-lucide="book-text"></i></span>
+            <span>Manage local dictionaries</span>
+          </a>
+        </p>
+
         <div class="field">
           <label class="label" for="le-dict1-uri">Dictionary 1 URI</label>
           <div class="control">

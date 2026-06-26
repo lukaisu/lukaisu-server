@@ -83,6 +83,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   the text. Whisper audio transcription is deferred to a follow-up. E2E covers both
   states (file-on-device + gated offline; web-page + YouTube fill the form
   connected).
+* **Bundled local-dictionaries page (server-enhanced, Job B surface 3).** A new
+  gated `dictionaries.html` manages a language's local dictionaries against a
+  connected server: **list** + **delete**, and **one-click curated import**
+  (`POST /api/v1/local-dictionaries/import-curated`) from a bundled copy of the
+  curated registry — the only import path a bearer-auth remote client can use
+  (file upload needs a server-side path). Arbitrary CSV/JSON/StarDict **file
+  upload links out** to the server's own web import form. Offline (local-first) the
+  page shows a "connect a server" notice and the reader keeps its online-dictionary
+  lookups (no on-device dictionary store). Reached from a gated "Manage local
+  dictionaries" link on the language-edit page. E2E covers gated-offline +
+  connected (list / curated import / delete).
 
 ### Changed
 

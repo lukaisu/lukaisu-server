@@ -45,7 +45,7 @@ function getLanguageId(): number | null {
 
 async function start(): Promise<void> {
   // Local-first (seed on first run) before any API call, so this works offline.
-  await initDataMode();
+  const localFirst = await initDataMode();
 
   const loading = el<HTMLElement>('le-loading');
   const notFound = el<HTMLElement>('le-notfound');
@@ -98,6 +98,13 @@ async function start(): Promise<void> {
 
   if (nameTitle) nameTitle.textContent = lang.name;
   document.title = `Lukaisu — Edit ${lang.name}`;
+
+  // Server-enhanced: the local-dictionaries page only works connected, so reveal
+  // its link only then (offline it would just show a "connect a server" notice).
+  if (!localFirst) {
+    el<HTMLAnchorElement>('le-local-dicts')?.setAttribute('href', `/languages/${id}/dictionaries`);
+    el<HTMLElement>('le-local-dicts-wrap')?.removeAttribute('hidden');
+  }
   if (name) name.value = lang.name;
   if (dict1Uri) dict1Uri.value = lang.dict1Uri;
   if (dict1Popup) dict1Popup.checked = lang.dict1PopUp;

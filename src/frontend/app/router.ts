@@ -73,6 +73,11 @@ export const pageUrl = {
   feeds(): string {
     return 'feeds.html';
   },
+  dictionaries(langId?: number | string): string {
+    return langId != null
+      ? `dictionaries.html?lang=${encodeURIComponent(String(langId))}`
+      : 'dictionaries.html';
+  },
   settings(): string {
     return 'settings.html';
   },
@@ -171,6 +176,20 @@ export function bundledPageFor(path: string): string | null {
   // fall through to the connected server's web UI (only reachable when connected).
   if (pathname === '/feeds' || pathname === '/feeds/manage') {
     return pageUrl.feeds();
+  }
+  // Local dictionaries — server-enhanced (Job B). Reached from /dictionaries?lang=
+  // and the per-language /languages/{id}/dictionaries; the bundle shows the
+  // management + curated-import page (gated to a connected server). The exact
+  // matches below deliberately exclude the file-import form (/dictionaries/import,
+  // /languages/{id}/dictionaries/import), which is not bundled and falls through to
+  // the connected server's native multipart upload.
+  if (pathname === '/dictionaries') {
+    const lang = new URLSearchParams(query).get('lang');
+    return pageUrl.dictionaries(lang ?? undefined);
+  }
+  const dictLangMatch = pathname.match(/^\/languages\/(\d+)\/dictionaries$/);
+  if (dictLangMatch) {
+    return pageUrl.dictionaries(dictLangMatch[1]);
   }
   // Preferences: the navbar's "Preferences" link targets the server's
   // /profile/preferences form; route it to the bundled settings page so it
