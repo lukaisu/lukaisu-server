@@ -18,29 +18,22 @@ declare(strict_types=1);
 
 namespace Lukaisu\Modules\Tags\Http;
 
-use Lukaisu\Shared\Http\AbstractCrudController;
-use Lukaisu\Shared\Infrastructure\Http\InputValidator;
+use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Modules\Tags\Application\TagsFacade;
-use Lukaisu\Modules\Tags\Domain\TagType;
 
 /**
  * Controller for managing text tags (tags applied to texts/documents).
+ *
+ * The text-tag list is served by the bundled client (GET /tags/text redirects
+ * to /app/tags.html); this controller only renders the server-side create/edit
+ * forms and handles deletes.
  */
-class TextTagController extends AbstractCrudController
+class TextTagController extends BaseController
 {
     protected string $pageTitle = 'Text Tags';
-    protected string $resourceName = 'tag';
+    protected bool $showMenu = true;
 
     private TagsFacade $facade;
-
-    /** @var string */
-    private string $currentQuery = '';
-
-    /** @var int */
-    private int $currentSort = 1;
-
-    /** @var int */
-    private int $currentPage = 1;
 
     /**
      * Constructor.
@@ -56,7 +49,7 @@ class TextTagController extends AbstractCrudController
     /**
      * Show new text tag form.
      *
-     * Route: GET /tags/text/new
+     * Route: GET/POST /tags/text/new
      *
      * @param array $params Route parameters
      *
@@ -137,162 +130,6 @@ class TextTagController extends AbstractCrudController
             header('Location: ' . url('/tags/text') . '?error=' . urlencode(__('tags.flash.delete_failed')));
         }
         exit;
-    }
-
-    /**
-     * Main index action.
-     *
-     * @param array $params Route parameters
-     *
-     * @return void
-     */
-    public function index(array $params): void
-    {
-        // Load filter/sort/page settings from URL params (sort persists to DB)
-        $this->currentSort = InputValidator::getIntWithDb("sort", 'currenttextagsort', 1);
-        $this->currentPage = InputValidator::getIntParam("page", 1, 1);
-        $this->currentQuery = InputValidator::getString("query");
-
-        parent::index($params);
-    }
-
-    /**
-     * Get the ID parameter name.
-     *
-     * @return string
-     */
-    protected function getIdParameterName(): string
-    {
-        return 'id';
-    }
-
-    /**
-     * Handle create operation.
-     *
-     * @return string Result message
-     */
-    protected function handleCreate(): string
-    {
-        $text = $this->param('text', '');
-        $comment = $this->param('comment', '');
-
-        $result = $this->facade->create($text, $comment);
-        return $result['success'] ? "Saved" : "Error: " . ($result['error'] ?? 'Unknown error');
-    }
-
-    /**
-     * Handle update operation.
-     *
-     * @param int $id Tag ID
-     *
-     * @return string Result message
-     */
-    protected function handleUpdate(int $id): string
-    {
-        $text = $this->param('text', '');
-        $comment = $this->param('comment', '');
-
-        $result = $this->facade->update($id, $text, $comment);
-        return $result['success'] ? "Updated" : "Error: " . ($result['error'] ?? 'Unknown error');
-    }
-
-    /**
-     * Handle delete operation.
-     *
-     * @param int $id Tag ID
-     *
-     * @return string Result message
-     */
-    protected function handleDelete(int $id): string
-    {
-        $result = $this->facade->delete($id);
-        return $result['success'] ? "Deleted" : "Deleted (0 rows affected)";
-    }
-
-    /**
-     * Handle bulk action.
-     *
-     * @param string $action Action code
-     * @param int[]  $ids    Tag IDs
-     *
-     * @return array{action: string, count: int, error?: string, success: bool}
-     */
-    protected function handleBulkAction(string $action, array $ids): array
-    {
-        if ($action === 'del') {
-            $result = $this->facade->deleteMultiple($ids);
-            $this->facade->cleanupOrphanedLinks();
-            return [
-                'success' => true,
-                'count' => $result['count'],
-                'action' => 'del'
-            ];
-        }
-
-        return parent::handleBulkAction($action, $ids);
-    }
-
-    /**
-     * Process action on all filtered items.
-     *
-     * @param string $action Action code
-     *
-     * @return array{action: string, count: int, error?: string, success: bool}
-     */
-    protected function processAllAction(string $action): array
-    {
-        if ($action === 'delall') {
-            $result = $this->facade->deleteAll($this->currentQuery);
-            return [
-                'success' => true,
-                'count' => $result['count'],
-                'action' => 'delall'
-            ];
-        }
-
-        return parent::processAllAction($action);
-    }
-
-    /**
-     * Render the list view.
-     *
-     * @param string $message Message to display
-     *
-     * @psalm-suppress UnusedVariable Variables are used by included view
-     *
-     * @return void
-     */
-    protected function renderList(string $message): void
-    {
-        $this->message($message, false);
-
-        TagsFacade::getAllTextTags(true); // Refresh cache
-
-        // Get counts and pagination
-        $totalCount = $this->facade->getCount($this->currentQuery);
-        $pagination = $this->facade->getPagination($totalCount, $this->currentPage);
-
-        // Get sort column
-        $sortColumn = $this->facade->getSortColumn($this->currentSort);
-
-        // Get tags list
-        $tags = $this->facade->getList(
-            $this->currentQuery,
-            $sortColumn,
-            $pagination['currentPage'],
-            $pagination['perPage']
-        );
-
-        // Set view variables
-        $currentQuery = $this->currentQuery;
-        $currentSort = $this->currentSort;
-        $isTextTag = true;
-        $service = $this->facade; // Backward compatible variable name
-        unset($isTextTag, $service);
-
-        // Cut-over: text-tag management is served by the bundled client. GET
-        // /tags/text redirects to /app/tags.html (see routes.php), so this
-        // render path is unreachable; the PHP view (tag_list.php) was removed.
     }
 
     /**

@@ -399,7 +399,7 @@ function registerRoutes(Router $router): void
     // Delete term tag (RESTful route): DELETE /tags/123
     $router->delete('/tags/{id:int}', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@delete', AUTH_MIDDLEWARE);
 
-    $router->registerWithMiddleware('/tags', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@index', AUTH_MIDDLEWARE);
+    // GET /tags (term-tag list) is served by the bundled client; see the /app redirects below.
 
     // Text tags (Tags module)
     // Same pattern as term tags: controller's new() handles GET and POST.
@@ -413,7 +413,7 @@ function registerRoutes(Router $router): void
     // Delete text tag (RESTful route): DELETE /tags/text/123
     $router->delete('/tags/text/{id:int}', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@delete', AUTH_MIDDLEWARE);
 
-    $router->registerWithMiddleware('/tags/text', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@index', AUTH_MIDDLEWARE);
+    // GET /tags/text (text-tag list) is served by the bundled client; see the /app redirects below.
 
     // ==================== FEED ROUTES (PROTECTED) ====================
 

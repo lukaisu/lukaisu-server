@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Lukaisu\Tests\Modules\Tags\Http;
 
-use Lukaisu\Modules\Tags\Http\TermTagController;
 use Lukaisu\Modules\Tags\Http\TextTagController;
 use Lukaisu\Modules\Tags\Application\TagsFacade;
 use PHPUnit\Framework\TestCase;
@@ -14,8 +13,10 @@ use PHPUnit\Framework\MockObject\MockObject;
 /**
  * Unit tests for TextTagController.
  *
- * Tests text tag management: create, update, delete, bulk actions,
- * and view rendering logic.
+ * The text-tag list is served by the bundled client (GET /tags/text redirects
+ * to /app/tags.html), so this controller only renders the server-side
+ * create/edit forms and handles deletes. Tests cover construction, the
+ * surviving public surface, and edit-form rendering.
  */
 class TextTagControllerTest extends TestCase
 {
@@ -58,7 +59,7 @@ class TextTagControllerTest extends TestCase
     }
 
     // =========================================================================
-    // Page title and resource name tests
+    // Page title test
     // =========================================================================
 
     #[Test]
@@ -67,282 +68,6 @@ class TextTagControllerTest extends TestCase
         $reflection = new \ReflectionProperty(TextTagController::class, 'pageTitle');
 
         $this->assertSame('Text Tags', $reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function resourceNameIsTag(): void
-    {
-        $reflection = new \ReflectionProperty(TextTagController::class, 'resourceName');
-
-        $this->assertSame('tag', $reflection->getValue($this->controller));
-    }
-
-    // =========================================================================
-    // getIdParameterName tests
-    // =========================================================================
-
-    #[Test]
-    public function getIdParameterNameReturnsT2ID(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'getIdParameterName');
-
-        $result = $method->invoke($this->controller);
-
-        $this->assertSame('id', $result);
-    }
-
-    // =========================================================================
-    // handleCreate tests via reflection
-    // =========================================================================
-
-    #[Test]
-    public function handleCreateReturnsSuccessMessage(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleCreate');
-
-        $this->facade->expects($this->once())
-            ->method('create')
-            ->with('', '')
-            ->willReturn(['success' => true]);
-
-        $result = $method->invoke($this->controller);
-
-        $this->assertSame('Saved', $result);
-    }
-
-    #[Test]
-    public function handleCreateReturnsErrorMessageOnFailure(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleCreate');
-
-        $this->facade->expects($this->once())
-            ->method('create')
-            ->willReturn(['success' => false, 'error' => 'Tag already exists']);
-
-        $result = $method->invoke($this->controller);
-
-        $this->assertSame('Error: Tag already exists', $result);
-    }
-
-    #[Test]
-    public function handleCreateReturnsUnknownErrorWhenNoErrorKey(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleCreate');
-
-        $this->facade->expects($this->once())
-            ->method('create')
-            ->willReturn(['success' => false]);
-
-        $result = $method->invoke($this->controller);
-
-        $this->assertSame('Error: Unknown error', $result);
-    }
-
-    // =========================================================================
-    // handleUpdate tests via reflection
-    // =========================================================================
-
-    #[Test]
-    public function handleUpdateReturnsSuccessMessage(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleUpdate');
-
-        $this->facade->expects($this->once())
-            ->method('update')
-            ->with(42, '', '')
-            ->willReturn(['success' => true]);
-
-        $result = $method->invoke($this->controller, 42);
-
-        $this->assertSame('Updated', $result);
-    }
-
-    #[Test]
-    public function handleUpdateReturnsErrorMessageOnFailure(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleUpdate');
-
-        $this->facade->expects($this->once())
-            ->method('update')
-            ->with(7, '', '')
-            ->willReturn(['success' => false, 'error' => 'Tag not found']);
-
-        $result = $method->invoke($this->controller, 7);
-
-        $this->assertSame('Error: Tag not found', $result);
-    }
-
-    #[Test]
-    public function handleUpdateReturnsUnknownErrorWhenNoErrorKey(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleUpdate');
-
-        $this->facade->expects($this->once())
-            ->method('update')
-            ->willReturn(['success' => false]);
-
-        $result = $method->invoke($this->controller, 1);
-
-        $this->assertSame('Error: Unknown error', $result);
-    }
-
-    // =========================================================================
-    // handleDelete tests via reflection
-    // =========================================================================
-
-    #[Test]
-    public function handleDeleteReturnsDeletedOnSuccess(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleDelete');
-
-        $this->facade->expects($this->once())
-            ->method('delete')
-            ->with(5)
-            ->willReturn(['success' => true]);
-
-        $result = $method->invoke($this->controller, 5);
-
-        $this->assertSame('Deleted', $result);
-    }
-
-    #[Test]
-    public function handleDeleteReturnsZeroRowsOnFailure(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleDelete');
-
-        $this->facade->expects($this->once())
-            ->method('delete')
-            ->with(99)
-            ->willReturn(['success' => false]);
-
-        $result = $method->invoke($this->controller, 99);
-
-        $this->assertSame('Deleted (0 rows affected)', $result);
-    }
-
-    // =========================================================================
-    // handleBulkAction tests via reflection
-    // =========================================================================
-
-    #[Test]
-    public function handleBulkActionDeleteCallsFacade(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleBulkAction');
-
-        $this->facade->expects($this->once())
-            ->method('deleteMultiple')
-            ->with([1, 2, 3])
-            ->willReturn(['count' => 3]);
-
-        $this->facade->expects($this->once())
-            ->method('cleanupOrphanedLinks');
-
-        $result = $method->invoke($this->controller, 'del', [1, 2, 3]);
-
-        $this->assertTrue($result['success']);
-        $this->assertSame(3, $result['count']);
-        $this->assertSame('del', $result['action']);
-    }
-
-    #[Test]
-    public function handleBulkActionDeleteWithSingleId(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleBulkAction');
-
-        $this->facade->expects($this->once())
-            ->method('deleteMultiple')
-            ->with([10])
-            ->willReturn(['count' => 1]);
-
-        $this->facade->expects($this->once())
-            ->method('cleanupOrphanedLinks');
-
-        $result = $method->invoke($this->controller, 'del', [10]);
-
-        $this->assertTrue($result['success']);
-        $this->assertSame(1, $result['count']);
-    }
-
-    #[Test]
-    public function handleBulkActionDeleteWithEmptyIds(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleBulkAction');
-
-        $this->facade->expects($this->once())
-            ->method('deleteMultiple')
-            ->with([])
-            ->willReturn(['count' => 0]);
-
-        $this->facade->expects($this->once())
-            ->method('cleanupOrphanedLinks');
-
-        $result = $method->invoke($this->controller, 'del', []);
-
-        $this->assertTrue($result['success']);
-        $this->assertSame(0, $result['count']);
-    }
-
-    #[Test]
-    public function handleBulkActionUnknownActionDelegatesToParent(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'handleBulkAction');
-
-        $result = $method->invoke($this->controller, 'unknown_action', [1, 2]);
-
-        $this->assertFalse($result['success']);
-        $this->assertSame('unknown_action', $result['error']);
-    }
-
-    // =========================================================================
-    // processAllAction tests via reflection
-    // =========================================================================
-
-    #[Test]
-    public function processAllActionDeleteAllCallsFacade(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'processAllAction');
-
-        // Set currentQuery via reflection
-        $queryProp = new \ReflectionProperty(TextTagController::class, 'currentQuery');
-        $queryProp->setValue($this->controller, 'search term');
-
-        $this->facade->expects($this->once())
-            ->method('deleteAll')
-            ->with('search term')
-            ->willReturn(['count' => 8]);
-
-        $result = $method->invoke($this->controller, 'delall');
-
-        $this->assertTrue($result['success']);
-        $this->assertSame(8, $result['count']);
-        $this->assertSame('delall', $result['action']);
-    }
-
-    #[Test]
-    public function processAllActionDeleteAllWithEmptyQuery(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'processAllAction');
-
-        $this->facade->expects($this->once())
-            ->method('deleteAll')
-            ->with('')
-            ->willReturn(['count' => 15]);
-
-        $result = $method->invoke($this->controller, 'delall');
-
-        $this->assertTrue($result['success']);
-        $this->assertSame(15, $result['count']);
-    }
-
-    #[Test]
-    public function processAllActionUnknownActionDelegatesToParent(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'processAllAction');
-
-        $result = $method->invoke($this->controller, 'unknown');
-
-        $this->assertFalse($result['success']);
-        $this->assertSame('not_implemented', $result['error']);
     }
 
     // =========================================================================
@@ -390,12 +115,12 @@ class TextTagControllerTest extends TestCase
     // =========================================================================
 
     #[Test]
-    public function classExtendsAbstractCrudController(): void
+    public function classExtendsBaseController(): void
     {
         $reflection = new \ReflectionClass(TextTagController::class);
 
         $this->assertSame(
-            'Lukaisu\Shared\Http\AbstractCrudController',
+            'Lukaisu\Shared\Http\BaseController',
             $reflection->getParentClass()->getName()
         );
     }
@@ -405,7 +130,7 @@ class TextTagControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass(TextTagController::class);
 
-        $expectedMethods = ['new', 'edit', 'delete', 'index'];
+        $expectedMethods = ['new', 'edit', 'delete'];
 
         foreach ($expectedMethods as $methodName) {
             $this->assertTrue(
@@ -425,17 +150,7 @@ class TextTagControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass(TextTagController::class);
 
-        $expectedMethods = [
-            'handleCreate',
-            'handleUpdate',
-            'handleDelete',
-            'handleBulkAction',
-            'processAllAction',
-            'renderList',
-            'renderCreateForm',
-            'renderEditForm',
-            'getIdParameterName',
-        ];
+        $expectedMethods = ['renderCreateForm', 'renderEditForm'];
 
         foreach ($expectedMethods as $methodName) {
             $this->assertTrue(
@@ -480,66 +195,5 @@ class TextTagControllerTest extends TestCase
         $this->assertCount(1, $params);
         $this->assertSame('id', $params[0]->getName());
         $this->assertSame('int', $params[0]->getType()->getName());
-    }
-
-    // =========================================================================
-    // Default state tests
-    // =========================================================================
-
-    #[Test]
-    public function defaultCurrentQueryIsEmpty(): void
-    {
-        $reflection = new \ReflectionProperty(TextTagController::class, 'currentQuery');
-
-        $this->assertSame('', $reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function defaultCurrentSortIsOne(): void
-    {
-        $reflection = new \ReflectionProperty(TextTagController::class, 'currentSort');
-
-        $this->assertSame(1, $reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function defaultCurrentPageIsOne(): void
-    {
-        $reflection = new \ReflectionProperty(TextTagController::class, 'currentPage');
-
-        $this->assertSame(1, $reflection->getValue($this->controller));
-    }
-
-    // =========================================================================
-    // Difference from TermTagController tests
-    // =========================================================================
-
-    #[Test]
-    public function renderCreateFormUsesT2Prefix(): void
-    {
-        $method = new \ReflectionMethod(TextTagController::class, 'renderCreateForm');
-
-        // We cannot fully invoke renderCreateForm because it includes a view file,
-        // but we can verify the method exists and is callable
-        $this->assertTrue($method->isProtected());
-        $this->assertSame(0, $method->getNumberOfRequiredParameters());
-    }
-
-    #[Test]
-    public function idParameterNameMatchesTermTag(): void
-    {
-        // After the snake_case rename both tag tables use the same `id` column.
-        $termController = new TermTagController($this->facade);
-
-        $termMethod = new \ReflectionMethod(TermTagController::class, 'getIdParameterName');
-
-        $textMethod = new \ReflectionMethod(TextTagController::class, 'getIdParameterName');
-
-        $termId = $termMethod->invoke($termController);
-        $textId = $textMethod->invoke($this->controller);
-
-        $this->assertSame('id', $termId);
-        $this->assertSame('id', $textId);
-        $this->assertSame($termId, $textId);
     }
 }
