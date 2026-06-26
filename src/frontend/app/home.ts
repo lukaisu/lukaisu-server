@@ -12,11 +12,12 @@
  *   - that text's status breakdown → GET /texts/statistics
  *
  * The server-version / update-check warnings are inert offline (no PHP, no
- * outbound GitHub call). The dashboard's discovery surfaces — Gutenberg / GDL
- * suggestions and the library-search/import modal — are server-enhanced (Job B,
- * the outbound bucket), so they are omitted from the offline dashboard; the
- * "Browse your library" card links to the bundled library instead. The offline
- * E2E asserts `apiAttempts === 0`.
+ * outbound GitHub call). Catalog discovery (Gutenberg/GDL browse + on-device
+ * Gutenberg plain-text import) runs client-side behind the home page's
+ * "Discover books" toggle: it reaches the catalogs CORS-free and never calls
+ * `/api/v1`, and it loads only on demand, so the offline dashboard still makes
+ * no server call on a passive visit (the E2E asserts `apiAttempts === 0`).
+ * Coverage preview, RSS, arbitrary-URL and EPUB import remain server-enhanced.
  *
  * @license Unlicense <http://unlicense.org/>
  */

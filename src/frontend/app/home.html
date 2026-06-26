@@ -6,9 +6,10 @@
   <meta name="color-scheme" content="light dark" />
   <title>Lukaisu — Home</title>
   <!-- Mounts the existing home dashboard component (js/home/home_app.ts). The
-       boot entry assembles its config (continue-reading text + counts) on-device;
-       the server-enhanced discovery surfaces (Gutenberg/GDL suggestions, library
-       search/import) are Job B and omitted from the offline dashboard. -->
+       boot entry assembles its config (continue-reading text + counts) on-device.
+       Catalog discovery (Gutenberg/GDL browse + on-device Gutenberg import) now
+       runs client-side behind the "Discover books" toggle below; coverage
+       preview, RSS, arbitrary-URL and EPUB import stay server-enhanced. -->
   <meta name="lukaisu-modules" content="home" />
   <style>[x-cloak]{display:none !important}</style>
 </head>
@@ -122,6 +123,75 @@
               <p class="mt-3 has-text-weight-semibold">Browse your library</p>
             </a>
           </div>
+        </div>
+
+        <!-- Discover books — on-device catalog browse (Gutendex + GDL) with
+             on-device import. Behind an explicit toggle so a passive home visit
+             makes no outbound request; the nested components only fetch once
+             opened. The catalog calls go direct to the source (CORS-free in the
+             app), never to /api/v1, so the offline dashboard's zero-server-call
+             invariant holds. -->
+        <div class="mt-5" x-data="discoverBooks">
+          <button class="button is-light" @click="toggle()">
+            <span class="icon"><i data-lucide="compass"></i></span>
+            <span>Discover books</span>
+            <span class="icon">
+              <i data-lucide="chevron-down" x-show="!open"></i>
+              <i data-lucide="chevron-up" x-show="open"></i>
+            </span>
+          </button>
+
+          <template x-if="open">
+            <div class="mt-4">
+
+              <!-- Project Gutenberg -->
+              <div x-data="gutenbergSuggestions">
+                <h2 class="title is-6 mb-2">Project Gutenberg</h2>
+                <p class="notification is-danger is-light py-2" x-show="error" x-text="error"></p>
+                <progress class="progress is-small is-primary" max="100" x-show="loading">Loading</progress>
+                <div style="display:flex; gap:0.75rem; overflow-x:auto; padding-bottom:0.5rem;">
+                  <template x-for="book in books" :key="book.id">
+                    <div class="box p-3" style="width:220px; flex-shrink:0; display:flex; flex-direction:column;">
+                      <p class="is-size-7 has-text-weight-semibold mb-1" x-text="book.title"></p>
+                      <p class="is-size-7 has-text-grey mb-2" x-text="formatAuthors(book.authors)"></p>
+                      <span class="tag is-small mb-3" :class="tierClass(book.difficultyTier)" x-text="tierLabel(book.difficultyTier)"></span>
+                      <button class="button is-small is-primary mt-auto" :class="importingClass(book)" :disabled="isImporting()" @click="importBook(book)">
+                        <span class="icon"><i data-lucide="download"></i></span>
+                        <span>Import</span>
+                      </button>
+                    </div>
+                  </template>
+                  <div style="flex-shrink:0; display:flex; align-items:center;" x-show="hasMore">
+                    <button class="button is-small" @click="loadMore()">More</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Global Digital Library (openly-licensed early-grade readers) -->
+              <div class="mt-4" x-data="gdlSuggestions" x-show="showRow()">
+                <h2 class="title is-6 mb-2">Easy readers (Global Digital Library)</h2>
+                <p class="notification is-danger is-light py-2" x-show="error" x-text="error"></p>
+                <progress class="progress is-small is-primary" max="100" x-show="loading">Loading</progress>
+                <div style="display:flex; gap:0.75rem; overflow-x:auto; padding-bottom:0.5rem;">
+                  <template x-for="book in books" :key="book.id">
+                    <div class="box p-3" style="width:220px; flex-shrink:0; display:flex; flex-direction:column;">
+                      <p class="is-size-7 has-text-weight-semibold mb-1" x-text="book.title"></p>
+                      <p class="is-size-7 has-text-grey mb-2" x-text="formatMeta(book)"></p>
+                      <span class="tag is-small mb-3" :class="tierClass(book)" x-text="bookLevel(book)" x-show="hasLevel(book)"></span>
+                      <button class="button is-small is-primary mt-auto" :class="importingClass(book)" :disabled="isImporting()" @click="importBook(book)">
+                        <span class="icon"><i data-lucide="download"></i></span>
+                        <span>Import</span>
+                      </button>
+                    </div>
+                  </template>
+                  <div style="flex-shrink:0; display:flex; align-items:center;" x-show="hasMore">
+                    <button class="button is-small" @click="loadMore()">More</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </template>
         </div>
       </div>
 
