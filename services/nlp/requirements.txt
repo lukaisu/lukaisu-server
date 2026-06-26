@@ -12,6 +12,9 @@ python-multipart>=0.0.6
 piper-tts>=1.2.0
 mecab-python3>=1.0.6
 jieba>=0.42.1
+# Korean morphology (parser + lemmatizer). Pure pip wheel with the model
+# bundled — no system package (cf. mecab-ko) and no separate model download.
+kiwipiepy>=0.17.0
 spacy>=3.7.0
 openai-whisper>=20231117
 

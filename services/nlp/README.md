@@ -6,7 +6,7 @@ does the work a phone **cannot** do locally:
 
 | Group | Endpoints | Notes |
 |---|---|---|
-| **NLP** | `/parse`, `/lemmatize`, `/tts`, `/whisper` | CJK tokenization (MeCab/jieba), lemmatization (spaCy), TTS (Piper), transcription (Whisper) |
+| **NLP** | `/parse`, `/lemmatize`, `/tts`, `/whisper` | CJK tokenization (MeCab/jieba), Korean morphology (Kiwi), lemmatization (spaCy + Kiwi for Korean), TTS (Piper), transcription (Whisper) |
 | **Outbound / network** | `/content`, `/feeds`, `/extract` | Content discovery (Gutendex, GDL, Internet Archive), RSS, web/EPUB/YouTube extraction |
 
 It runs **standalone** — no PHP container and no database — and the
