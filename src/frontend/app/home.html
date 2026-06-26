@@ -7,9 +7,9 @@
   <title>Lukaisu — Home</title>
   <!-- Mounts the existing home dashboard component (js/home/home_app.ts). The
        boot entry assembles its config (continue-reading text + counts) on-device.
-       Catalog discovery (Gutenberg/GDL browse + on-device Gutenberg import) now
-       runs client-side behind the "Discover books" toggle below; coverage
-       preview, RSS, arbitrary-URL and EPUB import stay server-enhanced. -->
+       Catalog discovery (Gutenberg/GDL browse, on-device Gutenberg import +
+       coverage preview) now runs client-side behind the "Discover books" toggle
+       below; RSS, arbitrary-URL and EPUB import stay server-enhanced. -->
   <meta name="lukaisu-modules" content="home" />
   <style>[x-cloak]{display:none !important}</style>
 </head>
@@ -155,10 +155,28 @@
                       <p class="is-size-7 has-text-weight-semibold mb-1" x-text="book.title"></p>
                       <p class="is-size-7 has-text-grey mb-2" x-text="formatAuthors(book.authors)"></p>
                       <span class="tag is-small mb-3" :class="tierClass(book.difficultyTier)" x-text="tierLabel(book.difficultyTier)"></span>
-                      <button class="button is-small is-primary mt-auto" :class="importingClass(book)" :disabled="isImporting()" @click="importBook(book)">
-                        <span class="icon"><i data-lucide="download"></i></span>
-                        <span>Import</span>
-                      </button>
+                      <div class="buttons are-small mt-auto mb-0">
+                        <button class="button is-primary" :class="importingClass(book)" :disabled="isImporting()" @click="importBook(book)">
+                          <span class="icon"><i data-lucide="download"></i></span>
+                          <span>Import</span>
+                        </button>
+                        <button class="button is-light" @click="previewBook(book)">
+                          <span class="icon"><i data-lucide="gauge"></i></span>
+                          <span>Preview</span>
+                        </button>
+                      </div>
+                      <!-- Coverage preview: samples the book and shows how much of
+                           its vocabulary you already know (computed on-device). -->
+                      <div x-show="isPreviewing(book)" class="mt-2">
+                        <progress class="progress is-small" max="100" x-show="previewLoading">…</progress>
+                        <p class="help is-danger" x-show="previewError" x-text="previewError"></p>
+                        <template x-if="previewData">
+                          <div>
+                            <p class="is-size-7 mb-1" x-text="coverageLabel(previewData)"></p>
+                            <progress class="progress is-small" :class="coverageClass(previewData.difficulty_label)" :value="previewData.coverage_percent" max="100"></progress>
+                          </div>
+                        </template>
+                      </div>
                     </div>
                   </template>
                   <div style="flex-shrink:0; display:flex; align-items:center;" x-show="hasMore">

@@ -18,6 +18,7 @@ import { resolveLanguageCode } from '../content/lang-code';
 import { searchGutenberg, fetchGutenbergText, type GutenbergBook, type CatalogPage } from '../content/gutenberg';
 import { searchGdl, type GdlBook } from '../content/gdl';
 import { computeQuickTier, sortByTier, isBeginnerVocabulary } from '../content/difficulty';
+import { computeCoverage, type CoveragePreview } from '../content/coverage';
 import { createText } from './texts';
 import type { TextCreateResponse } from '@modules/text/api/texts_api';
 
@@ -89,6 +90,51 @@ export async function readerLevel(
 ): Promise<{ vocabularySize: number; beginner: boolean }> {
   const known = await knownWordCount(langId);
   return { vocabularySize: known, beginner: isBeginnerVocabulary(known) };
+}
+
+/**
+ * Coverage preview for a Gutenberg book: fetch + sample its text and measure
+ * how much of its vocabulary the reader already knows. "Known" here is any word
+ * in the local vocabulary (no status filter, matching the server's lookup) —
+ * broader than {@link readerLevel}'s 5/98/99 count. Gutenberg URLs only; other
+ * sources stay server-enhanced.
+ */
+export async function analyzeCoverage(
+  url: string,
+  langId: number
+): Promise<CoveragePreview | { error: string }> {
+  if (!url) {
+    return { error: 'url is required' };
+  }
+  if (langId <= 0) {
+    return { error: 'language is required' };
+  }
+  const language = await localDb.languages.get(langId);
+  if (!language) {
+    return { error: 'Language not found.' };
+  }
+  const text = await fetchGutenbergText(url);
+  if (!text) {
+    return { error: 'Could not fetch text. The site may be unreachable.' };
+  }
+
+  const words = await localDb.words
+    .where('langId')
+    .equals(langId)
+    .and((w) => w.deletedAt == null)
+    .toArray();
+  const knownLc = new Set(words.map((w) => w.textLc));
+
+  const result = computeCoverage(
+    text,
+    knownLc,
+    language.regexpWordCharacters,
+    language.splitEachChar
+  );
+  if (!result) {
+    return { error: 'No words could be extracted from the text sample.' };
+  }
+  return result;
 }
 
 /**

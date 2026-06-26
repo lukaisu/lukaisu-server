@@ -65,6 +65,7 @@ interface SuggestionsData {
   tierClass(tier: string): string;
   importingClass(book: SuggestedBook): string;
   isImporting(): boolean;
+  isPreviewing(book: SuggestedBook): boolean;
   coverageClass(label: string): string;
   coverageLabel(data: PreviewData): string;
 }
@@ -235,6 +236,10 @@ export function gutenbergSuggestionsData(): SuggestionsData {
 
     isImporting(): boolean {
       return this.importing !== null;
+    },
+
+    isPreviewing(book: SuggestedBook): boolean {
+      return this.previewBookId === book.id;
     },
 
     coverageClass(label: string): string {

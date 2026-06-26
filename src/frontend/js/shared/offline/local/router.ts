@@ -91,6 +91,7 @@ import {
   librarySearch,
   gdlSuggestions,
   readerLevel,
+  analyzeCoverage,
   importGutenbergText,
 } from './repositories/content';
 import { getI18nBundle } from './i18n';
@@ -229,10 +230,10 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
       .filter((n) => !Number.isNaN(n));
     return wrap(await getStatistics(ids));
   }
-  // Content discovery (catalog browse/search + reader level). These reach the
-  // external catalogs CORS-free and tier results against on-device vocabulary;
-  // arbitrary-URL/RSS extraction, coverage preview and EPUB import stay
-  // unrouted here so they fall through to a server when one is connected.
+  // Content discovery (catalog browse/search + reader level + Gutenberg coverage
+  // preview). These reach the external catalogs CORS-free and measure results
+  // against on-device vocabulary; arbitrary-URL/RSS extraction and EPUB import
+  // stay unrouted here so they fall through to a server when one is connected.
   if (path === '/texts/gutenberg-suggestions') {
     return wrap(await gutenbergSuggestions(num(p.language_id), num(p.page) || 1));
   }
@@ -244,6 +245,9 @@ async function routeGet(path: string, p: Record<string, unknown>): Promise<Local
   }
   if (path === '/texts/reader-level') {
     return wrap(await readerLevel(num(p.language_id)));
+  }
+  if (path === '/texts/library-preview') {
+    return wrap(await analyzeCoverage(str(p.url), num(p.language_id)));
   }
   m = path.match(/^\/texts\/(\d+)$/);
   if (m) {

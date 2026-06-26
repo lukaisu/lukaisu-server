@@ -17,7 +17,8 @@
  * "Discover books" toggle: it reaches the catalogs CORS-free and never calls
  * `/api/v1`, and it loads only on demand, so the offline dashboard still makes
  * no server call on a passive visit (the E2E asserts `apiAttempts === 0`).
- * Coverage preview, RSS, arbitrary-URL and EPUB import remain server-enhanced.
+ * Gutenberg coverage preview runs on-device too; RSS, arbitrary-URL extraction
+ * and EPUB import remain server-enhanced.
  *
  * @license Unlicense <http://unlicense.org/>
  */

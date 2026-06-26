@@ -53,15 +53,16 @@ chose the **Hybrid** option, so this bucket now splits:
 
 - **Client (CORS-free via `CapacitorHttp`):** Gutendex (Project Gutenberg) and
   Global Digital Library browse/search, difficulty tiers + reader-level computed
-  against on-device vocabulary, and Gutenberg **plain-text** import (fetch →
-  strip boilerplate → parse on-device). Lives in
+  against on-device vocabulary, Gutenberg **plain-text** import (fetch → strip
+  boilerplate → parse on-device), and the **coverage preview** for Gutenberg
+  books (sample the text + measure it against the on-device vocabulary). Lives in
   `src/frontend/js/shared/offline/local/content/` + `repositories/content.ts`,
   wired through `routeLocal` and surfaced behind the home "Discover books" toggle.
 - **Optional server (Python), unchanged:** Internet Archive, RSS feeds, YouTube
-  transcripts, **arbitrary web-URL** extraction, **EPUB** parsing/import, and the
-  coverage **preview** (it fetches + samples the full text). These keep the SSRF
-  guard and stay "enhanced-when-connected." The Python `content`/`feeds`/`extract`
-  routers remain the implementation for the server's own UI and for these.
+  transcripts, **arbitrary web-URL** extraction (incl. coverage preview for
+  non-Gutenberg URLs), and **EPUB** parsing/import. These keep the SSRF guard and
+  stay "enhanced-when-connected." The Python `content`/`feeds`/`extract` routers
+  remain the implementation for the server's own UI and for these.
 
 Two parsers are **pure PHP today and must be ported to TS by the client agent**
 so they run with no server: `RegexParser` (space-separated + RTL languages) and
