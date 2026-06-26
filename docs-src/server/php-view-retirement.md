@@ -537,15 +537,22 @@ After this cut-over the PHP server's user-facing rendering is the bundle for all
 Job-A surfaces; it still renders Job B + Job C pages (and keeps `ViteHelper`/
 `dist/` for them) until those jobs land.
 
-### ⚠️ Live verification still required
+### ✅ Live verification — done (2026-06-27)
 
-Same-origin serving is **unit- and routing-verified** (BundleController
-serve/inject/traversal, the redirect map, the new endpoints' routability, the
-offline E2E unbroken) but was **not live-tested** — the build env had no DB/docker.
-Before relying on it: `docker compose up`, then exercise `/`, `/texts`,
-`/text/1/read`, `/words`, `/languages`, `/tags`, `/text/check`, a text edit, and a
-tag rename in a browser, confirming `/api/v1` returns 200 and writes persist, in
-both `MULTI_USER_ENABLED=false` and `true`.
+Same-origin serving is now **live-verified** against `docker compose` (MariaDB +
+Apache/PHP 8.4), in **both** `MULTI_USER_ENABLED=false` and `true`, on top of the
+prior unit/routing coverage. Confirmed end-to-end:
+
+- Every Job-A GET route (`/`, `/texts`, `/text/1/read`, `/words`, `/languages`,
+  `/tags`) **302s to its `/app/*.html` page**, and the bundle is served with the
+  injected `csrf-token` + `sameOriginServer":true` config.
+- The server-backed `/api/v1` arms return **200 and writes persist** (DB-verified):
+  `GET`/`PUT /texts/{id}`, `GET /texts/by-language/{id}`, `GET /tags/manage`,
+  `PUT /tags/term/{id}`, `POST /texts/check`.
+- **CSRF is enforced** on same-origin writes (a PUT without the token → 403),
+  authenticated or not.
+- **Multi-user gating**: unauthenticated web routes → `/login`, API → 401; after
+  login the same flows work, and first login claims the orphan (`user_id 0`) rows.
 
 ## Job B — server-enhanced surfaces (defer)
 
@@ -596,7 +603,7 @@ Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
   `ViteHelper.php` **remain** (Job B/C PHP pages need them) and `src/frontend/`
   has **not** moved to `lukaisu` (deferred — see the cut-over section). The
   now-dormant Job-A views/controllers are **not yet deleted** (follow-up below).
-  *Same-origin serving is not yet live-tested — see the ⚠️ note above.*
+  *Same-origin serving is live-verified (2026-06-27) — see the note below.*
 - **Views deleted (follow-up):** after a live smoke-test, delete the dormant
   Job-A `[A→…]` views + their unreachable GET render methods + DI + tests
   (see the deletion checklist). Keep `ViteHelper`/`dist/` and all POST/JSON/DELETE
@@ -607,10 +614,11 @@ Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
 
 ## Open items / risks
 
-- **Live verification of same-origin mode (highest priority).** The whole
-  cut-over rests on the bundle working server-backed; it is unit/routing-verified
-  but not browser-tested (no DB/docker in the build env). Run the smoke-test in
-  the ⚠️ note before pushing or deleting any PHP views.
+- **Live verification of same-origin mode — done ✅ (2026-06-27).** Verified live
+  against `docker compose` in both `MULTI_USER_ENABLED` modes: redirects, bundle
+  serving + config injection, `/api/v1` 200 + write persistence, CSRF enforcement,
+  and multi-user gating (see the verification note above). This **unblocks**
+  deleting the dormant Job-A PHP views.
 - **Delete the dormant Job-A views/controllers** — a large, entangled refactor
   (controllers shared with retained POST/data routes the bundle uses, plus their
   tests). Gated on the live test so we know exactly what is safe to remove.
