@@ -42,16 +42,6 @@ description: How to contribute to the Lukaisu Server project
 ---
 
 `
-  },
-  {
-    src: 'UNLICENSE.md',
-    dest: 'legal/license.md',
-    frontmatter: `---
-title: License
-description: Lukaisu Server license (Public Domain / Unlicense)
----
-
-`
   }
 ]
 
@@ -69,11 +59,22 @@ for (const { src, dest, frontmatter } of filesToCopy) {
     // Read source file
     let content = readFileSync(srcPath, 'utf-8')
 
-    // Add frontmatter if specified
+    // Add frontmatter (if specified) followed by a "do not edit" banner so the
+    // generated copy is self-documenting. The banner must come AFTER the
+    // frontmatter block, which has to stay at the very top of the file.
+    const banner = `<!--
+  AUTO-GENERATED — DO NOT EDIT.
+  Copied from \`${src}\` by scripts/docs-pre-build.js at build time.
+  This file is gitignored; edit the source (\`${src}\`) instead.
+-->
+
+`
     if (frontmatter) {
       // Remove existing frontmatter if present
       content = content.replace(/^---[\s\S]*?---\n*/, '')
-      content = frontmatter + content
+      content = frontmatter + banner + content
+    } else {
+      content = banner + content
     }
 
     // Escape Vue template syntax {{ }} to prevent VitePress from interpreting it

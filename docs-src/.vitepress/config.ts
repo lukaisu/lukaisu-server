@@ -8,8 +8,9 @@ export default defineConfig({
   srcDir: '.',
   cleanUrls: true,
 
-  // Exclude API docs from processing
-  srcExclude: ['**/api/**'],
+  // Exclude API docs from processing, plus internal planning docs
+  // (e.g. server/job-b-plan.md) which are kept untracked and never published.
+  srcExclude: ['**/api/**', '**/*-plan.md'],
 
   // Ignore dead links for localhost URLs (used in examples) and changelog references
   ignoreDeadLinks: [

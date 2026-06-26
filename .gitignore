@@ -86,3 +86,10 @@ coverage.xml
 # Unused SVG logo drafts
 docs-src/public/assets/images/favicon.svg
 docs-src/public/assets/images/lukaisu-logo*.svg
+
+# Generated docs pages — copied from repo-root sources by
+# scripts/docs-pre-build.js on every `npm run docs:*`. Edit the SOURCE, not these.
+#   docs-src/changelog.md              <- CHANGELOG.md
+#   docs-src/developer/contributing.md <- CONTRIBUTING.md
+docs-src/changelog.md
+docs-src/developer/contributing.md

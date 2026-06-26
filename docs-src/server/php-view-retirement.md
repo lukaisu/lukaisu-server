@@ -621,5 +621,3 @@ Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
 - **Don't fork the frontend.** `src/frontend/` stays here for now (the server
   still builds + serves `dist-app/`); coordinate the eventual `git mv` into
   `lukaisu` — and the reverse-pull infra it needs — with the `lukaisu` agent.
-</content>
-</invoke>
