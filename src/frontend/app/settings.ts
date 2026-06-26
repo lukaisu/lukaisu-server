@@ -37,7 +37,13 @@ import { SettingsApi } from '@modules/admin/api/settings_api';
 import { loadI18nFromApi, getStoredLocale } from '@shared/i18n/translator';
 import { getApiServer, setApiServer, setAuthToken } from '@shared/api/client';
 import { setLocalFirst } from '@shared/offline/local/router';
+import { setNlpServer, getNlpServerOverride } from '@shared/offline/nlp/endpoint';
 import { pageUrl } from './router';
+
+/** Default a bare host to https:// (matching the connect flow). */
+function normalizeServerUrl(value: string): string {
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+}
 
 /** The UI locales the catalog ships (`locale/<code>/`), with native names. */
 const LOCALES: ReadonlyArray<{ code: string; name: string }> = [
@@ -72,11 +78,14 @@ function showError(target: HTMLElement | null, message: string): void {
  *     `localFirst` is false yet no server URL is configured) -> hide the section
  *     entirely; connecting/disconnecting makes no sense there.
  */
-function initServerSection(localFirst: boolean): void {
+function initServerSection(localFirst: boolean): boolean {
   const section = el<HTMLElement>('st-server-section');
   const disconnected = el<HTMLElement>('st-server-disconnected');
   const connected = el<HTMLElement>('st-server-connected');
   const server = getApiServer();
+  // Visible for local-first (offer connect) and for a connected remote server;
+  // hidden in same-origin server mode, where connect/disconnect makes no sense.
+  const shown = localFirst || !!server;
 
   if (localFirst) {
     if (section) section.style.display = '';
@@ -97,7 +106,14 @@ function initServerSection(localFirst: boolean): void {
       window.location.assign(pageUrl.library());
     });
   }
-  // else: same-origin server mode — leave the whole section hidden.
+
+  // Prefill the optional NLP-endpoint override (blank = use the connected
+  // server). Only meaningful while the server section is visible.
+  if (shown) {
+    const nlp = el<HTMLInputElement>('st-nlp-server');
+    if (nlp) nlp.value = getNlpServerOverride();
+  }
+  return shown;
 }
 
 async function start(): Promise<void> {
@@ -153,8 +169,9 @@ async function start(): Promise<void> {
     }
   }
 
-  // 3. Server section — the optional "Connect a server" / "Disconnect" action.
-  initServerSection(localFirst);
+  // 3. Server section — the optional "Connect a server" / "Disconnect" action
+  //    plus the NLP-endpoint field. `serverShown` gates persisting the latter.
+  const serverShown = initServerSection(localFirst);
 
   if (loading) loading.style.display = 'none';
   if (form) form.style.display = '';
@@ -164,6 +181,13 @@ async function start(): Promise<void> {
     if (errorEl) errorEl.style.display = 'none';
     if (successEl) successEl.style.display = 'none';
     submit?.classList.add('is-loading');
+
+    // Optional NLP-endpoint override. Synchronous (localStorage) and resets its
+    // capability cache, so the next parse/lemmatize re-probes the new server.
+    if (serverShown) {
+      const raw = (el<HTMLInputElement>('st-nlp-server')?.value ?? '').trim();
+      setNlpServer(raw ? normalizeServerUrl(raw) : null);
+    }
 
     const newLangId = Number(defaultLang?.value) || 0;
     const newLocale = locale?.value ?? storedLocale;

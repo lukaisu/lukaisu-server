@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setApiServer } from '@shared/api/client';
 import {
   getConfiguredNlpServer,
+  getNlpServerOverride,
   setNlpServer,
   nlpUrl,
   getNlpCapabilities,
@@ -53,6 +54,15 @@ describe('NLP base-URL resolution', () => {
     setNlpServer(null);
     expect(getConfiguredNlpServer()).toBe('https://server.example');
     expect(localStorage.getItem('lukaisu.nlpServer')).toBeNull();
+  });
+
+  it('getNlpServerOverride reports only the explicit value (backs the settings field)', () => {
+    setApiServer('https://server.example');
+    // No explicit NLP server -> blank, so the field is not pre-filled with the
+    // inherited API-server default.
+    expect(getNlpServerOverride()).toBe('');
+    setNlpServer('https://nlp.example');
+    expect(getNlpServerOverride()).toBe('https://nlp.example');
   });
 });
 

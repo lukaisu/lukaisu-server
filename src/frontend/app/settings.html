@@ -81,6 +81,23 @@
               Disconnect
             </button>
           </div>
+
+          <!-- Language processing (NLP) endpoint — optional override. Defaults
+               to the connected server; point it elsewhere to use a separate NLP
+               service. -->
+          <div class="field mt-4">
+            <label class="label" for="st-nlp-server">Language processing service (optional)</label>
+            <div class="control">
+              <input id="st-nlp-server" class="input" type="url" inputmode="url"
+                     placeholder="https://nlp.example:8000" autocomplete="off"
+                     autocapitalize="none" autocorrect="off" spellcheck="false" />
+            </div>
+            <p class="help">
+              Adds high-quality Korean and CJK word splitting and dictionary
+              lemmas. Leave blank to use your connected server; set it to point at
+              a separate NLP service you run.
+            </p>
+          </div>
         </section>
 
         <p id="st-error" class="help is-danger" style="display:none"></p>

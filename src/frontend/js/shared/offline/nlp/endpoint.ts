@@ -38,21 +38,23 @@ function metaNlpServer(): string {
   return meta ? meta.getAttribute('content') || '' : '';
 }
 
-/** The NLP edge base origin (scheme + host[/subpath]), or '' for same-origin. */
-export function getConfiguredNlpServer(): string {
+/**
+ * The *explicitly* configured NLP server (runtime override → localStorage →
+ * `<meta>`), or '' when none is set and the client defaults to the connected
+ * API server. Backs the settings field: a blank value means "use the connected
+ * server", so the field isn't pre-filled with the inherited default.
+ */
+export function getNlpServerOverride(): string {
   if (overrideNlpServer !== null) {
     return overrideNlpServer;
   }
-  const stored = readStored();
-  if (stored) {
-    return stored;
-  }
-  const meta = metaNlpServer();
-  if (meta) {
-    return meta;
-  }
+  return readStored() || metaNlpServer();
+}
+
+/** The NLP edge base origin (scheme + host[/subpath]), or '' for same-origin. */
+export function getConfiguredNlpServer(): string {
   // No NLP-specific config: assume the edge is the connected server's root.
-  return getConfiguredApiServer();
+  return getNlpServerOverride() || getConfiguredApiServer();
 }
 
 /**
