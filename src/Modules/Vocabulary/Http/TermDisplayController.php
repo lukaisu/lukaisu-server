@@ -20,7 +20,6 @@ use Lukaisu\Shared\Infrastructure\Http\InputValidator;
 use Lukaisu\Shared\Infrastructure\Database\Settings;
 use Lukaisu\Shared\Infrastructure\Database\Validation;
 use Lukaisu\Modules\Vocabulary\Application\VocabularyFacade;
-use Lukaisu\Modules\Vocabulary\Application\UseCases\CreateTermFromHover;
 use Lukaisu\Modules\Vocabulary\Application\UseCases\FindSimilarTerms;
 use Lukaisu\Shared\Infrastructure\Dictionary\DictionaryAdapter;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
@@ -33,7 +32,6 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
  * Handles:
  * - GET /word/{wid} - Show word details
  * - /word/show - Show word details (legacy)
- * - /vocabulary/term-hover - Hover create from reading view
  * - /vocabulary/similar-terms - Get similar terms
  * - /words - List/edit words (Alpine.js)
  * - /words/edit - Edit words list
@@ -48,7 +46,6 @@ class TermDisplayController extends VocabularyBaseController
     /**
      * Use cases.
      */
-    private CreateTermFromHover $createTermFromHover;
     private FindSimilarTerms $findSimilarTerms;
 
     /**
@@ -64,22 +61,19 @@ class TermDisplayController extends VocabularyBaseController
     /**
      * Constructor.
      *
-     * @param VocabularyFacade|null     $facade              Vocabulary facade
-     * @param CreateTermFromHover|null  $createTermFromHover Create term from hover use case
-     * @param FindSimilarTerms|null     $findSimilarTerms    Find similar terms use case
-     * @param DictionaryAdapter|null    $dictionaryAdapter   Dictionary adapter
-     * @param LanguageFacade|null       $languageFacade      Language facade
+     * @param VocabularyFacade|null     $facade            Vocabulary facade
+     * @param FindSimilarTerms|null     $findSimilarTerms  Find similar terms use case
+     * @param DictionaryAdapter|null    $dictionaryAdapter Dictionary adapter
+     * @param LanguageFacade|null       $languageFacade    Language facade
      */
     public function __construct(
         ?VocabularyFacade $facade = null,
-        ?CreateTermFromHover $createTermFromHover = null,
         ?FindSimilarTerms $findSimilarTerms = null,
         ?DictionaryAdapter $dictionaryAdapter = null,
         ?LanguageFacade $languageFacade = null
     ) {
         parent::__construct();
         $this->facade = $facade ?? new VocabularyFacade();
-        $this->createTermFromHover = $createTermFromHover ?? new CreateTermFromHover();
         $this->findSimilarTerms = $findSimilarTerms ?? new FindSimilarTerms();
         $this->dictionaryAdapter = $dictionaryAdapter ?? new DictionaryAdapter();
         $this->languageFacade = $languageFacade ?? new LanguageFacade();
@@ -222,90 +216,6 @@ class TermDisplayController extends VocabularyBaseController
         ]);
 
         PageLayoutHelper::renderPageEnd();
-    }
-
-    /**
-     * Handle the hover create action from reading view.
-     *
-     * This is the route handler that parses request params and
-     * renders the result view.
-     *
-     * @param array<string, string> $params Route parameters
-     *
-     * @return void
-     */
-    public function hoverCreate(array $params): void
-    {
-        $text = InputValidator::getString('text');
-        $textId = InputValidator::getInt('tid', 0) ?? 0;
-        $status = InputValidator::getInt('status', 1) ?? 1;
-        $targetLang = InputValidator::getString('tl');
-        $sourceLang = InputValidator::getString('sl');
-
-        // Create the term
-        $result = $this->createFromHover(
-            $textId,
-            $text,
-            $status,
-            $sourceLang,
-            $targetLang
-        );
-
-        // Render page
-        PageLayoutHelper::renderPageStart("New Term: " . (string)$result['word'], false);
-
-        // Prepare view variables
-        $word = (string)$result['word'];
-        $wordRaw = (string)$result['wordRaw'];
-        $wid = (int)$result['wid'];
-        $hex = (string)$result['hex'];
-        $translation = (string)$result['translation'];
-
-        $this->render('hover_save_result', [
-            'word' => $word,
-            'wordRaw' => $wordRaw,
-            'wid' => $wid,
-            'hex' => $hex,
-            'translation' => $translation,
-            'textId' => $textId,
-            'status' => $status,
-            'todoContent' => $this->getTextStatisticsService()->getTodoWordsContent($textId),
-        ]);
-
-        PageLayoutHelper::renderPageEnd();
-    }
-
-    /**
-     * Create a term from hover action in reading view.
-     *
-     * @param int    $textId     Text ID
-     * @param string $wordText   Word text
-     * @param int    $status     Word status (1-5)
-     * @param string $sourceLang Source language code
-     * @param string $targetLang Target language code
-     *
-     * @return array Term creation result
-     */
-    private function createFromHover(
-        int $textId,
-        string $wordText,
-        int $status,
-        string $sourceLang = '',
-        string $targetLang = ''
-    ): array {
-        // Set no-cache headers for new words
-        if ($this->createTermFromHover->shouldSetNoCacheHeaders($status)) {
-            header('Pragma: no-cache');
-            header('Expires: 0');
-        }
-
-        return $this->createTermFromHover->execute(
-            $textId,
-            $wordText,
-            $status,
-            $sourceLang,
-            $targetLang
-        );
     }
 
     /**

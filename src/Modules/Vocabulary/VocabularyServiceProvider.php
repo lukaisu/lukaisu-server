@@ -51,7 +51,6 @@ use Lukaisu\Modules\Vocabulary\Http\TermTranslationApiHandler;
 use Lukaisu\Modules\Vocabulary\Http\TermStatusApiHandler;
 use Lukaisu\Modules\Vocabulary\Http\VocabularyApiRouter;
 use Lukaisu\Modules\Text\Application\TextFacade;
-use Lukaisu\Modules\Vocabulary\Application\UseCases\CreateTermFromHover;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordListService;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordUploadService;
 use Lukaisu\Modules\Vocabulary\Application\Services\ExpressionService;
@@ -72,7 +71,6 @@ use Lukaisu\Modules\Vocabulary\Http\TermDisplayController;
 use Lukaisu\Modules\Vocabulary\Http\TermStatusController;
 use Lukaisu\Modules\Vocabulary\Http\TermApiController;
 use Lukaisu\Modules\Vocabulary\Http\TermImportController;
-use Lukaisu\Modules\Vocabulary\Http\MultiWordController;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 
 /**
@@ -225,14 +223,6 @@ class VocabularyServiceProvider implements ServiceProviderInterface
             );
         });
 
-        // Register CreateTermFromHover Use Case
-        $container->singleton(CreateTermFromHover::class, function (Container $c): CreateTermFromHover {
-            return new CreateTermFromHover(
-                $c->getTyped(VocabularyFacade::class),
-                $c->getTyped(\Lukaisu\Modules\Dictionary\Application\DictionaryFacade::class)
-            );
-        });
-
         // Register Term CRUD API Handler
         $container->singleton(TermCrudApiHandler::class, function (Container $c) {
             return new TermCrudApiHandler(
@@ -306,7 +296,6 @@ class VocabularyServiceProvider implements ServiceProviderInterface
         $container->singleton(TermDisplayController::class, function (Container $c) {
             return new TermDisplayController(
                 $c->getTyped(VocabularyFacade::class),
-                $c->getTyped(CreateTermFromHover::class),
                 $c->getTyped(FindSimilarTerms::class),
                 $c->getTyped(DictionaryAdapter::class),
                 $c->getTyped(LanguageFacade::class)
@@ -329,14 +318,6 @@ class VocabularyServiceProvider implements ServiceProviderInterface
             return new TermImportController(
                 $c->getTyped(LanguageFacade::class),
                 $c->getTyped(\Lukaisu\Modules\Dictionary\Application\DictionaryFacade::class)
-            );
-        });
-
-        $container->singleton(MultiWordController::class, function (Container $c) {
-            return new MultiWordController(
-                $c->getTyped(VocabularyFacade::class),
-                $c->getTyped(DictionaryAdapter::class),
-                $c->getTyped(LanguageFacade::class)
             );
         });
 

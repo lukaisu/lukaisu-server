@@ -167,7 +167,7 @@ function registerRoutes(Router $router): void
 
     // ==================== WORD/TERM ROUTES (PROTECTED) ====================
     // Split into focused controllers: TermEditController, TermDisplayController,
-    // TermStatusController, TermApiController, TermImportController, MultiWordController
+    // TermStatusController, TermApiController, TermImportController
 
     // Edit word (TermEditController)
     $router->registerWithMiddleware(
@@ -209,12 +209,9 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Edit multi-word (MultiWordController)
-    $router->registerWithMiddleware(
-        '/word/edit-multi',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\MultiWordController@editMulti',
-        AUTH_MIDDLEWARE
-    );
+    // Multi-word create/edit is served by the bundled client's multi-word modal
+    // via TermsApi.createMultiWord/updateMultiWord (/api/v1); the legacy
+    // /word/edit-multi web form (MultiWordController) was retired.
 
     // All words (list view) - Alpine.js SPA version (TermDisplayController)
     $router->registerWithMiddleware(
@@ -252,12 +249,9 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Create term from hover (TermDisplayController)
-    $router->registerWithMiddleware(
-        '/vocabulary/term-hover',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermDisplayController@hoverCreate',
-        AUTH_MIDDLEWARE
-    );
+    // Term creation from the reader is served by the bundled client via
+    // /api/v1/terms (createJson); the legacy /vocabulary/term-hover web route
+    // (TermDisplayController::hoverCreate) was retired.
 
     // Similar terms lookup (TermDisplayController)
     $router->registerWithMiddleware(
