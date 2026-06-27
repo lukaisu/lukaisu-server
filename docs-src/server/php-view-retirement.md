@@ -577,14 +577,23 @@ exceptions → folded into Job A (`settings.html`, and a local stats view).
 
 Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
 **[B]** server-enhanced (defer) · **[C]** decommission with PHP.
+Progress markers: **✅** deleted · **◐** partially deleted · **⏸** deferred.
 
-- **Home (2):** index `[A→home]`, helpers `[del]`
-- **Language (3):** index `[A→languages]`, form `[A→language-edit]`, wizard `[A→language-edit]`
-- **Text (14):** edit_list `[A→texts]`, edit_form `[A→text-edit]`, archived_list `[A→texts]`, archived_form `[A→text-edit]`, check_form `[A→text-check]`, print_alpine `[A→text-print]`, display_header/main/text `[A→text-print]`, read_desktop/word_popover/word_modal/multi_word_modal/audio_player `[del]` (reader)
-- **Vocabulary (20):** list_alpine/list_filter/show `[A→words]`, form_new/form_edit_new/form_edit_existing/form_edit_term/form_edit_multi_new/form_edit_multi_existing `[A→word]`, bulk_translate_form/upload_form/starter_vocab `[A→word]` (server-enhanced bits stay), all `*_result` (save/bulk_save/edit/edit_term/edit_multi_update/hover_save/all_wellknown/upload) `[del]`
-- **Tags (2):** tag_list `[A→tags]`, tag_form `[A→tags]`
-- **Review (13):** review_desktop `[A→review ✅ done]`, all 12 others `[del]`
-- **Settings/Prefs:** `User/preferences` `[A→settings]`
+**Status (2026-06-27).** Six Job-A surfaces retired so far — Home, Review,
+User/preferences, Tags (+ `AbstractCrudController`), Language, and the dead
+multi-word + hover-create Vocabulary renders. The remaining **⏸** items are
+either blocked on an in-browser E2E (the reader/review popup fallbacks — the
+`/word/edit`, `/word/edit-term`, reader popups) or are intentionally kept
+server-rendered (the text importers, annotated display/print, and the tag
+create/edit forms).
+
+- **Home (2): ✅ deleted** — index `[A→home]`, helpers `[del]` (HomeController retired, `e63b172`)
+- **Language (3): ✅ deleted** — index `[A→languages]`, form `[A→language-edit]`, wizard `[A→language-edit]` (whole web `LanguageController` + both views gone, `a2a08d6`)
+- **Text (14): ⏸ deferred** — edit_list `[A→texts]`, edit_form `[A→text-edit]`, archived_list `[A→texts]`, archived_form `[A→text-edit]`, check_form `[A→text-check]`, print_alpine `[A→text-print]`, display_header/main/text `[A→text-print]`, read_desktop/word_popover/word_modal/multi_word_modal/audio_player `[del]` (reader). *edit_list/archived_list/check_form already removed earlier. The rest is **not** safely deletable yet: edit_form/archived_form keep the server-side importers (Job B), display_*/print are intentionally server-rendered, and the reader popups are E2E-gated (see Vocabulary).*
+- **Vocabulary (20): ◐ partial** — list_alpine/list_filter/show `[A→words]`, form_new/form_edit_new/form_edit_existing/form_edit_term `[A→word]`, **form_edit_multi_new/form_edit_multi_existing `✅ deleted` (`d3a967b`)**, bulk_translate_form/upload_form/starter_vocab `[A→word]` (server-enhanced bits stay — keep), `*_result`: **edit_multi_update + hover_save `✅ deleted` (`d3a967b`)**; save/bulk_save/edit/edit_term/all_wellknown/upload `[del]` ⏸ deferred (rendered by `/word/edit`, `/word/edit-term`, `/word/set-all-status`, `/word/upload`, `/word/bulk-translate` — live reader/review fallbacks, **E2E-gated**)
+- **Tags (2): ✅ done** — tag_list `[A→tags]` deleted (render retired, `3448f06`; `AbstractCrudController` deleted with it); **tag_form *stays server-rendered*** — the bundle `tags.html` is rename+delete only, so the create/edit forms have no client counterpart (PHP frozen)
+- **Review (13): ✅ deleted** — review_desktop `[A→review]` + all 12 others `[del]` (render controller + views gone, `b8fda4f`)
+- **Settings/Prefs: ✅ deleted** — `User/preferences` `[A→settings]` (preferences form render retired, `8a1f283`)
 - **Feed (12):** all `[B]`
 - **Book (4):** all `[B]`
 - **Dictionary (2):** import, index `[B]`
@@ -604,10 +613,15 @@ Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
   has **not** moved to `lukaisu` (deferred — see the cut-over section). The
   now-dormant Job-A views/controllers are **not yet deleted** (follow-up below).
   *Same-origin serving is live-verified (2026-06-27) — see the note below.*
-- **Views deleted (follow-up):** after a live smoke-test, delete the dormant
-  Job-A `[A→…]` views + their unreachable GET render methods + DI + tests
-  (see the deletion checklist). Keep `ViteHelper`/`dist/` and all POST/JSON/DELETE
-  data routes the bundle's server-backed mode still uses.
+- **Views deleted (follow-up): ◐ in progress (2026-06-27).** Six surfaces
+  retired so far — Home, Review, User/preferences, Tags (+ `AbstractCrudController`),
+  Language (whole web controller + views), and the dead Vocabulary multi-word +
+  hover-create renders. Each was a focused commit verified at psalm 0 / phpcs 0 /
+  PHPUnit green. `ViteHelper`/`dist/` and all POST/JSON/DELETE data routes the
+  bundle uses are kept. **Remaining** (see the checklist's ⏸ items): the rest of
+  Vocabulary's `*_result`/`form_*` and all of Text — entangled with live
+  reader/review fallbacks and gated on the in-browser E2E below, or intentionally
+  kept server-rendered (importers, annotated display/print, tag forms).
 - **All-views done (post-PHP-decommission):** Jobs B and C resolved; `ViteHelper`
   + the `vite.config.ts` web build removed; `src/frontend/` relocated to
   `lukaisu`; `Views/` directories removed. *Blocked on Python sync/auth.*
@@ -619,9 +633,17 @@ Legend: **[A]** port to bundle page · **[del]** partial, delete with parent ·
   serving + config injection, `/api/v1` 200 + write persistence, CSRF enforcement,
   and multi-user gating (see the verification note above). This **unblocks**
   deleting the dormant Job-A PHP views.
-- **Delete the dormant Job-A views/controllers** — a large, entangled refactor
-  (controllers shared with retained POST/data routes the bundle uses, plus their
-  tests). Gated on the live test so we know exactly what is safe to remove.
+- **Delete the dormant Job-A views/controllers — ◐ in progress (2026-06-27).**
+  The cleanly-verifiable surfaces are done (Home, Review, User/preferences, Tags,
+  Language, and the dead multi-word + hover-create Vocabulary renders — see the
+  checklist). **What's left is blocked on an in-browser E2E:** the Vocabulary
+  `*_result`/`form_*` views and the Text reader popups are rendered by routes that
+  are still live as bundle/reader/review *fallbacks* (`/word/edit`,
+  `/word/edit-term`, `/word/inline-edit`, `DELETE /words/{id}`, the reader frame
+  popups). Static analysis can't prove these dead; `npm run e2e` against a live
+  server is needed to confirm the fallbacks never fire before removing them.
+  edit_form/archived_form (importers), display_*/print, and the tag create/edit
+  forms are **not** deletion targets — they stay server-rendered by design.
 - **Data-layer gaps — all closed, both layers.** The offline (local-router) arms
   landed per page; the cut-over added the matching **server** `/api/v1` arms:
   `GET`/`PUT /texts/{id}`, `GET /tags/manage` + `PUT`/`DELETE /tags/{term,text}/{id}`,
