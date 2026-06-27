@@ -6,12 +6,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Lukaisu Server is a self-hosted web application for language learning by reading. This is a third-party community-maintained fork that improves upon the official SourceForge version with modern PHP support (8.2-8.5), smaller database size, better mobile support, and active development.
 
-**Tech Stack:**
+**Tech Stack (today):**
 
 - Backend: PHP 8.2+ with MySQLi
 - Frontend: TypeScript, Alpine.js, Bulma CSS, jQuery (legacy)
 - Database: MySQL/MariaDB with InnoDB engine
 - Build Tools: Composer (PHP), NPM with Vite (JS/CSS)
+
+**Direction (target architecture).** Lukaisu is a local-first app with an
+*optional* server, and the stack is deliberately shifting. Build to the target,
+not the legacy:
+
+- **PHP → Python.** The PHP backend is **frozen** and being hollowed out:
+  rendering and data move to the client; what stays server-side becomes an
+  optional **Python (FastAPI)** edge for sync + NLP. See `BRIEFING.md` and
+  `docs-src/server/local-first.md`.
+- **Alpine.js → Svelte 5.** The client is now a real local-first SPA, past
+  Alpine's islands model. Migrate **incrementally** — Svelte islands coexist with
+  Alpine on the same page (Alpine owns only `x-data` nodes). Svelte is CSP-clean
+  (no `unsafe-eval`). Spike: branch `spike/svelte-word-list`.
+- **Server DB → on-device.** Client data lives in IndexedDB (Dexie); the server
+  DB only matters for the (not-yet-built) sync path.
+- **jQuery is removed** as screens migrate; **Bulma (CSS) stays.**
+
+So: **don't add new PHP features or net-new Alpine screens** — build the Python
+edge or a Svelte island instead.
 
 ## Development Setup
 
@@ -308,6 +327,12 @@ Key modules:
 - `translation_api.ts` - Translation integration
 
 ### Alpine.js (CSP Build)
+
+> **Direction:** the rendering framework is migrating to **Svelte 5** (see
+> *Direction* above). The rules below apply to **existing Alpine code** and any
+> Alpine you must still touch — **don't build net-new screens in Alpine**, add a
+> Svelte island instead. Svelte is CSP-clean by construction and needs none of
+> these workarounds.
 
 This project uses `@alpinejs/csp` (aliased in `vite.config.ts`), which **cannot evaluate inline expressions**. The CSP header (`script-src 'self'` in `SecurityHeaders.php`) enforces this.
 

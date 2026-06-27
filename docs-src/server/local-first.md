@@ -39,10 +39,40 @@ agents both build to.
 
 | Bucket | Owner after migration | Examples |
 |---|---|---|
-| **Rendering** | **Client** (TypeScript) | reader, review surface, popups, navbar, i18n |
+| **Rendering** | **Client** (TypeScript; **Alpine → Svelte 5**) | reader, review surface, popups, navbar, i18n |
 | **Data / DB** | **Client** (on-device DB) | languages, texts, words, sentences, occurrences, tags, settings, review scheduling |
 | **NLP** | **Optional Python edge** | CJK parse (MeCab/jieba), lemmatize (spaCy), TTS (Piper), Whisper |
 | **Outbound / network** | **Optional Python edge** | Gutendex, GDL, Internet Archive, RSS, YouTube, web/EPUB extraction |
+
+### Rendering: Alpine.js → Svelte 5
+
+The rendering **framework** is migrating from **Alpine.js** to **Svelte 5**.
+Alpine fit the original "islands sprinkled on server-rendered PHP" model, but the
+rendering bucket is now a genuine **local-first SPA** (~53k lines of TS, an
+on-device DB, client-side routing) — which Alpine is not built for: large views
+are assembled as HTML strings, shared state is synced by hand, and there are no
+real `computed`/`effect` primitives. Svelte 5 (runes) gives real reactivity and
+components, first-class TypeScript, and — being a compile-to-vanilla framework —
+runs under a strict `script-src 'self'` CSP with **no `eval` / `unsafe-eval`**,
+unlike Alpine's *standard* build (the reason this repo currently pays for the
+constrained `@alpinejs/csp` build).
+
+**Incremental, not a rewrite.** Svelte and Alpine coexist on the same page —
+Alpine owns only `x-data` nodes; a Svelte component mounts as an island. Port the
+highest-pain screens first (review surface, word list); never stop the world. A
+spike proving the whole path — component → Vite build → CSP `script-src 'self'` →
+Capacitor WebView → F-Droid APK — landed on branch `spike/svelte-word-list` (the
+terms list) on 2026-06-27: zero `eval`/`new Function` in the bundle, packaged
+inside `app-debug.apk`, coexisting with the Alpine page.
+
+Consequences of this swap:
+
+- **CI gains `svelte-check` + `eslint-plugin-svelte`** (Svelte's type/lint
+  tooling) alongside the existing `tsc`/ESLint/Vitest.
+- **jQuery (`jq_pgm.ts`) is legacy and is dropped** as the screens that depend on
+  it move to Svelte — the migration is the moment to delete it.
+- **Bulma (CSS) is framework-agnostic and stays** — it is just stylesheet
+  classes, unaffected by the rendering framework.
 
 ### Parsers: the degradation rule
 

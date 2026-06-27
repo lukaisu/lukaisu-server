@@ -39,10 +39,20 @@ contract both agents build to.
 
 | Bucket | Owner after migration | Examples |
 |---|---|---|
-| **Rendering** | **Client** (already TS) | reader, review surface, word popups, navbar, i18n — already in `src/frontend/`, bundled into the app (see *Rendering hollow-out*) |
+| **Rendering** | **Client** (already TS; **Alpine → Svelte 5**) | reader, review surface, word popups, navbar, i18n — already in `src/frontend/`, bundled into the app (see *Rendering hollow-out*) |
 | **Data / DB** | **Client** (on-device DB) | languages, texts, words/terms, sentences, word-occurrences, tags, settings, review scheduling |
 | **NLP** | **Optional server (Python)** | CJK parse (MeCab/jieba), lemmatization (spaCy), TTS (Piper), Whisper transcription |
 | **Outbound / network** | **Hybrid (revised 2026-06-26)** — see below | structured catalog *browse* on the **client**; everything else **optional server (Python)** |
+
+**Rendering framework (2026-06-27): Alpine.js → Svelte 5.** The client outgrew
+Alpine's islands model (it is now a ~53k-line local-first SPA). Svelte 5 gives
+real reactivity/components and is CSP-clean (no `unsafe-eval`), so it needs none
+of Alpine's `@alpinejs/csp` constraints. Migration is **incremental** — Svelte
+islands coexist with Alpine (Alpine owns only `x-data` nodes), highest-pain
+screens first; **jQuery is dropped** as screens move, **Bulma (CSS) stays**, and
+CI gains `svelte-check` + `eslint-plugin-svelte`. End-to-end spike (build →
+strict CSP → Capacitor → F-Droid APK): branch `spike/svelte-word-list`. Full
+rationale: `docs-src/server/local-first.md` → *Rendering: Alpine → Svelte*.
 
 **Outbound split (2026-06-26).** The original seam put *all* outbound work on the
 optional server because "a phone can't make arbitrary cross-origin requests
