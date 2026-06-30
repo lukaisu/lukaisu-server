@@ -315,10 +315,21 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Upload words (TermImportController)
+    // Upload words (TermImportController). The GET page is served by the bundled
+    // client (Svelte WordUpload island); see the /app redirects below. The file
+    // POST (importing a term/dictionary file) keeps this controller — the bundle
+    // island posts to it natively (multipart), and the browser navigates to its
+    // server-rendered result (upload_result.php / dict-import form re-render).
     $router->registerWithMiddleware(
         '/word/upload',
         'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController@upload',
+        AUTH_MIDDLEWARE
+    );
+    // JSON bootstrap config for the island (current language, FrequencyWords
+    // availability, curated dictionaries, the upload/import endpoints).
+    $router->get(
+        '/word/upload/config',
+        'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController@uploadConfig',
         AUTH_MIDDLEWARE
     );
 
@@ -783,6 +794,7 @@ function registerRoutes(Router $router): void
     $router->get('/words', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/words/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/word/bulk-translate', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/word/upload', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/words/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/languages', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/languages/new', $bundleRedirect, AUTH_MIDDLEWARE);

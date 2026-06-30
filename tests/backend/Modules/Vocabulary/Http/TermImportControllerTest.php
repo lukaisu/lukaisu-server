@@ -89,7 +89,7 @@ class TermImportControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass(TermImportController::class);
 
-        $expectedMethods = ['bulkTranslate', 'config', 'upload'];
+        $expectedMethods = ['bulkTranslate', 'config', 'upload', 'uploadConfig'];
 
         foreach ($expectedMethods as $methodName) {
             $this->assertTrue(
@@ -303,6 +303,24 @@ class TermImportControllerTest extends TestCase
     public function configAcceptsArrayParameterAndReturnsJsonResponse(): void
     {
         $method = new \ReflectionMethod(TermImportController::class, 'config');
+        $params = $method->getParameters();
+
+        $this->assertCount(1, $params);
+        $this->assertSame('params', $params[0]->getName());
+        $this->assertSame('array', $params[0]->getType()->getName());
+
+        $returnType = $method->getReturnType();
+        $this->assertNotNull($returnType);
+        $this->assertSame(
+            'Lukaisu\\Shared\\Infrastructure\\Http\\JsonResponse',
+            $returnType->getName()
+        );
+    }
+
+    #[Test]
+    public function uploadConfigAcceptsArrayParameterAndReturnsJsonResponse(): void
+    {
+        $method = new \ReflectionMethod(TermImportController::class, 'uploadConfig');
         $params = $method->getParameters();
 
         $this->assertCount(1, $params);

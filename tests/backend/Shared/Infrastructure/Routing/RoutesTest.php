@@ -185,7 +185,11 @@ class RoutesTest extends TestCase
             'word bulk-translate' => ['/word/bulk-translate', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
             'word bulk-translate config' => ['/word/bulk-translate/config', "{$termImportController}@config"],
             'word set-all-status' => ['/word/set-all-status', "{$termStatusController}@markAllWords"],
-            'word upload' => ['/word/upload', "{$termImportController}@upload"],
+            // GET 302s into the bundled Svelte WordUpload island; the JSON config
+            // data route keeps the controller (the file POST also keeps it, but
+            // simulateRequest models GET here).
+            'word upload' => ['/word/upload', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
+            'word upload config' => ['/word/upload/config', "{$termImportController}@uploadConfig"],
         ];
     }
 

@@ -158,6 +158,8 @@ final class BundleController
                 return $withQuery('words.html');
             case $path === '/word/bulk-translate':
                 return $withQuery('bulk-translate.html');
+            case $path === '/word/upload':
+                return 'word-upload.html';
         }
 
         if (

@@ -242,6 +242,51 @@ class TermImportController extends VocabularyBaseController
     }
 
     /**
+     * Word-upload bootstrap config (JSON) for the Svelte island.
+     *
+     * The word-upload UI is now a Svelte island shipped in the bundle
+     * (`dist-app/word-upload.html`); the GET page route 302s there. The island
+     * cannot compute the server-only bits — the current language (id + name),
+     * whether FrequencyWords data exists for it, the curated dictionaries
+     * registry, and the base-path-correct import endpoints — so it fetches them
+     * here on mount. This mirrors the JSON blobs the retired `upload_form.php`
+     * view used to inline (minus the CSRF token, which the island reads from
+     * `<meta name="csrf-token">`). The manual upload still posts a native
+     * multipart form to {@see upload()} (the `uploadUrl`).
+     *
+     * Route: GET /word/upload/config
+     *
+     * @param array<string, string> $params Route parameters (unused).
+     *
+     * @return JsonResponse
+     */
+    public function uploadConfig(array $params): JsonResponse
+    {
+        unset($params);
+
+        $currentLanguage = Settings::get('currentlanguage');
+        $langId = 0;
+        $langName = '';
+        $isFrequencyAvailable = false;
+        if ($currentLanguage !== '') {
+            $langId = (int) $currentLanguage;
+            $langName = $this->languageFacade->getLanguageName($langId);
+            $isFrequencyAvailable = FrequencyLanguageMap::isSupported($langName);
+        }
+
+        return JsonResponse::success([
+            'uploadUrl' => url('/word/upload'),
+            'langId' => $langId,
+            'langName' => $langName,
+            'isFrequencyAvailable' => $isFrequencyAvailable,
+            'importUrl' => $langId > 0 ? url('/languages/' . $langId . '/starter-vocab/import') : '',
+            'enrichUrl' => $langId > 0 ? url('/languages/' . $langId . '/starter-vocab/enrich') : '',
+            'translationDelimiter' => Settings::getWithDefault('set-term-translation-delimiters'),
+            'curatedDictionaries' => $this->loadCuratedDictionaries(),
+        ]);
+    }
+
+    /**
      * Display the word upload form.
      *
      * @psalm-suppress UnresolvableInclude Path computed from viewPath property

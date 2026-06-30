@@ -65,7 +65,7 @@ class BundleCutoverTest extends TestCase
             ['/texts/new'], ['/texts/5/edit'], ['/text/archived'], ['/text/archived/5/edit'],
             ['/text/check'], ['/words'], ['/words/edit'], ['/words/5/edit'], ['/languages'],
             ['/languages/new'], ['/languages/5/edit'], ['/languages/5/starter-vocab'],
-            ['/word/bulk-translate'],
+            ['/word/bulk-translate'], ['/word/upload'],
             ['/tags'], ['/tags/text'], ['/review'],
             ['/profile/preferences'],
         ];
@@ -85,6 +85,7 @@ class BundleCutoverTest extends TestCase
         return [
             'export terms' => ['POST', '/words', 'TermDisplayController'],
             'save bulk-translate' => ['POST', '/word/bulk-translate', 'TermImportController@bulkTranslate'],
+            'upload terms file' => ['POST', '/word/upload', 'TermImportController@upload'],
             'create text' => ['POST', '/texts/new', 'TextController@new'],
             'edit text POST' => ['POST', '/texts/5/edit', 'TextController@editSingle'],
             'save preferences' => ['POST', '/profile/preferences', 'UserController@savePreferences'],
@@ -115,6 +116,9 @@ class BundleCutoverTest extends TestCase
             // Likewise, the bulk-translate page 302s into the bundle, but its JSON
             // config data route keeps the controller.
             'bulk-translate config' => ['/word/bulk-translate/config', 'TermImportController@config'],
+            // And the word-upload page 302s into the bundle, but its JSON config
+            // data route keeps the controller.
+            'word-upload config' => ['/word/upload/config', 'TermImportController@uploadConfig'],
             'api prefix' => ['/api/v1/languages', 'ApiController@v1'],
             'bundle shell' => ['/app/read.html', 'BundleController@serve'],
         ];

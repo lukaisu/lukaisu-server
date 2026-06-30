@@ -95,6 +95,9 @@ export const pageUrl = {
   },
   bulkTranslate(query = ''): string {
     return query ? `bulk-translate.html?${query}` : 'bulk-translate.html';
+  },
+  wordUpload(): string {
+    return 'word-upload.html';
   }
 };
 
@@ -182,6 +185,14 @@ export function bundledPageFor(path: string): string | null {
   // "connect a server" notice.
   if (pathname === '/word/bulk-translate') {
     return pageUrl.bulkTranslate(query);
+  }
+  // Word import (frequency / curated dictionaries / manual file upload):
+  // /word/upload -> the bundled Svelte WordUpload island. Server-gated like
+  // bulk-translate (the file import, frequency import and curated import all need
+  // a connected server); offline it shows a "connect a server" notice. The query
+  // is dropped — the island reads the current language from its server config.
+  if (pathname === '/word/upload') {
+    return pageUrl.wordUpload();
   }
   // Tag management: the server splits term tags (/tags, /tags/term) and text
   // tags (/tags/text) across two pages; the bundle shows both on one tags.html.
