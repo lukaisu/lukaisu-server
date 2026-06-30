@@ -48,10 +48,16 @@ export default defineConfig([
       ? config
       : { ...config, files: ["**/*.svelte", "**/*.svelte.ts", "**/*.svelte.js"] }
   ),
-  // Point the embedded `<script lang="ts">` at the TypeScript parser and supply
-  // browser globals.
+  // Point the embedded `<script lang="ts">` (and `*.svelte.ts` / `*.svelte.js`
+  // rune modules) at the TypeScript parser and supply browser globals. Without
+  // the TS sub-parser the Svelte parser can't read TypeScript syntax (e.g.
+  // `import { type Foo }`) in `*.svelte.ts` modules.
   {
-    files: ["src/frontend/**/*.svelte"],
+    files: [
+      "src/frontend/**/*.svelte",
+      "src/frontend/**/*.svelte.ts",
+      "src/frontend/**/*.svelte.js",
+    ],
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser,
