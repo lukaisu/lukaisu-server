@@ -19,9 +19,10 @@
   flow so scroll position and focus are preserved with no flicker. Show /
   translations / text-size / width apply via reactive CSS, not a re-render.
 
-  The audio player stays Alpine (a separate division) and lives outside this
-  island in read.html; this component manages the toolbar, book nav, text,
-  popover and modals only.
+  The audio player is its own Svelte island (`AudioPlayer.svelte`), hosted here
+  between the toolbar and the text (its original read_desktop.php position) and
+  shown only when the loaded text has audio. This component otherwise manages the
+  toolbar, book nav, text, popover and modals.
 
   @license Unlicense <http://unlicense.org/>
 -->
@@ -43,6 +44,7 @@
   import WordPopover from '@modules/vocabulary/pages/WordPopover.svelte';
   import WordModal from '@modules/vocabulary/pages/WordModal.svelte';
   import MultiWordModal from '@modules/vocabulary/pages/MultiWordModal.svelte';
+  import AudioPlayer from '@modules/text/pages/AudioPlayer.svelte';
 
   // `langId` is accepted in the config blob but resolved from the loaded text's
   // config (like the Alpine reader), so only `textId` is needed here.
@@ -406,6 +408,14 @@
       </div>
     </div>
   </div>
+
+  <!-- Audio player (Svelte island, between the toolbar and the text — the
+       original read_desktop.php position). Mounted only when the loaded text has
+       an audio source; it fetches its own config + player settings from
+       /texts/{id}/audio and reveals itself once that resolves. -->
+  {#if store.audioUri}
+    <AudioPlayer textId={store.textId} />
+  {/if}
 
   <!-- Chapter navigation: client-rendered from /texts/{id}/book-context. -->
   <div id="book-context-nav"></div>

@@ -9,10 +9,10 @@
  * Mirrors words.ts/review.ts ordering: guard a missing text, resolve the data
  * mode, fill the prerendered id-tokens, inject the reader config blob, boot i18n
  * so the island's labels render, mount into `#text-reader-root`, then boot the
- * shared page shell (navbar, link router, Alpine — the latter still drives the
- * coexisting `audioPlayer` island) via {@link bootAppPage}. The Svelte island
- * and Alpine coexist: Alpine owns only `x-data` nodes (here just the audio
- * player), and the reader island's mount point has none.
+ * shared page shell (navbar, link router, Alpine) via {@link bootAppPage}. The
+ * reader island now owns the audio player too (a nested `AudioPlayer.svelte`),
+ * so this page has no `x-data` nodes left for Alpine to drive; Alpine still
+ * boots for the shared bundle but manages no DOM here.
  *
  * @license Unlicense <http://unlicense.org/>
  */

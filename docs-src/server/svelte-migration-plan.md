@@ -57,7 +57,7 @@ ancillary → shared chrome → final Alpine removal. Shared chrome (Tier 4) is 
 
 - [x] **1. Review surface** — `review.html` · `reviewApp`, `tableReview` → `ReviewPage.svelte` + `review_store.svelte.ts` (Alpine `review_view.ts`/`review_store.ts` kept for PWA)
 - [x] **2 + 3. Reader + word interactions** — `read.html` · `textReader`, `wordPopover`, `wordModal`, `wordEditForm`, `multiWordModal` → `TextReaderApp.svelte` + `WordPopover`/`WordModal`/`WordEditForm`/`MultiWordModal` + `word_store`/`word_form_store`/`multi_word_form_store.svelte.ts`. Ported together (inseparable — shared Alpine stores). `text_renderer.ts` reused as-is; `audioPlayer` left as Alpine (→ #4). Alpine originals kept for PWA.
-- [ ] **4. Audio player** — `audioPlayer` (`media/audio_player_alpine.ts`) — shared by reader + review
+- [x] **4. Audio player** — `audioPlayer` (`media/audio_player_alpine.ts`) → `AudioPlayer.svelte`, hosted inside `TextReaderApp` (only `read.html` used it; review uses feedback sounds, not the player). Alpine original kept for PWA.
 
 ### Tier 2 — library & content
 
