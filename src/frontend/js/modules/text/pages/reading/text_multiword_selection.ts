@@ -159,12 +159,30 @@ function getSelectedText(words: HTMLElement[], container: HTMLElement): string {
 }
 
 /**
+ * Optional sink for a completed multi-word selection. When supplied (the Svelte
+ * reader passes one), it receives the selection instead of the Alpine
+ * `multiWordForm` store — letting the same native-selection logic drive either
+ * renderer. With no callback, the Alpine store path is used (the server PWA).
+ */
+export type MultiWordSelectHandler = (
+  textId: number,
+  position: number,
+  text: string,
+  wordCount: number
+) => void;
+
+/**
  * Handle text selection for multi-word creation.
  * Called on mouseup to check if user selected multiple words.
  *
- * @param container The text container element (#thetext)
+ * @param container  The text container element (#thetext)
+ * @param onMultiWord Optional callback to receive the selection (Svelte reader);
+ *                    when omitted, the Alpine `multiWordForm` store is used.
  */
-export function handleTextSelection(container: HTMLElement): void {
+export function handleTextSelection(
+  container: HTMLElement,
+  onMultiWord?: MultiWordSelectHandler
+): void {
   const selectedWords = getSelectedWords(container);
 
   // Clear selection after processing
@@ -193,6 +211,14 @@ export function handleTextSelection(container: HTMLElement): void {
   // Get text ID
   const textId = getTextId();
 
+  // Svelte reader: hand the selection to the supplied callback (its runes
+  // multi-word store), bypassing Alpine entirely.
+  if (onMultiWord) {
+    onMultiWord(textId, position, text, selectedWords.length);
+    clearSelection();
+    return;
+  }
+
   // Open multi-word modal via Alpine.js store
   const store = Alpine.store('multiWordForm') as MultiWordFormStoreState;
   if (store && typeof store.loadForEdit === 'function') {
@@ -214,12 +240,17 @@ export function handleTextSelection(container: HTMLElement): void {
  * Set up multi-word selection on a container.
  * Listens for mouseup and touchend events and checks for text selection.
  *
- * @param container The text container element (#thetext)
+ * @param container  The text container element (#thetext)
+ * @param onMultiWord Optional callback to receive the selection (Svelte reader);
+ *                    when omitted, the Alpine `multiWordForm` store is used.
  */
-export function setupMultiWordSelection(container: HTMLElement): void {
+export function setupMultiWordSelection(
+  container: HTMLElement,
+  onMultiWord?: MultiWordSelectHandler
+): void {
   const handler = () => {
     // Small delay to ensure selection is complete
-    setTimeout(() => handleTextSelection(container), 10);
+    setTimeout(() => handleTextSelection(container, onMultiWord), 10);
   };
 
   // Desktop: mouseup fires after click-and-drag selection

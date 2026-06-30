@@ -56,8 +56,7 @@ ancillary → shared chrome → final Alpine removal. Shared chrome (Tier 4) is 
 ### Tier 1 — reading/learning core (highest pain)
 
 - [x] **1. Review surface** — `review.html` · `reviewApp`, `tableReview` → `ReviewPage.svelte` + `review_store.svelte.ts` (Alpine `review_view.ts`/`review_store.ts` kept for PWA)
-- [ ] **2. Reader** — `read.html` · `textReader` (`@modules/text`) — the text-rendering surface; largest single screen
-- [ ] **3. Reader word interactions** — `read.html` · `wordPopover`, `wordModal`, `wordEditForm`, `multiWordModal` (`@modules/vocabulary`) — the tap-a-word layer (follows/merges with #2)
+- [x] **2 + 3. Reader + word interactions** — `read.html` · `textReader`, `wordPopover`, `wordModal`, `wordEditForm`, `multiWordModal` → `TextReaderApp.svelte` + `WordPopover`/`WordModal`/`WordEditForm`/`MultiWordModal` + `word_store`/`word_form_store`/`multi_word_form_store.svelte.ts`. Ported together (inseparable — shared Alpine stores). `text_renderer.ts` reused as-is; `audioPlayer` left as Alpine (→ #4). Alpine originals kept for PWA.
 - [ ] **4. Audio player** — `audioPlayer` (`media/audio_player_alpine.ts`) — shared by reader + review
 
 ### Tier 2 — library & content
