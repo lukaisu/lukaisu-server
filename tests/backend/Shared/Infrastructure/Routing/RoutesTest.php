@@ -250,11 +250,29 @@ class RoutesTest extends TestCase
 
     public static function feedRoutesProvider(): array
     {
+        // GET /feeds and /feeds/manage (the feed-manager SPA) now 302 into the
+        // bundled client (Svelte FeedsPage); the non-GET /feeds handler and the
+        // edit/wizard routes keep their controllers.
+        $redirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
         return [
-            'feeds index' => ['/feeds', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@index'],
+            'feeds index' => ['/feeds', $redirect],
+            'feeds manage' => ['/feeds/manage', $redirect],
             'feeds edit' => ['/feeds/edit', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@edit'],
             'feeds wizard' => ['/feeds/wizard', 'Lukaisu\\Modules\\Feed\\Http\\FeedWizardController@wizard'],
         ];
+    }
+
+    /**
+     * GET /connect (the packaged-client "choose server + log in" flow) now 302s
+     * into the bundled client (Svelte ConnectPage / index.html); the old Alpine
+     * clientAuthForm handler + client_auth.php view were retired.
+     */
+    public function testConnectRouteRedirectsToBundle(): void
+    {
+        $result = $this->simulateRequest('/connect');
+        $this->assertEquals('handler', $result['type'], 'Route /connect should resolve to handler');
+        $this->assertEquals('Lukaisu\\Shared\\Http\\BundleController@redirect', $result['handler']);
+        $this->assertHandlerFileExists($result['handler']);
     }
 
     // ==================== ADMIN ROUTES TESTS ====================

@@ -21,7 +21,6 @@ export { HighlightService, getHighlightService, initHighlightService } from './s
 
 // Stores
 export { initFeedWizardStore, getFeedWizardStore } from './stores/feed_wizard_store';
-export { initFeedManagerStore, getFeedManagerStore } from './stores/feed_manager_store';
 
 // Shared utilities needed by feed pages
 import '@shared/components/sorttable';
@@ -39,5 +38,8 @@ export { feedWizardStep2Data, initFeedWizardStep2Alpine } from './components/fee
 export { feedWizardStep3Data, initFeedWizardStep3Alpine } from './components/feed_wizard_step3';
 export { feedWizardStep4Data, initFeedWizardStep4Alpine } from './components/feed_wizard_step4';
 
-// Pages (side effects)
-import './pages/feed_manager_app';
+// The feed-manager SPA (Alpine `feed_manager_app.ts` / `feed_manager_store.ts`
+// + the `spa.php` view at /feeds/manage) was retired: that surface is now the
+// Svelte `FeedsPage` island on the bundle's feeds.html, and /feeds + /feeds/manage
+// 302 to it. The remaining components above still drive the PHP feed pages
+// (/feeds, /feeds/edit, /feeds/new, wizard) that are not yet migrated.

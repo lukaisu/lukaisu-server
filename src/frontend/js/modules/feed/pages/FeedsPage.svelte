@@ -12,12 +12,11 @@
   CRUD, bulk actions, filters, pagination, view transitions and the auto-
   dismissing toasts — is identical; only the rendering is Svelte.
 
-  This backs only the bundled app's `feeds.html`, and only when a server is
-  connected (the page is server-gated in `feeds.ts`: offline shows a "connect a
-  server" notice and never mounts this island). The PHP server's PWA still
-  renders the Alpine `feed_manager_app.ts` / `feed_manager_store.ts` (which keep
-  their tests) — the two coexist, built from the same `src/frontend/` source,
-  until the PWA retires.
+  This backs the bundled app's `feeds.html`, and only when a server is connected
+  (the page is server-gated in `feeds.ts`: offline shows a "connect a server"
+  notice and never mounts this island). It is now the sole feed-manager renderer:
+  the Alpine `feed_manager_app.ts` / `feed_manager_store.ts` SPA + its `spa.php`
+  view were retired, and the server's `/feeds` + `/feeds/manage` routes 302 here.
 
   Lucide icons in the client-rendered markup are re-hydrated from a `$effect`
   keyed on the view / lists / notifications (the role the Alpine store's

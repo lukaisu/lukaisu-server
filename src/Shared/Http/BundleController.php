@@ -134,6 +134,8 @@ final class BundleController
         switch (true) {
             case $path === '/' || $path === '/index.php':
                 return 'home.html';
+            case $path === '/connect':
+                return 'index.html';
             case $path === '/texts':
                 return 'library.html';
             case $path === '/languages/new':
@@ -148,6 +150,8 @@ final class BundleController
                 return 'languages.html';
             case $path === '/tags' || $path === '/tags/term' || $path === '/tags/text':
                 return 'tags.html';
+            case $path === '/feeds' || $path === '/feeds/manage':
+                return 'feeds.html';
             case $path === '/profile/preferences':
                 return 'settings.html';
             case $path === '/words' || $path === '/words/edit':

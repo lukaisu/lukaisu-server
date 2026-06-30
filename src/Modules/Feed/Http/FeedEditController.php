@@ -124,22 +124,9 @@ class FeedEditController
         PageLayoutHelper::renderPageEnd();
     }
 
-    /**
-     * Feeds SPA page - modern Alpine.js single page application.
-     *
-     * @param array<string, string> $params Route parameters
-     *
-     * @return void
-     *
-     * @psalm-suppress UnresolvableInclude View path is constructed at runtime
-     */
-    public function spa(array $params): void
-    {
-        PageLayoutHelper::renderPageStart('Feed Manager', true);
-        /** @psalm-suppress UnresolvableInclude */
-        include $this->viewPath . 'spa.php';
-        PageLayoutHelper::renderPageEnd();
-    }
+    // The feed-manager SPA page (GET /feeds/manage, rendered from `spa.php`) was
+    // retired: that route now 302s to the Svelte `FeedsPage` island on the
+    // bundle's feeds.html. See the /app redirects in routes.php.
 
     /**
      * New feed form (wizard with 3 tabs: Browse, URL Wizard, Manual).

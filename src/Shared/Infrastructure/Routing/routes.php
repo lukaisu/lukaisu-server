@@ -387,8 +387,10 @@ function registerRoutes(Router $router): void
 
     // ==================== FEED ROUTES (PROTECTED) ====================
 
-    // Feeds SPA (new Alpine.js single page application)
-    $router->registerWithMiddleware('/feeds/manage', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@spa', AUTH_MIDDLEWARE);
+    // GET /feeds and GET /feeds/manage (the feed-manager SPA) are served by the
+    // bundled client (Svelte FeedsPage); see the /app redirects below. The old
+    // Alpine `spa.php` view + FeedController@spa handler were retired. The
+    // non-GET /feeds handler (marked-items text creation) is kept below.
 
     // New feed form (RESTful route)
     $router->get('/feeds/new', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@newFeed', AUTH_MIDDLEWARE);
@@ -611,9 +613,10 @@ function registerRoutes(Router $router): void
         [AuthRateLimitMiddleware::class, CsrfMiddleware::class]
     );
 
-    // Packaged-client entry: client-rendered "choose server + log in" flow
-    // (token auth). The login POST goes to /api/v1/auth/login, not here.
-    $router->register('/connect', 'Lukaisu\\Modules\\User\\Http\\UserController@clientAuthForm', 'GET');
+    // Packaged-client entry: the client-rendered "choose server + log in" flow
+    // (token auth; the login POST goes to /api/v1/auth/login) is served by the
+    // bundled client — GET /connect 302s to the Svelte ConnectPage (index.html);
+    // see the /app redirects below. The old Alpine `client_auth.php` view was retired.
 
     // Registration - no auth required, rate limited and CSRF-protected on POST.
     $router->register('/register', 'Lukaisu\\Modules\\User\\Http\\UserController@registerForm', 'GET');
@@ -755,6 +758,7 @@ function registerRoutes(Router $router): void
     $bundleRedirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
     $router->get('/', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/index.php', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/connect', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/texts', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/text/{text:int}/read', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/text/read', $bundleRedirect, AUTH_MIDDLEWARE);
@@ -773,6 +777,8 @@ function registerRoutes(Router $router): void
     $router->get('/languages/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/tags', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/tags/text', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/feeds', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/feeds/manage', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/review', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/profile/preferences', $bundleRedirect, AUTH_MIDDLEWARE);
 

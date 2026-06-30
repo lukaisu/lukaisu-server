@@ -17,13 +17,12 @@
     3. `recovery` — an email-less registration returns a one-time recovery code,
        shown once before entering the app.
 
-  This backs only the bundled app's `index.html` (mounted by `connect.ts`). The
-  PHP server's PWA still renders the Alpine `client_auth.ts` (via
-  `client_auth.php`) — the two coexist, built from the same `src/frontend/`
-  source, until the server UI retires. Behaviour (strings, validation, token
-  storage, redirect) mirrors the Alpine component exactly; only the rendering is
-  Svelte, which compiles to plain JS so the island runs under the bundle's strict
-  `script-src 'self'` CSP.
+  This backs the bundled app's `index.html` (mounted by `connect.ts`) and is now
+  the sole renderer of the connect/login flow: the Alpine `client_auth.ts` + its
+  `client_auth.php` view were retired, and the server's GET /connect route 302s
+  here. Behaviour (strings, validation, token storage, redirect) matches the old
+  Alpine component; only the rendering is Svelte, which compiles to plain JS so
+  the island runs under the bundle's strict `script-src 'self'` CSP.
 
   @license Unlicense <http://unlicense.org/>
 -->

@@ -172,7 +172,7 @@ class FeedEditControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass(FeedEditController::class);
 
-        $expectedMethods = ['edit', 'spa', 'newFeed', 'editFeed', 'deleteFeed'];
+        $expectedMethods = ['edit', 'newFeed', 'editFeed', 'deleteFeed'];
 
         foreach ($expectedMethods as $methodName) {
             $this->assertTrue(
@@ -818,15 +818,6 @@ class FeedEditControllerTest extends TestCase
     public function editMethodAcceptsArrayParam(): void
     {
         $method = new \ReflectionMethod(FeedEditController::class, 'edit');
-        $params = $method->getParameters();
-        $this->assertCount(1, $params);
-        $this->assertSame('params', $params[0]->getName());
-    }
-
-    #[Test]
-    public function spaMethodAcceptsArrayParam(): void
-    {
-        $method = new \ReflectionMethod(FeedEditController::class, 'spa');
         $params = $method->getParameters();
         $this->assertCount(1, $params);
         $this->assertSame('params', $params[0]->getName());

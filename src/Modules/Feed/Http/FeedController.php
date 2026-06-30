@@ -86,12 +86,6 @@ class FeedController
     }
 
     /** @param array<string, string> $params */
-    public function spa(array $params): void
-    {
-        $this->editController->spa($params);
-    }
-
-    /** @param array<string, string> $params */
     public function newFeed(array $params): void
     {
         $this->editController->newFeed($params);

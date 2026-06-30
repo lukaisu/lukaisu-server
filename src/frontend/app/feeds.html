@@ -9,9 +9,9 @@
        RSS/Atom fetch + article import are done by a connected Lukaisu Server, so
        this page is gated. Offline (local-first, no server) feeds.ts reveals the
        notice below and does NOT mount the island, so no /api/v1/feeds* calls
-       fire. No `lukaisu-modules` meta: the Svelte island replaces the Alpine feed
-       module entirely on the bundled app (the Alpine `feed_manager_app.ts` stays
-       only as the PHP server's PWA renderer). -->
+       fire. No `lukaisu-modules` meta: the Svelte island is the sole feed-manager
+       renderer — the Alpine `feed_manager_app.ts` / `spa.php` SPA was retired, and
+       /feeds + /feeds/manage 302 here. -->
   <style>[x-cloak]{display:none !important}[hidden]{display:none !important}</style>
 </head>
 <body>
