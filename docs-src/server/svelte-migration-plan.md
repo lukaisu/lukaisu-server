@@ -79,7 +79,21 @@ so they render even on the plain-DOM pages. **Alpine cannot be removed until the
 are Svelte.** Migrate carefully (a regression hits every screen).
 
 - [x] **12. Navbar + streak + theme toggle** — `navbar`/`navbarStreak`/`themeToggle` → `NavBar.svelte` (+ `NavbarStreak`/`ThemeToggle` children), mounted globally from `main.ts` (replaces `mountNavbar()`; `Alpine.start()` kept for PWA server pages). Shared change: the PWA build now compiles Svelte (`vite.config.ts` got the plugin). Alpine navbar files kept (tree-shaken). NOTE: `streakDisplay` is an activity-page component (not in the navbar) — separate, not done here.
-- [ ] **13. Footer / theme / offline / select** — `footer`, `themeToggle`, `offlineIndicator`, `offlineButton`, `searchableSelect` (`shared/components`, `shared/offline`)
+- [x] **13. Footer / theme / offline / select** — no app porting work remained:
+  `themeToggle` shipped with #12 (nested in the navbar); `footer` and
+  `offlineIndicator` are registered but **never mounted** in any `app/*.html`
+  (no `#footer-root` / `#offline-indicator-root` — they don't render in the app,
+  so there's nothing to migrate for parity); `offlineButton` is not used on any
+  app page or island; `searchableSelect` is used only by server-rendered PHP
+  forms (`archived_form.php`, `edit_form.php`), **deferred to the PWA cut-over**.
+
+> **Milestone — the bundled app is now Alpine-free.** No `app/*.html` has any
+> `x-data` attribute (only cut-over comments), and the last JS-injected Alpine
+> chrome (the navbar) is now a Svelte island. `Alpine.start()` still runs from the
+> shared `main.ts` but finds nothing to bind on app pages (no-op). Alpine is still
+> *bundled* (imported by `main.ts`) and still drives the **PWA's** server-rendered
+> pages + `searchableSelect` forms — so it cannot be removed from the shared entry
+> yet (see #14).
 
 ### Tier 5 — optional consistency (no Alpine to remove)
 
@@ -90,10 +104,19 @@ wanted: `word`, `language`, `text`, `language-edit`, `text-edit`, `tags`,
 
 ### Final — remove Alpine
 
-- [ ] **14. Retire Alpine** — once no `x-data` remains in any app page and the
-  shared chrome (Tier 4) is Svelte: drop `@alpinejs/csp` + the vite alias, remove
-  the CSP-build workarounds, delete jQuery (`jq_pgm.ts`). Retire the now-dead
-  PWA-only Alpine components (`word_list_app.ts`, etc.) at the **PWA cut-over**.
+- [ ] **14. Retire Alpine — BLOCKED on the PWA cut-over (needs a decision).** The
+  app side is ready (Tiers 1–4 done; no `x-data` in any app page). But Alpine
+  cannot be dropped from `main.ts` / the vite configs yet because **`main.ts` is
+  shared** and the **PWA's server-rendered PHP views still emit Alpine `x-data`**
+  (read/library/feeds/admin views) plus the `searchableSelect` server forms. So
+  full removal (`@alpinejs/csp` + the alias, the CSP-build workarounds, jQuery
+  `jq_pgm.ts`, the kept Alpine `*_app.ts`/store files) requires first converting
+  (or retiring) the PWA's PHP-rendered pages to Svelte — a separate, larger
+  initiative beyond this app-focused plan. Two paths to decide between:
+  (a) **convert the PWA pages too** (port the PHP views' Alpine to Svelte islands,
+  then drop Alpine everywhere); or (b) **build-split** — keep Alpine only in the
+  PWA (`vite.config.ts`) bundle and strip it from the app (`vite.app.config.ts`)
+  via a conditional/lazy `main.ts` Alpine load. Both need explicit direction.
 
 ## Notes for the loop
 
