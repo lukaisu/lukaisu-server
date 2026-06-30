@@ -127,22 +127,48 @@ class StarterVocabControllerTest extends TestCase
     }
 
     // =========================================================================
-    // show()
+    // config()
     // =========================================================================
 
     #[Test]
-    public function showMethodExists(): void
+    public function configMethodExists(): void
     {
-        $this->assertTrue(method_exists($this->controller, 'show'));
+        $this->assertTrue(method_exists($this->controller, 'config'));
     }
 
     #[Test]
-    public function showMethodAcceptsIntId(): void
+    public function configMethodAcceptsIntId(): void
     {
-        $method = new \ReflectionMethod(StarterVocabController::class, 'show');
+        $method = new \ReflectionMethod(StarterVocabController::class, 'config');
         $params = $method->getParameters();
         $this->assertCount(1, $params);
+        $this->assertSame('id', $params[0]->getName());
         $this->assertSame('int', $params[0]->getType()?->getName());
+    }
+
+    #[Test]
+    public function configReturnTypeIsJsonResponse(): void
+    {
+        $method = new \ReflectionMethod(StarterVocabController::class, 'config');
+        $returnType = $method->getReturnType();
+        $this->assertNotNull($returnType);
+        $this->assertSame('Lukaisu\Shared\Infrastructure\Http\JsonResponse', $returnType->getName());
+    }
+
+    #[Test]
+    public function configReturnsNotFoundForUnknownLanguage(): void
+    {
+        $this->languageFacade->method('getById')->willReturn(null);
+        $response = $this->controller->config(999);
+        $this->assertSame(404, $response->getStatusCode());
+    }
+
+    #[Test]
+    public function showMethodWasRemoved(): void
+    {
+        // The GET page route now 302s to the bundled Svelte island; the PHP
+        // page-render method was retired in favour of config().
+        $this->assertFalse(method_exists($this->controller, 'show'));
     }
 
     // =========================================================================

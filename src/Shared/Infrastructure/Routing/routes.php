@@ -333,10 +333,13 @@ function registerRoutes(Router $router): void
     // form routes (LanguageController) were retired. GET /languages, /languages/new
     // and /languages/{id}/edit are redirected to the bundle (see /app redirects).
 
-    // Starter vocabulary (shown after language creation)
+    // Starter vocabulary (shown after language creation). The GET page route is
+    // served by the bundled client (Svelte StarterVocab island); see the /app
+    // redirects below. This JSON config route feeds that island the server-only
+    // bits (language name, FrequencyWords availability, curated dictionaries).
     $router->get(
-        '/languages/{id:int}/starter-vocab',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\StarterVocabController@show',
+        '/languages/{id:int}/starter-vocab/config',
+        'Lukaisu\\Modules\\Vocabulary\\Http\\StarterVocabController@config',
         AUTH_MIDDLEWARE
     );
     $router->post(
@@ -775,6 +778,7 @@ function registerRoutes(Router $router): void
     $router->get('/languages', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/languages/new', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/languages/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/languages/{id:int}/starter-vocab', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/tags', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/tags/text', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/feeds', $bundleRedirect, AUTH_MIDDLEWARE);

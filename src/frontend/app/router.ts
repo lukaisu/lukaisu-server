@@ -55,6 +55,9 @@ export const pageUrl = {
   editLanguage(langId: number | string): string {
     return `language-edit.html?id=${encodeURIComponent(String(langId))}`;
   },
+  starterVocab(langId: number | string): string {
+    return `starter-vocab.html?lang=${encodeURIComponent(String(langId))}`;
+  },
   newText(): string {
     return 'text.html';
   },
@@ -149,6 +152,14 @@ export function bundledPageFor(path: string): string | null {
   const langEditMatch = pathname.match(/^\/languages\/(\d+)\/edit$/);
   if (langEditMatch) {
     return pageUrl.editLanguage(langEditMatch[1]);
+  }
+  // Starter-vocab offer (shown after creating a language): /languages/{id}/starter-vocab
+  // -> the bundled Svelte StarterVocab island, carrying the language id as ?lang=.
+  // Server-gated like feeds (the FrequencyWords import + Wiktionary enrichment need
+  // a connected server); offline it shows a "connect a server" notice.
+  const starterVocabMatch = pathname.match(/^\/languages\/(\d+)\/starter-vocab$/);
+  if (starterVocabMatch) {
+    return pageUrl.starterVocab(starterVocabMatch[1]);
   }
   // Single-term edit form: /words/{id}/edit -> word.html?id={id}. Must precede
   // the list mapping below (which matches the literal /words/edit, not this).

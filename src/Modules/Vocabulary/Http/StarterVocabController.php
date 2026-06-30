@@ -6,8 +6,6 @@ namespace Lukaisu\Modules\Vocabulary\Http;
 
 use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
-use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
-use Lukaisu\Shared\UI\Helpers\FormHelper;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Modules\Vocabulary\Application\Services\FrequencyImportService;
 use Lukaisu\Modules\Vocabulary\Application\Services\FrequencyLanguageMap;
@@ -41,33 +39,37 @@ class StarterVocabController extends BaseController
     }
 
     /**
-     * Show the starter vocabulary offer page.
+     * Starter vocabulary bootstrap config (JSON).
      *
-     * Route: GET /languages/{id}/starter-vocab
+     * The starter-vocab UI is now a Svelte island shipped in the bundle
+     * (`dist-app/starter-vocab.html`); the GET page route 302s there. The island
+     * cannot compute the server-only bits — the language name, whether
+     * FrequencyWords data exists, and the curated dictionaries filtered for the
+     * language — so it fetches them here on mount. This mirrors the JSON blob the
+     * retired `starter_vocab.php` view used to inline (minus the CSRF token, which
+     * the island reads from `<meta name="csrf-token">`).
+     *
+     * Route: GET /languages/{id}/starter-vocab/config
+     *
+     * @return JsonResponse
      */
-    public function show(int $id): void
+    public function config(int $id): JsonResponse
     {
         $language = $this->languageFacade->getById($id);
         if ($language === null) {
-            http_response_code(404);
-            PageLayoutHelper::renderPageStart('Not Found', true);
-            echo '<div class="notification is-danger">Language not found.</div>';
-            PageLayoutHelper::renderPageEnd();
-            return;
+            return JsonResponse::notFound('Language not found.');
         }
 
         $langName = $language->name();
-        $isAvailable = FrequencyLanguageMap::isSupported($langName);
-        $langId = $id;
-        $skipUrl = url('/texts/new') . '?filterlang=' . $id;
-        $importUrl = url('/languages/' . $id . '/starter-vocab/import');
-        $enrichUrl = url('/languages/' . $id . '/starter-vocab/enrich');
-        $csrfToken = FormHelper::csrfToken();
-        $curatedDictionaries = $this->loadCuratedDictionariesForLanguage($langName);
 
-        PageLayoutHelper::renderPageStart('Starter Vocabulary', true);
-        include __DIR__ . '/../Views/starter_vocab.php';
-        PageLayoutHelper::renderPageEnd();
+        return JsonResponse::success([
+            'importUrl' => url('/languages/' . $id . '/starter-vocab/import'),
+            'enrichUrl' => url('/languages/' . $id . '/starter-vocab/enrich'),
+            'langId' => $id,
+            'langName' => $langName,
+            'isAvailable' => FrequencyLanguageMap::isSupported($langName),
+            'curatedDictionaries' => $this->loadCuratedDictionariesForLanguage($langName),
+        ]);
     }
 
     /**

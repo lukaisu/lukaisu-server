@@ -167,6 +167,9 @@ final class BundleController
         if (preg_match('#^/languages/(\d+)/edit$#', $path, $m) === 1) {
             return 'language-edit.html?id=' . $m[1];
         }
+        if (preg_match('#^/languages/(\d+)/starter-vocab$#', $path, $m) === 1) {
+            return 'starter-vocab.html?lang=' . $m[1];
+        }
         if (preg_match('#^/words/(\d+)/edit$#', $path, $m) === 1) {
             return 'word.html?id=' . $m[1];
         }

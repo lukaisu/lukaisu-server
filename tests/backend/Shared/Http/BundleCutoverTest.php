@@ -64,7 +64,8 @@ class BundleCutoverTest extends TestCase
             ['/'], ['/index.php'], ['/texts'], ['/text/5/read'], ['/text/5/print-plain'],
             ['/texts/new'], ['/texts/5/edit'], ['/text/archived'], ['/text/archived/5/edit'],
             ['/text/check'], ['/words'], ['/words/edit'], ['/words/5/edit'], ['/languages'],
-            ['/languages/new'], ['/languages/5/edit'], ['/tags'], ['/tags/text'], ['/review'],
+            ['/languages/new'], ['/languages/5/edit'], ['/languages/5/starter-vocab'],
+            ['/tags'], ['/tags/text'], ['/review'],
             ['/profile/preferences'],
         ];
     }
@@ -106,6 +107,9 @@ class BundleCutoverTest extends TestCase
             'feeds (Job B)' => ['/feeds/new', 'FeedController'],
             'login (Job C)' => ['/login', 'UserController@loginForm'],
             'word show (not bundled)' => ['/word/5', 'TermDisplayController@showWord'],
+            // The starter-vocab page 302s into the bundle, but its JSON config
+            // data route keeps the controller (the island fetches it server-backed).
+            'starter-vocab config' => ['/languages/5/starter-vocab/config', 'StarterVocabController@config'],
             'api prefix' => ['/api/v1/languages', 'ApiController@v1'],
             'bundle shell' => ['/app/read.html', 'BundleController@serve'],
         ];
