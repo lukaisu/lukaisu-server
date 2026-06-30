@@ -60,15 +60,26 @@ constrained `@alpinejs/csp` build).
 **Incremental, not a rewrite.** Svelte and Alpine coexist on the same page —
 Alpine owns only `x-data` nodes; a Svelte component mounts as an island. Port the
 highest-pain screens first (review surface, word list); never stop the world. A
-spike proving the whole path — component → Vite build → CSP `script-src 'self'` →
-Capacitor WebView → F-Droid APK — landed on branch `spike/svelte-word-list` (the
-terms list) on 2026-06-27: zero `eval`/`new Function` in the bundle, packaged
-inside `app-debug.apk`, coexisting with the Alpine page.
+spike first proved the whole path — component → Vite build → CSP `script-src
+'self'` → Capacitor WebView → F-Droid APK — on branch `spike/svelte-word-list`
+(the terms list, 2026-06-27): zero `eval`/`new Function`, packaged inside
+`app-debug.apk`, coexisting with the Alpine page.
+
+**First screen landed — the terms list.** The bundled app's `words.html` now
+mounts the Svelte `WordList` island
+(`src/frontend/js/modules/vocabulary/pages/WordList.svelte`) instead of the
+Alpine `wordListApp` — a full-parity port (filters, persisted column visibility,
+both bulk-action menus, inline edit, pagination, mobile cards). The Alpine
+`word_list_app.ts` is **kept** (it still backs the server PWA and no-ops in the
+app with no `x-data` node) and is deleted at the PWA cut-over, not now. Verified:
+`build:app`, strict-CSP grep (no `eval`/`new Function`), `tsc` + `svelte-check`
+(0/0), ESLint, and Vitest all green; live on-device render is the remaining check.
 
 Consequences of this swap:
 
-- **CI gains `svelte-check` + `eslint-plugin-svelte`** (Svelte's type/lint
-  tooling) alongside the existing `tsc`/ESLint/Vitest.
+- **The checks gained `svelte-check` + `eslint-plugin-svelte`:** `npm run
+  typecheck` runs `svelte-check` after `tsc`, and `eslint-plugin-svelte` lints
+  `*.svelte` (alongside the existing `tsc`/ESLint/Vitest).
 - **jQuery (`jq_pgm.ts`) is legacy and is dropped** as the screens that depend on
   it move to Svelte — the migration is the moment to delete it.
 - **Bulma (CSS) is framework-agnostic and stays** — it is just stylesheet

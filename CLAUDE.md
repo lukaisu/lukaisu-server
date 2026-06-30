@@ -24,7 +24,11 @@ not the legacy:
 - **Alpine.js → Svelte 5.** The client is now a real local-first SPA, past
   Alpine's islands model. Migrate **incrementally** — Svelte islands coexist with
   Alpine on the same page (Alpine owns only `x-data` nodes). Svelte is CSP-clean
-  (no `unsafe-eval`). Spike: branch `spike/svelte-word-list`.
+  (no `unsafe-eval`). Toolchain is wired in: `npm run typecheck` also runs
+  `svelte-check`, and `eslint-plugin-svelte` lints `*.svelte`. **First screen
+  migrated:** the app's `words.html` mounts `WordList.svelte` (the Alpine
+  `word_list_app.ts` stays as the PWA renderer until cut-over). Write new screens
+  as Svelte islands, port `.svelte` from the matching Alpine page.
 - **Server DB → on-device.** Client data lives in IndexedDB (Dexie); the server
   DB only matters for the (not-yet-built) sync path.
 - **jQuery is removed** as screens migrate; **Bulma (CSS) stays.**

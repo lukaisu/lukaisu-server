@@ -3,6 +3,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import markdown from "@eslint/markdown";
 import css from "@eslint/css";
+import svelte from "eslint-plugin-svelte";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
@@ -34,6 +35,29 @@ export default defineConfig([
   {
     files: ["src/frontend/{js,app}/**/*.{ts,mts,cts}"],
     extends: [tseslint.configs.recommended],
+  },
+
+  // Svelte components (the rendering framework the client is migrating to).
+  // `eslint-plugin-svelte`'s flat "recommended" wires the Svelte parser and
+  // rules. Two of its entries ship with no `files` filter, so they'd apply
+  // globally — and `svelte/comment-directive` then crashes on non-Svelte files
+  // (no Svelte parser services). Constrain those unscoped entries to *.svelte
+  // so the Svelte rules only run on Svelte files.
+  ...svelte.configs.recommended.map((config) =>
+    config.files
+      ? config
+      : { ...config, files: ["**/*.svelte", "**/*.svelte.ts", "**/*.svelte.js"] }
+  ),
+  // Point the embedded `<script lang="ts">` at the TypeScript parser and supply
+  // browser globals.
+  {
+    files: ["src/frontend/**/*.svelte"],
+    languageOptions: {
+      parserOptions: {
+        parser: tseslint.parser,
+      },
+      globals: globals.browser,
+    },
   },
 
   // Test files (Cypress, Vitest, etc.)

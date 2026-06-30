@@ -50,9 +50,14 @@ real reactivity/components and is CSP-clean (no `unsafe-eval`), so it needs none
 of Alpine's `@alpinejs/csp` constraints. Migration is **incremental** — Svelte
 islands coexist with Alpine (Alpine owns only `x-data` nodes), highest-pain
 screens first; **jQuery is dropped** as screens move, **Bulma (CSS) stays**, and
-CI gains `svelte-check` + `eslint-plugin-svelte`. End-to-end spike (build →
-strict CSP → Capacitor → F-Droid APK): branch `spike/svelte-word-list`. Full
-rationale: `docs-src/server/local-first.md` → *Rendering: Alpine → Svelte*.
+the checks gained `svelte-check` (run by `npm run typecheck`) + `eslint-plugin-svelte`.
+End-to-end spike (build → strict CSP → Capacitor → F-Droid APK): branch
+`spike/svelte-word-list`. **First screen landed:** the bundled app's `words.html`
+now mounts the Svelte `WordList` island (full parity with the Alpine
+`wordListApp`; the Alpine component stays as the PWA's renderer until cut-over) —
+verified green through `build:app`, the strict-CSP grep, `tsc`/`svelte-check`,
+ESLint and Vitest. Full rationale: `docs-src/server/local-first.md` →
+*Rendering: Alpine → Svelte*.
 
 **Outbound split (2026-06-26).** The original seam put *all* outbound work on the
 optional server because "a phone can't make arbitrary cross-origin requests

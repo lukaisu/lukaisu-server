@@ -1,4 +1,5 @@
 import { defineConfig, type PluginOption } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { cpSync, mkdirSync } from 'fs';
@@ -61,7 +62,13 @@ export default defineConfig({
     }
   },
 
-  plugins: [copyReviewSounds()],
+  // Svelte 5 is the rendering framework the client is migrating to (from
+  // Alpine; the two coexist per-page during the incremental port). Svelte
+  // compiles templates to plain JS at build time — no runtime `eval`/`new
+  // Function` — so islands run under the bundle's strict `script-src 'self'`
+  // CSP with none of Alpine's `@alpinejs/csp` constraints. Preprocess config
+  // (TS support) lives in svelte.config.js, shared with `svelte-check`.
+  plugins: [svelte(), copyReviewSounds()],
 
   build: {
     outDir: resolve(__dirname, 'dist-app'),
