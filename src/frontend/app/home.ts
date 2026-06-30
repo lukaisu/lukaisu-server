@@ -2,10 +2,11 @@
  * Home dashboard page entry for the bundled client.
  *
  * Replaces the server-rendered home page (`Modules/Home/Views/index.php`),
- * mounting the existing `homeApp` component (js/home/home_app.ts). The PHP
- * controller injected the dashboard config (the continue-reading text + its
- * stats, the text count, warnings) at request time; here the boot entry
- * assembles that config **on-device** from the local-first API:
+ * mounting the Svelte 5 `HomePage` island (the Alpine→Svelte port of
+ * `js/home/home_app.ts`). The PHP controller injected the dashboard config (the
+ * continue-reading text + its stats, the text count, warnings) at request time;
+ * here the boot entry assembles that config **on-device** from the local-first
+ * API:
  *
  *   - current language + name      → GET /languages
  *   - continue-reading text        → GET /texts/by-language/{id} (newest first)
@@ -20,10 +21,19 @@
  * Gutenberg coverage preview runs on-device too; RSS, arbitrary-URL extraction
  * and EPUB import remain server-enhanced.
  *
+ * Mirrors library.ts ordering: resolve the data mode, resolve the current
+ * language + dashboard, inject the config blob, boot i18n so the island's labels
+ * render, mount `HomePage` into `#home-root`, then boot the shared page shell
+ * (navbar, link router, Alpine) via {@link bootAppPage}. The Alpine home module
+ * still loads (PWA renderer) but binds no nodes on this page.
+ *
  * @license Unlicense <http://unlicense.org/>
  */
 
+import { mount } from 'svelte';
+import HomePage from '@modules/home/pages/HomePage.svelte';
 import { bootAppPage, initDataMode, injectConfig } from './boot';
+import { bootI18n } from '@shared/i18n/translator';
 import { apiGet } from '@shared/api/client';
 import { LanguagesApi } from '@modules/language/api/languages_api';
 import type { TextStats } from '@modules/language/stores/language_settings';
@@ -107,7 +117,6 @@ async function start(): Promise<void> {
   await initDataMode();
 
   const onboarding = document.getElementById('home-no-languages');
-  const content = document.getElementById('home-content');
 
   const langRes = await LanguagesApi.list();
   const languages = langRes.data?.languages ?? [];
@@ -127,7 +136,7 @@ async function start(): Promise<void> {
 
   const { lastText, textCount } = await resolveDashboard(langId, langName);
 
-  // Inject the config home_app reads at mount. phpVersion '' makes the
+  // Inject the config HomePage reads at mount. phpVersion '' makes the
   // server-version warning a no-op; checkForUpdates false skips the GitHub call.
   injectConfig('home-warnings-config', {
     phpVersion: '',
@@ -139,8 +148,17 @@ async function start(): Promise<void> {
     checkForUpdates: false,
   });
 
-  if (content) content.style.display = '';
+  // Ensure translation strings are loaded before the island renders its labels
+  // (the cookie warning + coverage captions go through t()).
+  await bootI18n();
 
+  const target = document.getElementById('home-root');
+  if (target) {
+    mount(HomePage, { target });
+  }
+
+  // Boot the shared shell (navbar, link router, Alpine). Runs after the island
+  // is mounted; the two manage disjoint DOM regions.
   await bootAppPage({ requireAuth: true });
 }
 

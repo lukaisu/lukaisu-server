@@ -63,7 +63,7 @@ ancillary → shared chrome → final Alpine removal. Shared chrome (Tier 4) is 
 
 - [x] **5. Library (active texts)** — `library.html` · `textsGroupedApp`, `dropdownToggle` → `TextList.svelte` (dropdown folded in). Alpine original kept for PWA. (Scout: #5/#6 are NOT a shared component — distinct data model/UI/actions.)
 - [x] **6. Archived texts** — `texts.html` · `archivedTextsGroupedApp` → `ArchivedTexts.svelte` (grouped-by-language, collapse-state localStorage, per-language lazy-load/pagination). Alpine original kept for PWA.
-- [ ] **7. Home / dashboard** — `home.html` · `homeApp`, `discoverBooks`, `gutenbergSuggestions`, `gdlSuggestions`, streak/`calendarHeatmap` (`home/`)
+- [x] **7. Home / dashboard** — `home.html` · `homeApp`, `discoverBooks`, `gutenbergSuggestions`, `gdlSuggestions` → `HomePage.svelte` (+ `DiscoverBooks`/`GutenbergSuggestions`/`GdlSuggestions` + `lib/suggestions.ts`). Alpine originals kept for PWA. (Streak/`calendarHeatmap` are NOT on home — they live in the activity module; `librarySearch` is a separate modal, left as Alpine.)
 
 ### Tier 3 — feeds, languages, auth, print
 

@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
   <title>Lukaisu — Home</title>
-  <!-- Mounts the existing home dashboard component (js/home/home_app.ts). The
-       boot entry assembles its config (continue-reading text + counts) on-device.
-       Catalog discovery (Gutenberg/GDL browse, on-device Gutenberg + GDL-EPUB
-       import, Gutenberg + GDL coverage preview) now runs client-side behind the
-       "Discover books" toggle below; RSS and arbitrary-URL import stay
-       server-enhanced. -->
+  <!-- Mounts the Svelte 5 home dashboard island (HomePage.svelte) into
+       #home-root. The boot entry (home.ts) assembles its config
+       (continue-reading text + counts) on-device. Catalog discovery
+       (Gutenberg/GDL browse, on-device Gutenberg + GDL-EPUB import, Gutenberg +
+       GDL coverage preview) runs client-side behind the "Discover books" toggle;
+       RSS and arbitrary-URL import stay server-enhanced. The Alpine home module
+       still loads (PWA renderer) but binds no nodes here. -->
   <meta name="lukaisu-modules" content="home" />
   <style>[x-cloak]{display:none !important}</style>
 </head>
@@ -35,202 +36,15 @@
         </a>
       </div>
 
-      <!-- Dashboard (mounts home_app). Hidden until the boot entry resolves the
+      <!-- Svelte 5 home dashboard island (mounted by home.ts). Replaces the
+           Alpine `homeApp` x-data region (incl. the nested `discoverBooks`,
+           `gutenbergSuggestions` and `gdlSuggestions` x-data) — the
+           Alpine→Svelte migration of the home page. The Alpine components
+           (home_app.ts etc.) still load via the page's module meta but no-op
+           here with no `x-data` node, and stay as the PWA's renderer until the
+           server UI retires. home.ts mounts this only after it resolves the
            current language + continue-reading text and injects the config. -->
-      <div id="home-content" x-data="homeApp" x-cloak style="display:none">
-
-        <!-- System notifications (offline these stay inert: no PHP, no update
-             check; the cookie check is harmless and client-side). -->
-        <div class="notification is-danger is-light" x-show="warnings.phpOutdated.visible" x-transition>
-          <p x-text="warnings.phpOutdated.message"></p>
-        </div>
-        <div class="notification is-warning is-light" x-show="warnings.cookiesDisabled.visible" x-transition>
-          <p x-text="warnings.cookiesDisabled.message"></p>
-        </div>
-
-        <!-- Language change notification -->
-        <div class="notification is-success is-light" x-show="languageNotification.visible" x-transition>
-          <button class="delete" @click="languageNotification.visible = false"></button>
-          <p x-text="languageNotification.message"></p>
-        </div>
-
-        <!-- Text cards (single row, horizontal scroll) -->
-        <div style="display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem;">
-
-          <!-- Continue reading / current text -->
-          <div style="flex-shrink: 0;">
-            <template x-if="lastText">
-              <div class="box has-background-link-light" style="width: 280px; min-height: 180px;">
-                <p class="title is-5 mb-3" x-text="lastText.title"></p>
-                <!-- Statistics bar — colours match the reader's word-status highlights. -->
-                <div class="mb-3" x-show="lastText.stats && lastText.stats.total > 0" :title="getStatsTitle()">
-                  <div style="display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #ddd;">
-                    <div style="background: #5ABAFF;" :style="{ width: getStatPercent('unknown') + '%' }"></div>
-                    <div style="background: #E85A3C;" :style="{ width: getStatPercent('s1') + '%' }"></div>
-                    <div style="background: #E8893C;" :style="{ width: getStatPercent('s2') + '%' }"></div>
-                    <div style="background: #E8B83C;" :style="{ width: getStatPercent('s3') + '%' }"></div>
-                    <div style="background: #E8E23C;" :style="{ width: getStatPercent('s4') + '%' }"></div>
-                    <div style="background: #66CC66;" :style="{ width: getStatPercent('s5') + '%' }"></div>
-                    <div style="background: #CCFFCC;" :style="{ width: getStatPercent('s99') + '%' }"></div>
-                    <div style="background: #888888;" :style="{ width: getStatPercent('s98') + '%' }"></div>
-                  </div>
-                </div>
-                <div class="buttons">
-                  <a :href="basePath + '/text/' + lastText.id + '/read'" class="button is-link is-medium">
-                    <span class="icon"><i data-lucide="book-open"></i></span>
-                    <span>Read</span>
-                  </a>
-                  <a :href="basePath + '/review?text=' + lastText.id" class="button is-info is-light is-medium">
-                    <span class="icon"><i data-lucide="circle-help"></i></span>
-                    <span>Review</span>
-                  </a>
-                </div>
-              </div>
-            </template>
-            <template x-if="!lastText">
-              <div class="box has-background-light" style="width: 280px; min-height: 180px;
-                  display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                <span class="icon is-large has-text-grey-light mb-2">
-                  <i data-lucide="book-open" style="width: 36px; height: 36px;"></i>
-                </span>
-                <p class="has-text-grey is-size-7 has-text-centered">
-                  No text yet — add one to start reading.
-                </p>
-              </div>
-            </template>
-          </div>
-
-          <!-- New text -->
-          <div style="flex-shrink: 0;">
-            <a href="/texts/new" class="box has-background-primary-light has-text-centered"
-               style="width: 180px; min-height: 180px; display: flex;
-                  flex-direction: column; justify-content: center; align-items: center;">
-              <span class="icon is-large has-text-primary">
-                <i data-lucide="plus" style="width: 48px; height: 48px;"></i>
-              </span>
-              <p class="mt-3 has-text-weight-semibold">New text</p>
-            </a>
-          </div>
-
-          <!-- Browse your library (offline replacement for the server's
-               Gutenberg/GDL discovery search — that stays server-enhanced). -->
-          <div style="flex-shrink: 0;">
-            <a href="/texts" class="box has-background-warning-light has-text-centered"
-               style="width: 180px; min-height: 180px; display: flex;
-                  flex-direction: column; justify-content: center; align-items: center;">
-              <span class="icon is-large has-text-warning-dark">
-                <i data-lucide="book-marked" style="width: 48px; height: 48px;"></i>
-              </span>
-              <p class="mt-3 has-text-weight-semibold">Browse your library</p>
-            </a>
-          </div>
-        </div>
-
-        <!-- Discover books — on-device catalog browse (Gutendex + GDL) with
-             on-device import. Behind an explicit toggle so a passive home visit
-             makes no outbound request; the nested components only fetch once
-             opened. The catalog calls go direct to the source (CORS-free in the
-             app), never to /api/v1, so the offline dashboard's zero-server-call
-             invariant holds. -->
-        <div class="mt-5" x-data="discoverBooks">
-          <button class="button is-light" @click="toggle()">
-            <span class="icon"><i data-lucide="compass"></i></span>
-            <span>Discover books</span>
-            <span class="icon">
-              <i data-lucide="chevron-down" x-show="!open"></i>
-              <i data-lucide="chevron-up" x-show="open"></i>
-            </span>
-          </button>
-
-          <template x-if="open">
-            <div class="mt-4">
-
-              <!-- Project Gutenberg -->
-              <div x-data="gutenbergSuggestions">
-                <h2 class="title is-6 mb-2">Project Gutenberg</h2>
-                <p class="notification is-danger is-light py-2" x-show="error" x-text="error"></p>
-                <progress class="progress is-small is-primary" max="100" x-show="loading">Loading</progress>
-                <div style="display:flex; gap:0.75rem; overflow-x:auto; padding-bottom:0.5rem;">
-                  <template x-for="book in books" :key="book.id">
-                    <div class="box p-3" style="width:220px; flex-shrink:0; display:flex; flex-direction:column;">
-                      <p class="is-size-7 has-text-weight-semibold mb-1" x-text="book.title"></p>
-                      <p class="is-size-7 has-text-grey mb-2" x-text="formatAuthors(book.authors)"></p>
-                      <span class="tag is-small mb-3" :class="tierClass(book.difficultyTier)" x-text="tierLabel(book.difficultyTier)"></span>
-                      <div class="buttons are-small mt-auto mb-0">
-                        <button class="button is-primary" :class="importingClass(book)" :disabled="isImporting()" @click="importBook(book)">
-                          <span class="icon"><i data-lucide="download"></i></span>
-                          <span>Import</span>
-                        </button>
-                        <button class="button is-light" @click="previewBook(book)">
-                          <span class="icon"><i data-lucide="gauge"></i></span>
-                          <span>Preview</span>
-                        </button>
-                      </div>
-                      <!-- Coverage preview: samples the book and shows how much of
-                           its vocabulary you already know (computed on-device). -->
-                      <div x-show="isPreviewing(book)" class="mt-2">
-                        <progress class="progress is-small" max="100" x-show="previewLoading">…</progress>
-                        <p class="help is-danger" x-show="previewError" x-text="previewError"></p>
-                        <template x-if="previewData">
-                          <div>
-                            <p class="is-size-7 mb-1" x-text="coverageLabel(previewData)"></p>
-                            <progress class="progress is-small" :class="coverageClass(previewData.difficulty_label)" :value="previewData.coverage_percent" max="100"></progress>
-                          </div>
-                        </template>
-                      </div>
-                    </div>
-                  </template>
-                  <div style="flex-shrink:0; display:flex; align-items:center;" x-show="hasMore">
-                    <button class="button is-small" @click="loadMore()">More</button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Global Digital Library (openly-licensed early-grade readers) -->
-              <div class="mt-4" x-data="gdlSuggestions" x-show="showRow()">
-                <h2 class="title is-6 mb-2">Easy readers (Global Digital Library)</h2>
-                <p class="notification is-danger is-light py-2" x-show="error" x-text="error"></p>
-                <progress class="progress is-small is-primary" max="100" x-show="loading">Loading</progress>
-                <div style="display:flex; gap:0.75rem; overflow-x:auto; padding-bottom:0.5rem;">
-                  <template x-for="book in books" :key="book.id">
-                    <div class="box p-3" style="width:220px; flex-shrink:0; display:flex; flex-direction:column;">
-                      <p class="is-size-7 has-text-weight-semibold mb-1" x-text="book.title"></p>
-                      <p class="is-size-7 has-text-grey mb-2" x-text="formatMeta(book)"></p>
-                      <span class="tag is-small mb-3" :class="tierClass(book)" x-text="bookLevel(book)" x-show="hasLevel(book)"></span>
-                      <div class="buttons are-small mt-auto mb-0">
-                        <button class="button is-primary" :class="importingClass(book)" :disabled="isImporting()" @click="importBook(book)">
-                          <span class="icon"><i data-lucide="download"></i></span>
-                          <span>Import</span>
-                        </button>
-                        <button class="button is-light" @click="previewBook(book)" x-show="canPreview()">
-                          <span class="icon"><i data-lucide="gauge"></i></span>
-                          <span>Preview</span>
-                        </button>
-                      </div>
-                      <!-- Coverage preview: downloads + samples the EPUB on-device
-                           and shows how much of its vocabulary you already know. -->
-                      <div x-show="isPreviewing(book)" class="mt-2">
-                        <progress class="progress is-small" max="100" x-show="previewLoading">…</progress>
-                        <p class="help is-danger" x-show="previewError" x-text="previewError"></p>
-                        <template x-if="previewData">
-                          <div>
-                            <p class="is-size-7 mb-1" x-text="coverageLabel(previewData)"></p>
-                            <progress class="progress is-small" :class="coverageClass(previewData.difficulty_label)" :value="previewData.coverage_percent" max="100"></progress>
-                          </div>
-                        </template>
-                      </div>
-                    </div>
-                  </template>
-                  <div style="flex-shrink:0; display:flex; align-items:center;" x-show="hasMore">
-                    <button class="button is-small" @click="loadMore()">More</button>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </template>
-        </div>
-      </div>
+      <div id="home-root"></div>
 
     </div>
   </section>
