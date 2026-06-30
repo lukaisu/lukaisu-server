@@ -18,6 +18,7 @@ namespace Lukaisu\Modules\Vocabulary\Http;
 
 use Lukaisu\Shared\Infrastructure\Utilities\StringUtils;
 use Lukaisu\Shared\Infrastructure\Http\InputValidator;
+use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
 use Lukaisu\Shared\Infrastructure\Database\Escaping;
 use Lukaisu\Shared\Infrastructure\Database\Settings;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordUploadService;
@@ -68,7 +69,15 @@ class TermImportController extends VocabularyBaseController
     }
 
     /**
-     * Bulk translate words.
+     * Bulk translate words (POST: save the chosen terms).
+     *
+     * The GET page is now the bundled Svelte `BulkTranslate` island: the
+     * `/word/bulk-translate` GET route 302s into `dist-app/bulk-translate.html`
+     * (see BundleController + routes.php), which fetches its data from
+     * {@see config()} and posts the chosen terms back here. So this method only
+     * handles the form POST; the next batch is loaded client-side by re-entering
+     * the island (the saved terms drop out of the unknown-word query), not by
+     * re-rendering a server form.
      *
      * @param array<string, string> $params Route parameters
      *
@@ -76,6 +85,7 @@ class TermImportController extends VocabularyBaseController
      */
     public function bulkTranslate(array $params): void
     {
+        unset($params);
         $tid = InputValidator::getInt('tid', 0) ?? 0;
         $pos = InputValidator::getInt('offset');
 
@@ -86,24 +96,86 @@ class TermImportController extends VocabularyBaseController
             $terms = $termsArray;
             $cnt = count($terms);
 
-            if ($pos !== null) {
-                $pos -= $cnt;
-            }
-
             PageLayoutHelper::renderPageStart($cnt . ' New Word' . ($cnt == 1 ? '' : 's') . ' Saved', false);
+            // cleanUp when this was the last batch (no pagination offset carried).
             $this->handleBulkSave($terms, $tid, $pos === null);
         } else {
             PageLayoutHelper::renderPageStartNobody('Translate New Words');
         }
 
-        // Show next page of terms if there are more
-        if ($pos !== null) {
-            $sl = InputValidator::getString('sl');
-            $tl = InputValidator::getString('tl');
-            $this->displayBulkTranslateForm($tid, $sl !== '' ? $sl : null, $tl !== '' ? $tl : null, $pos);
-        }
-
         PageLayoutHelper::renderPageEnd();
+    }
+
+    /**
+     * Bulk-translate bootstrap config (JSON) for the Svelte island.
+     *
+     * The bulk-translate UI is now a Svelte island shipped in the bundle
+     * (`dist-app/bulk-translate.html`); the GET page route 302s there. The island
+     * cannot compute the server-only bits — the text's dictionaries and the page
+     * of still-unknown words — so it fetches them here on mount. This mirrors the
+     * JSON blob the retired `bulk_translate_form.php` view used to inline, plus
+     * the term rows it rendered server-side. The chosen terms are posted back to
+     * {@see bulkTranslate()} (the `saveUrl`); the CSRF token comes from
+     * `<meta name="csrf-token">`.
+     *
+     * Route: GET /word/bulk-translate/config?tid=&offset=&sl=&tl=
+     *
+     * @param array<string, string> $params Route parameters (unused).
+     *
+     * @return JsonResponse
+     */
+    public function config(array $params): JsonResponse
+    {
+        unset($params);
+        $tid = InputValidator::getInt('tid', 0) ?? 0;
+        if ($tid <= 0) {
+            return JsonResponse::error('Missing or invalid text id.');
+        }
+        $offset = InputValidator::getInt('offset', 0) ?? 0;
+        if ($offset < 0) {
+            $offset = 0;
+        }
+        $sl = InputValidator::getString('sl');
+        $tl = InputValidator::getString('tl');
+
+        $contextService = $this->getContextService();
+        $discoveryService = $this->getDiscoveryService();
+        $limit = (int) Settings::getWithDefault('set-ggl-translation-per-page') + 1;
+        $dictionaries = $contextService->getLanguageDictionaries($tid);
+
+        $res = $discoveryService->getUnknownWordsForBulkTranslate($tid, $offset, $limit);
+
+        // Collect this page's terms; an extra (limit-th) row means there are more.
+        $terms = [];
+        $hasMore = false;
+        $cnt = 0;
+        foreach ($res as $record) {
+            $cnt++;
+            if ($cnt < $limit) {
+                $terms[] = [
+                    'word' => (string) ($record['word'] ?? ''),
+                    'languageId' => (int) ($record['language_id'] ?? 0),
+                ];
+            } else {
+                $hasMore = true;
+            }
+        }
+        $nextOffset = $hasMore ? $offset + $limit - 1 : null;
+
+        return JsonResponse::success([
+            'saveUrl' => url('/word/bulk-translate'),
+            'tid' => $tid,
+            'sourceLanguage' => $sl !== '' ? $sl : null,
+            'targetLanguage' => $tl !== '' ? $tl : null,
+            'offset' => $offset,
+            'dictionaries' => [
+                'dict1' => $dictionaries['dict1'] ?? '',
+                'dict2' => $dictionaries['dict2'] ?? '',
+                'translate' => $dictionaries['translate'] ?? '',
+            ],
+            'terms' => $terms,
+            'nextOffset' => $nextOffset,
+        ]);
     }
 
     /**
@@ -144,46 +216,6 @@ class TermImportController extends VocabularyBaseController
         $todoContent = $this->getTextStatisticsService()->getTodoWordsContent($tid);
 
         include $this->viewPath . 'bulk_save_result.php';
-    }
-
-    /**
-     * Display the bulk translate form.
-     *
-     * @param int         $tid Text ID
-     * @param string|null $sl  Source language code
-     * @param string|null $tl  Target language code
-     * @param int         $pos Offset position
-     *
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
-     *
-     * @return void
-     */
-    private function displayBulkTranslateForm(int $tid, ?string $sl, ?string $tl, int $pos): void
-    {
-        $contextService = $this->getContextService();
-        $discoveryService = $this->getDiscoveryService();
-        $limit = (int) Settings::getWithDefault('set-ggl-translation-per-page') + 1;
-        $dictionaries = $contextService->getLanguageDictionaries($tid);
-
-        $res = $discoveryService->getUnknownWordsForBulkTranslate($tid, $pos, $limit);
-
-        // Collect terms and check if there are more
-        $terms = [];
-        $hasMore = false;
-        $cnt = 0;
-        foreach ($res as $record) {
-            $cnt++;
-            if ($cnt < $limit) {
-                $terms[] = $record;
-            } else {
-                $hasMore = true;
-            }
-        }
-
-        // Calculate next offset if there are more terms
-        $nextOffset = $hasMore ? $pos + $limit - 1 : null;
-
-        include $this->viewPath . 'bulk_translate_form.php';
     }
 
     /**

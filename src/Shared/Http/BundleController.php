@@ -156,6 +156,8 @@ final class BundleController
                 return 'settings.html';
             case $path === '/words' || $path === '/words/edit':
                 return $withQuery('words.html');
+            case $path === '/word/bulk-translate':
+                return $withQuery('bulk-translate.html');
         }
 
         if (

@@ -89,7 +89,7 @@ class TermImportControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass(TermImportController::class);
 
-        $expectedMethods = ['bulkTranslate', 'upload'];
+        $expectedMethods = ['bulkTranslate', 'config', 'upload'];
 
         foreach ($expectedMethods as $methodName) {
             $this->assertTrue(
@@ -111,7 +111,6 @@ class TermImportControllerTest extends TestCase
 
         $expectedMethods = [
             'handleBulkSave',
-            'displayBulkTranslateForm',
             'displayUploadForm',
             'handleUploadImport',
             'importTerms',
@@ -301,19 +300,20 @@ class TermImportControllerTest extends TestCase
     }
 
     #[Test]
-    public function displayBulkTranslateFormParameterTypes(): void
+    public function configAcceptsArrayParameterAndReturnsJsonResponse(): void
     {
-        $method = new \ReflectionMethod(TermImportController::class, 'displayBulkTranslateForm');
+        $method = new \ReflectionMethod(TermImportController::class, 'config');
         $params = $method->getParameters();
 
-        $this->assertCount(4, $params);
-        $this->assertSame('tid', $params[0]->getName());
-        $this->assertSame('int', $params[0]->getType()->getName());
-        $this->assertSame('sl', $params[1]->getName());
-        $this->assertTrue($params[1]->getType()->allowsNull());
-        $this->assertSame('tl', $params[2]->getName());
-        $this->assertTrue($params[2]->getType()->allowsNull());
-        $this->assertSame('pos', $params[3]->getName());
-        $this->assertSame('int', $params[3]->getType()->getName());
+        $this->assertCount(1, $params);
+        $this->assertSame('params', $params[0]->getName());
+        $this->assertSame('array', $params[0]->getType()->getName());
+
+        $returnType = $method->getReturnType();
+        $this->assertNotNull($returnType);
+        $this->assertSame(
+            'Lukaisu\\Shared\\Infrastructure\\Http\\JsonResponse',
+            $returnType->getName()
+        );
     }
 }

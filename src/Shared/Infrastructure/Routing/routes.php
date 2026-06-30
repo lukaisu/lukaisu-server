@@ -242,10 +242,18 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Bulk translate (TermImportController)
+    // Bulk translate. The GET page is served by the bundled client (Svelte
+    // BulkTranslate island); see the /app redirects below. The form POST (saving
+    // the chosen terms) keeps this controller — the bundle island posts to it.
     $router->registerWithMiddleware(
         '/word/bulk-translate',
         'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController@bulkTranslate',
+        AUTH_MIDDLEWARE
+    );
+    // JSON bootstrap config for the island (dictionaries + page of unknown words).
+    $router->get(
+        '/word/bulk-translate/config',
+        'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController@config',
         AUTH_MIDDLEWARE
     );
 
@@ -774,6 +782,7 @@ function registerRoutes(Router $router): void
     $router->get('/text/print-plain', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/words', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/words/edit', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/word/bulk-translate', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/words/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/languages', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/languages/new', $bundleRedirect, AUTH_MIDDLEWARE);

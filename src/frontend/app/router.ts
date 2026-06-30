@@ -92,6 +92,9 @@ export const pageUrl = {
   },
   word(termId: number | string): string {
     return `word.html?id=${encodeURIComponent(String(termId))}`;
+  },
+  bulkTranslate(query = ''): string {
+    return query ? `bulk-translate.html?${query}` : 'bulk-translate.html';
   }
 };
 
@@ -171,6 +174,14 @@ export function bundledPageFor(path: string): string | null {
   // SPA. Carry the query through (the list reads `lang` from it).
   if (pathname === '/words' || pathname === '/words/edit') {
     return pageUrl.words(query);
+  }
+  // Bulk-translate (reader's "Lookup New Words" flow): /word/bulk-translate ->
+  // the bundled Svelte BulkTranslate island, carrying tid/offset/sl/tl through.
+  // Server-gated like starter-vocab (the unknown-word query + save endpoint +
+  // Google Translate widget need a connected server); offline it shows a
+  // "connect a server" notice.
+  if (pathname === '/word/bulk-translate') {
+    return pageUrl.bulkTranslate(query);
   }
   // Tag management: the server splits term tags (/tags, /tags/term) and text
   // tags (/tags/text) across two pages; the bundle shows both on one tags.html.

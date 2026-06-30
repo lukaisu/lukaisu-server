@@ -180,7 +180,10 @@ class RoutesTest extends TestCase
             'word new' => ['/word/new', "{$termEditController}@createWord"],
             'word show' => ['/word/show', "{$termDisplayController}@showWord"],
             'word inline-edit' => ['/word/inline-edit', "{$termEditController}@inlineEdit"],
-            'word bulk-translate' => ['/word/bulk-translate', "{$termImportController}@bulkTranslate"],
+            // GET 302s into the bundled Svelte BulkTranslate island; the JSON
+            // config data route keeps the controller.
+            'word bulk-translate' => ['/word/bulk-translate', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
+            'word bulk-translate config' => ['/word/bulk-translate/config', "{$termImportController}@config"],
             'word set-all-status' => ['/word/set-all-status', "{$termStatusController}@markAllWords"],
             'word upload' => ['/word/upload', "{$termImportController}@upload"],
         ];
