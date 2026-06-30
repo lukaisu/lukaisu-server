@@ -128,3 +128,41 @@ wanted: `word`, `language`, `text`, `language-edit`, `text-edit`, `tags`,
   `lukaisu-server/src/frontend/`; coordinate the eventual relocation to `lukaisu`.
 - **Per-component count for sizing:** feed 11, vocabulary 10, admin 7 (PWA-mostly),
   text 6, auth 3 — see `grep -rn "Alpine.data(" src/frontend/js`.
+
+## Phase 2 — retire Alpine (convert the PWA / server-rendered pages too)
+
+User-authorized 2026-06-30. The bundled **app** is Alpine-free; this phase removes
+Alpine from the **PWA** (the PHP server's own web UI). Key finding from the
+architecture scout: the PWA cut-over mechanism is **NOT** "rewrite each PHP view in
+Svelte" — it's **redirect the PHP GET route to the static `dist-app/*.html` shell**
+that already mounts the Svelte island (the documented "Job-A" recipe in
+`php-view-retirement.md`). Recipe per screen: build the island as `app/<page>.html`
++ `<page>.ts`, add the `vite.app.config.ts` entry, add the mapping to all **three
+mirror maps** (`routes.php` redirect block · `BundleController::mapPathToBundlePage`
+· `router.ts::bundledPageFor`), then delete the PHP view + its overridden route.
+
+Gate each division: `typecheck` · `lint` · `build:app` · `build` (PWA) · `vitest` ·
+`./vendor/bin/psalm` (+ `composer test:no-coverage` when a test DB is available).
+**Live routing (e2e/Cypress) needs a browser+server — can't run headless here;
+flag PWA routing changes for the user's manual/on-device QA.**
+
+Divisions (tasks #22–#32):
+- **D1 — delete dead Job-A views + dead Alpine renderers** (route-overridden
+  read_desktop/word_*/audio_player/edit_form + the `*_app.ts` kept "for the PWA"
+  that are now dead). Pure cleanup, no ports.
+- **D2 — converge Category-A** (island already exists): add redirects for
+  `/connect`→ConnectPage and `/feeds[/manage]`→FeedsPage; delete those PHP views.
+- **D3 — port the PWA-only clusters** (new islands): a) vocabulary imports,
+  b) tags forms, c) dictionary import, d) **feed wizard/browse (~3100 LOC, heaviest)**,
+  e) user auth views + statistics, **f) admin cluster — DECISION: port vs defer
+  (it dies with the PHP decommission)**, **g) annotated print — DECISION: port vs
+  keep server-only**.
+- **D4 — shared chrome** (searchableSelect/footer/offline + `BaseController::message`
+  inline notification + `PageLayoutHelper`); only after no reachable PHP page renders
+  the chrome. High risk (every shell).
+- **D5 — final Alpine deletion**: strip Alpine from `main.ts`, the `@alpinejs/csp`
+  alias from **both** vite configs, the `alpine` manualChunk + `[x-cloak]` safelist,
+  `@alpinejs/csp`/`@types/alpinejs` from `package.json`. Highest blast radius.
+
+Notes: **jQuery is already gone** (`hover_intent.ts` is vanilla TS, not jQuery — it
+stays). The `script-src 'self'` CSP stays (Svelte is CSP-clean too).

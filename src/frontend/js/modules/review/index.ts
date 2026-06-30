@@ -9,10 +9,6 @@ export * from './api/review_api';
 
 // Stores
 export * from './stores/review_state';
-export * from './stores/review_store';
-
-// Components
-export * from './components/review_view';
 
 // Utils
 export * from './utils/elapsed_timer';

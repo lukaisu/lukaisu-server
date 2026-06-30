@@ -107,7 +107,6 @@ const moduleMap: Record<string, () => Promise<unknown>> = {
   feed: () => import('@modules/feed'),
   language: () => import('@modules/language'),
   admin: () => import('@modules/admin'),
-  home: () => import('./home'),
   tags: () => import('@modules/tags/pages/tag_list'),
   auth: () => import('@modules/auth'),
   dictionary: () => import('@modules/dictionary/pages/dictionary_import'),

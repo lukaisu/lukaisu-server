@@ -11,9 +11,6 @@ export * from './api/texts_api';
 export * from './stores/reading_state';
 export * from './stores/text_config';
 
-// Components
-export * from './components/text_reader';
-
 // Reading pages
 export * from './pages/reading/text_renderer';
 export * from './pages/reading/text_display';
@@ -32,8 +29,6 @@ import '@/media';
 
 // Side-effect imports (pages)
 import './pages/text_list';
-import './pages/texts_grouped_app';
-import './pages/archived_texts_grouped_app';
 import './pages/text_status_chart';
 import './pages/youtube_import';
 import './pages/webpage_import';

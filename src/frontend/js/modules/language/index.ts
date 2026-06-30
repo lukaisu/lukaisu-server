@@ -14,7 +14,6 @@ export * from './stores/language_store';
 export * from './stores/language_form_store';
 
 // Components
-export * from './components/language_list_component';
 export * from './components/language_wizard_modal';
 
 // Shared utilities needed by language pages

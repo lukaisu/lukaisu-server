@@ -5,6 +5,5 @@
  */
 
 // Components
-export * from './audio_player_alpine';
 export * from './html5_audio_player';
 export * from './media_selection';
