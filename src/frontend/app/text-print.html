@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
   <title>Lukaisu — Print</title>
-  <!-- The `text` module self-registers the `textPrintApp` Alpine component
-       (modules/text/index.ts imports ./pages/text_print_app), which renders the
-       plain-print items this page mounts. -->
+  <!-- The `text` module still self-registers the `textPrintApp` Alpine component
+       for the PWA renderer; on this bundled page the print UI is the Svelte 5
+       `TextPrintApp` island mounted into #text-print-root (no x-data here). -->
   <meta name="lukaisu-modules" content="text" />
   <style>[x-cloak]{display:none !important}</style>
 </head>
@@ -16,110 +16,13 @@
        Hidden when printing so only the text below prints. -->
   <div class="noprint" id="navbar-root" data-navbar-root data-current-page="texts"></div>
 
-  <div x-data="textPrintApp()" x-init="init()" x-cloak>
-    <section class="section pt-4 noprint">
-      <!-- Per-text actions (links filled from the URL by text-print.ts, then
-           rewritten to bundled pages by the link router on click). -->
-      <div class="buttons are-small mb-3">
-        <a class="button is-light" href="/text/{{TEXT_ID}}/read">
-          <span class="icon"><i data-lucide="book-open"></i></span><span>Read</span>
-        </a>
-        <a class="button is-light" href="/review?text={{TEXT_ID}}">
-          <span class="icon"><i data-lucide="circle-help"></i></span><span>Review</span>
-        </a>
-        <a class="button is-light" href="/texts/{{TEXT_ID}}/edit">
-          <span class="icon"><i data-lucide="file-pen"></i></span><span>Edit text</span>
-        </a>
-      </div>
-
-      <h1 class="title is-4">
-        PRINT &#9654; <span x-text="getConfigTitle('')"></span>
-      </h1>
-
-      <!-- Loading state -->
-      <div x-show="loading" class="has-text-centered py-6">
-        <span class="icon is-large"><i data-lucide="loader-2" class="icon-spin"></i></span>
-        <p class="mt-2">Loading…</p>
-      </div>
-
-      <!-- Plain print options -->
-      <div x-show="!loading" class="card mb-4" id="printoptions">
-        <div class="card-content">
-          <p class="mb-3">
-            Terms with <strong>status(es)</strong>
-            <span class="select is-small">
-              <select x-model="statusFilter" @change="handleStatusChange($event)">
-                <option value="1">Learning [1]</option>
-                <option value="2">Learning [2]</option>
-                <option value="3">Learning [3]</option>
-                <option value="4">Learning [4]</option>
-                <option value="5">Learned [5]</option>
-                <option disabled="disabled">--------</option>
-                <option value="12">Learning [1..2]</option>
-                <option value="13">Learning [1..3]</option>
-                <option value="14">Learning [1..4]</option>
-                <option value="15">Learning/-ed [1..5]</option>
-                <option disabled="disabled">--------</option>
-                <option value="23">Learning [2..3]</option>
-                <option value="24">Learning [2..4]</option>
-                <option value="25">Learning/-ed [2..5]</option>
-                <option disabled="disabled">--------</option>
-                <option value="34">Learning [3..4]</option>
-                <option value="35">Learning/-ed [3..5]</option>
-                <option disabled="disabled">--------</option>
-                <option value="45">Learning/-ed [4..5]</option>
-                <option disabled="disabled">--------</option>
-                <option value="599">All known [5+Well Known]</option>
-              </select>
-            </span>
-            …
-          </p>
-          <p class="mb-3">
-            will be <strong>annotated</strong> with
-            <span class="select is-small">
-              <select x-model="annotationFlags" @change="handleAnnotationChange($event)">
-                <option value="0">Nothing</option>
-                <option value="1">Translation</option>
-                <option value="5">Translation &amp; Tags</option>
-                <option value="2">Romanization</option>
-                <option value="3">Romanization &amp; Translation</option>
-                <option value="7">Romanization, Translation &amp; Tags</option>
-              </select>
-            </span>
-            <span class="select is-small">
-              <select x-model="placementMode" @change="handlePlacementChange($event)">
-                <option value="0">behind</option>
-                <option value="1">in front of</option>
-                <option value="2">above (ruby)</option>
-              </select>
-            </span>
-            the term.
-          </p>
-          <div class="buttons">
-            <button type="button" class="button is-primary" @click="handlePrint()">
-              <span class="icon"><i data-lucide="printer"></i></span>
-              <span class="ml-1">Print it!</span>
-            </button>
-            <span class="is-size-7 ml-2">(only the text below the line)</span>
-          </div>
-          <p class="is-size-7 has-text-grey mt-3">
-            The Improved Annotated Text (hand-edited annotations) is a server-only
-            feature — connect a server to create or print one.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Print content (the only part that prints) -->
-    <div x-show="!loading" id="print" class="section pt-0" :dir="getConfigRtl() ? 'rtl' : 'ltr'">
-      <h2 class="title is-5" x-text="getConfigTitle('')"></h2>
-      <p :style="'font-size:' + getConfigTextSize(100) + '%; line-height: 1.35; margin-bottom: 10px;'">
-        <template x-for="item in items" :key="item.position">
-          <span x-effect="setItemHtml($el, item)"></span>
-        </template>
-      </p>
-    </div>
-  </div>
+  <!-- Svelte 5 print island (mounted by text-print.ts). Replaces the Alpine
+       `textPrintApp` x-data region (plain-print options + rendered print
+       content). The Alpine component (text_print_app.ts) still loads via the
+       page's module meta but no-ops here with no x-data node, and stays as the
+       PWA's renderer until the server UI retires. The print-only `@media print`
+       CSS (.noprint / #print / #printoptions) lives in global css/base/styles. -->
+  <div id="text-print-root"></div>
 
   <script type="module" src="./text-print.ts"></script>
 </body>
