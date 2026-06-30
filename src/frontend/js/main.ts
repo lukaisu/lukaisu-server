@@ -11,6 +11,9 @@
 // Import Alpine.js
 import Alpine from 'alpinejs';
 
+// Svelte mount for the global navbar island
+import { mount } from 'svelte';
+
 // Import Bulma CSS framework
 import 'bulma/css/bulma.min.css';
 
@@ -49,9 +52,8 @@ import '@shared/api/client';
 
 // Shared components (used on every page)
 import '@shared/components/modal';
-import { mountNavbar } from '@shared/components/navbar';
-import '@shared/components/navbar_streak';
-import '@shared/components/theme_toggle';
+import NavBar from '@shared/components/NavBar.svelte';
+import type { NavbarData as NavbarChromeData } from '@shared/components/navbar_renderer';
 import '@shared/components/footer';
 
 // Shared i18n
@@ -61,7 +63,7 @@ import { bootI18n, t } from '@shared/i18n/translator';
 import { initAriaLive } from '@shared/accessibility/aria_live';
 
 // Token session management (packaged/cross-origin clients)
-import { maybeRefreshAuthToken } from '@shared/api/client';
+import { maybeRefreshAuthToken, apiGet } from '@shared/api/client';
 import { url } from '@shared/utils/url';
 
 // Shared icons
@@ -163,10 +165,27 @@ Promise.all(loaders).then(async () => {
   // Start Alpine.js
   Alpine.start();
 
-  // Render the global navbar from GET /api/v1/navbar and hydrate it into its
-  // placeholder. Fire-and-forget: the rest of the page is already interactive,
-  // and pages without a #navbar-root (login, print headers) just no-op.
-  void mountNavbar();
+  // Render the global navbar from GET /api/v1/navbar and mount the Svelte island
+  // into its placeholder. Fire-and-forget: the rest of the page is already
+  // interactive, and pages without a #navbar-root (login, print headers) just
+  // no-op. The previously-empty `<div id="navbar-root" data-current-page="…">`
+  // is mounted in place (mount appends; the placeholder has no children to clear).
+  void (async () => {
+    const root = document.getElementById('navbar-root');
+    if (!root) {
+      return;
+    }
+    const currentPage = root.getAttribute('data-current-page') ?? '';
+    try {
+      const res = await apiGet<NavbarChromeData>('/navbar');
+      if (!res.data) {
+        return;
+      }
+      mount(NavBar, { target: root, props: { data: res.data, currentPage } });
+    } catch (error) {
+      console.error('Failed to load navbar:', error);
+    }
+  })();
 
   window.LUKAISU_VITE_LOADED = true;
 

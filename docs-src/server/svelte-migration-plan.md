@@ -78,7 +78,7 @@ ancillary → shared chrome → final Alpine removal. Shared chrome (Tier 4) is 
 so they render even on the plain-DOM pages. **Alpine cannot be removed until these
 are Svelte.** Migrate carefully (a regression hits every screen).
 
-- [ ] **12. Navbar + streak** — `navbar`, `navbarStreak`, `streakDisplay` (`shared/components`)
+- [x] **12. Navbar + streak + theme toggle** — `navbar`/`navbarStreak`/`themeToggle` → `NavBar.svelte` (+ `NavbarStreak`/`ThemeToggle` children), mounted globally from `main.ts` (replaces `mountNavbar()`; `Alpine.start()` kept for PWA server pages). Shared change: the PWA build now compiles Svelte (`vite.config.ts` got the plugin). Alpine navbar files kept (tree-shaken). NOTE: `streakDisplay` is an activity-page component (not in the navbar) — separate, not done here.
 - [ ] **13. Footer / theme / offline / select** — `footer`, `themeToggle`, `offlineIndicator`, `offlineButton`, `searchableSelect` (`shared/components`, `shared/offline`)
 
 ### Tier 5 — optional consistency (no Alpine to remove)

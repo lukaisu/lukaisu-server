@@ -1,4 +1,5 @@
 import { defineConfig, type PluginOption, build } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { PurgeCSS, type UserDefinedOptions } from 'purgecss';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -138,6 +139,9 @@ export default defineConfig({
   },
 
   plugins: [
+    // Compile Svelte islands (the global navbar is mounted from main.ts).
+    // Preprocessor (TS) config lives in svelte.config.js, shared with svelte-check.
+    svelte(),
     // Clean stale hashed bundles from previous builds
     cleanViteOutput(),
     // Build service worker for PWA support
@@ -150,6 +154,8 @@ export default defineConfig({
         resolve(__dirname, 'index.php'),
         // TypeScript files (for dynamic class names)
         resolve(__dirname, 'src/frontend/js/**/*.ts'),
+        // Svelte islands (e.g. the global navbar) bundled into the PWA build
+        resolve(__dirname, 'src/frontend/js/**/*.svelte'),
         // CSS files (for @apply directives)
         resolve(__dirname, 'src/frontend/css/**/*.css'),
       ],
