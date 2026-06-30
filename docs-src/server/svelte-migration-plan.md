@@ -69,7 +69,7 @@ ancillary → shared chrome → final Alpine removal. Shared chrome (Tier 4) is 
 
 - [x] **8. Feeds** — `feeds.html` · feed-manager SPA (`feedList`/`feedFilter`/`articleList`/`articleFilter`/`feedForm`/`feedNotifications`) → `FeedsPage.svelte` + 6 child components + `feed_manager_store.svelte.ts`. Server gate preserved (no mount in local-first). Alpine originals kept for PWA. NOTE: `feedBrowse`/`feedLoader`/`feedWizard*` are legacy PHP-only pages (NOT in `feeds.html`) — out of the app's scope, not ported.
 - [x] **9. Languages list** — `languages.html` · `languageList` → `LanguageList.svelte` (set-current in place, custom delete modal + canDelete guard). Alpine original kept for PWA. (Language form/wizard are a separate Tier-5 division.)
-- [ ] **10. Connect / auth** — `index.html` · `clientAuth`, `registerForm`, `resetPasswordForm` (`@modules/auth`)
+- [x] **10. Connect / auth** — `index.html` · `clientAuth` → `ConnectPage.svelte` (login/register/recovery inline; token storage + connect-URL probe + redirect plumbing reused as-is). Alpine original kept for PWA. (`registerForm`/`resetPasswordForm` are server-page-only — not in `index.html`, not ported.)
 - [ ] **11. Text print** — `text-print.html` · `textPrintApp` (`@modules/text`) — small
 
 ### Tier 4 — shared chrome (cross-cutting; on every page)
