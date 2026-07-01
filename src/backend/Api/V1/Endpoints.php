@@ -60,6 +60,7 @@ class Endpoints
         'similar-terms' => ['GET'],
         'settings' => ['POST'],
         'settings/theme-path' => ['GET'],
+        'settings/admin' => ['GET'],
         'statuses' => ['GET'],
         // POST /tags/{term,text} creates a tag; PUT/DELETE on tags reach
         // tags/term/{id} and tags/text/{id} (rename+comment / delete) via the

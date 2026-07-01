@@ -194,6 +194,9 @@ class BundleCutoverTest extends TestCase
             // POST books registers a book over on-device-imported chapter texts
             // (the EPUB import bridge) → BookApiHandler@createBook.
             'book create' => ['POST', 'books'],
+            // Admin-settings read for the bundled panel (Phase R); AdminApiHandler
+            // returns the server-wide admin settings, admin-scoped.
+            'admin settings read' => ['GET', 'settings/admin'],
         ];
     }
 

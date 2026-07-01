@@ -123,6 +123,10 @@ export const pageUrl = {
   settings(): string {
     return 'settings.html';
   },
+  /** Server-wide admin settings (server entity, gated). */
+  adminSettings(): string {
+    return 'admin-settings.html';
+  },
   statistics(): string {
     return 'statistics.html';
   },
@@ -356,6 +360,14 @@ export function bundledPageFor(path: string): string | null {
   // them). The query is dropped — the page has no parameters.
   if (pathname === '/profile/statistics') {
     return pageUrl.statistics();
+  }
+  // Admin settings — server-enhanced. The navbar's admin "Admin Settings" link
+  // (/admin/settings) opens the bundled Svelte panel, which reads/writes the
+  // server-wide feed limits + multi-user flags via admin-scoped /api/v1/settings*.
+  // Server-gated (the settings configure a connected server); the rest of /admin/*
+  // (backup, wizard, demo, server-data, users) stays server-rendered.
+  if (pathname === '/admin/settings') {
+    return pageUrl.adminSettings();
   }
   // Plain print, reached from the reader's and library's printer links
   // (/text/{id}/print-plain). The bundled page is plain-print only; the

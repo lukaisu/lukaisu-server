@@ -45,6 +45,16 @@ class AdminApiHandler implements ApiRoutableInterface
         if ($frag1 === 'theme-path') {
             return Response::success($this->formatThemePath((string) ($params['path'] ?? '')));
         }
+        if ($frag1 === 'admin') {
+            // Server-wide admin settings (feed limits + multi-user flags) for the
+            // bundled admin-settings panel. Admin-scoped: these persist at
+            // user_id=0 and are global, so in multi-user mode only an admin may
+            // read them, mirroring the write gate in routePost().
+            if (Globals::isMultiUserEnabled() && !Globals::isCurrentUserAdmin()) {
+                return Response::error('Permission denied: admin-scoped settings', 403);
+            }
+            return Response::success($this->adminFacade->getAllSettings());
+        }
         return Response::error('Endpoint Not Found: ' . $frag1, 404);
     }
 

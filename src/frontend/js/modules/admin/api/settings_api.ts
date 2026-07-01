@@ -22,6 +22,12 @@ export interface ThemePathResponse {
 }
 
 /**
+ * Server-wide admin settings (feed limits + multi-user flags), keyed by setting
+ * name. Values are strings as stored in the settings table.
+ */
+export type AdminSettings = Record<string, string>;
+
+/**
  * Settings API methods.
  */
 export const SettingsApi = {
@@ -44,5 +50,15 @@ export const SettingsApi = {
    */
   async getThemePath(path: string): Promise<ApiResponse<ThemePathResponse>> {
     return apiGet<ThemePathResponse>('/settings/theme-path', { path });
+  },
+
+  /**
+   * Load the current server-wide admin settings (admin-scoped; 403 for a
+   * non-admin in multi-user mode). Backs the bundled admin-settings panel.
+   *
+   * @returns Promise with the admin settings map
+   */
+  async getAdminSettings(): Promise<ApiResponse<AdminSettings>> {
+    return apiGet<AdminSettings>('/settings/admin');
   }
 };

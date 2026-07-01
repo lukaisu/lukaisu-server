@@ -109,6 +109,7 @@ export default defineConfig({
         'dictionary-import': resolve(__dirname, 'src/frontend/app/dictionary-import.html'),
         texts: resolve(__dirname, 'src/frontend/app/texts.html'),
         settings: resolve(__dirname, 'src/frontend/app/settings.html'),
+        'admin-settings': resolve(__dirname, 'src/frontend/app/admin-settings.html'),
         'text-print': resolve(__dirname, 'src/frontend/app/text-print.html'),
         home: resolve(__dirname, 'src/frontend/app/home.html')
       }
