@@ -114,37 +114,12 @@ function registerRoutes(Router $router): void
     // Legacy route: /text/display?text=123
     $router->get('/text/display', 'Lukaisu\\Modules\\Text\\Http\\TextController@display', AUTH_MIDDLEWARE);
 
-    // Print text (TextPrintController from Text module)
-    // RESTful route: /text/123/print
-    $router->get(
-        '/text/{text:int}/print',
-        'Lukaisu\\Modules\\Text\\Http\\TextPrintController@printAnnotated',
-        AUTH_MIDDLEWARE
-    );
-    // RESTful route: /text/123/print/edit
-    $router->get(
-        '/text/{text:int}/print/edit',
-        'Lukaisu\\Modules\\Text\\Http\\TextPrintController@editAnnotation',
-        AUTH_MIDDLEWARE
-    );
-    // RESTful route: DELETE /text/123/annotation
-    $router->delete(
-        '/text/{text:int}/annotation',
-        'Lukaisu\\Modules\\Text\\Http\\TextPrintController@deleteAnnotation',
-        AUTH_MIDDLEWARE
-    );
-    // RESTful route: /text/123/print-plain
-    $router->get(
-        '/text/{text:int}/print-plain',
-        'Lukaisu\\Modules\\Text\\Http\\TextPrintController@printPlain',
-        AUTH_MIDDLEWARE
-    );
-    // Legacy route: /text/print-plain?text=123
-    $router->registerWithMiddleware(
-        '/text/print-plain',
-        'Lukaisu\\Modules\\Text\\Http\\TextPrintController@printPlain',
-        AUTH_MIDDLEWARE
-    );
+    // Text print (plain) is served by the bundled client: GET /text/{id}/print-plain
+    // and /text/print-plain 302 to /app/text-print.html (see the /app redirects
+    // below), which renders from /api/v1/texts/{id}/print-items. The server-only
+    // annotated-print + edit-annotation browser feature (TextPrintController,
+    // print_alpine.php, text_print_app.ts) was dropped under the headless cut
+    // (Phase R, Option A) — the app never used it.
 
     // Parse-preview (GET /text/check) is served by the bundled client; the
     // preview itself posts to /api/v1/texts/check. The render handler

@@ -132,7 +132,6 @@ class BundleCutoverTest extends TestCase
     public static function notRedirectedProvider(): array
     {
         return [
-            'annotated print stays server' => ['/text/5/print', 'TextPrintController@printAnnotated'],
             'word show (not bundled)' => ['/word/5', 'TermDisplayController@showWord'],
             // The feed new/edit pages 302 into the bundle, but their JSON config
             // data routes keep the controller (the island fetches them server-backed).

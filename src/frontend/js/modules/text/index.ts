@@ -34,5 +34,4 @@ import './pages/youtube_import';
 import './pages/webpage_import';
 import './pages/file_import';
 import './pages/text_check_display';
-import './pages/text_print_app';
 import './pages/text_suggestions';

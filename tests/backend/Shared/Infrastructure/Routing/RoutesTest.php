@@ -129,7 +129,6 @@ class RoutesTest extends TestCase
     public static function textRoutesProvider(): array
     {
         $textController = 'Lukaisu\\Modules\\Text\\Http\\TextController';
-        $textPrintController = 'Lukaisu\\Modules\\Text\\Http\\TextPrintController';
         // Job-A page GET routes now 302 into the bundled client (the cut-over).
         $redirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
         return [
@@ -137,23 +136,10 @@ class RoutesTest extends TestCase
             'text edit' => ['/text/edit', "{$textController}@edit"],
             'texts list' => ['/texts', $redirect],
             'text display' => ['/text/display', "{$textController}@display"],
-            'text print' => ['/text/1/print', "{$textPrintController}@printAnnotated"],
-            'text print edit' => ['/text/1/print/edit', "{$textPrintController}@editAnnotation"],
             'text print-plain' => ['/text/print-plain', $redirect],
             'text check' => ['/text/check', $redirect],
             'text archived' => ['/text/archived', $redirect],
         ];
-    }
-
-    /**
-     * Test DELETE routes for text annotation.
-     */
-    public function testTextAnnotationDeleteRoute(): void
-    {
-        $result = $this->simulateRequest('/text/1/annotation', 'DELETE');
-        $this->assertEquals('handler', $result['type'], "Route DELETE /text/1/annotation should resolve to handler");
-        $this->assertEquals('Lukaisu\\Modules\\Text\\Http\\TextPrintController@deleteAnnotation', $result['handler']);
-        $this->assertHandlerFileExists($result['handler']);
     }
 
     // ==================== WORD ROUTES TESTS ====================

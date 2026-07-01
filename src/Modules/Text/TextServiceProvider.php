@@ -39,7 +39,6 @@ use Lukaisu\Modules\Text\Application\TextFacade;
 use Lukaisu\Modules\Text\Application\Services\SentenceService;
 // Http
 use Lukaisu\Modules\Text\Http\TextController;
-use Lukaisu\Modules\Text\Http\TextPrintController;
 use Lukaisu\Modules\Text\Http\TextApiHandler;
 use Lukaisu\Modules\Text\Http\WhisperApiHandler;
 use Lukaisu\Modules\Text\Http\YouTubeApiHandler;
@@ -110,16 +109,6 @@ class TextServiceProvider implements ServiceProviderInterface
                     $c->getTyped(TextFacade::class),
                     $c->getTyped(LanguageFacade::class),
                     $c->getTyped(TextDisplayService::class)
-                );
-            }
-        );
-
-        // Register Print Controller
-        $container->singleton(
-            TextPrintController::class,
-            function (Container $c) {
-                return new TextPrintController(
-                    $c->getTyped(TextPrintService::class)
                 );
             }
         );
