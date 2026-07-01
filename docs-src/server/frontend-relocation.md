@@ -222,9 +222,18 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > dead server-side — `listEditAlpine` is a stub and the word ExportService HTTP
 > methods were orphaned — so this rebuilt it. Frontend: `WordsApi.exportTerms` + a
 > new `downloadTextFile` Blob helper replace the native `POST /words` form; the
-> native POST /words route was dropped) · [ ] books
-> (needs bundle book pages or link-router handling) · [ ] admin (navbar links +
-> `app/settings.ts`'s `settings_api`).
+> native POST /words route was dropped) · **[x] books** (full build: new bundled
+> Svelte BooksListPage + BookDetailPage on the already-live /api/v1/books
+> endpoints via a BooksApi wrapper; link-router handles /books + /book/{id} so the
+> reader book-nav link resolves in-bundle; Endpoints registry `books` gains
+> PUT/DELETE, /texts/{id}/book-context already served the chapter nav. Cookie
+> BookController + its 4 HTML views + native routes deleted → GET bundle
+> redirects. NB: /book/import (server EPUB → book entity) deleted too; EPUB import
+> is on-device (tag-grouped texts, no server entity), and CreateBookFromTexts is
+> unwired, so there is now no bundle path that CREATES a server book entity —
+> existing ones are viewable/manageable, a future on-device→server bridge is a
+> separate decision) · [ ] admin (navbar links + `app/settings.ts`'s
+> `settings_api`).
 
 ---
 

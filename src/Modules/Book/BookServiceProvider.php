@@ -38,14 +38,13 @@ use Lukaisu\Modules\Book\Application\BookFacade;
 // Text module dependencies
 use Lukaisu\Modules\Text\Domain\TextRepositoryInterface;
 // Http
-use Lukaisu\Modules\Book\Http\BookController;
 use Lukaisu\Modules\Book\Http\BookApiHandler;
 
 /**
  * Service provider for the Book module.
  *
  * Registers the BookRepositoryInterface, all use cases,
- * BookFacade, BookController, and BookApiHandler.
+ * BookFacade and BookApiHandler.
  */
 class BookServiceProvider implements ServiceProviderInterface
 {
@@ -81,13 +80,6 @@ class BookServiceProvider implements ServiceProviderInterface
         $container->singleton(BookFacade::class, function (Container $c) {
             return new BookFacade(
                 $c->getTyped(BookRepositoryInterface::class)
-            );
-        });
-
-        // Register Controller
-        $container->singleton(BookController::class, function (Container $c) {
-            return new BookController(
-                $c->getTyped(BookFacade::class)
             );
         });
 

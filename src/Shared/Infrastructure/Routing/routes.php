@@ -389,19 +389,12 @@ function registerRoutes(Router $router): void
     $router->delete('/feeds/{id:int}', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@deleteFeed', AUTH_MIDDLEWARE);
 
     // ==================== BOOK ROUTES (PROTECTED) ====================
-    // Book module routes for EPUB import and book management
-
-    // Books list
-    $router->registerWithMiddleware('/books', 'Lukaisu\\Modules\\Book\\Http\\BookController@index', AUTH_MIDDLEWARE);
-
-    // Book detail (chapters list)
-    $router->get('/book/{id:int}', 'Lukaisu\\Modules\\Book\\Http\\BookController@show', AUTH_MIDDLEWARE);
-
-    // Import EPUB form and processing
-    $router->registerWithMiddleware('/book/import', 'Lukaisu\\Modules\\Book\\Http\\BookController@import', AUTH_MIDDLEWARE);
-
-    // Delete book
-    $router->post('/book/{id:int}/delete', 'Lukaisu\\Modules\\Book\\Http\\BookController@delete', AUTH_MIDDLEWARE);
+    // Book management is served by the bundled client (Phase R): the list
+    // (/books) and detail (/book/{id}) 302 into the bundled Svelte BooksListPage /
+    // BookDetailPage islands (see the /app redirects below), which read + delete
+    // via /api/v1/books (BookApiHandler). EPUB import is done on-device
+    // (app/text.ts, tag-grouped texts). The old cookie-authed BookController HTML
+    // routes (index/show/import + native delete POST) are gone.
 
     // ==================== LOCAL DICTIONARY ROUTES (PROTECTED) ====================
     // All dictionary routes use DictionaryController from the Dictionary module
@@ -726,6 +719,10 @@ function registerRoutes(Router $router): void
     $router->get('/index.php', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/connect', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/texts', $bundleRedirect, AUTH_MIDDLEWARE);
+    // Book list + detail 302 into the bundled Svelte BooksListPage /
+    // BookDetailPage islands (Phase R); they read + delete via /api/v1/books.
+    $router->get('/books', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/book/{id:int}', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/text/{text:int}/read', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/text/read', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/texts/new', $bundleRedirect, AUTH_MIDDLEWARE);
