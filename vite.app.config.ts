@@ -102,6 +102,8 @@ export default defineConfig({
         'tag-form': resolve(__dirname, 'src/frontend/app/tag-form.html'),
         feeds: resolve(__dirname, 'src/frontend/app/feeds.html'),
         'feed-form': resolve(__dirname, 'src/frontend/app/feed-form.html'),
+        books: resolve(__dirname, 'src/frontend/app/books.html'),
+        book: resolve(__dirname, 'src/frontend/app/book.html'),
         statistics: resolve(__dirname, 'src/frontend/app/statistics.html'),
         dictionaries: resolve(__dirname, 'src/frontend/app/dictionaries.html'),
         'dictionary-import': resolve(__dirname, 'src/frontend/app/dictionary-import.html'),

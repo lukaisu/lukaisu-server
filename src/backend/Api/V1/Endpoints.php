@@ -105,9 +105,11 @@ class Endpoints
         'feeds/list' => ['GET'],
         'feeds/articles' => ['GET'],
         'feeds/articles/import' => ['POST'],
-        'books' => ['GET'],
-        'books/chapters' => ['GET'],
-        'books/progress' => ['PUT'],
+        // books/{id} (GET), books/{id}/chapters (GET), books/{id}/progress (PUT)
+        // and books/{id} (DELETE) all resolve via the first-segment 'books'
+        // fallback (the id segment isn't a literal key), so 'books' must list
+        // every method BookApiHandler serves.
+        'books' => ['GET', 'PUT', 'DELETE'],
         'local-dictionaries' => ['GET', 'POST', 'PUT', 'DELETE'],
         'local-dictionaries/lookup' => ['GET'],
         'local-dictionaries/preview' => ['POST'],

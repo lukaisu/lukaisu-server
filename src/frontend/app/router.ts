@@ -140,6 +140,14 @@ export const pageUrl = {
   },
   wordUpload(): string {
     return 'word-upload.html';
+  },
+  /** Server book list (server entity, gated). */
+  books(): string {
+    return 'books.html';
+  },
+  /** Server book detail (server entity, gated); reached from the reader book-nav. */
+  book(id: number | string): string {
+    return `book.html?id=${encodeURIComponent(String(id))}`;
   }
 };
 
@@ -255,6 +263,18 @@ export function bundledPageFor(path: string): string | null {
   // is dropped — the island reads the current language from its server config.
   if (pathname === '/word/upload') {
     return pageUrl.wordUpload();
+  }
+  // Books (server book entity: EPUB-imported / long-text-split multi-chapter
+  // books). The list (/books) and detail (/book/{id}, reached from the reader's
+  // book-nav book-title link) render bundled Svelte islands backed by
+  // /api/v1/books; server-gated (the book entity is server-only), offline they
+  // show a "connect a server" notice.
+  if (pathname === '/books') {
+    return pageUrl.books();
+  }
+  const bookMatch = pathname.match(/^\/book\/(\d+)$/);
+  if (bookMatch) {
+    return pageUrl.book(bookMatch[1]);
   }
   // Tag management: the server splits term tags (/tags, /tags/term) and text
   // tags (/tags/text) across two pages; the bundle shows both on one tags.html.

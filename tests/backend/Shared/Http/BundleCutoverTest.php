@@ -180,6 +180,14 @@ class BundleCutoverTest extends TestCase
             // Terms export moved off the native POST /words form (Phase R);
             // VocabularyApiRouter dispatches it to WordListApiHandler@exportMarkedTerms.
             'terms export' => ['POST', 'terms/export'],
+            // Books moved into the bundle (Phase R): the list/detail pages read
+            // /api/v1/books and delete/progress hit books/{id}. All resolve via
+            // the first-segment 'books' fallback, so 'books' must allow every
+            // method BookApiHandler serves (GET/PUT/DELETE).
+            'books list' => ['GET', 'books'],
+            'book detail' => ['GET', 'books/5'],
+            'book delete' => ['DELETE', 'books/5'],
+            'book progress' => ['PUT', 'books/5/progress'],
         ];
     }
 
