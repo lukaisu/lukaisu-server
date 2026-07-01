@@ -45,7 +45,7 @@ class TextController extends BaseController
         $languageService = $languageService ?? new LanguageFacade();
         $displayService = $displayService ?? new TextDisplayService();
 
-        $this->readController = new TextReadController($textService, $displayService);
+        $this->readController = new TextReadController($displayService);
         $this->crudController = new TextCrudController($textService, $languageService);
         $this->archivedController = new ArchivedTextController($textService, $languageService);
     }
@@ -55,20 +55,9 @@ class TextController extends BaseController
     // =========================================================================
 
     /** @psalm-suppress UnusedVariable */
-    public function read(?int $text = null): ?RedirectResponse
-    {
-        return $this->readController->read($text);
-    }
-
-    /** @psalm-suppress UnusedVariable */
     public function display(?int $text = null): ?RedirectResponse
     {
         return $this->readController->display($text);
-    }
-
-    public function check(array $params): void
-    {
-        $this->readController->check($params);
     }
 
     // =========================================================================

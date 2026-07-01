@@ -147,6 +147,18 @@ R1–R4 are mechanical deletion (safe, do now). R5 is genuine API work (the
 dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 (the frontend move) is unblocked.**
 
+> **RE-SCOPE (2026-07-01, discovered mid-R1).** "Delete dead render" is only
+> clean for **purely-presentational** pages. Several old server controllers
+> interleave the dead GET render with **POST business logic that may be the sole
+> implementation of a feature** — e.g. `TextCrudController@{new,editSingle,edit}`
+> carry subtitle parsing, auto-split-to-book, and bulk mark-actions. These are
+> NOT safe to delete blind; they need `/api/v1` parity proof first. So the
+> deletion of *CRUD-with-logic* controllers **merges into R5** (verify API
+> parity → then delete), while R1 keeps only the **pure dead renders**
+> (`TextReadController@{read,check}`, list/form renders with no unique logic,
+> `tag_form`, the Alpine words-list render). Net: R1 shrinks and de-risks; R5
+> grows to "verify-parity-then-delete, per module."
+
 ---
 
 ## 3. Phase M — move the frontend into the app

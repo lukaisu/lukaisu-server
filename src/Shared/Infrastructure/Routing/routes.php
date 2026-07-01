@@ -83,11 +83,9 @@ function registerRoutes(Router $router): void
 
     // ==================== TEXT ROUTES (PROTECTED) ====================
 
-    // Read text (Alpine.js - client-side rendering)
-    // New RESTful route: /text/123/read
-    $router->get('/text/{text:int}/read', 'Lukaisu\\Modules\\Text\\Http\\TextController@read', AUTH_MIDDLEWARE);
-    // Legacy route: /text/read?text=123
-    $router->get('/text/read', 'Lukaisu\\Modules\\Text\\Http\\TextController@read', AUTH_MIDDLEWARE);
+    // The reader (GET /text/{id}/read, /text/read) is served by the bundled
+    // client — the render handler (TextController@read) was deleted under the
+    // headless cut (Phase R); the /app redirects below own these GETs.
 
     // New text form (RESTful route)
     $router->get('/texts/new', 'Lukaisu\\Modules\\Text\\Http\\TextController@new', AUTH_MIDDLEWARE);
@@ -148,8 +146,10 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Check text
-    $router->registerWithMiddleware('/text/check', 'Lukaisu\\Modules\\Text\\Http\\TextController@check', AUTH_MIDDLEWARE);
+    // Parse-preview (GET /text/check) is served by the bundled client; the
+    // preview itself posts to /api/v1/texts/check. The render handler
+    // (TextController@check) was deleted under the headless cut (Phase R); the
+    // /app redirect below owns this GET.
 
     // Archived texts
     $router->registerWithMiddleware(

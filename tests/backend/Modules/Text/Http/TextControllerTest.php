@@ -19,8 +19,10 @@ use PHPUnit\Framework\MockObject\MockObject;
 /**
  * Unit tests for TextController (facade) and sub-controllers.
  *
- * Tests text management, reading, display, archive/unarchive,
- * mark actions, class structure, and method signatures.
+ * Tests text management, display, archive/unarchive, mark actions, class
+ * structure, and method signatures. The reader (`read`) and parse-preview
+ * (`check`) render paths were retired under the headless cut (Phase R) — the
+ * bundle serves those GETs and posts parse-check to /api/v1/texts/check.
  */
 class TextControllerTest extends TestCase
 {
@@ -36,7 +38,6 @@ class TextControllerTest extends TestCase
     private TextController $controller;
     private TextCrudController $crudController;
     private ArchivedTextController $archivedController;
-    private TextReadController $readController;
 
     protected function setUp(): void
     {
@@ -61,11 +62,6 @@ class TextControllerTest extends TestCase
         $this->archivedController = new ArchivedTextController(
             $this->textService,
             $this->languageService
-        );
-
-        $this->readController = new TextReadController(
-            $this->textService,
-            $this->displayService
         );
     }
 
@@ -128,8 +124,8 @@ class TextControllerTest extends TestCase
         $reflection = new \ReflectionClass(TextController::class);
 
         $expectedMethods = [
-            'read', 'new', 'editSingle', 'delete', 'archive',
-            'unarchive', 'edit', 'display', 'check',
+            'new', 'editSingle', 'delete', 'archive',
+            'unarchive', 'edit', 'display',
             'archived', 'archivedEdit', 'deleteArchived',
         ];
 
@@ -150,7 +146,7 @@ class TextControllerTest extends TestCase
     public function subControllersHaveExpectedMethods(): void
     {
         // TextReadController
-        $readMethods = ['read', 'display', 'check', 'getTextIdFromRequest', 'renderReadPage'];
+        $readMethods = ['display'];
         $readReflection = new \ReflectionClass(TextReadController::class);
         foreach ($readMethods as $method) {
             $this->assertTrue($readReflection->hasMethod($method), "TextReadController should have: $method");
@@ -179,31 +175,6 @@ class TextControllerTest extends TestCase
             $reflection = new \ReflectionClassConstant($class, 'MODULE_VIEWS');
             $this->assertStringEndsWith('/Views', $reflection->getValue());
         }
-    }
-
-    // =========================================================================
-    // read() method tests
-    // =========================================================================
-
-    #[Test]
-    public function readRedirectsWhenNoTextId(): void
-    {
-        $result = $this->controller->read(null);
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-    }
-
-    #[Test]
-    public function readRedirectsWhenTextNotFound(): void
-    {
-        $this->textService->expects($this->once())
-            ->method('getTextForReading')
-            ->with(999)
-            ->willReturn(null);
-
-        $result = $this->controller->read(999);
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
     }
 
     // =========================================================================
@@ -310,42 +281,6 @@ class TextControllerTest extends TestCase
         $result = $this->controller->deleteArchived(1);
 
         $this->assertSame('/text/archived', $result->getUrl());
-    }
-
-    // =========================================================================
-    // getTextIdFromRequest() tests via TextReadController
-    // =========================================================================
-
-    #[Test]
-    public function getTextIdFromRequestReturnsInjectedId(): void
-    {
-        $result = $this->readController->getTextIdFromRequest(123);
-
-        $this->assertSame(123, $result);
-    }
-
-    #[Test]
-    public function getTextIdFromRequestReturnsNullWhenEmpty(): void
-    {
-        $result = $this->readController->getTextIdFromRequest(null);
-
-        $this->assertNull($result);
-    }
-
-    #[Test]
-    public function getTextIdFromRequestPrioritizesInjectedOverQueryParam(): void
-    {
-        $result = $this->readController->getTextIdFromRequest(42);
-
-        $this->assertSame(42, $result);
-    }
-
-    #[Test]
-    public function getTextIdFromRequestReturnsZeroInjectedId(): void
-    {
-        $result = $this->readController->getTextIdFromRequest(0);
-
-        $this->assertSame(0, $result);
     }
 
     // =========================================================================
@@ -596,17 +531,6 @@ class TextControllerTest extends TestCase
     // =========================================================================
 
     #[Test]
-    public function readMethodAcceptsNullableInt(): void
-    {
-        $method = new \ReflectionMethod(TextController::class, 'read');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('text', $params[0]->getName());
-        $this->assertTrue($params[0]->allowsNull());
-    }
-
-    #[Test]
     public function deleteMethodAcceptsInt(): void
     {
         $method = new \ReflectionMethod(TextController::class, 'delete');
@@ -668,16 +592,6 @@ class TextControllerTest extends TestCase
     }
 
     #[Test]
-    public function readReturnsNullableRedirectResponse(): void
-    {
-        $method = new \ReflectionMethod(TextController::class, 'read');
-        $returnType = $method->getReturnType();
-
-        $this->assertNotNull($returnType);
-        $this->assertTrue($returnType->allowsNull());
-    }
-
-    #[Test]
     public function displayReturnsNullableRedirectResponse(): void
     {
         $method = new \ReflectionMethod(TextController::class, 'display');
@@ -705,16 +619,6 @@ class TextControllerTest extends TestCase
 
         $this->assertCount(1, $params);
         $this->assertSame('params', $params[0]->getName());
-    }
-
-    #[Test]
-    public function checkReturnsVoid(): void
-    {
-        $method = new \ReflectionMethod(TextController::class, 'check');
-        $returnType = $method->getReturnType();
-
-        $this->assertNotNull($returnType);
-        $this->assertSame('void', $returnType->getName());
     }
 
     #[Test]
