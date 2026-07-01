@@ -28,7 +28,6 @@ use Lukaisu\Modules\Feed\Domain\TextCreationInterface;
 use Lukaisu\Modules\Feed\Infrastructure\MySqlFeedRepository;
 use Lukaisu\Modules\Feed\Infrastructure\MySqlArticleRepository;
 use Lukaisu\Modules\Feed\Infrastructure\TextCreationAdapter;
-use Lukaisu\Modules\Feed\Infrastructure\FeedWizardSessionManager;
 // Shared Infrastructure
 use Lukaisu\Shared\Infrastructure\Http\FlashMessageService;
 // Services
@@ -86,11 +85,6 @@ class FeedServiceProvider implements ServiceProviderInterface
             );
         });
 
-        // Register Session Managers
-        $container->singleton(FeedWizardSessionManager::class, function (Container $_c) {
-            return new FeedWizardSessionManager();
-        });
-
         $container->singleton(FlashMessageService::class, function (Container $_c) {
             return new FlashMessageService();
         });
@@ -100,7 +94,6 @@ class FeedServiceProvider implements ServiceProviderInterface
             return new FeedController(
                 $c->getTyped(FeedFacade::class),
                 $c->getTyped(LanguageFacade::class),
-                $c->getTyped(FeedWizardSessionManager::class),
                 $c->getTyped(FlashMessageService::class)
             );
         });

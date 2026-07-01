@@ -110,7 +110,7 @@ class RoutesTest extends TestCase
         return [
             ['/index.php/admin/install-demo', '/admin/install-demo'],
             ['/index.php/feeds', '/feeds'],
-            ['/index.php/feeds/edit', '/feeds/edit'],
+            ['/index.php/feeds/manage', '/feeds/manage'],
             ['/index.php/admin/statistics', '/admin/statistics'],
             ['/index.php/text/read', '/text/read'],
         ];
@@ -257,15 +257,15 @@ class RoutesTest extends TestCase
 
     public static function feedRoutesProvider(): array
     {
-        // GET /feeds and /feeds/manage (the feed-manager SPA) now 302 into the
-        // bundled client (Svelte FeedsPage); the non-GET /feeds handler and the
-        // edit/wizard routes keep their controllers.
+        // GET /feeds and /feeds/manage now 302 into the bundled client (Svelte
+        // FeedsPage). The legacy Alpine wizard/browse/index/edit + feed-load
+        // progress + multi-load routes were deleted; only the create/edit form
+        // POST coexistence + JSON config data routes + delete remain (covered by
+        // BundleCutoverTest).
         $redirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
         return [
             'feeds index' => ['/feeds', $redirect],
             'feeds manage' => ['/feeds/manage', $redirect],
-            'feeds edit' => ['/feeds/edit', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@edit'],
-            'feeds wizard' => ['/feeds/wizard', 'Lukaisu\\Modules\\Feed\\Http\\FeedWizardController@wizard'],
         ];
     }
 

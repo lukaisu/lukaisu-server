@@ -423,10 +423,12 @@ function registerRoutes(Router $router): void
 
     // ==================== FEED ROUTES (PROTECTED) ====================
 
-    // GET /feeds and GET /feeds/manage (the feed-manager SPA) are served by the
-    // bundled client (Svelte FeedsPage); see the /app redirects below. The old
-    // Alpine `spa.php` view + FeedController@spa handler were retired. The
-    // non-GET /feeds handler (marked-items text creation) is kept below.
+    // GET /feeds and GET /feeds/manage are served by the bundled client (Svelte
+    // FeedsPage); see the /app redirects below. The old Alpine `spa.php` view +
+    // FeedController@spa handler, the visual feed wizard, the legacy feed
+    // browse/index/edit pages, the feed-load progress page and multi-load were
+    // all retired — those surfaces are the shipped Svelte islands + the existing
+    // /api/v1/feeds* API (articles/import replaces the marked-items text creation).
 
     // The GET new/edit *forms* are served by the bundled client (Svelte
     // FeedFormPage island, which creates/edits via /api/v1/feeds); see the /app
@@ -449,25 +451,6 @@ function registerRoutes(Router $router): void
 
     // Delete feed (RESTful route): DELETE /feeds/123
     $router->delete('/feeds/{id:int}', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@deleteFeed', AUTH_MIDDLEWARE);
-
-    // Load/refresh feed (RESTful route): POST /feeds/123/load
-    $router->get('/feeds/{id:int}/load', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@loadFeedRoute', AUTH_MIDDLEWARE);
-
-    // Multi-load feeds interface (RESTful route)
-    $router->get('/feeds/multi-load', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@multiLoad', AUTH_MIDDLEWARE);
-
-    // Feeds list
-    $router->registerWithMiddleware('/feeds', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@index', AUTH_MIDDLEWARE);
-
-    // Edit feeds (legacy route - handles query params)
-    $router->registerWithMiddleware('/feeds/edit', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@edit', AUTH_MIDDLEWARE);
-
-    // Feed wizard
-    $router->registerWithMiddleware(
-        '/feeds/wizard',
-        'Lukaisu\\Modules\\Feed\\Http\\FeedWizardController@wizard',
-        AUTH_MIDDLEWARE
-    );
 
     // ==================== BOOK ROUTES (PROTECTED) ====================
     // Book module routes for EPUB import and book management
@@ -875,7 +858,6 @@ function registerRoutes(Router $router): void
     $router->deprecate('/word/new', '/words/new');
     $router->deprecate('/word/show', '/word/{wid}');
     $router->deprecate('/vocabulary/term/status', '/vocabulary/term/{wid}/status');
-    $router->deprecate('/feeds/edit', '/feeds/{id}/edit');
     $router->deprecate('/dictionaries', '/languages/{id}/dictionaries');
     $router->deprecate('/dictionaries/import', '/languages/{id}/dictionaries/import');
     $router->deprecatePrefix('/api.php/v1', '/api/v1');

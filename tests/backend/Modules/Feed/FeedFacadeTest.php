@@ -1328,14 +1328,6 @@ class FeedFacadeTest extends TestCase
         );
     }
 
-    public function testRenderFeedLoadInterfaceModernMethodExists(): void
-    {
-        $this->assertTrue(
-            method_exists($this->facade, 'renderFeedLoadInterfaceModern'),
-            'renderFeedLoadInterfaceModern method should exist'
-        );
-    }
-
     public function testGetLanguagesMethodExists(): void
     {
         $this->assertTrue(

@@ -52,7 +52,6 @@
                 <directory name="src/Modules/Admin/Views" />
                 <directory name="src/Modules/Book/Views" />
                 <directory name="src/Modules/Dictionary/Views" />
-                <directory name="src/Modules/Feed/Views" />
                 <directory name="src/Modules/Tags/Views" />
                 <directory name="src/Modules/Text/Views" />
                 <directory name="src/Modules/User/Views" />
@@ -98,7 +97,6 @@
                 <directory name="src/Modules/Book/Views" />
                 <directory name="src/Modules/Dictionary/Views" />
                 <directory name="src/Modules/Feed/Http" />
-                <directory name="src/Modules/Feed/Views" />
                 <directory name="src/Modules/Tags/Views" />
                 <directory name="src/Modules/Text/Http" />
                 <directory name="src/Modules/Text/Views" />
@@ -112,7 +110,6 @@
                 <directory name="src/Modules/Admin/Views" />
                 <directory name="src/Modules/Book/Views" />
                 <directory name="src/Modules/Dictionary/Infrastructure" />
-                <directory name="src/Modules/Feed/Views" />
                 <directory name="src/Modules/Feed/Application" />
                 <directory name="src/Modules/Tags/Views" />
                 <directory name="src/Modules/Text/Views" />
@@ -137,7 +134,6 @@
             <errorLevel type="suppress">
                 <directory name="src/Modules/Book/Application" />
                 <directory name="src/Modules/Dictionary/Views" />
-                <directory name="src/Modules/Feed/Views" />
                 <directory name="src/Modules/Feed/Application" />
                 <directory name="src/Modules/Feed/Http" />
                 <directory name="src/Modules/Tags/Views" />

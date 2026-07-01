@@ -3,9 +3,10 @@
 /**
  * Feed Controller (Facade)
  *
- * Thin facade delegating to FeedIndexController, FeedEditController,
- * and FeedLoadController. Maintained for backward compatibility with
- * existing route registrations.
+ * Thin facade delegating to FeedEditController for the surviving feed
+ * routes (the create/edit form POST coexistence + their JSON config data
+ * routes + delete). Maintained for backward compatibility with existing
+ * route registrations.
  *
  * PHP version 8.1
  *
@@ -21,41 +22,27 @@ declare(strict_types=1);
 namespace Lukaisu\Modules\Feed\Http;
 
 use Lukaisu\Modules\Feed\Application\FeedFacade;
-use Lukaisu\Modules\Feed\Infrastructure\FeedWizardSessionManager;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Http\FlashMessageService;
 
 /**
- * Facade controller delegating to specialized sub-controllers.
+ * Facade controller delegating to the FeedEditController sub-controller.
  */
 class FeedController
 {
     private FeedFacade $feedFacade;
-    private FeedIndexController $indexController;
     private FeedEditController $editController;
-    private FeedLoadController $loadController;
 
     public function __construct(
         FeedFacade $feedFacade,
         LanguageFacade $languageFacade,
-        ?FeedWizardSessionManager $wizardSession = null,
         ?FlashMessageService $flashService = null
     ) {
         $this->feedFacade = $feedFacade;
-        $this->indexController = new FeedIndexController(
-            $feedFacade,
-            $languageFacade,
-            $flashService
-        );
         $this->editController = new FeedEditController(
             $feedFacade,
             $languageFacade,
-            $wizardSession,
             $flashService
-        );
-        $this->loadController = new FeedLoadController(
-            $feedFacade,
-            $languageFacade
         );
     }
 
@@ -72,18 +59,6 @@ class FeedController
     // =========================================================================
     // Delegated Route Handlers
     // =========================================================================
-
-    /** @param array<string, string> $params */
-    public function index(array $params): void
-    {
-        $this->indexController->index($params);
-    }
-
-    /** @param array<string, string> $params */
-    public function edit(array $params): void
-    {
-        $this->editController->edit($params);
-    }
 
     /** @param array<string, string> $params */
     public function newFeed(array $params): void
@@ -127,27 +102,5 @@ class FeedController
     public function deleteFeed(int $id): void
     {
         $this->editController->deleteFeed($id);
-    }
-
-    public function loadFeedRoute(int $id): void
-    {
-        $this->loadController->loadFeedRoute($id);
-    }
-
-    /** @param array<string, string> $params */
-    public function multiLoad(array $params): void
-    {
-        $this->loadController->multiLoad($params);
-    }
-
-    /**
-     * Render feed load interface (used by renderFeedLoadInterfaceModern delegation).
-     */
-    public function renderFeedLoadInterface(
-        int $currentFeed,
-        bool $checkAutoupdate,
-        string $redirectUrl
-    ): void {
-        $this->loadController->renderFeedLoadInterface($currentFeed, $checkAutoupdate, $redirectUrl);
     }
 }

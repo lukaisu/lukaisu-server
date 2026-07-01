@@ -996,54 +996,6 @@ class FeedFacade
     }
 
     /**
-     * Render feed loading interface using Alpine.js component.
-     *
-     * This method outputs JSON configuration that is consumed by the
-     * feed_loader_component.ts Alpine component.
-     *
-     * @param int    $currentFeed     Feed ID to load
-     * @param bool   $checkAutoupdate Whether checking auto-update
-     * @param string $redirectUrl     URL to redirect after completion
-     *
-     * @return void
-     */
-    public function renderFeedLoadInterfaceModern(
-        int $currentFeed,
-        bool $checkAutoupdate,
-        string $redirectUrl
-    ): void {
-        $config = $this->getFeedLoadConfig($currentFeed, $checkAutoupdate);
-
-        // Output JSON config for Alpine component
-        echo '<script type="application/json" id="feed-loader-config">';
-        echo json_encode([
-            'feeds' => $config['feeds'],
-            'redirectUrl' => $redirectUrl
-        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-        echo '</script>';
-
-        // Alpine.js component wrapper
-        echo '<div x-data="feedLoader()">';
-
-        // Show progress UI
-        if ($config['count'] != 1) {
-            echo '<div class="notification is-info">' .
-                '<p>UPDATING <span x-text="loadedCount">0</span>/' .
-                $config['count'] . ' FEEDS</p></div>';
-        }
-
-        // Create placeholder divs for each feed using Alpine templates
-        echo '<template x-for="feed in feeds" :key="feed.id">';
-        echo '<div :class="getStatusClass(feed.id)"><p x-text="feedMessages[feed.id]"></p></div>';
-        echo '</template>';
-
-        // Continue button with Alpine click handler
-        echo '<div class="has-text-centered"><button @click="handleContinue()">Continue</button></div>';
-
-        echo '</div>';
-    }
-
-    /**
      * Get all languages for select dropdown.
      *
      * @return array Array of language records
