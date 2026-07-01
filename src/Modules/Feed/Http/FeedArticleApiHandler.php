@@ -185,8 +185,10 @@ class FeedArticleApiHandler
     public function deleteArticles(int $feedId, array $articleIds = []): array
     {
         // Verify the caller owns the target feed before doing any deletes.
-        // getFeedById is user-scoped (news_feeds is in USER_SCOPED_TABLES),
-        // so a foreign feedId returns null and we bail out before touching
+        // getFeedById flows through MySqlFeedRepository::find(), which is
+        // user-scoped in multi-user mode (news_feeds is in USER_SCOPED_TABLES
+        // and find() also asserts user_id at the repository boundary), so a
+        // foreign feedId returns null and we bail out before touching
         // feed_links — which has no user_id column of its own and would
         // otherwise let any logged-in user wipe any other user's articles.
         $feed = $this->feedFacade->getFeedById($feedId);

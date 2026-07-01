@@ -18,6 +18,7 @@ namespace Lukaisu\Modules\Feed\Infrastructure;
 
 use Lukaisu\Shared\Infrastructure\Repository\AbstractRepository;
 use Lukaisu\Shared\Infrastructure\Database\QueryBuilder;
+use Lukaisu\Shared\Infrastructure\Globals;
 use Lukaisu\Modules\Feed\Domain\Feed;
 use Lukaisu\Modules\Feed\Domain\FeedRepositoryInterface;
 
@@ -113,12 +114,32 @@ class MySqlFeedRepository extends AbstractRepository implements FeedRepositoryIn
 
     /**
      * {@inheritdoc}
+     *
+     * Reads are user-scoped in multi-user mode: `find()` only ever returns a
+     * feed owned by the current user, so a foreign id resolves to `null`.
+     *
+     * `firstPrepared()` already appends `AND user_id = ?` on its own, because
+     * `news_feeds` is registered in {@see QueryBuilder}'s user-scope table map.
+     * We *also* assert the predicate explicitly here so this security invariant
+     * lives at the repository boundary and does not silently depend on that
+     * shared registry staying intact — every by-id read/update/delete funnels
+     * through `find()` (GetFeedById, FeedCrudApiHandler::updateFeed/getFeed,
+     * FeedArticleApiHandler::deleteArticles), so this is the one place that
+     * closes the multi-user IDOR. In single-user mode both scopes are no-ops
+     * and the query stays `WHERE id = ?`, preserving legacy behaviour.
      */
     public function find(int $id): ?Feed
     {
-        $row = $this->query()
-            ->where($this->primaryKey, '=', $id)
-            ->firstPrepared();
+        $query = $this->query()->where($this->primaryKey, '=', $id);
+
+        if (Globals::isMultiUserEnabled()) {
+            $userId = Globals::getCurrentUserId();
+            if ($userId !== null) {
+                $query->where('user_id', '=', $userId);
+            }
+        }
+
+        $row = $query->firstPrepared();
 
         if ($row === null) {
             return null;
