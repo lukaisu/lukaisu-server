@@ -89,7 +89,7 @@ class AdminControllerTest extends TestCase
         $reflection = new \ReflectionClass(AdminController::class);
 
         $expectedMethods = [
-            'backup', 'wizard', 'settings',
+            'backup', 'wizard',
             'installDemo', 'serverData',
         ];
 
@@ -109,7 +109,7 @@ class AdminControllerTest extends TestCase
     #[Test]
     public function publicMethodsAcceptArrayParams(): void
     {
-        $methods = ['backup', 'wizard', 'settings', 'installDemo', 'serverData'];
+        $methods = ['backup', 'wizard', 'installDemo', 'serverData'];
 
         foreach ($methods as $methodName) {
             $method = new \ReflectionMethod(AdminController::class, $methodName);
@@ -435,124 +435,9 @@ class AdminControllerTest extends TestCase
         $_REQUEST = [];
     }
 
-    // =========================================================================
-    // settings method tests
-    // =========================================================================
-
-    #[Test]
-    public function settingsWithNoOpLoadsCurrentSettings(): void
-    {
-        $_REQUEST = [];
-
-        $this->facade->expects($this->once())
-            ->method('getAllSettings')
-            ->willReturn([]);
-
-
-        ob_start();
-        try {
-            $this->controller->settings([]);
-        } catch (\Throwable $e) {
-            // View include may fail
-        }
-        ob_end_clean();
-
-        $_REQUEST = [];
-    }
-
-    #[Test]
-    public function settingsWithSaveOpCallsSaveAllSettings(): void
-    {
-        $_REQUEST = ['op' => 'Save'];
-
-        $this->facade->expects($this->once())
-            ->method('saveAllSettings')
-            ->willReturn(['success' => true]);
-
-        $this->facade->expects($this->once())
-            ->method('getAllSettings')
-            ->willReturn([]);
-
-
-        ob_start();
-        try {
-            $this->controller->settings([]);
-        } catch (\Throwable $e) {
-            // View include may fail
-        }
-        ob_end_clean();
-
-        $_REQUEST = [];
-    }
-
-    #[Test]
-    public function settingsWithSaveFailureReturnsErrorMessage(): void
-    {
-        $_REQUEST = ['op' => 'Save'];
-
-        $this->facade->expects($this->once())
-            ->method('saveAllSettings')
-            ->willReturn(['success' => false]);
-
-        $this->facade->expects($this->once())->method('getAllSettings')->willReturn([]);
-
-
-        ob_start();
-        try {
-            $this->controller->settings([]);
-        } catch (\Throwable $e) {
-            // View include may fail
-        }
-        ob_end_clean();
-
-        $_REQUEST = [];
-    }
-
-    #[Test]
-    public function settingsWithResetOpCallsResetAllSettings(): void
-    {
-        $_REQUEST = ['op' => 'Reset'];
-
-        $this->facade->expects($this->once())
-            ->method('resetAllSettings')
-            ->willReturn(['success' => true]);
-
-        $this->facade->expects($this->once())->method('getAllSettings')->willReturn([]);
-
-
-        ob_start();
-        try {
-            $this->controller->settings([]);
-        } catch (\Throwable $e) {
-            // View include may fail
-        }
-        ob_end_clean();
-
-        $_REQUEST = [];
-    }
-
-    #[Test]
-    public function settingsWithResetFailureReturnsErrorMessage(): void
-    {
-        $_REQUEST = ['op' => 'Reset'];
-
-        $this->facade->expects($this->once())
-            ->method('resetAllSettings')
-            ->willReturn(['success' => false]);
-
-        $this->facade->expects($this->once())->method('getAllSettings')->willReturn([]);
-
-
-        ob_start();
-        try {
-            $this->controller->settings([]);
-        } catch (\Throwable $e) {
-            // View include may fail
-        }
-        ob_end_clean();
-
-        $_REQUEST = [];
-    }
+    // The settings() action moved to the bundled Svelte AdminSettingsPage island
+    // (Phase R): it reads/writes via admin-scoped /api/v1/settings*, so the
+    // controller method + its saveAllSettings/resetAllSettings tests were removed.
 
     // =========================================================================
     // installDemo method tests

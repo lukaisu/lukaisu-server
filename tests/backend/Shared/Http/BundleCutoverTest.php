@@ -85,6 +85,9 @@ class BundleCutoverTest extends TestCase
             // Book list + detail (Phase R) → bundled Svelte BooksListPage /
             // BookDetailPage islands; they read + delete via /api/v1/books.
             ['/books'], ['/book/5'],
+            // Admin settings (Phase R) → bundled Svelte AdminSettingsPage island;
+            // reads/writes via admin-scoped /api/v1/settings*.
+            ['/admin/settings'],
         ];
     }
 
@@ -102,7 +105,6 @@ class BundleCutoverTest extends TestCase
         return [
             'create text' => ['POST', '/texts/new', 'TextController@new'],
             'edit text POST' => ['POST', '/texts/5/edit', 'TextController@editSingle'],
-            'save preferences' => ['POST', '/profile/preferences', 'UserController@savePreferences'],
             'term status' => ['PUT', '/vocabulary/term/5/status', 'TermStatusController'],
             'delete text' => ['DELETE', '/texts/5', 'TextController@delete'],
         ];

@@ -287,7 +287,9 @@ class RoutesTest extends TestCase
                 'Lukaisu\\Modules\\User\\Http\\StatisticsController@redirectFromAdmin'
             ],
             'admin install-demo' => ['/admin/install-demo', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@installDemo'],
-            'admin settings' => ['/admin/settings', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@settings'],
+            // GET /admin/settings 302s into the bundled Svelte AdminSettingsPage
+            // island (Phase R); it reads/writes via admin-scoped /api/v1/settings*.
+            'admin settings' => ['/admin/settings', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
             'admin server-data' => ['/admin/server-data', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@serverData'],
             // GET /profile/statistics 302s into the bundled Svelte StatisticsPage
             // island; its chart data moved to GET /api/v1/activity/statistics

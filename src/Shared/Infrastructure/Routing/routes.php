@@ -478,12 +478,11 @@ function registerRoutes(Router $router): void
         ADMIN_MIDDLEWARE
     );
 
-    // Settings (Admin module)
-    $router->registerWithMiddleware(
-        '/admin/settings',
-        'Lukaisu\\Modules\\Admin\\Http\\AdminController@settings',
-        ADMIN_MIDDLEWARE
-    );
+    // Admin settings are served by the bundled Svelte AdminSettingsPage island
+    // (Phase R): GET /admin/settings 302s into the bundle (see the admin redirect
+    // below), which reads/writes the server-wide feed limits + multi-user flags
+    // via admin-scoped /api/v1/settings*. The old cookie-authed form + native
+    // POST are gone.
 
     // Server data (Admin module)
     $router->registerWithMiddleware(
@@ -532,7 +531,10 @@ function registerRoutes(Router $router): void
     $router->get('/profile', 'Lukaisu\\Modules\\User\\Http\\UserController@profileForm', AUTH_MIDDLEWARE);
     $router->post('/profile', 'Lukaisu\\Modules\\User\\Http\\UserController@updateProfile', AUTH_MIDDLEWARE);
     $router->post('/profile/password', 'Lukaisu\\Modules\\User\\Http\\UserController@changePassword', AUTH_MIDDLEWARE);
-    $router->post('/profile/preferences', 'Lukaisu\\Modules\\User\\Http\\UserController@savePreferences', AUTH_MIDDLEWARE);
+    // POST /profile/preferences (UserController@savePreferences) removed (Phase R):
+    // it was the retired native preferences form's target and was never called by
+    // the bundled client, which saves preferences via POST /api/v1/settings. The
+    // GET /profile/preferences 302 into the bundled settings page stays (below).
     // The GET /profile/statistics page is served by the bundled client (Svelte
     // StatisticsPage island); see the /app redirect below. Its chart data
     // (intensity + frequency) moved to GET /api/v1/activity/statistics under the
@@ -763,6 +765,10 @@ function registerRoutes(Router $router): void
     $router->get('/languages/{id:int}/dictionaries/import', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/profile/preferences', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/profile/statistics', $bundleRedirect, AUTH_MIDDLEWARE);
+    // Admin settings 302 into the bundled Svelte AdminSettingsPage island (Phase
+    // R). Admin-gated, so a non-admin can't even reach the redirect; the /api/v1
+    // reads/writes are admin-scoped too.
+    $router->get('/admin/settings', $bundleRedirect, ADMIN_MIDDLEWARE);
 
     // ==================== DEPRECATED ROUTES ====================
     // These legacy routes still work but emit Deprecation headers.

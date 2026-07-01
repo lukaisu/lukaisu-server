@@ -232,7 +232,17 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > server book over its just-created chapter texts when server-connected — new
 > RegisterBookFromChapters use case + POST /api/v1/books (ownership-checked), so
 > the bundle both creates and manages server books; offline the texts stay
-> tag-grouped) · [ ] admin (navbar links + `app/settings.ts`'s `settings_api`).
+> tag-grouped) · **[x] admin** (scoped: user-facing prefs were already bundled on
+> POST /api/v1/settings; the rest — backup/wizard/demo/server-data/users/profile —
+> is genuinely server-bound and stays server-rendered. Cut: /admin/settings
+> (server-wide feed limits + multi-user flags) bundled as a Svelte
+> AdminSettingsPage on new admin-scoped GET /api/v1/settings/admin + existing POST
+> /api/v1/settings; AdminController@settings + settings_form.php deleted → GET
+> bundle redirect. Orphaned POST /profile/preferences (savePreferences) deleted).
+>
+> **R5 complete** — all app-facing families are on /api/v1 with the bundle
+> repointed and the cookie routes deleted (or, for server-bound admin, explicitly
+> left server-rendered).
 
 ---
 

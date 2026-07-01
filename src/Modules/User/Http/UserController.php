@@ -460,35 +460,9 @@ class UserController extends BaseController
         return $this->redirect('/profile');
     }
 
-    // =========================================================================
-    // Preferences Methods
-    // =========================================================================
-
-    /**
-     * Save user preferences.
-     *
-     * POST /profile/preferences
-     *
-     * @param array<string, string> $params Route parameters
-     *
-     * @return ResponseInterface
-     */
-    public function savePreferences(array $params = []): ResponseInterface
-    {
-        if (!$this->isPost()) {
-            return $this->redirect('/profile/preferences');
-        }
-
-        $result = $this->userFacade->saveUserPreferences();
-
-        if ($result['success']) {
-            $this->flash->success(__('user.flash.preferences_saved'));
-        } else {
-            $this->flash->error(__('user.flash.preferences_failed'));
-        }
-
-        return $this->redirect('/profile/preferences');
-    }
+    // Preferences are saved by the bundled client via POST /api/v1/settings
+    // (Phase R); the native POST /profile/preferences form target
+    // (savePreferences) was removed. The GET page 302s to the bundled settings.
 
     // =========================================================================
     // Email Verification Methods

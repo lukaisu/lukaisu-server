@@ -212,47 +212,9 @@ class AdminController extends BaseController
         include $this->viewPath . 'wizard.php';
     }
 
-    /**
-     * Settings page.
-     *
-     * Handles:
-     * - op=Save: Save all settings
-     * - op=Reset: Reset to defaults
-     *
-     * @param array<string, string> $params Route parameters
-     *
-     * @return void
-     *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
-     * @psalm-suppress UnresolvableInclude View path is constructed at runtime
-     */
-    public function settings(array $params): void
-    {
-        $message = '';
-
-        // Handle form submission
-        $op = $this->param('op');
-        if ($op !== '') {
-            if ($op === 'Save') {
-                $result = $this->adminFacade->saveAllSettings();
-                $message = $result['success'] ? 'Settings saved' : 'Failed to save settings';
-            } else {
-                $result = $this->adminFacade->resetAllSettings();
-                $message = $result['success'] ? 'Settings reset to defaults' : 'Failed to reset settings';
-            }
-        }
-
-        // Load current admin settings for the form (used by included view)
-        $settings = $this->adminFacade->getAllSettings();
-
-        // Render page
-        $this->render('Admin Settings', true);
-        $this->message($message, true);
-
-        include $this->viewPath . 'settings_form.php';
-
-        $this->endRender();
-    }
+    // The admin settings form moved to the bundled Svelte AdminSettingsPage island
+    // (Phase R); it reads/writes via admin-scoped /api/v1/settings*, so this
+    // controller's settings() action + settings_form.php view were removed.
 
     /**
      * Install demo page.
