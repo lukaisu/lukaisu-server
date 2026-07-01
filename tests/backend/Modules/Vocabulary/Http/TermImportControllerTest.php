@@ -111,7 +111,6 @@ class TermImportControllerTest extends TestCase
 
         $expectedMethods = [
             'handleBulkSave',
-            'displayUploadForm',
             'handleUploadImport',
             'importTerms',
         ];
@@ -166,13 +165,20 @@ class TermImportControllerTest extends TestCase
     }
 
     #[Test]
-    public function uploadReturnsVoid(): void
+    public function uploadReturnsJsonResponse(): void
     {
+        // The word-upload POST tail was ported to Svelte: the GET page is the
+        // bundled island and this method now serves only the island's fetch()
+        // POST, always answering with JSON ({lastUpdate, rtl, recno} or {error})
+        // instead of rendering the retired upload_result.php view.
         $method = new \ReflectionMethod(TermImportController::class, 'upload');
         $returnType = $method->getReturnType();
 
         $this->assertNotNull($returnType);
-        $this->assertSame('void', $returnType->getName());
+        $this->assertSame(
+            \Lukaisu\Shared\Infrastructure\Http\JsonResponse::class,
+            $returnType->getName()
+        );
     }
 
     #[Test]
