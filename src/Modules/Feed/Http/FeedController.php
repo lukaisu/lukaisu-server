@@ -96,6 +96,34 @@ class FeedController
         $this->editController->editFeed($id);
     }
 
+    /**
+     * Bootstrap config for the bundled feed create form.
+     *
+     * Route: GET /feeds/new/config
+     *
+     * @param array<string, string> $params Route/query parameters.
+     *
+     * @return \Lukaisu\Shared\Infrastructure\Http\JsonResponse
+     */
+    public function configNew(array $params): \Lukaisu\Shared\Infrastructure\Http\JsonResponse
+    {
+        return $this->editController->configNew($params);
+    }
+
+    /**
+     * Bootstrap config for the bundled feed edit form.
+     *
+     * Route: GET /feeds/{id}/edit/config
+     *
+     * @param int $id Feed ID from route parameter.
+     *
+     * @return \Lukaisu\Shared\Infrastructure\Http\JsonResponse
+     */
+    public function configEdit(int $id): \Lukaisu\Shared\Infrastructure\Http\JsonResponse
+    {
+        return $this->editController->configEdit($id);
+    }
+
     public function deleteFeed(int $id): void
     {
         $this->editController->deleteFeed($id);

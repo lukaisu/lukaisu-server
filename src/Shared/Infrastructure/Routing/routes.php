@@ -428,12 +428,23 @@ function registerRoutes(Router $router): void
     // Alpine `spa.php` view + FeedController@spa handler were retired. The
     // non-GET /feeds handler (marked-items text creation) is kept below.
 
+    // The GET new/edit *forms* are served by the bundled client (Svelte
+    // FeedFormPage island, which creates/edits via /api/v1/feeds); see the /app
+    // redirects below. The POST handlers stay: they still process native form
+    // submissions (kept for coexistence; FeedEditControllerTest covers them). The
+    // two JSON config data routes below feed the island its languages + edit-mode
+    // prefill (authed, NOT bundle-redirected — mirrors starter-vocab/config).
+
     // New feed form (RESTful route)
-    $router->get('/feeds/new', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@newFeed', AUTH_MIDDLEWARE);
+    $router->get('/feeds/new/config', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@configNew', AUTH_MIDDLEWARE);
     $router->post('/feeds/new', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@newFeed', AUTH_MIDDLEWARE);
 
     // Edit feed form (RESTful route): /feeds/123/edit
-    $router->get('/feeds/{id:int}/edit', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@editFeed', AUTH_MIDDLEWARE);
+    $router->get(
+        '/feeds/{id:int}/edit/config',
+        'Lukaisu\\Modules\\Feed\\Http\\FeedController@configEdit',
+        AUTH_MIDDLEWARE
+    );
     $router->post('/feeds/{id:int}/edit', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@editFeed', AUTH_MIDDLEWARE);
 
     // Delete feed (RESTful route): DELETE /feeds/123
@@ -836,6 +847,12 @@ function registerRoutes(Router $router): void
     $router->get('/tags/text', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/feeds', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/feeds/manage', $bundleRedirect, AUTH_MIDDLEWARE);
+    // Feed new/edit form (Job B, D3d): the GET forms 302 into the bundled Svelte
+    // FeedFormPage island; the POST /feeds/new + POST /feeds/{id}/edit handlers
+    // (and the /feeds/new/config + /feeds/{id}/edit/config data routes) above keep
+    // their controllers so native submits + the island's config fetch still work.
+    $router->get('/feeds/new', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/feeds/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/tags/text/new', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/tags/text/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/review', $bundleRedirect, AUTH_MIDDLEWARE);

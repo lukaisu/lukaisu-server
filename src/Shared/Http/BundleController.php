@@ -165,6 +165,8 @@ final class BundleController
                 return 'tags.html';
             case $path === '/feeds' || $path === '/feeds/manage':
                 return 'feeds.html';
+            case $path === '/feeds/new':
+                return 'feed-form.html';
             case $path === '/tags/new':
                 return 'tag-form.html?kind=term';
             case $path === '/tags/text/new':
@@ -210,6 +212,9 @@ final class BundleController
         }
         if (preg_match('#^/tags/(\d+)/edit$#', $path, $m) === 1) {
             return 'tag-form.html?kind=term&id=' . $m[1];
+        }
+        if (preg_match('#^/feeds/(\d+)/edit$#', $path, $m) === 1) {
+            return 'feed-form.html?feed=' . $m[1];
         }
         if (preg_match('#^/text/(\d+)/print-plain$#', $path, $m) === 1) {
             return 'text-print.html?text=' . $m[1];

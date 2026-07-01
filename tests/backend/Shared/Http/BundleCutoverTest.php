@@ -69,6 +69,9 @@ class BundleCutoverTest extends TestCase
             ['/tags'], ['/tags/text'], ['/review'],
             // Tag new/edit forms 302 into the bundled Svelte TagForm island.
             ['/tags/new'], ['/tags/5/edit'], ['/tags/text/new'], ['/tags/text/5/edit'],
+            // Feed new/edit forms (Job B, D3d) 302 into the bundled Svelte
+            // FeedFormPage island.
+            ['/feeds/new'], ['/feeds/5/edit'],
             ['/profile/preferences'],
             // Login is now cut over: GET /login 302s to the bundled LoginPage
             // island (token-API login), replacing the server-rendered form.
@@ -99,6 +102,10 @@ class BundleCutoverTest extends TestCase
             'upload terms file' => ['POST', '/word/upload', 'TermImportController@upload'],
             'create text' => ['POST', '/texts/new', 'TextController@new'],
             'edit text POST' => ['POST', '/texts/5/edit', 'TextController@editSingle'],
+            // Feed forms: GET 302s into the bundle, but the native-submit POST
+            // handlers stay (coexistence).
+            'create feed POST' => ['POST', '/feeds/new', 'FeedController@newFeed'],
+            'edit feed POST' => ['POST', '/feeds/5/edit', 'FeedController@editFeed'],
             'save preferences' => ['POST', '/profile/preferences', 'UserController@savePreferences'],
             'term status' => ['PUT', '/vocabulary/term/5/status', 'TermStatusController'],
             'delete text' => ['DELETE', '/texts/5', 'TextController@delete'],
@@ -126,8 +133,11 @@ class BundleCutoverTest extends TestCase
     {
         return [
             'annotated print stays server' => ['/text/5/print', 'TextPrintController@printAnnotated'],
-            'feeds (Job B)' => ['/feeds/new', 'FeedController'],
             'word show (not bundled)' => ['/word/5', 'TermDisplayController@showWord'],
+            // The feed new/edit pages 302 into the bundle, but their JSON config
+            // data routes keep the controller (the island fetches them server-backed).
+            'feed new config' => ['/feeds/new/config', 'FeedController@configNew'],
+            'feed edit config' => ['/feeds/5/edit/config', 'FeedController@configEdit'],
             // The starter-vocab page 302s into the bundle, but its JSON config
             // data route keeps the controller (the island fetches it server-backed).
             'starter-vocab config' => ['/languages/5/starter-vocab/config', 'StarterVocabController@config'],

@@ -104,6 +104,12 @@ export const pageUrl = {
   feeds(): string {
     return 'feeds.html';
   },
+  /** New/edit feed form (Svelte FeedFormPage island); `id` present ⇒ edit mode. */
+  feedForm(id?: number | string): string {
+    return id != null
+      ? `feed-form.html?feed=${encodeURIComponent(String(id))}`
+      : 'feed-form.html';
+  },
   dictionaries(langId?: number | string): string {
     return langId != null
       ? `dictionaries.html?lang=${encodeURIComponent(String(langId))}`
@@ -279,10 +285,20 @@ export function bundledPageFor(path: string): string | null {
   // to /feeds?filterlang=… and the server serves the SPA at /feeds and
   // /feeds/manage; the bundle shows both on feeds.html, gated to a connected
   // server. The query (filterlang, …) is dropped — the SPA has its own filter UI.
-  // The wizard (/feeds/new) and per-feed edit routes are not bundled, so they
-  // fall through to the connected server's web UI (only reachable when connected).
   if (pathname === '/feeds' || pathname === '/feeds/manage') {
     return pageUrl.feeds();
+  }
+  // Feed new/edit form: /feeds/new and /feeds/{id}/edit render the bundled Svelte
+  // FeedFormPage island (feed id → ?feed=). Server-gated like feeds. The wizard
+  // (/feeds/wizard) and per-feed load/multi-load routes stay server-only (they
+  // fall through to the connected server's web UI). Match /feeds/new before the
+  // edit regex.
+  if (pathname === '/feeds/new') {
+    return pageUrl.feedForm();
+  }
+  const feedEditMatch = pathname.match(/^\/feeds\/(\d+)\/edit$/);
+  if (feedEditMatch) {
+    return pageUrl.feedForm(feedEditMatch[1]);
   }
   // Local dictionaries — server-enhanced (Job B). Reached from /dictionaries?lang=
   // and the per-language /languages/{id}/dictionaries; the bundle shows the

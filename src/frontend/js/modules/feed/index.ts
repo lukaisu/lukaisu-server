@@ -41,5 +41,8 @@ export { feedWizardStep4Data, initFeedWizardStep4Alpine } from './components/fee
 // The feed-manager SPA (Alpine `feed_manager_app.ts` / `feed_manager_store.ts`
 // + the `spa.php` view at /feeds/manage) was retired: that surface is now the
 // Svelte `FeedsPage` island on the bundle's feeds.html, and /feeds + /feeds/manage
-// 302 to it. The remaining components above still drive the PHP feed pages
-// (/feeds, /feeds/edit, /feeds/new, wizard) that are not yet migrated.
+// 302 to it. The standalone new/edit *form* (`new.php`/`edit.php`) is likewise now
+// the Svelte `FeedFormPage` island — /feeds/new + /feeds/{id}/edit 302 to it — but
+// `feed_form_component` (imported above) is KEPT: the wizard's manual-setup tab
+// (`wizard_step1.php`, `x-data="feedForm"`) still uses it. The remaining components
+// above still drive the PHP feed pages (/feeds/edit legacy, wizard) not yet migrated.
