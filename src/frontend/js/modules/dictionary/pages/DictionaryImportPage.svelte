@@ -26,7 +26,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import { t } from '@shared/i18n/translator';
-  import { apiGet, apiDelete } from '@shared/api/client';
+  import { apiGet, apiDelete, apiPostMultipart } from '@shared/api/client';
   import CuratedDictBrowser from '@modules/vocabulary/components/CuratedDictBrowser.svelte';
   import type { CuratedDictGroup } from '@modules/vocabulary/api/word_upload_api';
 
@@ -89,9 +89,6 @@
     initialDictId != null ? dicts.find((d) => d.id === initialDictId) ?? null : null
   );
 
-  /** POST target for the native multipart upload (base-path aware). */
-  const importAction = $derived(`${basePath}/dictionaries/import`);
-
   async function loadDictionaries(): Promise<void> {
     if (langId <= 0) {
       dicts = [];
@@ -126,6 +123,40 @@
   function onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     fileName = input.files?.[0]?.name ?? '';
+  }
+
+  // The dictionary-file upload moved off the cookie-authed native form POST onto
+  // POST /api/v1/local-dictionaries/import (Phase R): send the multipart body via
+  // apiPostMultipart (bearer + CSRF) and, on success, mirror the retired flow by
+  // landing on the dictionaries list with the imported-count flash the
+  // server-rendered index renders. The file input + option fields are unchanged,
+  // so `new FormData(form)` carries the same payload the server already parses.
+  async function handleImport(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    if (submitting) {
+      return;
+    }
+    const form = event.currentTarget as HTMLFormElement;
+    const formData = new FormData(form);
+    submitting = true;
+    error = '';
+    try {
+      const res = await apiPostMultipart<{ dictId: number; imported: number; langId: number }>(
+        '/local-dictionaries/import',
+        formData
+      );
+      if (res.error || !res.data) {
+        error = res.error || 'Import failed.';
+        submitting = false;
+        return;
+      }
+      window.location.assign(
+        `${basePath}/dictionaries?lang=${res.data.langId}&message=imported_${res.data.imported}`
+      );
+    } catch {
+      error = 'Import failed. Please check your connection.';
+      submitting = false;
+    }
   }
 
   function dictionariesHref(): string {
@@ -226,12 +257,9 @@
   <h3 class="title is-4">{t('dictionary.import_dictionary')}</h3>
   <p class="subtitle is-6">{t('dictionary.import_dictionary_subtitle')}</p>
 
-  <form
-    method="POST"
-    action={importAction}
-    enctype="multipart/form-data"
-    onsubmit={() => (submitting = true)}
-  >
+  <!-- action/method are inert: onsubmit preventDefaults and posts the FormData
+       through apiPostMultipart. enctype documents the multipart payload. -->
+  <form enctype="multipart/form-data" onsubmit={handleImport}>
     <input type="hidden" name="_csrf_token" value={csrfToken} />
     <input type="hidden" name="lang_id" value={langId} />
 

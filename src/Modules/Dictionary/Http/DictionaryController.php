@@ -22,6 +22,7 @@ use Lukaisu\Modules\Dictionary\Application\Services\DictionaryImportFileResolver
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Database\Validation;
 use Lukaisu\Shared\Infrastructure\Http\InputValidator;
+use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
 use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
 use RuntimeException;
 
@@ -89,13 +90,25 @@ class DictionaryController extends BaseController
     }
 
     /**
-     * Process import form submission.
+     * Import a dictionary file (multipart upload), returning JSON.
      *
-     * @param array $params Route parameters
+     * Under the headless cut (Phase R) this moved off the cookie-authed native
+     * form routes (`POST /dictionaries/import`, `POST /languages/{id}/…`) onto
+     * POST /api/v1/local-dictionaries/import, dispatched by DictionaryApiHandler.
+     * The DictionaryImportPage island posts a bearer-authed multipart body and
+     * renders the outcome in place (the retired flow full-page-redirected to the
+     * dictionaries list with a flash), so this answers with JSON —
+     * {dictId, imported, langId} on success, {error} on failure. It reads the
+     * language from the `lang_id`/`id` field, the file from `$_FILES['file']`,
+     * and the per-format options exactly as the native form POST did.
      *
-     * @return void
+     * Route: POST /api/v1/local-dictionaries/import
+     *
+     * @param array<string, mixed> $params Parsed request body.
+     *
+     * @return JsonResponse
      */
-    public function processImport(array $params): void
+    public function processImport(array $params): JsonResponse
     {
         // Support both route parameter and form field
         $langId = isset($params['id'])
@@ -106,7 +119,7 @@ class DictionaryController extends BaseController
         $dictName = $this->param('dict_name');
 
         if ($langId <= 0) {
-            $this->redirect('/dictionaries?error=invalid_language');
+            return JsonResponse::error('A valid language is required.');
         }
 
         // Create new dictionary if needed
@@ -120,8 +133,7 @@ class DictionaryController extends BaseController
         // Process uploaded file
         $uploadedFile = InputValidator::getUploadedFile('file');
         if ($uploadedFile === null) {
-            $this->redirect("/dictionaries/import?lang=$langId&dict_id=$dictId&error=upload_failed");
-            return;
+            return JsonResponse::error('No file was uploaded.');
         }
 
         $resolver = new DictionaryImportFileResolver();
@@ -135,8 +147,7 @@ class DictionaryController extends BaseController
 
             /** @psalm-suppress UndefinedClass Psalm incorrectly resolves namespace */
             if (!$importer->canImport($importPath, $importName)) {
-                $this->redirect("/dictionaries/import?lang=$langId&dict_id=$dictId&error=invalid_file");
-                return;
+                return JsonResponse::error('The uploaded file is not a valid ' . $format . ' dictionary.');
             }
 
             // Get import options from form
@@ -147,10 +158,13 @@ class DictionaryController extends BaseController
             $entries = $importer->parse($importPath, $options);
             $count = $this->dictionaryFacade->addEntriesBatch($dictId, $entries);
 
-            $this->redirect("/dictionaries?lang=$langId&message=imported_$count");
+            return JsonResponse::success([
+                'dictId' => $dictId,
+                'imported' => $count,
+                'langId' => $langId,
+            ]);
         } catch (RuntimeException $e) {
-            $errorMsg = urlencode($e->getMessage());
-            $this->redirect("/dictionaries/import?lang=$langId&dict_id=$dictId&error=$errorMsg");
+            return JsonResponse::error($e->getMessage(), 500);
         } finally {
             $resolver->cleanup();
         }

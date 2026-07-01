@@ -8,6 +8,7 @@ use Lukaisu\Modules\Dictionary\Http\DictionaryController;
 use Lukaisu\Modules\Dictionary\Application\DictionaryFacade;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Http\BaseController;
+use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -175,7 +176,9 @@ class DictionaryControllerTest extends TestCase
     public function allPublicMethodsReturnVoid(): void
     {
         $reflection = new ReflectionClass(DictionaryController::class);
-        $publicMethods = ['index', 'processImport', 'delete', 'preview'];
+        // processImport now returns JsonResponse (Phase R: it moved onto
+        // /api/v1/local-dictionaries/import); the rest still render server-side.
+        $publicMethods = ['index', 'delete', 'preview'];
 
         foreach ($publicMethods as $methodName) {
             $method = $reflection->getMethod($methodName);
@@ -191,6 +194,16 @@ class DictionaryControllerTest extends TestCase
                 "Method $methodName should return void"
             );
         }
+    }
+
+    #[Test]
+    public function processImportReturnsJsonResponse(): void
+    {
+        $method = new ReflectionMethod(DictionaryController::class, 'processImport');
+        $returnType = $method->getReturnType();
+
+        $this->assertNotNull($returnType);
+        $this->assertSame(JsonResponse::class, $returnType->getName());
     }
 
     #[Test]
@@ -385,53 +398,45 @@ class DictionaryControllerTest extends TestCase
     // =========================================================================
 
     #[Test]
-    public function processImportRedirectsOnInvalidLanguage(): void
+    public function processImportRejectsInvalidLanguageWithJsonError(): void
     {
         $_REQUEST = [];
         $_GET = [];
         $_POST = [];
         $_SERVER = ['REQUEST_METHOD' => 'POST'];
 
-        // langId will be 0 (no params['id'], no lang_id form field)
-        // Should redirect to /dictionaries?error=invalid_language
-        $result = null;
-        try {
-            ob_start();
-            $this->controller->processImport([]);
-            ob_end_clean();
-        } catch (\Throwable $e) {
-            ob_end_clean();
-            // RedirectResponse may be returned or header() called
-            $result = $e;
-        }
-
-        // The method calls $this->redirect() which returns a RedirectResponse.
-        // Since we can't easily capture the return from void, we verify the
-        // facade was never called (meaning early exit happened).
+        // langId resolves to 0 (no params['id'], no lang_id field), so the import
+        // returns a JSON error and never touches the facade (Phase R: the method
+        // now answers with JSON instead of redirecting).
+        $this->dictionaryFacade->expects($this->never())->method('create');
         $this->dictionaryFacade->expects($this->never())->method('addEntriesBatch');
-        // If we got here without exception, the redirect was called
-        $this->assertTrue(true);
+
+        $response = $this->controller->processImport([]);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
     }
 
     #[Test]
     public function processImportUsesRouteParamIdOverFormField(): void
     {
-        // When params['id'] is set, it should be used as langId
+        // When params['id'] is set, it wins over the lang_id form field: the
+        // dictionary is created for language 5, not 99.
         $_REQUEST = ['lang_id' => '99', 'format' => 'csv'];
         $_GET = [];
         $_POST = [];
         $_SERVER = ['REQUEST_METHOD' => 'POST'];
         $_FILES = [];
 
-        // params['id'] = 5 should win over lang_id = 99
-        // With no uploaded file, should redirect with upload_failed
-        ob_start();
-        $this->controller->processImport(['id' => '5']);
-        $output = ob_get_clean();
+        $this->dictionaryFacade->expects($this->once())
+            ->method('create')
+            ->with(5, $this->anything(), 'csv')
+            ->willReturn(7);
+        // No uploaded file => JSON error before any entries are imported.
+        $this->dictionaryFacade->expects($this->never())->method('addEntriesBatch');
 
-        // Verify the facade create was never called with lang 99
-        // (no file uploaded => redirect before facade call)
-        $this->assertTrue(true);
+        $response = $this->controller->processImport(['id' => '5']);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
     }
 
     #[Test]

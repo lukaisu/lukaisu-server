@@ -104,14 +104,6 @@ class BundleCutoverTest extends TestCase
             'save preferences' => ['POST', '/profile/preferences', 'UserController@savePreferences'],
             'term status' => ['PUT', '/vocabulary/term/5/status', 'TermStatusController'],
             'delete text' => ['DELETE', '/texts/5', 'TextController@delete'],
-            // The dictionary-import GET is bundled, but the multipart upload POST
-            // keeps its controller (the API can't ingest a raw file).
-            'import dictionary' => ['POST', '/dictionaries/import', 'DictionaryController@processImport'],
-            'import dictionary (rest)' => [
-                'POST',
-                '/languages/5/dictionaries/import',
-                'DictionaryController@processImport',
-            ],
         ];
     }
 
@@ -184,6 +176,9 @@ class BundleCutoverTest extends TestCase
             // FeedApiHandler dispatches both to FeedController.
             'feed new config' => ['GET', 'feeds/new/config'],
             'feed edit config' => ['GET', 'feeds/5/edit/config'],
+            // Dictionary-file multipart import moved off its cookie routes (Phase R);
+            // DictionaryApiHandler dispatches it to DictionaryController@processImport.
+            'dict-import file' => ['POST', 'local-dictionaries/import'],
         ];
     }
 

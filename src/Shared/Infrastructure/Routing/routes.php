@@ -427,30 +427,18 @@ function registerRoutes(Router $router): void
         'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@index',
         AUTH_MIDDLEWARE
     );
-    // GET /languages/{id}/dictionaries/import is served by the bundled Svelte
-    // dictionary-import island (see the Job-A/B cut-over block below); only the
-    // POST (native multipart upload) keeps its controller.
-    $router->post(
-        '/languages/{id:int}/dictionaries/import',
-        'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@processImport',
-        AUTH_MIDDLEWARE
-    );
+    // Dictionary-file import: the GET pages are the bundled Svelte island. Under
+    // the headless cut (Phase R) the multipart upload moved to POST
+    // /api/v1/local-dictionaries/import (DictionaryApiHandler dispatches it to
+    // DictionaryController@processImport, now JSON), so the cookie-authed native
+    // POST routes (/dictionaries/import + /languages/{id}/dictionaries/import) are
+    // gone.
 
     // Legacy routes (with ?lang= query parameter)
     $router->registerWithMiddleware(
         '/dictionaries',
         'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@index',
         AUTH_MIDDLEWARE
-    );
-
-    // Import wizard: GET /dictionaries/import is served by the bundled Svelte
-    // dictionary-import island (cut-over block below); the POST keeps its
-    // controller (native multipart upload → server-side parse + store).
-    $router->registerWithMiddleware(
-        '/dictionaries/import',
-        'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@processImport',
-        AUTH_MIDDLEWARE,
-        'POST'
     );
 
     // Delete dictionary
@@ -782,8 +770,8 @@ function registerRoutes(Router $router): void
     $router->get('/tags/text/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/review', $bundleRedirect, AUTH_MIDDLEWARE);
     // Dictionary import (Job B, D3c): the GET form is served by the bundled
-    // Svelte island; the POST /dictionaries/import (processImport) below keeps
-    // its controller so the native multipart upload still works server-side.
+    // Svelte island, which uploads via POST /api/v1/local-dictionaries/import
+    // (Phase R). The old cookie-authed native POST route is gone.
     $router->get('/dictionaries/import', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/languages/{id:int}/dictionaries/import', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/profile/preferences', $bundleRedirect, AUTH_MIDDLEWARE);

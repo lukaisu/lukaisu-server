@@ -25,6 +25,7 @@ use Lukaisu\Modules\Dictionary\Infrastructure\Import\JsonImporter;
 use Lukaisu\Modules\Dictionary\Infrastructure\Import\StarDictImporter;
 use Lukaisu\Shared\Http\ApiRoutableInterface;
 use Lukaisu\Shared\Http\ApiRoutableTrait;
+use Lukaisu\Shared\Infrastructure\Container\Container;
 use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
 use RuntimeException;
 
@@ -746,6 +747,15 @@ class DictionaryApiHandler implements ApiRoutableInterface
 
         if ($frag1 === 'import-curated') {
             return Response::success($this->importCurated($params));
+        }
+        if ($frag1 === 'import') {
+            // Multipart dictionary-file upload moved off the cookie-authed native
+            // form routes onto POST /api/v1/local-dictionaries/import (Phase R).
+            // DictionaryController@processImport reads $_FILES + the fields the
+            // multipart body populates and returns JSON; resolve it at dispatch.
+            return Container::getInstance()
+                ->getTyped(DictionaryController::class)
+                ->processImport($params);
         }
         if ($frag1 === 'preview') {
             return Response::success($this->formatPreview($params));
