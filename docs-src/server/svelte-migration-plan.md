@@ -343,3 +343,86 @@ layer + add an existing-owner check to `updateFeed`/`deleteFeeds`.
 
 **Remaining (C order):** **D3d-rest** (feed wizard + load + multi-load + browse — net-new API) · D3f
 admin (defer→A) · D3g annotated print (defer→A) · D4 shared chrome · D5 final `@alpinejs` deletion.
+
+---
+
+## D3d-rest plan (drafted 2026-07-01, from a read-only Plan pass over the real feed code)
+
+**Reframing — this is ~70% deletion, ~30% net-new, NOT the heavy build the LOC count implied.**
+The already-shipped `/feeds` + `/feeds/new` + `/feeds/{id}/edit` bundle redirects and the
+`FeedsPage`/`FeedFormPage` islands already retired browse, feed-list, article-import, feed CRUD, and
+single-feed load — all through existing `/api/v1/feeds*`. What remains is mostly **already-dead orphan
+code** plus **one genuinely net-new thing**: the 4-step visual XPath wizard.
+
+**Pivotal open decision — KEEP or KILL the visual XPath wizard.** Verified: the wizard
+(`/feeds/wizard`, steps 2-4) is **reachable-but-unlinked — no live entry point.** Every link into it
+comes from dead views (`edit.php:42`) or the wizard's own steps; `router.ts:293` is only a comment. The
+live `FeedsPage.svelte:94` "Feed Wizard" button points at **`/feeds/new`** → the *plain form* island, not
+the wizard. So **killing the wizard breaks nothing user-facing** (the branded button already opens the
+form). This is a product call, not a code call, and it forks the whole division:
+- **KILL** → D3d-rest collapses to Phase A + the IDOR fix (pure deletion); **D5 unblocks fast**. No new API.
+- **KEEP** → also build Phase C (2 endpoints) + Phase D (the Svelte wizard island, ~2-3d, the only heavy part).
+
+### Already-dead — delete regardless of the wizard decision (Phase A, independent, low-risk)
+`browse.php`, `index.php`, `edit_text_form.php`, `edit_text_footer.php`, `edit.php`, `wizard_step1.php`
+(its manual tab is the *only* remaining `x-data="feedForm"` consumer — grep-verify, then
+`feed_form_component.ts` + the Alpine `feed_form_api.ts` die too; **the shipped `FeedFormPage.svelte` does
+NOT depend on them** — that earlier coexistence note is now stale), plus Alpine
+`feed_browse/index/text_edit_component.ts`. Strip the marked-items branches from `FeedIndexController`
+(`index:62`, `processMarkedItems:95-246`) — the `feeds/articles/import` API replaces them. Update
+`BundleCutoverTest` (drop the `POST /feeds/new|edit` preserved rows if native POSTs are retired for the API).
+
+### Load-progress + multi-load (Phase B, do after A — both touch Feed{Index,Load}Controller)
+Single-feed `/feeds/{id}/load` progress is superseded by `feeds_api.loadFeed` (inline in the manager).
+Multi-load: fold into `FeedList.svelte` as a bulk action (checkbox loop over the existing
+`POST /api/v1/feeds/{id}/load`, which already returns per-feed `{message,imported,duplicates}`), OR just
+delete `multi_load.php` (it's unlinked). Then delete `renderFeedLoadInterfaceModern`,
+`feed_loader_component.ts`, `feed_multi_load_component.ts`, and the `/feeds/{id}/load` + `/feeds/multi-load` routes.
+
+### Net-new wizard API — only if KEEP (Phase C, backend-only, parallelizable with A/B)
+XPath preview is **already client-side** (`xpath_utils.ts` `document.evaluate`); the server's only job is
+to fetch+clean article HTML. So just **two thin stateless endpoints** wrapping code that mostly exists:
+- **`POST /api/v1/feeds/wizard/detect`** `{sourceUri}` → `{detectedFeed, feedText, items[], articleSources[]}`.
+  Reuse `FeedLoadApiHandler::detectFeed()` (`:212`, already exists, just **unrouted**). 422 `{error}` on
+  bad/unreachable/SSRF-blocked URL (`safeHttpGet` already guards private ranges).
+- **`POST /api/v1/feeds/wizard/preview-article`** `{link,title,inlineText?,articleSource,charset?,redirect}`
+  → `{html, sourceUri}`. Extract `previewArticle()` from `FeedWizardController::getStep2FeedHtml()`
+  (`:625`) → `extractTextFromArticle(...,'new','iframe!?!script!?!...')` returns the whole cleaned doc.
+- **Save** = existing `POST /api/v1/feeds` / `PUT /api/v1/feeds/{id}` with
+  `article_section_tags = articleSelectors.join(' | ')`, `filter_tags = filterSelectors.join(' | ')`,
+  `options = buildOptionsString()` (the store already builds these). **No net-new save endpoint.**
+- Register in `Endpoints.php` (`feeds/wizard/detect|preview-article => ['POST']`) + branch in
+  `FeedApiHandler::routePost` (`:457`).
+
+### Wizard Svelte island — only if KEEP (Phase D, depends on C, the heavy part ~2-3d, one worktree)
+Port `feed_wizard_store.ts` → a `.svelte.ts` runes store (session state maps ~1:1; the ~200 LOC of
+`FeedWizardController` session-shuffling evaporates — step N's output is in-memory for step N+1). One
+multi-step island `FeedWizardPage.svelte` (client-side step router) + 4 step components; reuse
+`xpath_utils.ts`/`highlight_service.ts` (framework-agnostic) unchanged; extract a shared
+`FeedOptionsFields.svelte` from `FeedFormPage.svelte` for step 4. Add `app/feed-wizard.{html,ts}`
+(server-gated like `feeds.ts`), vite input, 3-mirror-map wiring, flip `/feeds/wizard` to redirect, and
+repoint `FeedsPage`'s "Feed Wizard" button to `/feeds/wizard`.
+
+### Security — fix the pre-existing feed IDOR HERE, at the repository layer (Phase E, independent)
+Confirmed: `AbstractRepository::find()` (`:60`) uses `QueryBuilder::table()` with **no user_id predicate**;
+`UserScopedQuery` *registers* `news_feeds => user_id` but `find()` never applies it → in multi-user mode any
+user can read/update/delete any feed by id, and `FeedArticleApiHandler::deleteArticles`'s comment claiming
+`getFeedById` is scoped (`:190`) is **false**. Fix once at the boundary every path funnels through: make
+`MySqlFeedRepository::find()` (+ `findByLanguage`, `findNeedingAutoUpdate`) append
+`UserScopedQuery::forTablePrepared('news_feeds', $bindings)`. Do it now (not deferred) since D3d-rest adds
+write endpoints on this exact path; keep it a **distinct commit** with multi-user regression tests.
+
+### Sequencing / parallelizability
+Phase 0 (keep-or-kill decision, blocking) → **A, C, E are independent** (safe concurrent worktrees) → B
+after A → D after C (serial, one worktree, coupled shared store). If KILL: only A + B + E. Critical path
+if KEEP: 0 → C → D.
+
+### Top risk (if KEEP): browser-vs-PHP XPath parity
+In-browser `document.evaluate` generates the saved selectors; PHP `DOMXPath` (`ArticleExtractor`) re-runs
+them at load. Divergence = right element in preview, nothing extracted at load. **Pre-existing**, but the
+port must keep `preview-article` returning byte-identical cleaned HTML to what the loader sees, and preserve
+the `§` parent-separator + `contains(concat())` idioms in `xpath_utils.ts`. **Verification without a live
+browser+server:** PHPUnit contract tests for both endpoints against in-memory XML/HTML fixtures (fetch/parse
+are split, so no network); Vitest for the store serialization round-trip + `xpath_utils` in jsdom; extend
+`BundleCutoverTest::newApiEndpointsProvider`. Real remote-feed fetch + preview↔load XPath parity need
+**manual server QA** on 2-3 real feeds — cannot be automated here.
