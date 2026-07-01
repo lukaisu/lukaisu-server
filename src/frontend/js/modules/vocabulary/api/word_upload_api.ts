@@ -3,21 +3,23 @@
  *
  * The word-upload island needs server-only data the bundle cannot compute
  * locally — the current language (name + id), whether FrequencyWords data exists
- * for it, the curated dictionaries registry, the base-path-correct file-upload
- * POST endpoint, and the default translation delimiter. The frequency import and
- * Wiktionary enrichment run against the shared /api/v1 starter-vocab endpoints
- * (built from `langId` in the island). The server exposes the rest at
- * `GET /word/upload/config`
- * (TermImportController@uploadConfig).
+ * for it, the curated dictionaries registry, and the default translation
+ * delimiter. The frequency import and Wiktionary enrichment run against the
+ * shared /api/v1 starter-vocab endpoints, and the manual file upload posts to
+ * POST /api/v1/terms/upload (both built from `langId` / a static path in the
+ * island). The server exposes this bootstrap config at
+ * `GET /api/v1/terms/upload/config` (VocabularyApiRouter dispatches it to
+ * TermImportController@uploadConfig), fetched through the api client so a
+ * connected remote server authenticates it by bearer token.
  *
- * That route is NOT under `/api/v1`, so this uses a base-path-aware raw fetch
- * rather than the api client (mirroring starter_vocab_api / bulk_translate_api).
- * It is only reachable in same-origin server mode: the page is server-gated (the
- * file import + frequency import + curated import all need a connected server),
- * so offline the island is never mounted and this is never called.
+ * The page is server-gated (the file import + frequency import + curated import
+ * all need a connected server), so offline the island is never mounted and this
+ * is never called.
  *
  * @license Unlicense <http://unlicense.org/>
  */
+
+import { apiGet } from '@shared/api/client';
 
 /** A curated dictionary source entry (one downloadable dictionary). */
 export interface CuratedDictSource {
@@ -41,8 +43,6 @@ export interface CuratedDictGroup {
 
 /** Bootstrap config the WordUpload island reads on mount. */
 export interface WordUploadConfig {
-  /** Base-path-correct POST endpoint the manual upload form submits to. */
-  uploadUrl: string;
   /** Current language id (0 when none selected). */
   langId: number;
   /** Current language name ('' when none selected). */
@@ -55,27 +55,17 @@ export interface WordUploadConfig {
   curatedDictionaries: CuratedDictGroup[];
 }
 
-/** The server's base path (`<meta name="lukaisu-base-path">`), '' at the root. */
-function basePath(): string {
-  const meta = document.querySelector('meta[name="lukaisu-base-path"]');
-  return meta?.getAttribute('content') ?? '';
-}
-
 /**
  * Fetch the word-upload bootstrap config, or `null` when the request fails.
  */
 export async function fetchWordUploadConfig(): Promise<WordUploadConfig | null> {
   try {
-    const response = await fetch(`${basePath()}/word/upload/config`, {
-      headers: { Accept: 'application/json' },
-      credentials: 'same-origin'
-    });
-    if (!response.ok) {
+    const response = await apiGet<WordUploadConfig>('/terms/upload/config');
+    const data = response.data;
+    if (!data) {
       return null;
     }
-    const data = (await response.json()) as Partial<WordUploadConfig>;
     return {
-      uploadUrl: data.uploadUrl ?? '/word/upload',
       langId: data.langId ?? 0,
       langName: data.langName ?? '',
       isFrequencyAvailable: data.isFrequencyAvailable ?? false,

@@ -22,6 +22,7 @@ use Lukaisu\Api\V1\Response;
 use Lukaisu\Shared\Http\ApiRoutableInterface;
 use Lukaisu\Shared\Http\ApiRoutableTrait;
 use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
+use Lukaisu\Shared\Infrastructure\Container\Container;
 use Lukaisu\Modules\Text\Application\TextFacade;
 
 /**
@@ -70,7 +71,19 @@ class VocabularyApiRouter implements ApiRoutableInterface
         $frag1 = $this->frag($fragments, 1);
         $frag2 = $this->frag($fragments, 2);
 
-        if ($frag1 === 'list') {
+        if ($frag1 === 'upload') {
+            // Word-upload bootstrap config moved off its cookie-authed
+            // /word/upload/config route onto /api/v1 under the headless cut
+            // (Phase R). TermImportController@uploadConfig already returns a
+            // JsonResponse; resolve it at dispatch to avoid churning this
+            // router's constructor.
+            if ($frag2 === 'config') {
+                return Container::getInstance()
+                    ->getTyped(TermImportController::class)
+                    ->uploadConfig($params);
+            }
+            return Response::error('Expected "config" sub-path', 404);
+        } elseif ($frag1 === 'list') {
             return Response::success($this->wordListHandler->getWordList($params));
         } elseif ($frag1 === 'filter-options') {
             $langId = isset($params['language_id']) && $params['language_id'] !== ''
@@ -132,6 +145,16 @@ class VocabularyApiRouter implements ApiRoutableInterface
     {
         $frag1 = $this->frag($fragments, 1);
         $frag2 = $this->frag($fragments, 2);
+
+        if ($frag1 === 'upload') {
+            // The multipart term/dictionary file upload moved off /word/upload
+            // onto POST /api/v1/terms/upload (Phase R). The WordUpload island
+            // posts a multipart body, so $_POST/$_FILES are populated and the
+            // controller reads op + the file exactly as for the native form.
+            return Container::getInstance()
+                ->getTyped(TermImportController::class)
+                ->upload($params);
+        }
 
         if ($frag1 !== '' && ctype_digit($frag1)) {
             $termId = (int) $frag1;

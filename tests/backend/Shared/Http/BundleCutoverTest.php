@@ -99,7 +99,6 @@ class BundleCutoverTest extends TestCase
         return [
             'export terms' => ['POST', '/words', 'TermDisplayController'],
             'save bulk-translate' => ['POST', '/word/bulk-translate', 'TermImportController@bulkTranslate'],
-            'upload terms file' => ['POST', '/word/upload', 'TermImportController@upload'],
             'create text' => ['POST', '/texts/new', 'TextController@new'],
             'edit text POST' => ['POST', '/texts/5/edit', 'TextController@editSingle'],
             // Feed forms: GET 302s into the bundle, but the native-submit POST
@@ -142,9 +141,6 @@ class BundleCutoverTest extends TestCase
             // Likewise, the bulk-translate page 302s into the bundle, but its JSON
             // config data route keeps the controller.
             'bulk-translate config' => ['/word/bulk-translate/config', 'TermImportController@config'],
-            // And the word-upload page 302s into the bundle, but its JSON config
-            // data route keeps the controller.
-            'word-upload config' => ['/word/upload/config', 'TermImportController@uploadConfig'],
             'api prefix' => ['/api/v1/languages', 'ApiController@v1'],
             'bundle shell' => ['/app/read.html', 'BundleController@serve'],
         ];
@@ -187,6 +183,11 @@ class BundleCutoverTest extends TestCase
             'starter-vocab config' => ['GET', 'languages/5/starter-vocab/config'],
             'starter-vocab import' => ['POST', 'languages/5/starter-vocab/import'],
             'starter-vocab enrich' => ['POST', 'languages/5/starter-vocab/enrich'],
+            // Word-upload bootstrap config + multipart file POST moved off their
+            // cookie routes (Phase R); VocabularyApiRouter dispatches both to
+            // TermImportController.
+            'word-upload config' => ['GET', 'terms/upload/config'],
+            'word-upload file' => ['POST', 'terms/upload'],
         ];
     }
 

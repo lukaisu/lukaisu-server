@@ -303,22 +303,12 @@ function registerRoutes(Router $router): void
     );
 
     // Upload words (TermImportController). The GET page is served by the bundled
-    // client (Svelte WordUpload island); see the /app redirects below. The file
-    // POST (importing a term/dictionary file) keeps this controller — the bundle
-    // island fetch()-posts to it (multipart) and renders the returned JSON
-    // ({lastUpdate, rtl, recno}) as an imported-terms table client-side.
-    $router->registerWithMiddleware(
-        '/word/upload',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController@upload',
-        AUTH_MIDDLEWARE
-    );
-    // JSON bootstrap config for the island (current language, FrequencyWords
-    // availability, curated dictionaries, the upload/import endpoints).
-    $router->get(
-        '/word/upload/config',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController@uploadConfig',
-        AUTH_MIDDLEWARE
-    );
+    // client (Svelte WordUpload island; see the /app redirects below). Under the
+    // headless cut (Phase R) the file-upload POST and its bootstrap config moved
+    // onto /api/v1/terms/upload{,/config}, dispatched by VocabularyApiRouter to
+    // TermImportController; the WordUpload island posts a bearer-authed multipart
+    // body there. No cookie-authed top-level upload route remains — only the GET
+    // bundle redirect for /word/upload (registered further below).
 
     // Review status change during review (iframe/ajax view).
     // NB: the dead text-reader frame routes (set-status, delete-term,

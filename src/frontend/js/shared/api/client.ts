@@ -722,3 +722,46 @@ export async function apiPostForm<T>(
     return { error: String(error) };
   }
 }
+
+/**
+ * Make a multipart/form-data POST request (for file uploads).
+ *
+ * Unlike {@link apiPostForm} (which sends urlencoded key/value pairs), this
+ * sends a raw `FormData` body so file inputs survive — the browser sets the
+ * `multipart/form-data` Content-Type + boundary itself, so we must NOT set it.
+ * Bearer auth + CSRF headers are attached so a connected remote server accepts
+ * the upload cross-origin.
+ *
+ * @param endpoint API endpoint
+ * @param formData The multipart body (files + fields)
+ * @returns Promise resolving to ApiResponse with data or error
+ */
+export async function apiPostMultipart<T>(
+  endpoint: string,
+  formData: FormData
+): Promise<ApiResponse<T>> {
+  try {
+    const response = await apiFetch(defaultConfig.baseUrl + endpoint, {
+      method: 'POST',
+      // No Content-Type header: the browser derives multipart/form-data and its
+      // boundary from the FormData body. Setting it ourselves breaks parsing.
+      headers: withAuth(withCsrf({ Accept: 'application/json' })),
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await parseResponse<{ message?: string; error?: string }>(response);
+      return {
+        error:
+          errorData.error ||
+          errorData.message ||
+          `HTTP ${response.status}: ${response.statusText}`
+      };
+    }
+
+    const respData = await parseResponse<T>(response);
+    return { data: respData };
+  } catch (error) {
+    return { error: String(error) };
+  }
+}

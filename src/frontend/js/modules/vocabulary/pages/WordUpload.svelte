@@ -36,7 +36,7 @@
   import { tick } from 'svelte';
   import { initIcons } from '@shared/icons/lucide_icons';
   import { t } from '@shared/i18n/translator';
-  import { apiPostForm, getCsrfToken } from '@shared/api/client';
+  import { apiPostForm, apiPostMultipart, getCsrfToken } from '@shared/api/client';
   import { statuses } from '@shared/stores/app_data';
   import CuratedDictBrowser from '@modules/vocabulary/components/CuratedDictBrowser.svelte';
   import ResultDisplay from '@modules/vocabulary/pages/ResultDisplay.svelte';
@@ -285,17 +285,18 @@
     manualSubmitting = true;
     manualError = '';
     try {
-      // FormData carries the hidden `_csrf_token` + `id` inputs, so CSRF is
-      // preserved exactly as the native form POST did.
-      const response = await fetch(config.uploadUrl, { method: 'POST', body: formData });
-      const data = await response.json();
+      // apiPostMultipart carries the FormData (files + the hidden `id` /
+      // `_csrf_token` inputs) with a bearer token, so a connected remote server
+      // accepts the upload cross-origin.
+      const response = await apiPostMultipart<ManualResult>('/terms/upload', formData);
 
-      if (!response.ok) {
-        manualError = data.error || 'Import failed.';
+      if (response.error || !response.data) {
+        manualError = response.error || 'Import failed.';
         manualResult = null;
         return;
       }
 
+      const data = response.data;
       manualResult = {
         lastUpdate: String(data.lastUpdate ?? ''),
         rtl: Boolean(data.rtl),
@@ -554,12 +555,9 @@
           <span>{manualError}</span>
         </div>
       {/if}
-      <form
-        enctype="multipart/form-data"
-        action={config.uploadUrl}
-        method="post"
-        onsubmit={handleManualSubmit}
-      >
+      <!-- action/method are inert: onsubmit preventDefaults and posts the
+           FormData through apiPostMultipart. enctype documents the payload. -->
+      <form enctype="multipart/form-data" onsubmit={handleManualSubmit}>
       <input type="hidden" name="_csrf_token" value={csrfToken} />
       <!-- Language ID from current language setting -->
       <input type="hidden" name="id" value={config.langId} />

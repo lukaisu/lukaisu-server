@@ -222,7 +222,9 @@ class TermImportController extends VocabularyBaseController
      *
      * The GET page is the bundled Svelte `WordUpload` island (the `/word/upload`
      * GET route 302s into `dist-app/word-upload.html`); this method now only
-     * serves the island's manual-upload `fetch()` POST and always answers with
+     * serves the island's manual-upload multipart POST (at POST
+     * /api/v1/terms/upload, dispatched by VocabularyApiRouter@routePost) and
+     * always answers with
      * JSON. The Svelte manual tab submits exactly two operations, keyed by the
      * clicked submit button's `op` value: `ImportDictionary` (upload a dictionary
      * file → {@see handleDictionaryImport}) or `Import` (a CSV/TSV/pasted term
@@ -257,10 +259,11 @@ class TermImportController extends VocabularyBaseController
      * registry, and the base-path-correct import endpoints — so it fetches them
      * here on mount. This mirrors the JSON blobs the retired `upload_form.php`
      * view used to inline (minus the CSRF token, which the island reads from
-     * `<meta name="csrf-token">`). The manual upload still posts a native
-     * multipart form to {@see upload()} (the `uploadUrl`).
+     * `<meta name="csrf-token">`). The manual upload posts a multipart body to
+     * {@see upload()} at POST /api/v1/terms/upload.
      *
-     * Route: GET /word/upload/config
+     * Route: GET /api/v1/terms/upload/config
+     * (dispatched by VocabularyApiRouter@routeGet)
      *
      * @param array<string, string> $params Route parameters (unused).
      *
@@ -281,7 +284,6 @@ class TermImportController extends VocabularyBaseController
         }
 
         return JsonResponse::success([
-            'uploadUrl' => url('/word/upload'),
             'langId' => $langId,
             'langName' => $langName,
             'isFrequencyAvailable' => $isFrequencyAvailable,
