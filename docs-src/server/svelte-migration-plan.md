@@ -557,7 +557,28 @@ admin/annotated (defer→Python). D3f/D3g stay deferred.
 
 ---
 
-## D5 plan — the `main.ts` Alpine split (drafted + verified 2026-07-01; READY TO EXECUTE, pending go-ahead)
+## D5 plan — the `main.ts` Alpine split — ✅ EXECUTED 2026-07-01 (static gate green; manual QA pending)
+
+**Done as planned (Option A, ~5 files + 1 leak-fix).** `shared/boot/frontend_shell.ts` (shared Alpine-free
+init) + `client.ts` (Alpine-free client entry) created; `main.ts` kept Alpine-ful for the server;
+`app/boot.ts:170` now imports `@/client`; the `alpinejs` alias removed from `vite.app.config.ts`.
+**The removed alias immediately earned its keep** — `build:app` failed on a leak the plan had missed:
+`modules/text/pages/reading/text_multiword_selection.ts` (reached by the Svelte reader island via
+`TextReaderApp.svelte`) statically `import`ed `alpinejs` for a server-only `Alpine.store('multiWordForm')`
+fallback the client never hits (the reader always returns early via its `onMultiWord` callback). Fixed by
+reading `window.Alpine` off the global instead of importing it (+ updated its test to stub the global).
+**Static gate green:** typecheck 590/0/0 · eslint · `build:app` (no alias) + `build` · vitest 3190 · and
+`dist-app/` has **zero Alpine runtime** (no `_x_dataStack`/`Alpine.start()`/`@alpinejs`/alpine chunk; the only
+residual "alpine" strings are the inert `window.Alpine?.store` server-branch + the `alpine:initialized` event
+name in `lucide_icons.ts` + migration comments in the shells). `@alpinejs/csp` + `@types/alpinejs` stay (server
+entry). **STILL REQUIRED before deploy: the manual QA matrix below** — every page's boot changed and Cypress
+can't run headless here. Top item to verify: client icons (the `alpine:initialized → initIcons` pass in
+`lucide_icons.ts:459` never fires without Alpine; icons should still render via module-load `init()` + each
+island's `initIcons()`, but confirm on the reader + words action card).
+
+---
+
+### Original D5 plan (as drafted + verified, for reference)
 
 **Goal:** make the local-first **client bundle Alpine-free**; keep `main.ts` Alpine-ful as the **server** entry
 (searchableSelect, coexistence tag_form/login/edit_form, admin, annotated, text_list/suggestions/wizard —
