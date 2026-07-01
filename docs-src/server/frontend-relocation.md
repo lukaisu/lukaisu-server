@@ -202,11 +202,14 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > **including vitest** — R2 skipped vitest and a deleted-module test import
 > slipped through (`c60aed9`); always run vitest when touching `src/frontend`.
 >
-> Families: **[x] statistics** · [ ] word-upload (multipart) · [ ] bulk-translate
-> · [ ] starter-vocab · [ ] feeds (config + native POST) · [ ] dict-import
-> (multipart) · [ ] terms-export (native form `POST /words` → fetch + blob
-> download) · [ ] books (needs bundle book pages or link-router handling) ·
-> [ ] admin (navbar links + `app/settings.ts`'s `settings_api`).
+> Families: **[x] statistics** · **[x] starter-vocab** (config GET `18f6e51` +
+> import/enrich POST — the import/enrich endpoints are shared with word-upload's
+> Frequency tab, both islands repointed to `apiPostForm`) · [ ] word-upload
+> (its OWN `GET /word/upload/config` + multipart `POST /word/upload` still on
+> `basePath()`) · [ ] bulk-translate · [ ] feeds (config + native POST) ·
+> [ ] dict-import (multipart) · [ ] terms-export (native form `POST /words` →
+> fetch + blob download) · [ ] books (needs bundle book pages or link-router
+> handling) · [ ] admin (navbar links + `app/settings.ts`'s `settings_api`).
 
 ---
 
