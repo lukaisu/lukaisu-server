@@ -38,5 +38,4 @@ import '@shared/forms/word_form_auto';
 
 // Side-effect imports (pages)
 import './pages/expression_interactable';
-import './pages/word_result_init';
 import './pages/translation_page';

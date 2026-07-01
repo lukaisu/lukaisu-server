@@ -287,9 +287,7 @@ class VocabularyServiceProvider implements ServiceProviderInterface
         // Register Controllers
         $container->singleton(TermEditController::class, function (Container $c) {
             return new TermEditController(
-                $c->getTyped(VocabularyFacade::class),
-                $c->getTyped(DictionaryAdapter::class),
-                $c->getTyped(LanguageFacade::class)
+                $c->getTyped(VocabularyFacade::class)
             );
         });
 

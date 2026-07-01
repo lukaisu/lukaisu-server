@@ -63,7 +63,9 @@ class BundleCutoverTest extends TestCase
         return [
             ['/'], ['/index.php'], ['/texts'], ['/text/5/read'], ['/text/5/print-plain'],
             ['/texts/new'], ['/texts/5/edit'], ['/text/archived'], ['/text/archived/5/edit'],
-            ['/text/check'], ['/words'], ['/words/edit'], ['/words/5/edit'], ['/languages'],
+            ['/text/check'], ['/words'], ['/words/edit'], ['/words/5/edit'],
+            // New-term form 302s into the bundled new-term island (headless cut).
+            ['/words/new'], ['/word/new'], ['/languages'],
             ['/languages/new'], ['/languages/5/edit'], ['/languages/5/starter-vocab'],
             ['/word/bulk-translate'], ['/word/upload'],
             ['/tags'], ['/tags/text'], ['/review'],

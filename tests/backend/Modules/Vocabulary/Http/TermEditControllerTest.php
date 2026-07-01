@@ -8,8 +8,6 @@ use Lukaisu\Modules\Vocabulary\Http\TermEditController;
 use Lukaisu\Modules\Vocabulary\Http\VocabularyBaseController;
 use Lukaisu\Modules\Vocabulary\Application\VocabularyFacade;
 use Lukaisu\Modules\Vocabulary\Domain\Term;
-use Lukaisu\Shared\Infrastructure\Dictionary\DictionaryAdapter;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -18,32 +16,20 @@ use PHPUnit\Framework\MockObject\MockObject;
 /**
  * Unit tests for TermEditController.
  *
- * Tests constructor behavior, class structure, method signatures,
- * inline edit logic, delete operations, and form data assembly.
+ * The server-rendered create/edit forms were retired under the headless cut;
+ * this controller now only serves inline edit (AJAX) and term deletion.
  */
 class TermEditControllerTest extends TestCase
 {
     /** @var VocabularyFacade&MockObject */
     private VocabularyFacade $facade;
 
-    /** @var DictionaryAdapter&MockObject */
-    private DictionaryAdapter $dictionaryAdapter;
-
-    /** @var LanguageFacade&MockObject */
-    private LanguageFacade $languageFacade;
-
     private TermEditController $controller;
 
     protected function setUp(): void
     {
         $this->facade = $this->createMock(VocabularyFacade::class);
-        $this->dictionaryAdapter = $this->createMock(DictionaryAdapter::class);
-        $this->languageFacade = $this->createMock(LanguageFacade::class);
-        $this->controller = new TermEditController(
-            $this->facade,
-            $this->dictionaryAdapter,
-            $this->languageFacade
-        );
+        $this->controller = new TermEditController($this->facade);
     }
 
     // =========================================================================
@@ -57,9 +43,9 @@ class TermEditControllerTest extends TestCase
     }
 
     #[Test]
-    public function constructorAcceptsAllNullParameters(): void
+    public function constructorAcceptsNullParameter(): void
     {
-        $controller = new TermEditController(null, null, null);
+        $controller = new TermEditController(null);
         $this->assertInstanceOf(TermEditController::class, $controller);
     }
 
@@ -69,22 +55,6 @@ class TermEditControllerTest extends TestCase
         $reflection = new \ReflectionProperty(TermEditController::class, 'facade');
 
         $this->assertSame($this->facade, $reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function constructorSetsDictionaryAdapterProperty(): void
-    {
-        $reflection = new \ReflectionProperty(TermEditController::class, 'dictionaryAdapter');
-
-        $this->assertSame($this->dictionaryAdapter, $reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function constructorSetsLanguageFacadeProperty(): void
-    {
-        $reflection = new \ReflectionProperty(TermEditController::class, 'languageFacade');
-
-        $this->assertSame($this->languageFacade, $reflection->getValue($this->controller));
     }
 
     // =========================================================================
@@ -108,11 +78,7 @@ class TermEditControllerTest extends TestCase
         $reflection = new \ReflectionClass(TermEditController::class);
 
         $expectedMethods = [
-            'editWordById',
-            'editWord',
-            'editTerm',
             'inlineEdit',
-            'createWord',
             'deleteWord',
         ];
 
@@ -129,81 +95,14 @@ class TermEditControllerTest extends TestCase
         }
     }
 
-    #[Test]
-    public function classHasRequiredPrivateMethods(): void
-    {
-        $reflection = new \ReflectionClass(TermEditController::class);
-
-        $expectedMethods = [
-            'handleEditWordOperation',
-            'displayEditWordForm',
-            'handleEditTermOperation',
-            'displayEditTermForm',
-            'getWordFormData',
-        ];
-
-        foreach ($expectedMethods as $methodName) {
-            $this->assertTrue(
-                $reflection->hasMethod($methodName),
-                "TermEditController should have private method: $methodName"
-            );
-            $method = $reflection->getMethod($methodName);
-            $this->assertTrue(
-                $method->isPrivate(),
-                "Method $methodName should be private"
-            );
-        }
-    }
-
     // =========================================================================
     // Method signature tests
     // =========================================================================
 
     #[Test]
-    public function editWordByIdAcceptsIntParameter(): void
-    {
-        $method = new \ReflectionMethod(TermEditController::class, 'editWordById');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('id', $params[0]->getName());
-        $this->assertSame('int', $params[0]->getType()->getName());
-    }
-
-    #[Test]
-    public function editWordAcceptsArrayParameter(): void
-    {
-        $method = new \ReflectionMethod(TermEditController::class, 'editWord');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('params', $params[0]->getName());
-    }
-
-    #[Test]
-    public function editTermAcceptsArrayParameter(): void
-    {
-        $method = new \ReflectionMethod(TermEditController::class, 'editTerm');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('params', $params[0]->getName());
-    }
-
-    #[Test]
     public function inlineEditAcceptsArrayParameter(): void
     {
         $method = new \ReflectionMethod(TermEditController::class, 'inlineEdit');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('params', $params[0]->getName());
-    }
-
-    #[Test]
-    public function createWordAcceptsArrayParameter(): void
-    {
-        $method = new \ReflectionMethod(TermEditController::class, 'createWord');
         $params = $method->getParameters();
 
         $this->assertCount(1, $params);
@@ -475,171 +374,5 @@ class TermEditControllerTest extends TestCase
         $this->assertStringContainsString('&lt;b&gt;', $output);
 
         unset($_POST['id'], $_POST['value']);
-    }
-
-    // =========================================================================
-    // getWordFormData tests via reflection
-    // =========================================================================
-
-    #[Test]
-    public function getWordFormDataReturnsExpectedKeys(): void
-    {
-        $method = new \ReflectionMethod(TermEditController::class, 'getWordFormData');
-
-        $result = $method->invoke($this->controller);
-
-        $expectedKeys = [
-            'id', 'language_id', 'text', 'text_lc', 'status',
-            'WoOldStatus', 'translation', 'romanization', 'sentence',
-            'tid', 'ord', 'len',
-        ];
-
-        foreach ($expectedKeys as $key) {
-            $this->assertArrayHasKey($key, $result, "getWordFormData should contain key: $key");
-        }
-    }
-
-    #[Test]
-    public function getWordFormDataReturnsCorrectCount(): void
-    {
-        $method = new \ReflectionMethod(TermEditController::class, 'getWordFormData');
-
-        $result = $method->invoke($this->controller);
-
-        $this->assertCount(12, $result);
-    }
-
-    #[Test]
-    public function getWordFormDataDefaultWoLgIDIsZero(): void
-    {
-        $method = new \ReflectionMethod(TermEditController::class, 'getWordFormData');
-
-        $result = $method->invoke($this->controller);
-
-        $this->assertSame(0, $result['language_id']);
-    }
-
-    // =========================================================================
-    // handleEditWordOperation tests via reflection
-    // =========================================================================
-
-    #[Test]
-    public function handleEditWordOperationReturnsBool(): void
-    {
-        $method = new \ReflectionMethod(TermEditController::class, 'handleEditWordOperation');
-
-        $returnType = $method->getReturnType();
-        $this->assertNotNull($returnType);
-        $this->assertSame('bool', $returnType->getName());
-    }
-
-    // =========================================================================
-    // Lazy-loaded service accessor tests
-    // =========================================================================
-
-    #[Test]
-    public function crudServiceIsNullByDefault(): void
-    {
-        $reflection = new \ReflectionProperty(VocabularyBaseController::class, 'crudService');
-
-        $this->assertNull($reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function contextServiceIsNullByDefault(): void
-    {
-        $reflection = new \ReflectionProperty(VocabularyBaseController::class, 'contextService');
-
-        $this->assertNull($reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function linkingServiceIsNullByDefault(): void
-    {
-        $reflection = new \ReflectionProperty(VocabularyBaseController::class, 'linkingService');
-
-        $this->assertNull($reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function expressionServiceIsNullByDefault(): void
-    {
-        $reflection = new \ReflectionProperty(VocabularyBaseController::class, 'expressionService');
-
-        $this->assertNull($reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function textStatisticsServiceIsNullByDefault(): void
-    {
-        $reflection = new \ReflectionProperty(VocabularyBaseController::class, 'textStatisticsService');
-
-        $this->assertNull($reflection->getValue($this->controller));
-    }
-
-    // =========================================================================
-    // View path tests
-    // =========================================================================
-
-    #[Test]
-    public function viewPathEndsWithViews(): void
-    {
-        $reflection = new \ReflectionProperty(VocabularyBaseController::class, 'viewPath');
-
-        $path = $reflection->getValue($this->controller);
-
-        $this->assertStringEndsWith('Views/', $path);
-    }
-
-    #[Test]
-    public function setViewPathUpdatesViewPath(): void
-    {
-        $this->controller->setViewPath('/custom/path');
-
-        $reflection = new \ReflectionProperty(VocabularyBaseController::class, 'viewPath');
-
-        $this->assertSame('/custom/path/', $reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function setViewPathTrailingSlashIsNormalized(): void
-    {
-        $this->controller->setViewPath('/custom/path/');
-
-        $reflection = new \ReflectionProperty(VocabularyBaseController::class, 'viewPath');
-
-        $this->assertSame('/custom/path/', $reflection->getValue($this->controller));
-    }
-
-    // =========================================================================
-    // render method tests
-    // =========================================================================
-
-    #[Test]
-    public function renderThrowsOnMissingView(): void
-    {
-        $method = new \ReflectionMethod(VocabularyBaseController::class, 'render');
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('View not found: nonexistent_view');
-
-        $method->invoke($this->controller, 'nonexistent_view', []);
-    }
-
-    // =========================================================================
-    // editWord early return tests
-    // =========================================================================
-
-    #[Test]
-    public function editWordReturnsEarlyWithNoParams(): void
-    {
-        // No GET params set - wid='', tid='', ord='', op=''
-        // This should trigger early return
-        ob_start();
-        $this->controller->editWord([]);
-        $output = ob_get_clean();
-
-        // No output when early return
-        $this->assertSame('', $output);
     }
 }

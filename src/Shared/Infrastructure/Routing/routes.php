@@ -156,31 +156,14 @@ function registerRoutes(Router $router): void
     // Split into focused controllers: TermEditController, TermDisplayController,
     // TermStatusController, TermApiController, TermImportController
 
-    // Edit word (TermEditController)
-    $router->registerWithMiddleware(
-        '/word/edit',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermEditController@editWord',
-        AUTH_MIDDLEWARE
-    );
-
-    // Edit term while testing (TermEditController)
-    $router->registerWithMiddleware(
-        '/word/edit-term',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermEditController@editTerm',
-        AUTH_MIDDLEWARE
-    );
-
-    // Edit single word form (RESTful route): /words/123/edit
-    $router->get(
-        '/words/{id:int}/edit',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermEditController@editWordById',
-        AUTH_MIDDLEWARE
-    );
-    $router->post(
-        '/words/{id:int}/edit',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermEditController@editWordById',
-        AUTH_MIDDLEWARE
-    );
+    // Create / edit term forms are served by the bundled client under the
+    // headless cut: the reader edits inline via /api/v1/terms, review's "edit
+    // term" opens the bundled term editor (/words/{id}/edit -> word.html), and
+    // the standalone new-term page (/words/new -> word-new.html) creates via
+    // POST /api/v1/terms/standalone. GET /words/{id}/edit + /words/new + /word/new
+    // 302 into the bundle (see the /app redirects below); the old
+    // TermEditController render methods + form_edit_* / form_new / *_result views
+    // were deleted.
 
     // Delete word (RESTful route): DELETE /words/123
     $router->delete(
@@ -198,16 +181,6 @@ function registerRoutes(Router $router): void
     // "Export" actions used to POST the marked ids here to stream a download;
     // that moved to POST /api/v1/terms/export (Phase R), so no native POST /words
     // handler remains.
-
-    // New word (TermEditController)
-    // RESTful route: /words/new
-    $router->get('/words/new', 'Lukaisu\\Modules\\Vocabulary\\Http\\TermEditController@createWord', AUTH_MIDDLEWARE);
-    // Legacy route: /word/new
-    $router->registerWithMiddleware(
-        '/word/new',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermEditController@createWord',
-        AUTH_MIDDLEWARE
-    );
 
     // Show word - new RESTful route with typed parameter (TermDisplayController)
     $router->get('/word/{wid:int}', 'Lukaisu\\Modules\\Vocabulary\\Http\\TermDisplayController@showWord', AUTH_MIDDLEWARE);
@@ -710,6 +683,10 @@ function registerRoutes(Router $router): void
     $router->get('/text/print-plain', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/words', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/words/edit', $bundleRedirect, AUTH_MIDDLEWARE);
+    // New-term form: /words/new (and the legacy /word/new alias) 302 into the
+    // bundled Svelte new-term island, which creates via POST /api/v1/terms/standalone.
+    $router->get('/words/new', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/word/new', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/word/bulk-translate', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/word/upload', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/words/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);

@@ -159,11 +159,13 @@ class RoutesTest extends TestCase
         $termStatusController = 'Lukaisu\\Modules\\Vocabulary\\Http\\TermStatusController';
         $termImportController = 'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController';
         return [
-            'word edit' => ['/word/edit', "{$termEditController}@editWord"],
-            'word edit-term' => ['/word/edit-term', "{$termEditController}@editTerm"],
+            // Create/edit term forms are bundled (headless cut): /word/edit and
+            // /word/edit-term were deleted; /words/new + /word/new 302 into the
+            // bundled new-term island (create via POST /api/v1/terms/standalone).
             'words edit list' => ['/words/edit', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
             'words list' => ['/words', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            'word new' => ['/word/new', "{$termEditController}@createWord"],
+            'words new' => ['/words/new', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
+            'word new' => ['/word/new', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
             'word show' => ['/word/show', "{$termDisplayController}@showWord"],
             'word inline-edit' => ['/word/inline-edit', "{$termEditController}@inlineEdit"],
             // GET 302s into the bundled Svelte BulkTranslate island. Its bootstrap
