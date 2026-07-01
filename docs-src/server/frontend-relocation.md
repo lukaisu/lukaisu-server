@@ -174,6 +174,23 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > parity-then-delete. **R5 edits `src/frontend/js` (bundled into the app), so it
 > is app-affecting — coordinate before starting.**
 
+> **CLEAN-DELETION PHASE COMPLETE (2026-07-01).** R1 + R2 (`470b2c5`, `765e60c`)
+> were the *only* server-only surfaces. Probing further confirmed **R3 (books)
+> and R4 (admin/profile) are BOTH app-entangled**, not server-only:
+> - **Books:** the app's reader chapter-nav (`book_nav_renderer.ts` → `/book/{id}`)
+>   and EPUB import nav (`text_suggestions.ts` → `/book/import`) link to server
+>   book pages.
+> - **Admin/profile:** the app's Svelte navbar (`navbar_renderer.ts`) renders
+>   `/admin/{backup,settings,users,server-data}` + `/profile` links,
+>   `WordUpload.svelte` links `/admin/backup`, and **`app/settings.ts` imports
+>   `@modules/admin/api/settings_api`** — so the admin module ships in the app
+>   bundle.
+>
+> So **everything past R2 is R5** (repoint/rethink the app reference + build the
+> `/api/v1` endpoint, then delete) — there is nothing left to delete without
+> touching `src/frontend/js`. **Deletion track stops here; R5 is the coordination
+> boundary.** R3/R4 fold into R5's per-module parity-then-delete.
+
 ---
 
 ## 3. Phase M — move the frontend into the app
