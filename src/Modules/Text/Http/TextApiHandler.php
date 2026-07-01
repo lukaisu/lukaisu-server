@@ -32,6 +32,7 @@ use Lukaisu\Shared\Infrastructure\Database\Connection;
 use Lukaisu\Shared\Infrastructure\Database\Settings;
 use Lukaisu\Shared\Infrastructure\Database\TextParsing;
 use Lukaisu\Shared\Infrastructure\Database\UserScopedQuery;
+use Lukaisu\Shared\Infrastructure\Globals;
 use Lukaisu\Shared\Infrastructure\Http\GdlClient;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordDiscoveryService;
 use Lukaisu\Shared\Http\ApiRoutableInterface;
@@ -331,7 +332,13 @@ class TextApiHandler implements ApiRoutableInterface
             return $this->handleCheck($params);
         }
 
-        if ($frag1 === '' || !ctype_digit($frag1)) {
+        if ($frag1 === '') {
+            // POST /texts — create a text (the bundled new-text page's
+            // server-backed path). Mirrors the local router's createText.
+            return $this->handleCreateText($params);
+        }
+
+        if (!ctype_digit($frag1)) {
             return Response::error('Text ID (Integer) Expected', 404);
         }
 
@@ -475,16 +482,102 @@ class TextApiHandler implements ApiRoutableInterface
             (string) ($params['sourceUri'] ?? '')
         );
         if (isset($params['tags']) && is_array($params['tags'])) {
-            $tags = array_values(array_filter(
-                array_map(
-                    static fn(mixed $tag): string => is_scalar($tag) ? (string) $tag : '',
-                    $params['tags']
-                ),
-                static fn(string $name): bool => $name !== ''
-            ));
-            TagsFacade::saveTextTags($textId, $tags);
+            // Present-but-empty `tags` clears the text's tags on update.
+            TagsFacade::saveTextTags($textId, $this->normalizeTagNames($params['tags']));
         }
         return Response::success($result);
+    }
+
+    /**
+     * POST /texts — create a text (the bundled new-text page's server-backed
+     * path). Mirrors the local router's `createText` and the retired new-text
+     * form: a plain create via TextFacade::createText, or an auto-split into a
+     * book when the body exceeds the split threshold.
+     *
+     * @param array<string, mixed> $params JSON body (TextCreateRequest).
+     *
+     * @return JsonResponse
+     */
+    private function handleCreateText(array $params): JsonResponse
+    {
+        $langId = (int) ($params['langId'] ?? $params['language_id'] ?? 0);
+        if ($langId <= 0) {
+            return Response::error('langId is required', 400);
+        }
+        $title = (string) ($params['title'] ?? '');
+        $text = (string) ($params['text'] ?? '');
+        // TextsApi.create posts the server contract's snake_case keys
+        // (source_uri / audio_uri); accept those and the camelCase aliases.
+        $audioUri = (string) ($params['audioUri'] ?? $params['audio_uri'] ?? '');
+        $sourceUri = (string) ($params['sourceUri'] ?? $params['source_uri'] ?? '');
+        $tags = $this->normalizeTagNames($params['tags'] ?? null);
+
+        $bookFacade = Container::getInstance()->getTyped(BookFacade::class);
+
+        // Auto-split a long body into a book (parity with the retired form's
+        // handleAutoSplitImport): one text per chapter, tags applied to each.
+        if ($bookFacade->needsSplit($text)) {
+            $result = $bookFacade->createBookFromText(
+                $langId,
+                $title,
+                $text,
+                null,
+                $audioUri,
+                $sourceUri,
+                [],
+                Globals::getCurrentUserId()
+            );
+            if (!$result['success']) {
+                return Response::error($result['message'], 422);
+            }
+            if ($tags !== []) {
+                foreach ($result['textIds'] as $chapterTextId) {
+                    TagsFacade::saveTextTags($chapterTextId, $tags);
+                }
+            }
+            return Response::success([
+                'book' => true,
+                'bookId' => $result['bookId'],
+                'textIds' => $result['textIds'],
+                'message' => $result['message'],
+            ]);
+        }
+
+        $facade = Container::getInstance()->getTyped(TextFacade::class);
+        $created = $facade->createText($langId, $title, $text, $audioUri, $sourceUri);
+        $textId = (int) ($created['textId'] ?? 0);
+        $message = (string) ($created['message'] ?? '');
+        if ($textId <= 0) {
+            return Response::error($message !== '' ? $message : 'Text creation failed', 422);
+        }
+        if ($tags !== []) {
+            TagsFacade::saveTextTags($textId, $tags);
+        }
+        return Response::success([
+            'id' => $textId,
+            'message' => $message,
+        ]);
+    }
+
+    /**
+     * Normalize a raw `tags` payload into a clean list of non-empty tag names.
+     *
+     * @param mixed $tags Raw `tags` value from the JSON body.
+     *
+     * @return list<string>
+     */
+    private function normalizeTagNames(mixed $tags): array
+    {
+        if (!is_array($tags)) {
+            return [];
+        }
+        return array_values(array_filter(
+            array_map(
+                static fn(mixed $tag): string => is_scalar($tag) ? (string) $tag : '',
+                $tags
+            ),
+            static fn(string $name): bool => $name !== ''
+        ));
     }
 
     /**
