@@ -68,6 +68,9 @@ class BundleCutoverTest extends TestCase
             ['/word/bulk-translate'], ['/word/upload'],
             ['/tags'], ['/tags/text'], ['/review'],
             ['/profile/preferences'],
+            // Login is now cut over: GET /login 302s to the bundled LoginPage
+            // island (token-API login), replacing the server-rendered form.
+            ['/login'],
         ];
     }
 
@@ -108,7 +111,6 @@ class BundleCutoverTest extends TestCase
         return [
             'annotated print stays server' => ['/text/5/print', 'TextPrintController@printAnnotated'],
             'feeds (Job B)' => ['/feeds/new', 'FeedController'],
-            'login (Job C)' => ['/login', 'UserController@loginForm'],
             'word show (not bundled)' => ['/word/5', 'TermDisplayController@showWord'],
             // The starter-vocab page 302s into the bundle, but its JSON config
             // data route keeps the controller (the island fetches it server-backed).

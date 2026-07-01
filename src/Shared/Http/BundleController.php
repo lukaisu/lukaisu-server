@@ -17,6 +17,8 @@ declare(strict_types=1);
 
 namespace Lukaisu\Shared\Http;
 
+use Lukaisu\Shared\I18n\Translator;
+use Lukaisu\Shared\Infrastructure\Container\Container;
 use Lukaisu\Shared\Infrastructure\Globals;
 use Lukaisu\Shared\Infrastructure\Http\UrlUtilities;
 use Lukaisu\Shared\Infrastructure\Routing\Middleware\CsrfMiddleware;
@@ -136,6 +138,8 @@ final class BundleController
                 return 'home.html';
             case $path === '/connect':
                 return 'index.html';
+            case $path === '/login':
+                return 'login.html';
             case $path === '/texts':
                 return 'library.html';
             case $path === '/languages/new':
@@ -285,9 +289,14 @@ final class BundleController
     {
         $csrf = htmlspecialchars(CsrfMiddleware::getToken(), ENT_QUOTES);
         $basePath = htmlspecialchars(UrlUtilities::getBasePath(), ENT_QUOTES);
+        [$uiLocale, $uiLocales] = $this->uiLocaleConfig();
         $config = json_encode([
             'sameOriginServer' => true,
             'multiUser' => Globals::isMultiUserEnabled(),
+            // Guest UI-language switcher data for the login island (the active
+            // locale + installed locale codes). Harmless on every other page.
+            'uiLocale' => $uiLocale,
+            'uiLocales' => $uiLocales,
         ]);
         if ($config === false) {
             $config = '{"sameOriginServer":true}';
@@ -303,5 +312,23 @@ final class BundleController
             return $inject . $html;
         }
         return substr($html, 0, $pos) . $inject . substr($html, $pos);
+    }
+
+    /**
+     * Resolve the active UI locale and the installed locale codes for the guest
+     * language switcher on the login shell. Guest-safe (no user data): mirrors
+     * PageLayoutHelper::languageSwitcher(), which lists the same locales. Returns
+     * `['en', []]` when the Translator is unavailable (e.g. setup wizard).
+     *
+     * @return array{0: string, 1: list<string>}
+     */
+    private function uiLocaleConfig(): array
+    {
+        $container = Container::getInstance();
+        if (!$container->has(Translator::class)) {
+            return ['en', []];
+        }
+        $translator = $container->getTyped(Translator::class);
+        return [$translator->getLocale(), array_values($translator->getAvailableLocales())];
     }
 }

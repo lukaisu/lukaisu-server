@@ -32,6 +32,10 @@ export const pageUrl = {
   connectChooser(): string {
     return 'index.html?connect';
   },
+  /** The same-origin PWA login screen (guest). */
+  login(): string {
+    return 'login.html';
+  },
   home(): string {
     return 'home.html';
   },
@@ -124,6 +128,11 @@ export function bundledPageFor(path: string): string | null {
   }
   if (pathname === '/connect') {
     return pageUrl.connect();
+  }
+  // Same-origin login screen (the token-API login island). A logout link or an
+  // auth-expired bounce that lands on /login resolves to the bundled page.
+  if (pathname === '/login') {
+    return pageUrl.login();
   }
   // Create surfaces: the navbar "+" and library "new text" links point here.
   // The server-rendered forms can't run offline, so route to the bundled

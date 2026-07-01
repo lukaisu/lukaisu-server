@@ -68,6 +68,13 @@ function registerRoutes(Router $router): void
         'Lukaisu\\Shared\\Http\\BundleController@serve',
         AUTH_MIDDLEWARE
     );
+    // The login shell is the one bundle page a guest must reach pre-auth. An
+    // exact route overrides the /app prefix above (exact match wins in
+    // Router::resolve), so it is served WITHOUT AuthMiddleware — otherwise a
+    // guest hitting /login -> /app/login.html would be bounced back to /login in
+    // an infinite loop. Serving it is guest-safe: BundleController only injects a
+    // per-session CSRF token + runtime config (no user data).
+    $router->get('/app/login.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
 
     // ==================== TEXT ROUTES (PROTECTED) ====================
 
@@ -632,7 +639,16 @@ function registerRoutes(Router $router): void
     // victim to log in as the attacker's account (and then have the victim's
     // reading/vocabulary land there) without first stealing the pre-login
     // session token, which is HttpOnly+SameSite.
-    $router->register('/login', 'Lukaisu\\Modules\\User\\Http\\UserController@loginForm', 'GET');
+    //
+    // GET /login now 302s into the bundled client: the Svelte `LoginPage` island
+    // (login.html) logs in via the token API (POST /api/v1/auth/login), which
+    // both sets the PHP session AND returns a bearer token. NO AuthMiddleware —
+    // guests must reach it (and gating it would loop, since AuthMiddleware
+    // bounces the unauthenticated to /login). The `/app/login.html` shell is
+    // exempted from the /app auth gate just below. The old `login.php` session
+    // form + UserController@loginForm/login are retained (still covered by tests)
+    // but are no longer reached by GET; see the report.
+    $router->get('/login', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
     $router->post(
         '/login',
         'Lukaisu\\Modules\\User\\Http\\UserController@login',
