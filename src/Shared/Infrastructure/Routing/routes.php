@@ -340,14 +340,11 @@ function registerRoutes(Router $router): void
     // and /languages/{id}/edit are redirected to the bundle (see /app redirects).
 
     // Starter vocabulary (shown after language creation). The GET page route is
-    // served by the bundled client (Svelte StarterVocab island); see the /app
-    // redirects below. This JSON config route feeds that island the server-only
-    // bits (language name, FrequencyWords availability, curated dictionaries).
-    $router->get(
-        '/languages/{id:int}/starter-vocab/config',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\StarterVocabController@config',
-        AUTH_MIDDLEWARE
-    );
+    // served by the bundled client (Svelte StarterVocab island; see the /app
+    // redirects below). The bootstrap config moved to GET
+    // /api/v1/languages/{id}/starter-vocab/config (LanguageApiHandler dispatches
+    // it to StarterVocabController@config) under the headless cut (Phase R). The
+    // import/enrich POST handlers below still process the island's native submits.
     $router->post(
         '/languages/{id:int}/starter-vocab/import',
         'Lukaisu\\Modules\\Vocabulary\\Http\\StarterVocabController@import',

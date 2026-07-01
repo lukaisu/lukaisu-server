@@ -26,6 +26,8 @@ use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Language\LanguagePresets;
 use Lukaisu\Modules\Text\Application\Services\SentenceService;
 use Lukaisu\Modules\Vocabulary\Application\UseCases\FindSimilarTerms;
+use Lukaisu\Modules\Vocabulary\Http\StarterVocabController;
+use Lukaisu\Shared\Infrastructure\Container\Container;
 
 /**
  * Handler for language-related API operations.
@@ -518,6 +520,17 @@ class LanguageApiHandler implements ApiRoutableInterface
         }
         if ($frag2 === 'reading-configuration') {
             return Response::success($this->formatReadingConfiguration($langId));
+        }
+        if ($frag2 === 'starter-vocab') {
+            // The starter-vocab bootstrap config moved off its cookie-authed
+            // top-level route onto /api/v1 under the headless cut (Phase R);
+            // StarterVocabController@config already returns a JsonResponse.
+            if ($this->frag($fragments, 3) === 'config') {
+                return Container::getInstance()
+                    ->getTyped(StarterVocabController::class)
+                    ->config($langId);
+            }
+            return Response::error('Expected "config" sub-path', 404);
         }
         if ($frag2 === '') {
             $result = $this->formatGetOne($langId);

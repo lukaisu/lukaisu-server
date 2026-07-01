@@ -4,16 +4,18 @@
  * The starter-vocab island needs server-only data the bundle cannot compute
  * locally — the language name, whether FrequencyWords data exists for it, and
  * the curated dictionaries filtered for the language. The server exposes them at
- * `GET /languages/{id}/starter-vocab/config` (StarterVocabController@config).
+ * `GET /api/v1/languages/{id}/starter-vocab/config` (dispatched to
+ * StarterVocabController@config), fetched through the api client so a connected
+ * remote server authenticates it by bearer token.
  *
- * That route is NOT under `/api/v1`, so this uses a base-path-aware raw fetch
- * rather than the api client. It is only reachable in same-origin server mode:
- * the page is server-gated (the FrequencyWords import + Wiktionary enrichment
+ * The page is server-gated (the FrequencyWords import + Wiktionary enrichment
  * need a connected server), so offline the island is never mounted and this is
  * never called.
  *
  * @license Unlicense <http://unlicense.org/>
  */
+
+import { apiGet } from '@shared/api/client';
 
 export interface CuratedDictSource {
   name: string;
@@ -46,12 +48,6 @@ export interface StarterVocabConfig {
   curatedDictionaries: CuratedDictGroup[];
 }
 
-/** The server's base path (`<meta name="lukaisu-base-path">`), '' at the root. */
-function basePath(): string {
-  const meta = document.querySelector('meta[name="lukaisu-base-path"]');
-  return meta?.getAttribute('content') ?? '';
-}
-
 /**
  * Fetch the starter-vocab bootstrap config for a language, or `null` when the
  * language is unknown or the request fails.
@@ -60,15 +56,9 @@ export async function fetchStarterVocabConfig(
   langId: number
 ): Promise<StarterVocabConfig | null> {
   try {
-    const response = await fetch(`${basePath()}/languages/${langId}/starter-vocab/config`, {
-      headers: { Accept: 'application/json' },
-      credentials: 'same-origin'
-    });
-    if (!response.ok) {
-      return null;
-    }
-    const data = (await response.json()) as Partial<StarterVocabConfig>;
-    if (typeof data.langName !== 'string') {
+    const response = await apiGet<StarterVocabConfig>(`/languages/${langId}/starter-vocab/config`);
+    const data = response.data;
+    if (!data || typeof data.langName !== 'string') {
       return null;
     }
     return {

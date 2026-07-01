@@ -139,7 +139,6 @@ class BundleCutoverTest extends TestCase
             'feed edit config' => ['/feeds/5/edit/config', 'FeedController@configEdit'],
             // The starter-vocab page 302s into the bundle, but its JSON config
             // data route keeps the controller (the island fetches it server-backed).
-            'starter-vocab config' => ['/languages/5/starter-vocab/config', 'StarterVocabController@config'],
             // Likewise, the bulk-translate page 302s into the bundle, but its JSON
             // config data route keeps the controller.
             'bulk-translate config' => ['/word/bulk-translate/config', 'TermImportController@config'],
@@ -182,6 +181,8 @@ class BundleCutoverTest extends TestCase
             'load single text tag' => ['GET', 'tags/text/5'],
             // Statistics chart data moved off /profile/statistics/config (Phase R).
             'statistics chart data' => ['GET', 'activity/statistics'],
+            // Starter-vocab config moved off its cookie route (Phase R).
+            'starter-vocab config' => ['GET', 'languages/5/starter-vocab/config'],
         ];
     }
 
