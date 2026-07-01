@@ -461,3 +461,57 @@ D4 + retiring those coexistence views — the feed cluster is done but it was no
 
 **Remaining (C order):** D3f admin (defer→A / decision) · D3g annotated print (defer→A / decision) · D4
 shared chrome · coexistence-view cleanup · D5 final `@alpinejs` deletion.
+
+---
+
+## D3f / D3g port-or-defer call (drafted 2026-07-01, from read-only scouts; PROPOSED — pending confirmation)
+
+**TL;DR recommendation: DEFER both (leave server-rendered). Delete 2 orphaned admin Alpine components now.
+Make D4 (shared chrome) the next real Alpine-retirement work — it's the actual blocker to a lean client.**
+
+### D3f — admin cluster → DEFER (leave server-rendered) + delete 2 orphans now
+9 live routes, all `ADMIN_MIDDLEWARE`-gated (admin role), none orphaned: `/admin` dashboard, `/admin/backup`
+(DB+file backup/restore), `/admin/wizard` (writes `.env`), `/admin/install-demo`, `/admin/server-data`
+(read-only version info, already uses `/api/v1/version`), `/admin/settings` (server-wide config — the
+user-scoped prefs already moved to `/profile/preferences`), `/admin/users*` (user CRUD, multi-user mode only).
+- **This is genuine server administration, not a user feature** — backup/restore, `.env`, demo-seed, user
+  management are meaningless on a local-first client with no server. Only `/admin/users` is even conceivably
+  client-worthy, and only in multi-user deployments.
+- **Almost no `/api/v1` coverage** — backup, wizard, install-demo, settings-save-all, and user CRUD all POST
+  to `/admin/*` returning HTML/redirect (or ad-hoc JSON). Porting to islands needs **substantial net-new PHP
+  APIs** — and per the project direction (**PHP frozen → optional Python edge**) that PHP is **throwaway**:
+  when the Python FastAPI admin lands, these get Python APIs, so building PHP ones now is wasted.
+- **Verdict:** leave the server-rendered admin forms as-is (stable, low-maintenance). Revisit when the Python
+  edge is built (port admin + its Python APIs together) or if a specific client-admin need appears.
+- **Free win now (do regardless):** delete `src/frontend/js/modules/admin/pages/table_management.ts`
+  (`tableManagementApp`) + `tts_settings.ts` (`ttsSettingsApp`) — registered but **no view references them**
+  (orphaned, ~343 LOC dead Alpine), plus their `admin/index.ts` imports + any specs.
+
+### D3g — annotated print → DEFER (leave server-only)
+Already **server-only by design**: the plain-print Svelte island explicitly renders "connect a server to
+create or print" (`TextPrintApp.svelte`), the router deliberately does NOT bundle `/text/{id}/print`, and
+`BundleCutoverTest` asserts `TextPrintController@printAnnotated` stays server. It's a niche power-user
+workflow (hand-edit an annotation blob persisted in `texts.annotated_text`). A real port needs **net-new
+write API** (~200 LOC — no annotation-CRUD `/api/v1` exists) + an **on-device annotation store** (IndexedDB/
+sync) + an edit UI (~40h total). **Verdict:** leave server-only; revisit only if local-first annotations
+become a product priority.
+
+### The consequence for D5 (state plainly — this is the real fork)
+There is **one shared `main.ts`** that imports Alpine and calls `Alpine.start()`; the app islands boot it too
+(`vite.app.config.ts:13`). The **client islands are already Alpine-free** (all `app/*.html` `x-data` hits are
+comments; `Alpine.start()` hydrates nothing there). What still keeps `@alpinejs` in the build: **(1) D4 shared
+chrome** (navbar/footer/theme/searchable-select/offline — on every page) and **(2) the server-rendered
+admin/annotated/coexistence views** (`tag_form.php`, `login.php`, `edit_form.php`, `text_list`,
+`text_suggestions`, `language_wizard_modal`, `local_dictionary_panel`). So **deferring D3f/D3g defers *full*
+`@alpinejs` removal with them.** Two coherent D5 end-states to pick from later:
+- **(i) Client D5 (recommended):** do D4 + retire the coexistence views, then split the build so the shrinking
+  server-rendered admin/annotated pages load a *standalone* mini-Alpine and remove Alpine from the client
+  `main.ts`/island bundle. → Alpine-free, CSP-clean **local-first client** (the migration's real goal); residual
+  Alpine quarantined to server-admin pages pending Python. No throwaway API work.
+- **(ii) Hold full D5:** keep `@alpinejs` in the shared bundle (dormant on the client) until admin + annotated
+  migrate to Python or are de-Alpined/deleted. Simpler, but the client keeps shipping Alpine.
+
+### Recommended next step
+DEFER D3f + D3g, delete the 2 orphans, and make **D4 (shared chrome → Svelte)** the next Alpine-retirement
+unit — it's needed on every page regardless of the admin/annotated decision and is the genuine blocker to a
+lean client. Then revisit D5 as the scoped **client-D5 (i)**.
