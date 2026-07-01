@@ -518,3 +518,39 @@ admin/annotated/coexistence views** (`tag_form.php`, `login.php`, `edit_form.php
 DEFER D3f + D3g, delete the 2 orphans, and make **D4 (shared chrome → Svelte)** the next Alpine-retirement
 unit — it's needed on every page regardless of the admin/annotated decision and is the genuine blocker to a
 lean client. Then revisit D5 as the scoped **client-D5 (i)**.
+
+---
+
+## D4 shared chrome — ✅ DONE 2026-07-01 (it was DELETION, not a port)
+
+Scouted + verified: the "shared chrome" was almost entirely **dead Alpine**, not live-needs-porting. Deleted
+6 components + 4 specs (−2,328 LOC; gate: typecheck 588/0/0 · eslint · vitest 3190 · build):
+- `footer.ts` — no `x-data="footer"` mount anywhere.
+- `navbar.ts` / `theme_toggle.ts` / `navbar_streak.ts` — Alpine leftovers; the live mounted versions are
+  `NavBar.svelte` / `ThemeToggle.svelte` / `NavbarStreak.svelte` (their `x-data` names appeared only in
+  `navbar_renderer.ts` template strings, themselves used only by the dead `navbar.ts`).
+- `offline-indicator.ts` / `offline-button.ts` — registered but unmounted PWA stubs (recoverable from git if
+  the PWA download/status UI is built later).
+- Removed the `main.ts` side-effect imports + `shared/{index,offline/index}.ts` re-exports.
+
+**KEPT (correcting the scout's "delete its imports" suggestion — that would break server forms):**
+- `navbar_renderer.ts` — its `NavbarData` **type** is imported by live `NavBar.svelte`/`main.ts`/offline repo
+  (runtime `renderNavbar` is now dead but it's plain TS, not an Alpine registration).
+- `searchable_select.ts` (+ its `text`/`language` barrel imports) — **coexistence**, not dead: registered via
+  the lazy `text`/`language` chunks and mounted on server-rendered `edit_form.php` + `archived_form.php` via
+  `SearchableSelectHelper.php`. Retires WITH those coexistence views, not in D4.
+- `BaseController::message()` inline `x-data` — server-only toast; retires with the server views.
+
+**Key reframe for D5 — D4 did NOT make the client Alpine-free.** `main.ts` still `import`s Alpine, registers
+the `$t`/`$markdown` magics, and calls `Alpine.start()`; the client islands boot that same `main.ts`. And
+Alpine is still genuinely needed on **server-rendered** pages: `searchableSelect` (edit/archived text forms),
+the coexistence views (`tag_form.php`, `login.php`, `edit_form.php`), admin (deferred), annotated print
+(deferred), `text_list`/`text_suggestions`/`language_wizard_modal`/`local_dictionary_panel`. So **client-D5**
+requires **splitting `main.ts`** — a client entry that does NOT import/start Alpine (islands are already
+`x-data`-free) vs. a legacy/server entry that keeps Alpine for the above until they migrate to Python or die.
+That build-split is the real D5 task; the remaining server-side Alpine is intentionally deferred with the
+Python-bound PHP.
+
+**Remaining (C order):** D5 = **the `main.ts` Alpine split** (client entry Alpine-free; legacy entry keeps
+Alpine for the deferred server views) · coexistence-view + `searchableSelect` retirement (with those views) ·
+admin/annotated (defer→Python). D3f/D3g stay deferred.
