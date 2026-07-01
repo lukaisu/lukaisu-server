@@ -159,6 +159,21 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > `tag_form`, the Alpine words-list render). Net: R1 shrinks and de-risks; R5
 > grows to "verify-parity-then-delete, per module."
 
+> **R1 OUTCOME + a second audit gap (2026-07-01).** R1 landed as **one** clean
+> deletion — the reader + parse-preview render paths (`470b2c5`). The Alpine
+> **words-list** render looked next, but deleting it broke `BundleCutoverTest`:
+> `registerWithMiddleware('/words', …)` bound **all methods**, so it also served
+> **`POST /words` = terms export** — a *native form* submit (`WordList.svelte`
+> sets `form.action='/words'`) that R0's `fetch()`-only audit **missed**.
+> **Lesson: the app-facing keep-list must include native form POSTs, not just
+> `fetch()`.** Reverted. Consequence: essentially **every remaining server route
+> is either app-facing (native POST/fetch) or POST-entangled** → they all move to
+> **R5** (build the `/api/v1` endpoint + repoint the frontend off `basePath()`,
+> then delete). So R1 is **done**; R2 = drop the server-only annotated-print
+> browser feature (live, not app-facing); R3/R4 fold into R5's per-module
+> parity-then-delete. **R5 edits `src/frontend/js` (bundled into the app), so it
+> is app-affecting — coordinate before starting.**
+
 ---
 
 ## 3. Phase M — move the frontend into the app
