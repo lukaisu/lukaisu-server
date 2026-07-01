@@ -45,7 +45,6 @@ use Lukaisu\Modules\Text\Http\YouTubeApiHandler;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 // Module services
 use Lukaisu\Modules\Text\Application\Services\TextPrintService;
-use Lukaisu\Modules\Text\Application\Services\TextDisplayService;
 use Lukaisu\Modules\Text\Application\Services\TextScoringService;
 
 /**
@@ -125,13 +124,6 @@ class TextServiceProvider implements ServiceProviderInterface
             TextPrintService::class,
             function (Container $_c) {
                 return new TextPrintService();
-            }
-        );
-
-        $container->singleton(
-            TextDisplayService::class,
-            function (Container $_c) {
-                return new TextDisplayService();
             }
         );
 
