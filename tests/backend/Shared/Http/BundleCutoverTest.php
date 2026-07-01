@@ -98,7 +98,6 @@ class BundleCutoverTest extends TestCase
     {
         return [
             'export terms' => ['POST', '/words', 'TermDisplayController'],
-            'save bulk-translate' => ['POST', '/word/bulk-translate', 'TermImportController@bulkTranslate'],
             'create text' => ['POST', '/texts/new', 'TextController@new'],
             'edit text POST' => ['POST', '/texts/5/edit', 'TextController@editSingle'],
             'save preferences' => ['POST', '/profile/preferences', 'UserController@savePreferences'],
@@ -120,11 +119,6 @@ class BundleCutoverTest extends TestCase
     {
         return [
             'word show (not bundled)' => ['/word/5', 'TermDisplayController@showWord'],
-            // The starter-vocab page 302s into the bundle, but its JSON config
-            // data route keeps the controller (the island fetches it server-backed).
-            // Likewise, the bulk-translate page 302s into the bundle, but its JSON
-            // config data route keeps the controller.
-            'bulk-translate config' => ['/word/bulk-translate/config', 'TermImportController@config'],
             'api prefix' => ['/api/v1/languages', 'ApiController@v1'],
             'bundle shell' => ['/app/read.html', 'BundleController@serve'],
         ];
@@ -179,6 +173,11 @@ class BundleCutoverTest extends TestCase
             // Dictionary-file multipart import moved off its cookie routes (Phase R);
             // DictionaryApiHandler dispatches it to DictionaryController@processImport.
             'dict-import file' => ['POST', 'local-dictionaries/import'],
+            // Bulk-translate bootstrap config + save moved off their cookie routes
+            // (Phase R); VocabularyApiRouter dispatches both to TermImportController
+            // (@config and @bulkTranslate).
+            'bulk-translate config' => ['GET', 'terms/bulk-translate/config'],
+            'bulk-translate save' => ['POST', 'terms/bulk-translate'],
         ];
     }
 

@@ -83,6 +83,18 @@ class VocabularyApiRouter implements ApiRoutableInterface
                     ->uploadConfig($params);
             }
             return Response::error('Expected "config" sub-path', 404);
+        } elseif ($frag1 === 'bulk-translate') {
+            // Bulk-translate bootstrap config moved off its cookie-authed
+            // /word/bulk-translate/config route onto /api/v1 under the headless
+            // cut (Phase R). TermImportController@config already returns a
+            // JsonResponse; resolve it at dispatch to avoid churning this
+            // router's constructor.
+            if ($frag2 === 'config') {
+                return Container::getInstance()
+                    ->getTyped(TermImportController::class)
+                    ->config($params);
+            }
+            return Response::error('Expected "config" sub-path', 404);
         } elseif ($frag1 === 'list') {
             return Response::success($this->wordListHandler->getWordList($params));
         } elseif ($frag1 === 'filter-options') {
@@ -154,6 +166,17 @@ class VocabularyApiRouter implements ApiRoutableInterface
             return Container::getInstance()
                 ->getTyped(TermImportController::class)
                 ->upload($params);
+        }
+
+        if ($frag1 === 'bulk-translate') {
+            // The bulk-translate save moved off the native /word/bulk-translate
+            // form POST onto POST /api/v1/terms/bulk-translate (Phase R). The
+            // BulkTranslate island posts an urlencoded body (the marked term[]
+            // rows), so $_POST is populated and the controller reads the terms
+            // exactly as for the native form; it now answers with JSON.
+            return Container::getInstance()
+                ->getTyped(TermImportController::class)
+                ->bulkTranslate($params);
         }
 
         if ($frag1 !== '' && ctype_digit($frag1)) {

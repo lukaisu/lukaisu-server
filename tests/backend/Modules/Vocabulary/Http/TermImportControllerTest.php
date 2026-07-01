@@ -7,6 +7,7 @@ namespace Lukaisu\Tests\Modules\Vocabulary\Http;
 use Lukaisu\Modules\Vocabulary\Http\TermImportController;
 use Lukaisu\Modules\Vocabulary\Http\VocabularyBaseController;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
+use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -110,7 +111,7 @@ class TermImportControllerTest extends TestCase
         $reflection = new \ReflectionClass(TermImportController::class);
 
         $expectedMethods = [
-            'handleBulkSave',
+            'saveBulkTerms',
             'handleUploadImport',
             'importTerms',
         ];
@@ -144,13 +145,17 @@ class TermImportControllerTest extends TestCase
     }
 
     #[Test]
-    public function bulkTranslateReturnsVoid(): void
+    public function bulkTranslateReturnsJsonResponse(): void
     {
+        // The save moved off the native /word/bulk-translate form POST onto
+        // POST /api/v1/terms/bulk-translate (Phase R): it now answers with JSON
+        // instead of rendering a result page.
         $method = new \ReflectionMethod(TermImportController::class, 'bulkTranslate');
         $returnType = $method->getReturnType();
 
         $this->assertNotNull($returnType);
-        $this->assertSame('void', $returnType->getName());
+        $this->assertInstanceOf(\ReflectionNamedType::class, $returnType);
+        $this->assertSame(JsonResponse::class, $returnType->getName());
     }
 
     #[Test]
@@ -291,18 +296,17 @@ class TermImportControllerTest extends TestCase
     }
 
     #[Test]
-    public function handleBulkSaveParameterTypes(): void
+    public function saveBulkTermsParameterTypes(): void
     {
-        $method = new \ReflectionMethod(TermImportController::class, 'handleBulkSave');
+        // Renamed from handleBulkSave and slimmed to just the save (the reader
+        // result-view rendering is gone under the headless cut, Phase R): it now
+        // takes only the terms to persist.
+        $method = new \ReflectionMethod(TermImportController::class, 'saveBulkTerms');
         $params = $method->getParameters();
 
-        $this->assertCount(3, $params);
+        $this->assertCount(1, $params);
         $this->assertSame('terms', $params[0]->getName());
         $this->assertSame('array', $params[0]->getType()->getName());
-        $this->assertSame('tid', $params[1]->getName());
-        $this->assertSame('int', $params[1]->getType()->getName());
-        $this->assertSame('cleanUp', $params[2]->getName());
-        $this->assertSame('bool', $params[2]->getType()->getName());
     }
 
     #[Test]

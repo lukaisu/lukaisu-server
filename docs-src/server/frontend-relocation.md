@@ -210,9 +210,13 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > **[x] feeds** (config GET → `/api/v1/feeds/*/config` via `apiGet`; the save was
 > already on `/api/v1/feeds`; dead native POST /feeds/new|edit routes dropped) ·
 > **[x] dict-import** (multipart `POST /api/v1/local-dictionaries/import` via
-> `apiPostMultipart`; `processImport` void→JSON) · [ ] bulk-translate (behavior
-> port: native full-page form POST renders HTML → needs JSON + result UI) ·
-> [ ] terms-export (native form `POST /words` → fetch + blob download) · [ ] books
+> `apiPostMultipart`; `processImport` void→JSON) · **[x] bulk-translate**
+> (behavior port: config GET → `GET /api/v1/terms/bulk-translate/config` via
+> `apiGet`; save `bulkTranslate` void→JSON at `POST /api/v1/terms/bulk-translate`
+> via `apiPostForm` on the serialized marked rows; the native full-page form POST
+> + server result page are gone — the entry's `onSaved` re-enters the island for
+> the next batch or returns to the reader; orphaned `bulk_save_result.php` view
+> deleted) · [ ] terms-export (native form `POST /words` → fetch + blob download) · [ ] books
 > (needs bundle book pages or link-router handling) · [ ] admin (navbar links +
 > `app/settings.ts`'s `settings_api`).
 

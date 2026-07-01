@@ -229,20 +229,11 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Bulk translate. The GET page is served by the bundled client (Svelte
-    // BulkTranslate island); see the /app redirects below. The form POST (saving
-    // the chosen terms) keeps this controller — the bundle island posts to it.
-    $router->registerWithMiddleware(
-        '/word/bulk-translate',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController@bulkTranslate',
-        AUTH_MIDDLEWARE
-    );
-    // JSON bootstrap config for the island (dictionaries + page of unknown words).
-    $router->get(
-        '/word/bulk-translate/config',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController@config',
-        AUTH_MIDDLEWARE
-    );
+    // Bulk translate (reader's "Lookup New Words" flow). The GET page is served
+    // by the bundled Svelte BulkTranslate island (see the /app redirects below),
+    // which fetches its config from GET /api/v1/terms/bulk-translate/config and
+    // saves via POST /api/v1/terms/bulk-translate (Phase R). The old cookie-authed
+    // config GET + native-submit POST routes are gone.
 
     // Term creation from the reader is served by the bundled client via
     // /api/v1/terms (createJson); the legacy /vocabulary/term-hover web route

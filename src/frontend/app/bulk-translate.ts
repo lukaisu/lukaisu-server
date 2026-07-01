@@ -4,14 +4,15 @@
  * the reader's "Lookup New Words" flow).
  *
  * The flow's work is done by a connected server: the still-unknown words for a
- * text come from a server query, the chosen translations are saved via a PHP form
- * POST (`/word/bulk-translate`), and the in-page translations come from Google's
- * Translate widget — none are served by the local-first router. So this page is
- * gated exactly like feeds.ts / starter-vocab.ts:
+ * text come from a server query, the chosen translations are saved via a
+ * bearer-authed API POST (`/api/v1/terms/bulk-translate`), and the in-page
+ * translations come from Google's Translate widget — none are served by the
+ * local-first router. So this page is gated exactly like feeds.ts /
+ * starter-vocab.ts:
  *
- *   - **server-backed / same-origin** (a server is connected): boot i18n, fetch
- *     the island's bootstrap config (`/word/bulk-translate/config`), then mount
- *     the island into `#bulk-translate-root`.
+ *   - **server-backed** (a server is connected): boot i18n, fetch the island's
+ *     bootstrap config (`/api/v1/terms/bulk-translate/config`), then mount the
+ *     island into `#bulk-translate-root`.
  *   - **local-first** (packaged app, no server): reveal a "connect a server"
  *     notice and mount nothing, so no server-only endpoint is ever requested.
  *
@@ -36,6 +37,28 @@ const tid = parseInt(params.get('tid') ?? '0', 10) || 0;
 const offset = parseInt(params.get('offset') ?? '0', 10) || 0;
 const sl = params.get('sl') ?? '';
 const tl = params.get('tl') ?? '';
+
+/**
+ * Advance after a successful save. When there is a next batch, re-enter this
+ * island at the next offset (the just-saved terms now drop out of the
+ * unknown-word query); otherwise the lookup is done, so return to the reader.
+ * Both navigate via bundled page URLs (`pageUrl`), which resolve the same
+ * same-origin and against a connected remote server.
+ */
+function navigateAfterSave(nextOffset: number | null): void {
+  if (nextOffset !== null) {
+    const query = new URLSearchParams({ tid: String(tid), offset: String(nextOffset) });
+    if (sl !== '') {
+      query.set('sl', sl);
+    }
+    if (tl !== '') {
+      query.set('tl', tl);
+    }
+    window.location.assign(pageUrl.bulkTranslate(query.toString()));
+  } else {
+    window.location.assign(pageUrl.read(tid));
+  }
+}
 
 async function start(): Promise<void> {
   // Resolve local-first vs server mode before deciding whether to mount.
@@ -66,7 +89,10 @@ async function start(): Promise<void> {
     }
     const target = document.getElementById('bulk-translate-root');
     if (target) {
-      mount(BulkTranslate, { target, props: { config } });
+      mount(BulkTranslate, {
+        target,
+        props: { config, onSaved: () => navigateAfterSave(config.nextOffset) }
+      });
     }
   }
 

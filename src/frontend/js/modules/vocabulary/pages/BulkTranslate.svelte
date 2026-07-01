@@ -4,20 +4,23 @@
 
   Drives the reader's "Lookup New Words" flow: a text's still-unknown words are
   listed, Google's Translate widget fills in candidate translations in-page, the
-  user marks/edits which to keep, and the chosen terms are POSTed back to
-  `/word/bulk-translate` (the kept save endpoint, `config.saveUrl`).
+  user marks/edits which to keep, and the chosen terms are POSTed to
+  `/api/v1/terms/bulk-translate`, which saves them and answers with JSON.
 
   Server-gated (Job-B-style): the unknown-word list comes from a server query,
-  the save is a PHP form POST, and the in-page translations come from Google's
-  Translate widget — none run offline, so the page only mounts this island when a
-  server is connected (the gate lives in `app/bulk-translate.ts`, mirroring
-  feeds.ts / starter-vocab.ts). The server-only bootstrap data (dictionaries,
-  the page of unknown words, pagination) is fetched once by the entry and passed
-  in as `config`.
+  the save is a bearer-authed API POST, and the in-page translations come from
+  Google's Translate widget — none run offline, so the page only mounts this
+  island when a server is connected (the gate lives in `app/bulk-translate.ts`,
+  mirroring feeds.ts / starter-vocab.ts). The server-only bootstrap data
+  (dictionaries, the page of unknown words, pagination) is fetched once by the
+  entry and passed in as `config`.
 
-  Behaviour is a faithful port of the Alpine component — same save endpoint, same
-  request shape (a native form POST with `_csrf_token`), same Google-Translate
-  conversion dance and the same mark/status helpers; only the rendering is Svelte.
+  Behaviour is a faithful port of the Alpine component — same marked-row save
+  payload (now urlencoded via `apiPostForm` instead of a native full-page form
+  POST), same Google-Translate conversion dance and the same mark/status helpers;
+  only the rendering and the JSON-backed submit are Svelte. After a successful
+  save the entry's `onSaved` re-enters this island for the next batch (the saved
+  terms drop out of the unknown-word query) or returns to the reader when done.
   The term rows are rendered once from the static `config` prop and then mutated
   imperatively by the Google-Translate hookup (exactly as the Alpine component
   mutated the PHP-rendered DOM), so Svelte never reconciles them away. The dict
@@ -30,7 +33,7 @@
   import { onMount } from 'svelte';
   import { initIcons } from '@shared/icons/lucide_icons';
   import { t } from '@shared/i18n/translator';
-  import { getCsrfToken } from '@shared/api/client';
+  import { apiPostForm, getCsrfToken } from '@shared/api/client';
   import { createTheDictUrl, openDictionaryPopup } from '@modules/vocabulary/services/dictionary';
   import { selectToggle } from '@shared/forms/bulk_actions';
   import { setDictionaryLinks } from '@modules/language/stores/language_config';
@@ -60,7 +63,13 @@
     googleTranslateElementInit?: () => void;
   }
 
-  const { config }: { config: BulkTranslateConfig } = $props();
+  // `onSaved` is supplied by the entry (app/bulk-translate.ts), which owns the
+  // page router (`pageUrl`): after a successful save it advances to the next
+  // batch (re-entering this island at the next offset) or returns to the reader
+  // when this was the last batch. Keeping the routing in the entry lets the
+  // island stay routing-agnostic and navigate via bundled page URLs, which work
+  // both same-origin and against a connected remote server (mobile client).
+  const { config, onSaved }: { config: BulkTranslateConfig; onSaved: () => void } = $props();
 
   // `config` is a static mount-time prop, but these are `$derived` to keep
   // svelte-check happy about reading a prop at the top level (mirrors StarterVocab).
@@ -83,6 +92,10 @@
   // the Alpine component (never `__e()` i18n keys), so the port keeps them
   // verbatim.
   let submitButtonText = $state('Save');
+
+  // Save-POST state (the native full-page form submit is gone; see handleSubmit).
+  let submitting = $state(false);
+  let submitError = $state('');
 
   let formEl: HTMLFormElement | undefined = $state();
   let pollTimer: ReturnType<typeof setInterval> | undefined;
@@ -232,12 +245,53 @@
     }
   }
 
-  // Before the native POST, give the active translation input its real name back
-  // (clickDictionary temporarily renames it to "translation" for popup tracking).
-  function onFormSubmit(): void {
+  // Give the active translation input its real name back (clickDictionary
+  // temporarily renames it to "translation" for popup tracking), so its value is
+  // submitted under its real `term[i][trans]` name.
+  function restoreTranslationName(): void {
     const currentTranslation = document.querySelector<HTMLElement>('[name="translation"]');
     if (currentTranslation) {
       currentTranslation.setAttribute('name', currentTranslation.getAttribute('data_name') ?? '');
+    }
+  }
+
+  // Save the marked terms. Replaces the native full-page form POST: the chosen
+  // rows are serialized from the form (disabled inputs on unmarked rows are
+  // excluded, exactly as a native submit would) and sent urlencoded to POST
+  // /api/v1/terms/bulk-translate, which now answers with JSON instead of
+  // rendering a result page. On success the entry's `onSaved` advances to the
+  // next batch or back to the reader.
+  async function handleSubmit(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    if (submitting) {
+      return;
+    }
+    restoreTranslationName();
+    if (!formEl) {
+      return;
+    }
+
+    const body: Record<string, string> = {};
+    new FormData(formEl).forEach((value, key) => {
+      body[key] = typeof value === 'string' ? value : '';
+    });
+
+    submitting = true;
+    submitError = '';
+    try {
+      const response = await apiPostForm<{ savedCount: number; cleanUp: boolean }>(
+        '/terms/bulk-translate',
+        body
+      );
+      if (response.error) {
+        submitError = response.error || 'Save failed.';
+        submitting = false;
+        return;
+      }
+      onSaved();
+    } catch {
+      submitError = 'Save failed. Please check your connection.';
+      submitting = false;
     }
   }
 
@@ -343,13 +397,16 @@
 <div class="container">
   <h2 class="title is-4 mb-4 notranslate">{t('vocabulary.list.col_translation')}</h2>
 
-  <form
-    name="form1"
-    action={config.saveUrl}
-    method="post"
-    bind:this={formEl}
-    onsubmit={onFormSubmit}
-  >
+  {#if submitError}
+    <div class="notification is-danger is-light">
+      <button class="delete" aria-label="close" onclick={() => (submitError = '')}></button>
+      <span>{submitError}</span>
+    </div>
+  {/if}
+
+  <!-- onsubmit preventDefaults and posts the serialized form through
+       apiPostForm (bearer + CSRF); there is no native action/method. -->
+  <form name="form1" bind:this={formEl} onsubmit={handleSubmit}>
     <input type="hidden" name="_csrf_token" value={csrfToken} />
 
     <!-- Controls Panel -->
@@ -397,7 +454,12 @@
                 </div>
               </div>
               <div class="control">
-                <button type="submit" class="button is-primary is-small">
+                <button
+                  type="submit"
+                  class="button is-primary is-small"
+                  class:is-loading={submitting}
+                  disabled={submitting}
+                >
                   <span class="icon is-small"><i data-lucide="save"></i></span>
                   <span>{submitButtonText}</span>
                 </button>

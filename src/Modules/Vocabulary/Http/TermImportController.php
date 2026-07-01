@@ -16,17 +16,14 @@ declare(strict_types=1);
 
 namespace Lukaisu\Modules\Vocabulary\Http;
 
-use Lukaisu\Shared\Infrastructure\Utilities\StringUtils;
 use Lukaisu\Shared\Infrastructure\Http\InputValidator;
 use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
-use Lukaisu\Shared\Infrastructure\Database\Escaping;
 use Lukaisu\Shared\Infrastructure\Database\Settings;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordUploadService;
 use Lukaisu\Modules\Vocabulary\Application\Services\FrequencyLanguageMap;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Modules\Dictionary\Application\DictionaryFacade;
 use Lukaisu\Modules\Dictionary\Application\Services\DictionaryImportFileResolver;
-use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
 use RuntimeException;
 
 /**
@@ -68,41 +65,42 @@ class TermImportController extends VocabularyBaseController
     }
 
     /**
-     * Bulk translate words (POST: save the chosen terms).
+     * Bulk translate words (POST: save the chosen terms) — JSON.
      *
-     * The GET page is now the bundled Svelte `BulkTranslate` island: the
-     * `/word/bulk-translate` GET route 302s into `dist-app/bulk-translate.html`
-     * (see BundleController + routes.php), which fetches its data from
-     * {@see config()} and posts the chosen terms back here. So this method only
-     * handles the form POST; the next batch is loaded client-side by re-entering
-     * the island (the saved terms drop out of the unknown-word query), not by
-     * re-rendering a server form.
+     * The GET page is the bundled Svelte `BulkTranslate` island (the
+     * `/word/bulk-translate` GET route 302s into `dist-app/bulk-translate.html`);
+     * the island fetches its data from {@see config()} and posts the chosen terms
+     * back here at POST /api/v1/terms/bulk-translate (dispatched by
+     * VocabularyApiRouter@routePost), always answering with JSON. It saves the
+     * marked terms and reports how many were saved plus whether this was the last
+     * batch (`cleanUp`, i.e. no pagination `offset` carried). The island then
+     * drives the next step client-side — re-entering the island for the next
+     * batch (the saved terms drop out of the unknown-word query) or returning to
+     * the reader when done — instead of the server rendering a result page.
      *
-     * @param array<string, string> $params Route parameters
+     * @param array<string, string> $params Route parameters (unused).
      *
-     * @return void
+     * @return JsonResponse
      */
-    public function bulkTranslate(array $params): void
+    public function bulkTranslate(array $params): JsonResponse
     {
         unset($params);
-        $tid = InputValidator::getInt('tid', 0) ?? 0;
         $pos = InputValidator::getInt('offset');
 
-        // Handle form submission (save terms)
         $termsArray = InputValidator::getArray('term');
-        if (!empty($termsArray)) {
-            /** @var array<int, array{lg: int, text: string, status: int, trans?: string}> $terms */
-            $terms = $termsArray;
-            $cnt = count($terms);
-
-            PageLayoutHelper::renderPageStart($cnt . ' New Word' . ($cnt == 1 ? '' : 's') . ' Saved', false);
-            // cleanUp when this was the last batch (no pagination offset carried).
-            $this->handleBulkSave($terms, $tid, $pos === null);
-        } else {
-            PageLayoutHelper::renderPageStartNobody('Translate New Words');
+        if (empty($termsArray)) {
+            // Nothing marked to save (a "Next"/"End" with all rows unmarked).
+            return JsonResponse::success(['savedCount' => 0, 'cleanUp' => $pos === null]);
         }
 
-        PageLayoutHelper::renderPageEnd();
+        /** @var array<int, array{lg: int, text: string, status: int, trans?: string}> $terms */
+        $terms = $termsArray;
+        $this->saveBulkTerms($terms);
+
+        return JsonResponse::success([
+            'savedCount' => count($terms),
+            'cleanUp' => $pos === null,
+        ]);
     }
 
     /**
@@ -114,10 +112,11 @@ class TermImportController extends VocabularyBaseController
      * of still-unknown words — so it fetches them here on mount. This mirrors the
      * JSON blob the retired `bulk_translate_form.php` view used to inline, plus
      * the term rows it rendered server-side. The chosen terms are posted back to
-     * {@see bulkTranslate()} (the `saveUrl`); the CSRF token comes from
-     * `<meta name="csrf-token">`.
+     * {@see bulkTranslate()} at POST /api/v1/terms/bulk-translate; the CSRF token
+     * comes from `<meta name="csrf-token">`.
      *
-     * Route: GET /word/bulk-translate/config?tid=&offset=&sl=&tl=
+     * Route: GET /api/v1/terms/bulk-translate/config?tid=&offset=&sl=&tl=
+     * (dispatched by VocabularyApiRouter@routeGet)
      *
      * @param array<string, string> $params Route parameters (unused).
      *
@@ -162,7 +161,6 @@ class TermImportController extends VocabularyBaseController
         $nextOffset = $hasMore ? $offset + $limit - 1 : null;
 
         return JsonResponse::success([
-            'saveUrl' => url('/word/bulk-translate'),
             'tid' => $tid,
             'sourceLanguage' => $sl !== '' ? $sl : null,
             'targetLanguage' => $tl !== '' ? $tl : null,
@@ -178,43 +176,25 @@ class TermImportController extends VocabularyBaseController
     }
 
     /**
-     * Handle saving bulk translated terms.
+     * Save the marked bulk-translated terms and link them to text items.
+     *
+     * The reader-frame DOM sync the retired `bulk_save_result.php` view drove is
+     * gone under the headless cut: the bundled island is a standalone page, and
+     * the reader re-renders from the updated data when the user returns to it. So
+     * this only performs the save — bulk-insert the chosen terms, then link the
+     * new words to their text occurrences.
      *
      * @param array<int, array{lg: int, text: string, status: int, trans?: string}> $terms Array of term data
-     * @param int  $tid     Text ID
-     * @param bool $cleanUp Whether to clean up right frames after save
      *
      * @return void
-     *
-     * @psalm-suppress UnusedParam $tid and $cleanUp are used in included view file
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
      */
-    private function handleBulkSave(array $terms, int $tid, bool $cleanUp): void
+    private function saveBulkTerms(array $terms): void
     {
         $bulkService = $this->getBulkService();
         $maxWoId = $bulkService->bulkSaveTerms($terms);
 
-        $tooltipMode = Settings::getWithDefault('set-tooltip-mode');
-        $res = $bulkService->getNewWordsAfter($maxWoId);
-
-        // Link new words to text items
         $linkingService = new \Lukaisu\Modules\Vocabulary\Application\Services\WordLinkingService();
         $linkingService->linkNewWordsToTextItems($maxWoId);
-
-        // Prepare data for view
-        /** @var list<array<string, mixed>> $newWords */
-        $newWords = [];
-        foreach ($res as $record) {
-            $record['hex'] = StringUtils::toClassName(
-                Escaping::prepareTextdata((string)$record['text_lc'])
-            );
-            $record['translation'] = (string)$record['translation'];
-            $newWords[] = $record;
-        }
-
-        $todoContent = $this->getTextStatisticsService()->getTodoWordsContent($tid);
-
-        include $this->viewPath . 'bulk_save_result.php';
     }
 
     /**
