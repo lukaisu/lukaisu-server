@@ -29,6 +29,7 @@ import {
 import {
   createQuick,
   createFull,
+  createStandalone,
   updateFull,
   deleteTerm,
   getTerm,
@@ -376,6 +377,63 @@ describe('review path', () => {
 
     const tomorrow = await getTomorrowCount('local', `lang:${langId}`);
     expect(tomorrow.count).toBe(0); // no translation -> never reviewable
+  });
+});
+
+describe('standalone term create (word-new.html)', () => {
+  it('creates a term with no text context and stores every field', async () => {
+    const { langId } = await setupEnglishText();
+    const res = await createStandalone({
+      langId,
+      text: 'hello',
+      status: 3,
+      translation: 'a greeting',
+      romanization: '',
+      sentence: 'Say hello.',
+      notes: 'informal',
+      lemma: 'hello',
+      tags: ['greeting'],
+    });
+    expect(res.success).toBe(true);
+    expect(res.term!.id).toBeGreaterThan(0);
+    expect(res.term!.tags).toContain('greeting');
+
+    const row = await localDb.words.where('textLc').equals('hello').first();
+    expect(row).toBeDefined();
+    expect(row!.status).toBe(3);
+    expect(row!.translation).toBe('a greeting');
+    expect(row!.notes).toBe('informal');
+  });
+
+  it('links the new term into existing text occurrences', async () => {
+    const { langId, textId } = await setupEnglishText();
+    // "cat" appears twice in the sample text but has no word row yet.
+    const res = await createStandalone({
+      langId, text: 'cat', status: 5, translation: 'feline',
+      romanization: '', sentence: '', notes: '', tags: [],
+    });
+    expect(res.success).toBe(true);
+
+    const after = words(await getTextWords(textId));
+    const cats = after.words.filter((w) => w.textLc === 'cat');
+    expect(cats.length).toBe(2);
+    expect(cats.every((w) => w.status === 5)).toBe(true);
+  });
+
+  it('rejects a duplicate term for the same language', async () => {
+    const { langId } = await setupEnglishText();
+    const first = await createStandalone({
+      langId, text: 'dog', status: 1, translation: '',
+      romanization: '', sentence: '', notes: '', tags: [],
+    });
+    expect(first.success).toBe(true);
+
+    const dup = await createStandalone({
+      langId, text: 'dog', status: 1, translation: '',
+      romanization: '', sentence: '', notes: '', tags: [],
+    });
+    expect(dup.success).toBeUndefined();
+    expect(dup.error).toBeDefined();
   });
 });
 

@@ -27,6 +27,7 @@ import type {
   TermTranslationResponse,
   TermDeleteResponse,
   TermCreateFullRequest,
+  TermCreateStandaloneRequest,
   TermUpdateFullRequest,
   TermFullResponse,
   TermForEditResponse,
@@ -242,6 +243,39 @@ export async function createFull(
     id = (await localDb.words.add(row)) as number;
   }
   await linkWordOccurrences(id, occ.langId, occ.textLc);
+  await setWordTags(id, req.tags);
+  const saved = await localDb.words.get(id);
+  return { success: true, term: termPayload(saved ?? row, await getWordTagNames(id)) };
+}
+
+/**
+ * Create a term outside of any text (the standalone "new term" form). Mirrors
+ * createFull but takes the language + text directly, so a term can be created
+ * with no text occurrence. Still links the new word into any matching existing
+ * text occurrences so the reader reflects it.
+ */
+export async function createStandalone(
+  req: TermCreateStandaloneRequest
+): Promise<TermFullResponse> {
+  const text = req.text.trim();
+  if (!req.langId || text === '') {
+    return { error: 'Language and text are required' };
+  }
+  const textLc = text.toLowerCase();
+  const existing = await findWord(req.langId, textLc);
+  if (existing && existing.id != null) {
+    return { error: `Duplicate entry for "${textLc}"` };
+  }
+  const fields: WordFields = {
+    translation: req.translation,
+    romanization: req.romanization,
+    sentence: req.sentence,
+    notes: req.notes,
+    lemma: await resolveLemma(req.langId, text, req.lemma),
+  };
+  const row = buildWordRow(req.langId, text, req.status, fields);
+  const id = (await localDb.words.add(row)) as number;
+  await linkWordOccurrences(id, req.langId, textLc);
   await setWordTags(id, req.tags);
   const saved = await localDb.words.get(id);
   return { success: true, term: termPayload(saved ?? row, await getWordTagNames(id)) };

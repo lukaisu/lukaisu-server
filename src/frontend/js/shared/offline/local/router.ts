@@ -50,6 +50,7 @@ import {
   incrementStatus,
   createQuick,
   createFull,
+  createStandalone,
   updateFull,
   updateTranslation,
   addWithTranslation,
@@ -102,6 +103,7 @@ import type {
 } from '@modules/language/api/languages_api';
 import type {
   TermCreateFullRequest,
+  TermCreateStandaloneRequest,
   TermUpdateFullRequest,
 } from '@modules/vocabulary/api/terms_api';
 import type { WordListFilters } from '@modules/vocabulary/api/words_api';
@@ -426,6 +428,9 @@ async function routePost(path: string, p: Record<string, unknown>): Promise<Loca
   }
   if (path === '/terms/full') {
     return wrap(await createFull(p as unknown as TermCreateFullRequest));
+  }
+  if (path === '/terms/standalone') {
+    return wrap(await createStandalone(p as unknown as TermCreateStandaloneRequest));
   }
   m = path.match(/^\/terms\/(\d+)\/status\/(.+)$/);
   if (m) {

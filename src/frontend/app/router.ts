@@ -139,6 +139,10 @@ export const pageUrl = {
   word(termId: number | string): string {
     return `word.html?id=${encodeURIComponent(String(termId))}`;
   },
+  /** Standalone "new term" form (no text context); `lang` seeds the picker. */
+  newWord(lang?: number | string): string {
+    return lang != null ? `word-new.html?lang=${encodeURIComponent(String(lang))}` : 'word-new.html';
+  },
   bulkTranslate(query = ''): string {
     return query ? `bulk-translate.html?${query}` : 'bulk-translate.html';
   },
@@ -240,6 +244,12 @@ export function bundledPageFor(path: string): string | null {
   const starterVocabMatch = pathname.match(/^\/languages\/(\d+)\/starter-vocab$/);
   if (starterVocabMatch) {
     return pageUrl.starterVocab(starterVocabMatch[1]);
+  }
+  // Standalone new-term form: /words/new -> word-new.html (creates via
+  // TermsApi.createStandalone). Must precede the /words list + edit matches.
+  if (pathname === '/words/new') {
+    const lang = new URLSearchParams(query).get('lang');
+    return pageUrl.newWord(lang ?? undefined);
   }
   // Single-term edit form: /words/{id}/edit -> word.html?id={id}. Must precede
   // the list mapping below (which matches the literal /words/edit, not this).

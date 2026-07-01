@@ -159,6 +159,23 @@ export interface TermCreateFullRequest {
 }
 
 /**
+ * Request body for creating a term outside of any text (the standalone
+ * "new term" form). Unlike TermCreateFullRequest there is no text occurrence;
+ * the language and text are supplied directly.
+ */
+export interface TermCreateStandaloneRequest {
+  langId: number;
+  text: string;
+  status: number;
+  translation: string;
+  romanization?: string;
+  sentence?: string;
+  notes?: string;
+  lemma?: string;
+  tags?: string[];
+}
+
+/**
  * Request body for updating a term with full data.
  */
 export interface TermUpdateFullRequest {
@@ -515,6 +532,21 @@ export const TermsApi = {
     data: TermCreateFullRequest
   ): Promise<ApiResponse<TermFullResponse>> {
     return apiPost<TermFullResponse>('/terms/full', data as unknown as Record<string, unknown>);
+  },
+
+  /**
+   * Create a term with no text context (the standalone "new term" form).
+   *
+   * Served on-device by the local-first router (writes straight to IndexedDB)
+   * and, when server-backed, by POST /api/v1/terms/standalone.
+   *
+   * @param data Standalone term data (langId, text, status, translation, …)
+   * @returns Promise with created term data
+   */
+  async createStandalone(
+    data: TermCreateStandaloneRequest
+  ): Promise<ApiResponse<TermFullResponse>> {
+    return apiPost<TermFullResponse>('/terms/standalone', data as unknown as Record<string, unknown>);
   },
 
   /**
