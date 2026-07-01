@@ -384,10 +384,14 @@ export class ReviewStore {
 
   /**
    * Get the edit URL for the current word.
+   *
+   * Points at the bundled term editor (`/words/{id}/edit` → word.html), which
+   * the link-router serves in-bundle. The old `/word/edit-term` server form
+   * (TermEditController@editTerm) is being retired under the headless cut.
    */
   getEditUrl(): string {
     if (!this.currentWord) return '#';
-    return `/word/edit-term?wid=${this.currentWord.wordId}`;
+    return `/words/${this.currentWord.wordId}/edit`;
   }
 
   /**

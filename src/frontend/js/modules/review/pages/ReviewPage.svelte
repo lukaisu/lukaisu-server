@@ -750,7 +750,7 @@
                   <tr>
                     {#if columns.edit}
                       <td class="has-text-centered">
-                        <a href={`/word/edit-term?wid=${word.id}`} class="button is-small is-text">
+                        <a href={`/words/${word.id}/edit`} class="button is-small is-text">
                           {t('review.table.col_edit')}
                         </a>
                       </td>
