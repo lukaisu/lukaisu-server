@@ -283,35 +283,12 @@ function registerRoutes(Router $router): void
 
     // ==================== TAG ROUTES (PROTECTED) ====================
 
-    // Term tags (Tags module)
-    // The GET new/edit *forms* are served by the bundled client (Svelte TagForm
-    // island, which creates/edits via /api/v1/tags/term); see the /app redirects
-    // below. The POST handlers stay: they still process native form submissions
-    // and render tag_form.php on validation errors (kept for coexistence;
-    // TermTagControllerTest covers them).
-    $router->post('/tags/new', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@new', AUTH_MIDDLEWARE);
-
-    // Edit term tag POST (RESTful route): POST /tags/123/edit
-    $router->post('/tags/{id:int}/edit', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@edit', AUTH_MIDDLEWARE);
-
-    // Delete term tag (RESTful route): DELETE /tags/123
-    $router->delete('/tags/{id:int}', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@delete', AUTH_MIDDLEWARE);
-
-    // GET /tags (list), /tags/new and /tags/{id}/edit are served by the bundled
-    // client; see the /app redirects below.
-
-    // Text tags (Tags module)
-    // Same pattern as term tags: the GET forms are bundled, the POST handlers stay.
-    $router->post('/tags/text/new', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@new', AUTH_MIDDLEWARE);
-
-    // Edit text tag POST (RESTful route): POST /tags/text/123/edit
-    $router->post('/tags/text/{id:int}/edit', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@edit', AUTH_MIDDLEWARE);
-
-    // Delete text tag (RESTful route): DELETE /tags/text/123
-    $router->delete('/tags/text/{id:int}', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@delete', AUTH_MIDDLEWARE);
-
-    // GET /tags/text (list), /tags/text/new and /tags/text/{id}/edit are served
-    // by the bundled client; see the /app redirects below.
+    // Tag management is served entirely by the bundled client under the headless
+    // cut: the list/new/edit GET pages 302 into the bundled Svelte Tags / TagForm
+    // islands (see the /app redirects below), which create / rename / delete via
+    // the /api/v1/tags/{term,text} REST API (TagApiHandler). The old cookie-authed
+    // web forms (TermTagController / TextTagController + tag_form.php + their
+    // native POST/DELETE routes) were deleted.
 
     // ==================== FEED ROUTES (PROTECTED) ====================
 

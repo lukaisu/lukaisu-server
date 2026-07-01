@@ -40,8 +40,6 @@ use Lukaisu\Modules\Tags\Application\UseCases\UpdateTag;
 // Application
 use Lukaisu\Modules\Tags\Application\TagsFacade;
 // Http
-use Lukaisu\Modules\Tags\Http\TermTagController;
-use Lukaisu\Modules\Tags\Http\TextTagController;
 use Lukaisu\Modules\Tags\Http\TagApiHandler;
 
 /**
@@ -68,9 +66,6 @@ class TagsServiceProvider implements ServiceProviderInterface
 
         // Register Facades
         $this->registerFacades($container);
-
-        // Register Controllers
-        $this->registerControllers($container);
 
         // Register API Handler
         $this->registerApiHandler($container);
@@ -247,30 +242,6 @@ class TagsServiceProvider implements ServiceProviderInterface
         $container->singleton(TagsFacade::class, function (Container $c): TagsFacade {
             /** @var TagsFacade */
             return $c->get('tags.facade.term');
-        });
-    }
-
-    /**
-     * Register controller bindings.
-     *
-     * @param Container $container The DI container
-     *
-     * @return void
-     */
-    private function registerControllers(Container $container): void
-    {
-        // Term Tag Controller
-        $container->singleton(TermTagController::class, function (Container $c) {
-            /** @var TagsFacade $termFacade */
-            $termFacade = $c->get('tags.facade.term');
-            return new TermTagController($termFacade);
-        });
-
-        // Text Tag Controller
-        $container->singleton(TextTagController::class, function (Container $c) {
-            /** @var TagsFacade $textFacade */
-            $textFacade = $c->get('tags.facade.text');
-            return new TextTagController($textFacade);
         });
     }
 
