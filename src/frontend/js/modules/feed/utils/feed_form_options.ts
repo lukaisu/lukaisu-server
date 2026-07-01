@@ -1,9 +1,8 @@
 /**
  * Feed-form option (de)serialization — the toggle state ↔ options-string bridge.
  *
- * Ported from the Alpine `feedForm` component
- * (`components/feed_form_component.ts::serializeOptions`) and the wizard store's
- * `buildOptionsString`, this is the single source of truth the Svelte
+ * Originally ported from the retired Alpine `feedForm` component + feed-wizard
+ * store serialization, this is now the single source of truth the Svelte
  * `FeedFormPage` island uses to turn its checkbox/value state into the
  * comma-separated `options` string the server persists, and back.
  *

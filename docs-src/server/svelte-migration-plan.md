@@ -331,15 +331,15 @@ therefore stay on disk (verify-then-delete guard did its job): **`edit.php`** (s
 **`feed_form_component.ts`** (the wizard's `wizard_step1.php` manual-setup tab still binds
 `x-data="feedForm"`). So the Alpine `feedForm` component is NOT gone yet — it dies with the wizard.
 
-**⚠ Pre-existing security finding (surfaced, NOT introduced here).** `FeedCrudApiHandler::getFeed` →
-`FeedFacade::getFeedById` → `AbstractRepository::find()` uses `QueryBuilder::table()` with **no
-user-scoping** — so in `MULTI_USER_ENABLED=true` mode any user can read any feed by id. The new
-`configEdit` reuses this exact path, but it is the **same code already public at `GET /api/v1/feeds/{id}`**
-(no net-new exposure; inert in the default single-user mode). The `PUT`/`DELETE` write paths have a
-related gap: `updateFeed` fences the *new* `langId` via `languageBelongsToCurrentUser` but never checks
-the *existing* feed's owner, so a user could hijack another user's feed by reassigning it to their own
-language. **Recommended follow-up (own task, not this batch):** user-scope feed reads at the repository
-layer + add an existing-owner check to `updateFeed`/`deleteFeeds`.
+**~~⚠ Pre-existing security finding~~ — FALSE POSITIVE, corrected 2026-07-01 (see D3d-rest batch 4).**
+The earlier claim here was that `getFeed`→`getFeedById`→`find()` had **no user-scoping** (feed IDOR in
+multi-user mode). That was a mis-trace: I read `AbstractRepository::query()` = `QueryBuilder::table()` and
+stopped, but **`QueryBuilder` auto-applies user scope inside its execution methods** (`firstPrepared`/
+`getPrepared`/`updatePrepared`/`deletePrepared`) via its own `USER_SCOPED_TABLES` registry, which includes
+`'news_feeds' => 'user_id'` (`QueryBuilder.php:84`). So `find()` was always emitting `… AND user_id = ?`
+in multi-user mode; the read/update/delete/deleteArticles paths were all already gated, and the
+`deleteArticles` "scoped" comment was already true. Present since the initial commit — no live vuln.
+(Phase E of D3d-rest still hardened it defensively — see batch 4.)
 
 **Remaining (C order):** **D3d-rest** (feed wizard + load + multi-load + browse — net-new API) · D3f
 admin (defer→A) · D3g annotated print (defer→A) · D4 shared chrome · D5 final `@alpinejs` deletion.
@@ -403,14 +403,18 @@ multi-step island `FeedWizardPage.svelte` (client-side step router) + 4 step com
 (server-gated like `feeds.ts`), vite input, 3-mirror-map wiring, flip `/feeds/wizard` to redirect, and
 repoint `FeedsPage`'s "Feed Wizard" button to `/feeds/wizard`.
 
-### Security — fix the pre-existing feed IDOR HERE, at the repository layer (Phase E, independent)
-Confirmed: `AbstractRepository::find()` (`:60`) uses `QueryBuilder::table()` with **no user_id predicate**;
-`UserScopedQuery` *registers* `news_feeds => user_id` but `find()` never applies it → in multi-user mode any
-user can read/update/delete any feed by id, and `FeedArticleApiHandler::deleteArticles`'s comment claiming
-`getFeedById` is scoped (`:190`) is **false**. Fix once at the boundary every path funnels through: make
-`MySqlFeedRepository::find()` (+ `findByLanguage`, `findNeedingAutoUpdate`) append
-`UserScopedQuery::forTablePrepared('news_feeds', $bindings)`. Do it now (not deferred) since D3d-rest adds
-write endpoints on this exact path; keep it a **distinct commit** with multi-user regression tests.
+### Security — Phase E (~~fix the feed IDOR~~ → the IDOR was a FALSE POSITIVE; hardened defensively anyway)
+The plan drafted this as a real vuln fix. On execution it turned out there was **no live IDOR**:
+`find()` runs through `QueryBuilder`, which **auto-applies** `AND user_id = ?` for `news_feeds` (its
+`USER_SCOPED_TABLES` registry, `QueryBuilder.php:84`) inside `firstPrepared`/`getPrepared`/`updatePrepared`/
+`deletePrepared` — I'd stopped my trace at `query()` and missed it. Proven empirically (generated SQL per
+mode) + confirmed by git blame (present since the initial commit). So read/update/delete/deleteArticles were
+already gated and the `deleteArticles` comment was already accurate. **Phase E still shipped** as
+defense-in-depth: an explicit multi-user-gated `where('user_id', …)` in `MySqlFeedRepository::find()` so the
+invariant lives at the repository boundary (no longer silently depends on the shared registry), a corrected
+comment, and 6 DB-guarded multi-user regression tests (`FeedMultiUserIsolationTest`) that lock it. Note the
+plan's instinct to also scope `findNeedingAutoUpdate` was checked and **declined** — every caller is an HTTP
+request path (no cron/CLI), so its existing per-user auto-scope is correct as-is.
 
 ### Sequencing / parallelizability
 Phase 0 (keep-or-kill decision, blocking) → **A, C, E are independent** (safe concurrent worktrees) → B
@@ -426,3 +430,34 @@ browser+server:** PHPUnit contract tests for both endpoints against in-memory XM
 are split, so no network); Vitest for the store serialization round-trip + `xpath_utils` in jsdom; extend
 `BundleCutoverTest::newApiEndpointsProvider`. Real remote-feed fetch + preview↔load XPath parity need
 **manual server QA** on 2-3 real feeds — cannot be automated here.
+
+### Progress update 2026-07-01 (batch 4 — D3d-rest EXECUTED, decision = KILL) ✅ DONE
+
+User chose **KILL** the visual XPath wizard (verified: no live entry point). D3d-rest ran as 2 parallel
+worktree agents; full central gate green (typecheck 0/0 · eslint · psalm 0 · phpcs 0-new · build:app ·
+build · vitest 3347 · **phpunit 8705, 0 failures**):
+- [x] **Phase A+B — kill dead cluster** (`5f76a8d`): deleted **45 files** (10 views: `wizard_step1-4`,
+  `browse`, `index`, `edit`, `edit_text_form`/`_footer`, `multi_load`; 4 PHP: `FeedWizardController`,
+  `FeedIndexController`, `FeedLoadController`, `FeedWizardSessionManager`; 14 Alpine incl. all 4 wizard
+  steps, browse/index/text-edit/loader/multi-load/**feedForm** components, `feed_wizard_store`,
+  `xpath_utils`, `highlight_service`, `feed_wizard_types`; 17 tests). Modified 11 (routes: dropped
+  `/feeds/wizard`, `/feeds/{id}/load`, `/feeds/multi-load`, legacy `/feeds/edit`; slimmed
+  `FeedController`/`FeedEditController`/`FeedFacade`/`FeedServiceProvider`/`feed/index.ts`; fixed `psalm.xml`
+  — its `Feed/Views` suppression paths broke config parse once the dir was gone). **Feed Alpine is now 100%
+  retired.** No live referrer forced any keep.
+- [x] **Phase E — feed IDOR** (`e13804e`): FALSE POSITIVE (see corrected note above); shipped as
+  defense-in-depth + `FeedMultiUserIsolationTest` (6 DB-guarded tests).
+- Post-integration: fixed a stale doc-comment in `feed_form_options.ts` (referenced the deleted
+  `feed_form_component.ts`).
+
+**D5 readiness scan (2026-07-01, post-feed-kill).** Remaining reachable Alpine (`Alpine.data(` ×22 regs /
+11 PHP `x-data` views): **D3f admin** (backup/settings_form/server_data/users/install_demo/wizard +
+`table_management`/`user_management`/`tts_settings`/`server_data`/`backup_manager`/`settings_form`), **D3g
+annotated print** (`print_alpine.php`, `text_print_app`), **D4 shared chrome**
+(navbar/theme_toggle/searchable_select/footer/navbar_streak/offline-*), plus `text_list`,
+`text_suggestions`, `language_wizard_modal`, `local_dictionary_panel`, and the **coexistence views** kept
+from earlier tiers (`tag_form.php`, `login.php`, `edit_form.php`). So **D5 is still blocked** on D3f + D3g +
+D4 + retiring those coexistence views — the feed cluster is done but it was not the last Alpine.
+
+**Remaining (C order):** D3f admin (defer→A / decision) · D3g annotated print (defer→A / decision) · D4
+shared chrome · coexistence-view cleanup · D5 final `@alpinejs` deletion.
