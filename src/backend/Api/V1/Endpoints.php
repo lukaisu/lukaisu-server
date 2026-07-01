@@ -37,6 +37,11 @@ class Endpoints
         'auth/refresh' => ['POST'],
         'auth/logout' => ['POST'],
         'auth/me' => ['GET'],
+        // Password recovery (guest, brute-forceable — rate-limited + CSRF via the
+        // /api/v1 prefix middleware, same as auth/login + auth/register).
+        'auth/password/forgot' => ['POST'],
+        'auth/password/reset' => ['POST'],
+        'auth/password/recover' => ['POST'],
 
         'languages' => ['GET', 'POST', 'DELETE'],
         'languages/definitions' => ['GET'],

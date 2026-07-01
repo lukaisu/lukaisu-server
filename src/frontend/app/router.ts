@@ -36,6 +36,22 @@ export const pageUrl = {
   login(): string {
     return 'login.html';
   },
+  /** The same-origin PWA sign-up screen (guest). */
+  register(): string {
+    return 'register.html';
+  },
+  /** The guest "email me a reset link" screen. */
+  forgotPassword(): string {
+    return 'forgot-password.html';
+  },
+  /** The guest "set a new password with an emailed token" screen. */
+  resetPassword(query = ''): string {
+    return query ? `reset-password.html?${query}` : 'reset-password.html';
+  },
+  /** The guest "reset with a one-time recovery code" screen. */
+  recoverPassword(): string {
+    return 'recover-password.html';
+  },
   home(): string {
     return 'home.html';
   },
@@ -146,6 +162,21 @@ export function bundledPageFor(path: string): string | null {
   // auth-expired bounce that lands on /login resolves to the bundled page.
   if (pathname === '/login') {
     return pageUrl.login();
+  }
+  // Guest auth surfaces (token-API Svelte islands). The login "Create account" /
+  // "Forgot password" links and the emailed reset/recover links resolve here.
+  if (pathname === '/register') {
+    return pageUrl.register();
+  }
+  if (pathname === '/password/forgot') {
+    return pageUrl.forgotPassword();
+  }
+  // Reset carries the emailed `?token=` through to the island.
+  if (pathname === '/password/reset') {
+    return pageUrl.resetPassword(query);
+  }
+  if (pathname === '/password/recover') {
+    return pageUrl.recoverPassword();
   }
   // Create surfaces: the navbar "+" and library "new text" links point here.
   // The server-rendered forms can't run offline, so route to the bundled

@@ -58,6 +58,11 @@ class ApiV1
         'auth/login' => true,
         'auth/register' => true,
         'auth/altcha-challenge' => true,
+        // Password recovery is used by unauthenticated visitors (that is the
+        // whole point), so it must be reachable without a session/token.
+        'auth/password/forgot' => true,
+        'auth/password/reset' => true,
+        'auth/password/recover' => true,
         'version' => true,
     ];
 

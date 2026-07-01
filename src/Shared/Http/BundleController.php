@@ -140,6 +140,15 @@ final class BundleController
                 return 'index.html';
             case $path === '/login':
                 return 'login.html';
+            case $path === '/register':
+                return 'register.html';
+            case $path === '/password/forgot':
+                return 'forgot-password.html';
+            case $path === '/password/reset':
+                // Carry the emailed `?token=` through to the island.
+                return $withQuery('reset-password.html');
+            case $path === '/password/recover':
+                return 'recover-password.html';
             case $path === '/texts':
                 return 'library.html';
             case $path === '/languages/new':
@@ -312,8 +321,9 @@ final class BundleController
         $config = json_encode([
             'sameOriginServer' => true,
             'multiUser' => Globals::isMultiUserEnabled(),
-            // Guest UI-language switcher data for the login island (the active
-            // locale + installed locale codes). Harmless on every other page.
+            // Guest UI-language switcher data for the pre-auth auth islands
+            // (login / register / password), the active locale + installed
+            // locale codes. Harmless on every other page.
             'uiLocale' => $uiLocale,
             'uiLocales' => $uiLocales,
         ]);
@@ -335,9 +345,9 @@ final class BundleController
 
     /**
      * Resolve the active UI locale and the installed locale codes for the guest
-     * language switcher on the login shell. Guest-safe (no user data): mirrors
-     * PageLayoutHelper::languageSwitcher(), which lists the same locales. Returns
-     * `['en', []]` when the Translator is unavailable (e.g. setup wizard).
+     * language switcher on the pre-auth auth shells. Guest-safe (no user data):
+     * mirrors PageLayoutHelper::languageSwitcher(), which lists the same locales.
+     * Returns `['en', []]` when the Translator is unavailable (e.g. setup wizard).
      *
      * @return array{0: string, 1: list<string>}
      */

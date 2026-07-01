@@ -5,9 +5,10 @@
  */
 
 // Side-effect imports (pages)
-import './pages/register_form';
-import './pages/reset_password_form';
-// The packaged-client connect/login flow is now the Svelte `ConnectPage` island
-// (mounted by app/connect.ts on the bundle's index.html); the Alpine `clientAuth`
-// renderer + its `client_auth.php` view were retired (the /connect route 302s to
-// the bundle). register/reset stay Alpine until their own pages migrate.
+//
+// Every auth screen is now a token-API Svelte island mounted by its own
+// app/*.ts entry: login (LoginPage), register (RegisterPage), the password flows
+// (Forgot/Reset/RecoverPasswordPage), and the packaged-client connect flow
+// (ConnectPage). The Alpine `register_form` / `reset_password_form` / `client_auth`
+// renderers were all retired, so this barrel has no side effects left.
+export {};

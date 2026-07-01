@@ -78,6 +78,10 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, 'src/frontend/app/index.html'),
         login: resolve(__dirname, 'src/frontend/app/login.html'),
+        register: resolve(__dirname, 'src/frontend/app/register.html'),
+        'forgot-password': resolve(__dirname, 'src/frontend/app/forgot-password.html'),
+        'reset-password': resolve(__dirname, 'src/frontend/app/reset-password.html'),
+        'recover-password': resolve(__dirname, 'src/frontend/app/recover-password.html'),
         library: resolve(__dirname, 'src/frontend/app/library.html'),
         read: resolve(__dirname, 'src/frontend/app/read.html'),
         review: resolve(__dirname, 'src/frontend/app/review.html'),

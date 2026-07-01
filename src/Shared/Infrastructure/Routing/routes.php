@@ -68,13 +68,18 @@ function registerRoutes(Router $router): void
         'Lukaisu\\Shared\\Http\\BundleController@serve',
         AUTH_MIDDLEWARE
     );
-    // The login shell is the one bundle page a guest must reach pre-auth. An
-    // exact route overrides the /app prefix above (exact match wins in
-    // Router::resolve), so it is served WITHOUT AuthMiddleware — otherwise a
-    // guest hitting /login -> /app/login.html would be bounced back to /login in
-    // an infinite loop. Serving it is guest-safe: BundleController only injects a
-    // per-session CSRF token + runtime config (no user data).
+    // The guest auth shells (login + register + the password flows) are the
+    // bundle pages a visitor must reach pre-auth. Each exact route overrides the
+    // /app prefix above (exact match wins in Router::resolve), so it is served
+    // WITHOUT AuthMiddleware — otherwise a guest hitting e.g. /login ->
+    // /app/login.html would bounce back to /login in an infinite loop. Serving
+    // them is guest-safe: BundleController only injects a per-session CSRF token
+    // + guest runtime config (no user data).
     $router->get('/app/login.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
+    $router->get('/app/register.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
+    $router->get('/app/forgot-password.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
+    $router->get('/app/reset-password.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
+    $router->get('/app/recover-password.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
 
     // ==================== TEXT ROUTES (PROTECTED) ====================
 
@@ -657,17 +662,21 @@ function registerRoutes(Router $router): void
     // see the /app redirects below. The old Alpine `client_auth.php` view was retired.
 
     // Registration - no auth required, rate limited and CSRF-protected on POST.
-    $router->register('/register', 'Lukaisu\\Modules\\User\\Http\\UserController@registerForm', 'GET');
+    //
+    // GET /register now 302s into the bundled client: the Svelte `RegisterPage`
+    // island (register.html) signs up via the token API (POST /api/v1/auth/register),
+    // which both sets the PHP session AND returns a bearer token. NO AuthMiddleware
+    // — guests must reach it. The `/app/register.html` shell is exempted from the
+    // /app auth gate above. The email-less recovery code is now shown INLINE by
+    // the island (from the register response), so the old server-rendered
+    // `register.php` + `GET /register/recovery-code` page were retired. The POST
+    // handler UserController@register is retained (still covered by tests) but is
+    // no longer reached by any UI; see the report.
+    $router->get('/register', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
     $router->post(
         '/register',
         'Lukaisu\\Modules\\User\\Http\\UserController@register',
         [AuthRateLimitMiddleware::class, CsrfMiddleware::class]
-    );
-    // One-time recovery code shown after an email-less sign-up or a code reset.
-    $router->register(
-        '/register/recovery-code',
-        'Lukaisu\\Modules\\User\\Http\\UserController@recoveryCodeShown',
-        'GET'
     );
 
     // Logout - POST-only with CSRF so cross-site `<img src=/logout>` cannot
@@ -686,24 +695,29 @@ function registerRoutes(Router $router): void
     );
 
     // Password Reset - no auth required, rate limited and CSRF-protected on POST.
-    $router->register('/password/forgot', 'Lukaisu\\Modules\\User\\Http\\UserController@forgotPasswordForm', 'GET');
+    //
+    // The GET pages now 302 into the bundled client: the Svelte
+    // ForgotPasswordPage / ResetPasswordPage / RecoverPasswordPage islands post
+    // to the token API (POST /api/v1/auth/password/{forgot,reset,recover}). NO
+    // AuthMiddleware — guests must reach them; the `/app/*-password.html` shells
+    // are exempted from the /app auth gate above. The old server-rendered
+    // forgot_password.php / reset_password.php / recover_password.php views were
+    // retired; the POST handlers are retained (forgot/reset are covered by tests)
+    // but are no longer reached by any UI. See the report.
+    $router->get('/password/forgot', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
     $router->post(
         '/password/forgot',
         'Lukaisu\\Modules\\User\\Http\\UserController@forgotPassword',
         [AuthRateLimitMiddleware::class, CsrfMiddleware::class]
     );
-    $router->register('/password/reset', 'Lukaisu\\Modules\\User\\Http\\UserController@resetPasswordForm', 'GET');
+    $router->get('/password/reset', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
     $router->post(
         '/password/reset',
         'Lukaisu\\Modules\\User\\Http\\UserController@resetPassword',
         [AuthRateLimitMiddleware::class, CsrfMiddleware::class]
     );
     // Recovery-code reset (for accounts created without an email).
-    $router->register(
-        '/password/recover',
-        'Lukaisu\\Modules\\User\\Http\\UserController@recoverWithCodeForm',
-        'GET'
-    );
+    $router->get('/password/recover', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
     $router->post(
         '/password/recover',
         'Lukaisu\\Modules\\User\\Http\\UserController@recoverWithCode',

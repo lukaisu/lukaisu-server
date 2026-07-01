@@ -175,6 +175,15 @@ class UserApiHandler implements ApiRoutableInterface
             // Set the current user context after registration
             $this->userFacade->setCurrentUser($user);
 
+            // Establish a PHP session exactly as login does, so the just-registered
+            // user is fully authenticated for the still server-rendered PHP pages
+            // (parity with formatLogin(): the shared Login use case regenerates the
+            // session id and sets $_SESSION[LUKAISU_USER_ID]). We re-run login()
+            // with the plaintext password we already hold — the same
+            // session-creation path login takes; the returned user is ignored since
+            // $user already holds the identity we need for the token/response.
+            $this->userFacade->login($username, $password);
+
             // Generate API token for the new user
             $token = $this->userFacade->generateApiToken($user->id()->toInt());
 
@@ -202,6 +211,99 @@ class UserApiHandler implements ApiRoutableInterface
                 'success' => false,
                 'error' => 'Registration failed. Please try again.'
             ];
+        }
+    }
+
+    /**
+     * Request a password-reset email.
+     *
+     * Anti-enumeration: always reports success whether or not the address
+     * exists (UserFacade::requestPasswordReset silently succeeds either way).
+     *
+     * @param array<string, mixed> $params Request data (email).
+     *
+     * @return array<string, mixed>
+     */
+    public function formatForgotPassword(array $params): array
+    {
+        $email = trim((string)($params['email'] ?? ''));
+
+        if ($email === '') {
+            return ['success' => false, 'error' => 'Email is required'];
+        }
+
+        // Fire-and-forget: the result is intentionally not branched on, so the
+        // response cannot reveal whether the email is registered.
+        $this->userFacade->requestPasswordReset($email);
+
+        return ['success' => true];
+    }
+
+    /**
+     * Complete a password reset with an emailed token and a new password.
+     *
+     * @param array<string, mixed> $params Request data (token, password, password_confirm).
+     *
+     * @return array<string, mixed>
+     */
+    public function formatResetPassword(array $params): array
+    {
+        $token = (string)($params['token'] ?? '');
+        $password = (string)($params['password'] ?? '');
+        $passwordConfirm = (string)($params['password_confirm'] ?? '');
+
+        if ($token === '') {
+            return ['success' => false, 'error' => 'This reset link is invalid or has expired.'];
+        }
+        if ($password === '') {
+            return ['success' => false, 'error' => 'Password is required'];
+        }
+        if ($password !== $passwordConfirm) {
+            return ['success' => false, 'error' => 'Passwords do not match'];
+        }
+
+        try {
+            $success = $this->userFacade->completePasswordReset($token, $password);
+            if (!$success) {
+                return ['success' => false, 'error' => 'This reset link has expired. Please request a new one.'];
+            }
+            return ['success' => true];
+        } catch (\InvalidArgumentException $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Reset a password with a username + one-time recovery code (for accounts
+     * created without an email), returning the freshly rotated recovery code.
+     *
+     * @param array<string, mixed> $params Request data (username, recovery_code,
+     *                                     password, password_confirm).
+     *
+     * @return array<string, mixed>
+     */
+    public function formatRecoverPassword(array $params): array
+    {
+        $username = trim((string)($params['username'] ?? ''));
+        $code = trim((string)($params['recovery_code'] ?? ''));
+        $password = (string)($params['password'] ?? '');
+        $passwordConfirm = (string)($params['password_confirm'] ?? '');
+
+        if ($username === '' || $code === '' || $password === '') {
+            return [
+                'success' => false,
+                'error' => 'Username, recovery code, and a new password are required'
+            ];
+        }
+        if ($password !== $passwordConfirm) {
+            return ['success' => false, 'error' => 'Passwords do not match'];
+        }
+
+        try {
+            $newCode = $this->userFacade->resetPasswordWithRecoveryCode($username, $code, $password);
+            return ['success' => true, 'recovery_code' => $newCode];
+        } catch (\InvalidArgumentException $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
@@ -410,12 +512,36 @@ class UserApiHandler implements ApiRoutableInterface
                 return Response::success($this->formatLogin($params));
             case 'register':
                 return Response::success($this->formatRegister($params));
+            case 'password':
+                return $this->routePasswordPost($fragments, $params);
             case 'refresh':
                 return Response::success($this->formatRefresh());
             case 'logout':
                 return Response::success($this->formatLogout());
             default:
                 return Response::error('Endpoint Not Found: auth/' . ($fragments[1] ?? ''), 404);
+        }
+    }
+
+    /**
+     * Route the `auth/password/*` recovery POSTs (guest, no auth).
+     *
+     * @param list<string>         $fragments Endpoint path segments.
+     * @param array<string, mixed> $params    Request parameters.
+     *
+     * @return JsonResponse
+     */
+    private function routePasswordPost(array $fragments, array $params): JsonResponse
+    {
+        switch ($fragments[2] ?? '') {
+            case 'forgot':
+                return Response::success($this->formatForgotPassword($params));
+            case 'reset':
+                return Response::success($this->formatResetPassword($params));
+            case 'recover':
+                return Response::success($this->formatRecoverPassword($params));
+            default:
+                return Response::error('Endpoint Not Found: auth/password/' . ($fragments[2] ?? ''), 404);
         }
     }
 }

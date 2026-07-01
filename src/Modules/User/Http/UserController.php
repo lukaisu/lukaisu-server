@@ -182,36 +182,13 @@ class UserController extends BaseController
      */
     public function registerForm(): mixed
     {
-        // Check if registration is enabled
-        if (!$this->isRegistrationEnabled()) {
-            return $this->redirect('/login');
-        }
-
-        // If already authenticated, redirect to home
-        if (Globals::isAuthenticated()) {
-            return $this->redirect('/');
-        }
-
-        // Get flash error messages
-        $errorMessages = $this->flash->getByTypeAndClear(FlashMessageService::TYPE_ERROR);
-        $error = !empty($errorMessages) ? $errorMessages[0]['message'] : null;
-
-        // Get persisted form data
-        $username = $this->formData->getAndClearUsername();
-        $email = $this->formData->getAndClearEmail();
-
-        // Stamp when the form was served, so the POST handler can reject
-        // near-instant submissions (a cheap bot signal — see register()).
-        if (session_status() === PHP_SESSION_NONE) {
-            @session_start();
-        }
-        $_SESSION['register_form_time'] = time();
-
-        $this->render(__('user.register.page_title'), false);
-        require __DIR__ . '/../Views/register.php';
-        $this->endRender();
-
-        return null;
+        // GET /register now 302s into the bundled client (Svelte RegisterPage
+        // island); the server-rendered register.php view was retired. This
+        // method is retained only so
+        // UserControllerTest::testClassHasRequiredPublicMethods keeps passing
+        // (the orchestrator removes this coexistence cluster later) and is no
+        // longer reached by routing — send any direct caller to the bundle.
+        return $this->redirect('/register');
     }
 
     /**
@@ -585,24 +562,11 @@ class UserController extends BaseController
      */
     public function forgotPasswordForm(): void
     {
-        // If already authenticated, redirect to home
-        if (Globals::isAuthenticated()) {
-            $this->redirect('/');
-        }
-
-        // Get flash messages
-        $errorMessages = $this->flash->getByTypeAndClear(FlashMessageService::TYPE_ERROR);
-        $error = !empty($errorMessages) ? $errorMessages[0]['message'] : null;
-
-        $successMessages = $this->flash->getByTypeAndClear(FlashMessageService::TYPE_SUCCESS);
-        $success = !empty($successMessages) ? $successMessages[0]['message'] : null;
-
-        // Get persisted form data
-        $email = $this->formData->getAndClearPasswordEmail();
-
-        $this->render(__('user.forgot.page_title'), false);
-        require __DIR__ . '/../Views/forgot_password.php';
-        $this->endRender();
+        // GET /password/forgot now 302s into the bundled client (Svelte
+        // ForgotPasswordPage island); the forgot_password.php view was retired.
+        // Retained only so UserControllerTest::testClassHasRequiredPublicMethods
+        // keeps passing; no longer reached by routing.
+        $this->redirect('/password/forgot')->send();
     }
 
     /**
@@ -641,31 +605,11 @@ class UserController extends BaseController
      */
     public function resetPasswordForm(): void
     {
-        // If already authenticated, redirect to home
-        if (Globals::isAuthenticated()) {
-            $this->redirect('/');
-        }
-
-        $token = $this->get('token');
-
-        if (empty($token)) {
-            $this->flash->error(__('user.flash.reset_invalid_token'));
-            $this->redirect('/password/forgot');
-        }
-
-        // Validate token before showing form
-        if (!$this->userFacade->validatePasswordResetToken($token)) {
-            $this->flash->error(__('user.flash.reset_expired'));
-            $this->redirect('/password/forgot');
-        }
-
-        // Get flash error messages
-        $errorMessages = $this->flash->getByTypeAndClear(FlashMessageService::TYPE_ERROR);
-        $error = !empty($errorMessages) ? $errorMessages[0]['message'] : null;
-
-        $this->render(__('user.reset.page_title'), false);
-        require __DIR__ . '/../Views/reset_password.php';
-        $this->endRender();
+        // GET /password/reset now 302s into the bundled client (Svelte
+        // ResetPasswordPage island); the reset_password.php view was retired.
+        // Retained only so UserControllerTest::testClassHasRequiredPublicMethods
+        // keeps passing; no longer reached by routing.
+        $this->redirect('/password/reset')->send();
     }
 
     /**
@@ -717,39 +661,6 @@ class UserController extends BaseController
     }
 
     /**
-     * Show a freshly issued recovery code exactly once.
-     *
-     * GET /register/recovery-code
-     *
-     * The code is read from (and cleared out of) the session, so a refresh or a
-     * direct visit shows nothing and bounces to login.
-     *
-     * @return mixed Redirect response, or null after rendering.
-     */
-    public function recoveryCodeShown(): mixed
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            @session_start();
-        }
-        $recoveryCode = (string) ($_SESSION['lukaisu_recovery_code'] ?? '');
-        $recoveryContext = (string) ($_SESSION['lukaisu_recovery_context'] ?? 'register');
-        unset($_SESSION['lukaisu_recovery_code'], $_SESSION['lukaisu_recovery_context']);
-
-        if ($recoveryCode === '') {
-            return $this->redirect('/login');
-        }
-        if ($recoveryContext === '') {
-            $recoveryContext = 'register';
-        }
-
-        $this->render(__('user.recovery.page_title'), false);
-        require __DIR__ . '/../Views/recovery_code.php';
-        $this->endRender();
-
-        return null;
-    }
-
-    /**
      * Show the "reset with recovery code" form.
      *
      * GET /password/recover
@@ -758,19 +669,11 @@ class UserController extends BaseController
      */
     public function recoverWithCodeForm(): mixed
     {
-        if (Globals::isAuthenticated()) {
-            return $this->redirect('/');
-        }
-
-        $errorMessages = $this->flash->getByTypeAndClear(FlashMessageService::TYPE_ERROR);
-        $error = !empty($errorMessages) ? $errorMessages[0]['message'] : null;
-        $username = $this->formData->getAndClearUsername();
-
-        $this->render(__('user.recovery.reset_page_title'), false);
-        require __DIR__ . '/../Views/recover_password.php';
-        $this->endRender();
-
-        return null;
+        // GET /password/recover now 302s into the bundled client (Svelte
+        // RecoverPasswordPage island); the recover_password.php view was retired.
+        // Retained for coexistence (removed later with the cluster); no longer
+        // reached by routing.
+        return $this->redirect('/password/recover');
     }
 
     /**

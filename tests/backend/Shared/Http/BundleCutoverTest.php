@@ -73,6 +73,10 @@ class BundleCutoverTest extends TestCase
             // Login is now cut over: GET /login 302s to the bundled LoginPage
             // island (token-API login), replacing the server-rendered form.
             ['/login'],
+            // Register + the password flows are now cut over: their GET routes 302
+            // to the bundled token-API Svelte islands (register / forgot / reset /
+            // recover), replacing the server-rendered forms.
+            ['/register'], ['/password/forgot'], ['/password/reset'], ['/password/recover'],
             // Dictionary import GET (Job B, D3c) → bundled Svelte island.
             ['/dictionaries/import'], ['/languages/5/dictionaries/import'],
         ];
