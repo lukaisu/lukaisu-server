@@ -290,15 +290,12 @@ class RoutesTest extends TestCase
             'admin install-demo' => ['/admin/install-demo', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@installDemo'],
             'admin settings' => ['/admin/settings', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@settings'],
             'admin server-data' => ['/admin/server-data', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@serverData'],
-            // GET /profile/statistics now 302s into the bundled Svelte
-            // StatisticsPage island; the JSON config data route keeps the controller.
+            // GET /profile/statistics 302s into the bundled Svelte StatisticsPage
+            // island; its chart data moved to GET /api/v1/activity/statistics
+            // (see BundleCutoverTest::newApiEndpointsProvider) under the headless cut.
             'profile statistics' => [
                 '/profile/statistics',
                 'Lukaisu\\Shared\\Http\\BundleController@redirect'
-            ],
-            'profile statistics config' => [
-                '/profile/statistics/config',
-                'Lukaisu\\Modules\\User\\Http\\StatisticsController@config'
             ],
         ];
     }

@@ -118,6 +118,7 @@ class Endpoints
         'activity/calendar' => ['GET'],
         'activity/today' => ['GET'],
         'activity/dashboard' => ['GET'],
+        'activity/statistics' => ['GET'],
         'version' => ['GET'],
 
         // TTS endpoints (Piper TTS via NLP microservice)

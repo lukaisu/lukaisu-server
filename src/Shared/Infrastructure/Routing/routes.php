@@ -592,14 +592,10 @@ function registerRoutes(Router $router): void
     $router->post('/profile/password', 'Lukaisu\\Modules\\User\\Http\\UserController@changePassword', AUTH_MIDDLEWARE);
     $router->post('/profile/preferences', 'Lukaisu\\Modules\\User\\Http\\UserController@savePreferences', AUTH_MIDDLEWARE);
     // The GET /profile/statistics page is served by the bundled client (Svelte
-    // StatisticsPage island); see the /app redirect below. This JSON config
-    // route feeds that island the server-computed intensity + frequency chart
-    // data (the streak + calendar it fetches from /api/v1/activity/*).
-    $router->get(
-        '/profile/statistics/config',
-        'Lukaisu\\Modules\\User\\Http\\StatisticsController@config',
-        AUTH_MIDDLEWARE
-    );
+    // StatisticsPage island); see the /app redirect below. Its chart data
+    // (intensity + frequency) moved to GET /api/v1/activity/statistics under the
+    // headless cut (Phase R) — the island fetches it via the api client alongside
+    // the streak + calendar from /api/v1/activity/*.
 
     // ==================== AUTHENTICATION ROUTES (PUBLIC) ====================
     // All auth routes use UserController from the User module

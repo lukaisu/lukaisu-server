@@ -1,21 +1,22 @@
 /**
- * Statistics bootstrap config fetch.
+ * Statistics chart-data fetch.
  *
  * The statistics island needs server-computed chart data the bundle cannot
  * derive locally — the per-language term-status counts (intensity) and the
  * created/activity/known totals over rolling time windows (frequency). The
- * server exposes them at `GET /profile/statistics/config`
- * (StatisticsController@config), mirroring the two JSON blobs the retired
- * `statistics.php` view used to inline.
+ * server exposes them at `GET /api/v1/activity/statistics`
+ * (ActivityApiHandler::statistics), fetched through the api client so a
+ * connected remote server authenticates it by bearer token (the old
+ * `/profile/statistics/config` cookie route was retired under the headless cut).
  *
- * That route is NOT under `/api/v1`, so this uses a base-path-aware raw fetch
- * rather than the api client (same convention as `starter_vocab_api`). It is
- * only reachable in same-origin server mode: the page is server-gated (the
- * statistics are computed from the connected server's database), so offline the
- * island is never mounted and this is never called.
+ * The page is server-gated (the statistics are computed from the connected
+ * server's database), so offline the island is never mounted and this is never
+ * called.
  *
  * @license Unlicense <http://unlicense.org/>
  */
+
+import { apiGet } from '@shared/api/client';
 
 /** Per-language term-status counts for the intensity (stacked bar) chart. */
 export interface IntensityLanguageData {
@@ -52,27 +53,18 @@ export const ZERO_FREQUENCY_TOTALS: FrequencyTotals = {
   ca: 0, aa: 0, ka: 0
 };
 
-/** The server's base path (`<meta name="lukaisu-base-path">`), '' at the root. */
-function basePath(): string {
-  const meta = document.querySelector('meta[name="lukaisu-base-path"]');
-  return meta?.getAttribute('content') ?? '';
-}
-
 /**
- * Fetch the statistics bootstrap config. Never throws: on any transport/parse
- * failure it returns empty intensity + zeroed totals, so the island still
- * mounts (the streak + calendar sections it fetches itself are unaffected).
+ * Fetch the statistics chart data. Never throws: on any transport/parse failure
+ * it returns empty intensity + zeroed totals, so the island still mounts (the
+ * streak + calendar sections it fetches itself are unaffected).
  */
 export async function fetchStatisticsConfig(): Promise<StatisticsConfig> {
   try {
-    const response = await fetch(`${basePath()}/profile/statistics/config`, {
-      headers: { Accept: 'application/json' },
-      credentials: 'same-origin'
-    });
-    if (!response.ok) {
+    const response = await apiGet<StatisticsConfig>('/activity/statistics');
+    const data = response.data;
+    if (!data) {
       return { intensity: [], frequency: { ...ZERO_FREQUENCY_TOTALS } };
     }
-    const data = (await response.json()) as Partial<StatisticsConfig>;
     return {
       intensity: Array.isArray(data.intensity) ? data.intensity : [],
       frequency: data.frequency ?? { ...ZERO_FREQUENCY_TOTALS }

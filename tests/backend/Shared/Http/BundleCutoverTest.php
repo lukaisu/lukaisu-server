@@ -180,6 +180,8 @@ class BundleCutoverTest extends TestCase
             'create text tag' => ['POST', 'tags/text'],
             'load single term tag' => ['GET', 'tags/term/5'],
             'load single text tag' => ['GET', 'tags/text/5'],
+            // Statistics chart data moved off /profile/statistics/config (Phase R).
+            'statistics chart data' => ['GET', 'activity/statistics'],
         ];
     }
 

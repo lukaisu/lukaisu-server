@@ -20,6 +20,8 @@ use Lukaisu\Shared\Http\ApiRoutableInterface;
 use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
 use Lukaisu\Api\V1\Response;
 use Lukaisu\Modules\Activity\Application\ActivityFacade;
+use Lukaisu\Modules\User\Application\UseCases\Statistics\GetIntensityStatistics;
+use Lukaisu\Modules\User\Application\UseCases\Statistics\GetFrequencyStatistics;
 
 /**
  * API handler for activity and streak endpoints.
@@ -54,8 +56,59 @@ class ActivityApiHandler implements ApiRoutableInterface
                 'calendar' => $this->facade->getCalendarHeatmapData(),
                 'today' => $this->facade->getTodaySummary(),
             ]),
+            'statistics' => $this->statistics(),
             default => Response::error('Unknown activity endpoint', 404),
         };
+    }
+
+    /**
+     * Per-user learning-statistics chart data.
+     *
+     * Moved from the retired StatisticsController@config (GET
+     * /profile/statistics/config) under the headless cut (Phase R): per-language
+     * term-status counts (intensity) + created/activity/known totals over rolling
+     * windows (frequency). The StatisticsPage island fetches this on mount
+     * alongside activity/streak + activity/calendar.
+     *
+     * @return JsonResponse
+     */
+    private function statistics(): JsonResponse
+    {
+        $intensityStats = (new GetIntensityStatistics())->execute();
+        $frequencyStats = (new GetFrequencyStatistics())->execute();
+
+        $intensity = [];
+        /** @var mixed $lang */
+        foreach (($intensityStats['languages'] ?? []) as $lang) {
+            if (!is_array($lang)) {
+                continue;
+            }
+            $intensity[] = [
+                'name' => (string) ($lang['name'] ?? ''),
+                's1' => (int) ($lang['s1'] ?? 0),
+                's2' => (int) ($lang['s2'] ?? 0),
+                's3' => (int) ($lang['s3'] ?? 0),
+                's4' => (int) ($lang['s4'] ?? 0),
+                's5' => (int) ($lang['s5'] ?? 0),
+                's99' => (int) ($lang['s99'] ?? 0),
+            ];
+        }
+
+        $totals = is_array($frequencyStats['totals'] ?? null) ? $frequencyStats['totals'] : [];
+        $frequency = [];
+        foreach (
+            [
+                'ct', 'at', 'kt', 'cy', 'ay', 'ky', 'cw', 'aw', 'kw',
+                'cm', 'am', 'km', 'ca', 'aa', 'ka',
+            ] as $key
+        ) {
+            $frequency[$key] = (int) ($totals[$key] ?? 0);
+        }
+
+        return Response::success([
+            'intensity' => $intensity,
+            'frequency' => $frequency,
+        ]);
     }
 
     /**
