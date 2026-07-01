@@ -77,6 +77,14 @@ export const pageUrl = {
   tags(): string {
     return 'tags.html';
   },
+  /** New/edit tag form (Svelte TagForm island); `id` present ⇒ edit mode. */
+  tagForm(kind: 'term' | 'text', id?: number | string): string {
+    const params = new URLSearchParams({ kind });
+    if (id != null) {
+      params.set('id', String(id));
+    }
+    return `tag-form.html?${params.toString()}`;
+  },
   feeds(): string {
     return 'feeds.html';
   },
@@ -217,6 +225,24 @@ export function bundledPageFor(path: string): string | null {
   // they never reach here.)
   if (pathname === '/tags' || pathname === '/tags/term' || pathname === '/tags/text') {
     return pageUrl.tags();
+  }
+  // Tag create/edit forms: /tags/new, /tags/{id}/edit and the /tags/text/*
+  // variants render the bundled Svelte TagForm island (kind + id in the query).
+  // The mutation paths (/tags/{term,text}/{id}) are API calls, not navigation.
+  if (pathname === '/tags/new') {
+    return pageUrl.tagForm('term');
+  }
+  if (pathname === '/tags/text/new') {
+    return pageUrl.tagForm('text');
+  }
+  // Text before term: the term regex's \d+ won't match the literal "text".
+  const tagTextEditMatch = pathname.match(/^\/tags\/text\/(\d+)\/edit$/);
+  if (tagTextEditMatch) {
+    return pageUrl.tagForm('text', tagTextEditMatch[1]);
+  }
+  const tagEditMatch = pathname.match(/^\/tags\/(\d+)\/edit$/);
+  if (tagEditMatch) {
+    return pageUrl.tagForm('term', tagEditMatch[1]);
   }
   // Feeds — the first server-enhanced (Job B) surface. The languages page links
   // to /feeds?filterlang=… and the server serves the SPA at /feeds and

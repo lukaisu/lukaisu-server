@@ -56,13 +56,15 @@ class Endpoints
         'settings' => ['POST'],
         'settings/theme-path' => ['GET'],
         'statuses' => ['GET'],
-        // PUT/DELETE on tags reach tags/term/{id} and tags/text/{id} (rename /
-        // delete) via the first-segment fallback; the handler rejects bare
-        // /tags writes. GET /tags/manage lists every tag with its usage count.
-        'tags' => ['GET', 'PUT', 'DELETE'],
+        // POST /tags/{term,text} creates a tag; PUT/DELETE on tags reach
+        // tags/term/{id} and tags/text/{id} (rename+comment / delete) via the
+        // first-segment fallback; the handler rejects bare /tags writes. GET
+        // /tags/{term,text}/{id} loads one tag (edit form); GET /tags/manage
+        // lists every tag with its usage count.
+        'tags' => ['GET', 'POST', 'PUT', 'DELETE'],
         'tags/manage' => ['GET'],
-        'tags/term' => ['GET'],
-        'tags/text' => ['GET'],
+        'tags/term' => ['GET', 'POST'],
+        'tags/text' => ['GET', 'POST'],
         'terms' => ['GET', 'POST', 'PUT', 'DELETE'],
         'terms/imported' => ['GET'],
         'terms/new' => ['POST'],

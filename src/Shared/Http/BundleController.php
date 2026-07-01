@@ -156,6 +156,10 @@ final class BundleController
                 return 'tags.html';
             case $path === '/feeds' || $path === '/feeds/manage':
                 return 'feeds.html';
+            case $path === '/tags/new':
+                return 'tag-form.html?kind=term';
+            case $path === '/tags/text/new':
+                return 'tag-form.html?kind=text';
             case $path === '/profile/preferences':
                 return 'settings.html';
             case $path === '/profile/statistics':
@@ -190,6 +194,13 @@ final class BundleController
         }
         if (preg_match('#^/words/(\d+)/edit$#', $path, $m) === 1) {
             return 'word.html?id=' . $m[1];
+        }
+        // Tag edit forms — text before term (term's \d+ won't match "text").
+        if (preg_match('#^/tags/text/(\d+)/edit$#', $path, $m) === 1) {
+            return 'tag-form.html?kind=text&id=' . $m[1];
+        }
+        if (preg_match('#^/tags/(\d+)/edit$#', $path, $m) === 1) {
+            return 'tag-form.html?kind=term&id=' . $m[1];
         }
         if (preg_match('#^/text/(\d+)/print-plain$#', $path, $m) === 1) {
             return 'text-print.html?text=' . $m[1];

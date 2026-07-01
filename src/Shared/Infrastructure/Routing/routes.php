@@ -387,32 +387,34 @@ function registerRoutes(Router $router): void
     // ==================== TAG ROUTES (PROTECTED) ====================
 
     // Term tags (Tags module)
-    // The controller's new() handles both GET (show form) and POST (save).
-    $router->get('/tags/new', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@new', AUTH_MIDDLEWARE);
+    // The GET new/edit *forms* are served by the bundled client (Svelte TagForm
+    // island, which creates/edits via /api/v1/tags/term); see the /app redirects
+    // below. The POST handlers stay: they still process native form submissions
+    // and render tag_form.php on validation errors (kept for coexistence;
+    // TermTagControllerTest covers them).
     $router->post('/tags/new', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@new', AUTH_MIDDLEWARE);
 
-    // Edit term tag (RESTful route): GET/POST /tags/123/edit
-    $router->get('/tags/{id:int}/edit', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@edit', AUTH_MIDDLEWARE);
+    // Edit term tag POST (RESTful route): POST /tags/123/edit
     $router->post('/tags/{id:int}/edit', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@edit', AUTH_MIDDLEWARE);
 
     // Delete term tag (RESTful route): DELETE /tags/123
     $router->delete('/tags/{id:int}', 'Lukaisu\\Modules\\Tags\\Http\\TermTagController@delete', AUTH_MIDDLEWARE);
 
-    // GET /tags (term-tag list) is served by the bundled client; see the /app redirects below.
+    // GET /tags (list), /tags/new and /tags/{id}/edit are served by the bundled
+    // client; see the /app redirects below.
 
     // Text tags (Tags module)
-    // Same pattern as term tags: controller's new() handles GET and POST.
-    $router->get('/tags/text/new', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@new', AUTH_MIDDLEWARE);
+    // Same pattern as term tags: the GET forms are bundled, the POST handlers stay.
     $router->post('/tags/text/new', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@new', AUTH_MIDDLEWARE);
 
-    // Edit text tag (RESTful route): GET/POST /tags/text/123/edit
-    $router->get('/tags/text/{id:int}/edit', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@edit', AUTH_MIDDLEWARE);
+    // Edit text tag POST (RESTful route): POST /tags/text/123/edit
     $router->post('/tags/text/{id:int}/edit', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@edit', AUTH_MIDDLEWARE);
 
     // Delete text tag (RESTful route): DELETE /tags/text/123
     $router->delete('/tags/text/{id:int}', 'Lukaisu\\Modules\\Tags\\Http\\TextTagController@delete', AUTH_MIDDLEWARE);
 
-    // GET /tags/text (text-tag list) is served by the bundled client; see the /app redirects below.
+    // GET /tags/text (list), /tags/text/new and /tags/text/{id}/edit are served
+    // by the bundled client; see the /app redirects below.
 
     // ==================== FEED ROUTES (PROTECTED) ====================
 
@@ -815,9 +817,13 @@ function registerRoutes(Router $router): void
     $router->get('/languages/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/languages/{id:int}/starter-vocab', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/tags', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/tags/new', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/tags/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/tags/text', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/feeds', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/feeds/manage', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/tags/text/new', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/tags/text/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/review', $bundleRedirect, AUTH_MIDDLEWARE);
     // Dictionary import (Job B, D3c): the GET form is served by the bundled
     // Svelte island; the POST /dictionaries/import (processImport) below keeps

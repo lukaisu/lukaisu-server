@@ -49,7 +49,68 @@ class TagApiHandler implements ApiRoutableInterface
         if ($this->frag($fragments, 1) === 'manage') {
             return $this->handleManage();
         }
+        // GET /tags/{term|text}/{id} — one tag with its comment, for the bundled
+        // tag-form island's edit prefill.
+        $idFrag = $this->frag($fragments, 2);
+        if ($idFrag !== '' && ctype_digit($idFrag)) {
+            $facade = $this->facadeForType($this->frag($fragments, 1));
+            if ($facade !== null) {
+                return $this->handleGetOne($facade, (int) $idFrag);
+            }
+        }
         return $this->handleGet(array_slice($fragments, 1));
+    }
+
+    /**
+     * POST /tags/term or /tags/text — create a tag with a name and optional
+     * comment (backs the bundled tag-form island's "new" mode).
+     *
+     * @param list<string>         $fragments URL fragments (['tags', 'term'|'text']).
+     * @param array<string, mixed> $params    JSON body ({ name, comment }).
+     *
+     * @return JsonResponse
+     */
+    public function routePost(array $fragments, array $params): JsonResponse
+    {
+        $facade = $this->facadeForType($this->frag($fragments, 1));
+        if ($facade === null) {
+            return Response::error('Expected /tags/term or /tags/text', 404);
+        }
+        $name = trim((string) ($params['name'] ?? ''));
+        if ($name === '') {
+            return Response::error('Tag name required', 400);
+        }
+        $comment = (string) ($params['comment'] ?? '');
+        $result = $facade->create($name, $comment);
+        if (empty($result['success'])) {
+            return Response::error($result['error'] ?? 'Create failed', 400);
+        }
+        $tag = $result['tag'] ?? null;
+        return Response::success([
+            'success' => true,
+            'id' => $tag !== null ? $tag->id()->toInt() : 0,
+        ]);
+    }
+
+    /**
+     * Return one tag as `{id, text, comment}` for the edit form, or a 404.
+     *
+     * @param TagsFacade $facade Term or text facade.
+     * @param int        $id     Tag id.
+     *
+     * @return JsonResponse
+     */
+    private function handleGetOne(TagsFacade $facade, int $id): JsonResponse
+    {
+        $tag = $facade->getById($id);
+        if ($tag === null) {
+            return Response::error('Tag not found', 404);
+        }
+        return Response::success([
+            'id' => (int) ($tag['id'] ?? $id),
+            'text' => (string) ($tag['text'] ?? ''),
+            'comment' => (string) ($tag['comment'] ?? ''),
+        ]);
     }
 
     /**
@@ -88,10 +149,15 @@ class TagApiHandler implements ApiRoutableInterface
     }
 
     /**
-     * PUT /tags/term/{id} or /tags/text/{id} — rename a tag (comment preserved).
+     * PUT /tags/term/{id} or /tags/text/{id} — update a tag's name, and its
+     * comment when the body carries one.
+     *
+     * The bundled tag-form island (edit mode) sends `{ name, comment }`; the
+     * inline rename widget on tags.html sends only `{ name }`, so the stored
+     * comment is preserved when `comment` is absent.
      *
      * @param list<string>         $fragments URL fragments (['tags', 'term'|'text', id]).
-     * @param array<string, mixed> $params    JSON body ({ name }).
+     * @param array<string, mixed> $params    JSON body ({ name, comment? }).
      *
      * @return JsonResponse
      */
@@ -109,11 +175,15 @@ class TagApiHandler implements ApiRoutableInterface
         if ($name === '') {
             return Response::error('Tag name required', 400);
         }
-        $current = $facade->getById($id);
-        $comment = is_array($current) ? (string) ($current['comment'] ?? '') : '';
+        if (array_key_exists('comment', $params)) {
+            $comment = (string) $params['comment'];
+        } else {
+            $current = $facade->getById($id);
+            $comment = is_array($current) ? (string) ($current['comment'] ?? '') : '';
+        }
         $result = $facade->update($id, $name, $comment);
         if (empty($result['success'])) {
-            return Response::error($result['error'] ?? 'Rename failed', 400);
+            return Response::error($result['error'] ?? 'Update failed', 400);
         }
         return Response::success(['success' => true]);
     }

@@ -67,6 +67,8 @@ class BundleCutoverTest extends TestCase
             ['/languages/new'], ['/languages/5/edit'], ['/languages/5/starter-vocab'],
             ['/word/bulk-translate'], ['/word/upload'],
             ['/tags'], ['/tags/text'], ['/review'],
+            // Tag new/edit forms 302 into the bundled Svelte TagForm island.
+            ['/tags/new'], ['/tags/5/edit'], ['/tags/text/new'], ['/tags/text/5/edit'],
             ['/profile/preferences'],
             // Login is now cut over: GET /login 302s to the bundled LoginPage
             // island (token-API login), replacing the server-rendered form.
@@ -160,6 +162,11 @@ class BundleCutoverTest extends TestCase
             'delete term tag' => ['DELETE', 'tags/term/5'],
             'rename text tag' => ['PUT', 'tags/text/5'],
             'delete text tag' => ['DELETE', 'tags/text/5'],
+            // Tag-form island: create + single-tag load (edit prefill).
+            'create term tag' => ['POST', 'tags/term'],
+            'create text tag' => ['POST', 'tags/text'],
+            'load single term tag' => ['GET', 'tags/term/5'],
+            'load single text tag' => ['GET', 'tags/text/5'],
         ];
     }
 
