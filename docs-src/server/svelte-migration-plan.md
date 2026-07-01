@@ -248,3 +248,48 @@ routing** (Cypress `e2e`/`e2e:app` need a browser+server). Every redirect + serv
 needs a **manual pass on a running server** before deploy. Outstanding QA from D1–D3a:
 `/connect` first-visit login (multi-user `AuthMiddleware` bounces unauth → `/login`),
 `/feeds[/manage]`, and the three vocab screens (server flow + offline "connect a server" notice).
+
+### Progress update 2026-07-01 (batch 2 — stats + auth + tags + dictionary)
+
+Landed on `main` (gate-verified, incl. full psalm/phpunit):
+- [x] **D3e-stats** (`61130f4`) — `/profile/statistics` → server-gated Svelte island;
+  `StatisticsController::config()` JSON endpoint; deleted the 3 Alpine components.
+- [x] **D3e-auth** — the whole auth surface rebuilt on the **token API** (the chosen
+  "full bundle-redirect" path):
+  - `D3e-auth-1` login (`ea24bb6`): `GET /login` → `LoginPage` island → `POST /api/v1/auth/login`
+    (sets **both** session cookie + bearer, so the remaining PHP pages keep auth). Added an exact
+    guest `GET /app/login.html` serve route to punch through the `/app` auth prefix.
+  - `D3e-auth-2` register + password (`a894ae0`): `RegisterPage` (+ ALTCHA + inline recovery-code)
+    / `Forgot`/`Reset`/`RecoverPasswordPage`; **session-on-register fix** (register now creates a
+    session like login); **3 new endpoints** `POST /api/v1/auth/password/{forgot,reset,recover}`
+    (public, `[RateLimit, Csrf]`, not CSRF-exempt — `apiPost` sends the token); retired
+    `recovery_code.php` + its route. Guest `/app/*.html` serve routes for each shell.
+- [x] **D3b tags** (`bef4380`) — `tag-form.html` island (term/text · new/edit); **completed the
+  tags API** (added `POST /tags/{term,text}` create + single-tag GET) instead of a config endpoint.
+- [x] **D3c dictionary** (`ea72792`) — `dictionary-import.html` server-gated island **reusing
+  `CuratedDictBrowser.svelte`**; drives list/delete/curated-import via `/api/v1/local-dictionaries`;
+  the native multipart file upload keeps its `POST /dictionaries/import` (a bearer client can't
+  ship a server temp file). Integration fixups in `33eceec`.
+
+**Coexistence still on disk (retired as a cluster at D5):** `login.php` + `UserController@login/loginForm`
++ `POST /login`; `register/forgot_password/reset_password/recover_password` controller POST handlers +
+their now-redirect-only `*Form` GET methods; `tag_form.php` + Term/TextTagController POST/DELETE (POST
+re-renders it on error); dictionary `processImport` POST + `Views/index.php`. All unreachable by GET;
+kept because backend tests still assert them.
+
+**Process lesson — parallel worktree agents (honor "don't do items one by one"):** ran D3b/D3c/D3e-auth-2
+as 3 concurrent `isolation:'worktree'` agents. **Gotcha:** the worktrees branch from `origin/main`
+(`757f3b7`), NOT local `main` HEAD, so each agent lacked the unpushed Phase-2 work (templates
+`starter-vocab`/`login`, `CuratedDictBrowser`) and re-created/vendored some of it. Integration was
+`git cherry-pick <branch-tip>` per division onto `main`, resolving the shared-wiring conflicts (the 4
+mirror files + `BundleCutoverTest` + `Endpoints.php`) by **union**, plus de-duping the re-created login
+infra (`uiLocaleConfig`, `/app/*.html` serve routes) and dropping a stale `client_auth` import main had
+already deleted. Agents self-gate typecheck+lint only; the **central full gate (psalm/phpunit) is where
+integration bugs surface** — it caught a `list<string>` coercion + a stale tags 405→404 test.
+**Next time: push `main` first** so worktrees branch from current work (or integrate the same way).
+
+**Remaining (C order):** word-upload POST-result tail · **D3d feed wizard/browse (heaviest)** · D3f
+admin (defer→A) · D3g annotated print (defer→A) · D4 shared chrome · D5 final `@alpinejs` deletion.
+Note for D5: `grep x-data src/frontend/app/*.html` still hits the **earlier-tier** shells
+(read/words/home/texts/library/index/languages/text-print) — verify those are inert (islands own the
+DOM) or scrub them before dropping Alpine.
