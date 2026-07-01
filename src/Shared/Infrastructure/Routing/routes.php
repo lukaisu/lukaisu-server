@@ -387,22 +387,13 @@ function registerRoutes(Router $router): void
 
     // The GET new/edit *forms* are served by the bundled client (Svelte
     // FeedFormPage island, which creates/edits via /api/v1/feeds); see the /app
-    // redirects below. The POST handlers stay: they still process native form
-    // submissions (kept for coexistence; FeedEditControllerTest covers them). The
-    // two JSON config data routes below feed the island its languages + edit-mode
-    // prefill (authed, NOT bundle-redirected — mirrors starter-vocab/config).
-
-    // New feed form (RESTful route)
-    $router->get('/feeds/new/config', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@configNew', AUTH_MIDDLEWARE);
-    $router->post('/feeds/new', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@newFeed', AUTH_MIDDLEWARE);
-
-    // Edit feed form (RESTful route): /feeds/123/edit
-    $router->get(
-        '/feeds/{id:int}/edit/config',
-        'Lukaisu\\Modules\\Feed\\Http\\FeedController@configEdit',
-        AUTH_MIDDLEWARE
-    );
-    $router->post('/feeds/{id:int}/edit', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@editFeed', AUTH_MIDDLEWARE);
+    // redirects below. Under the headless cut (Phase R) the island's bootstrap
+    // config moved to GET /api/v1/feeds/new/config + /api/v1/feeds/{id}/edit/config
+    // (FeedApiHandler dispatches both to FeedController). The native-submit POST
+    // handlers (FeedController@newFeed/@editFeed) are dead here — the island saves
+    // via /api/v1/feeds — so their cookie-authed routes are gone; the controller
+    // methods stay (FeedEditControllerTest exercises them directly) pending a
+    // dedicated orphan cleanup.
 
     // Delete feed (RESTful route): DELETE /feeds/123
     $router->delete('/feeds/{id:int}', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@deleteFeed', AUTH_MIDDLEWARE);
@@ -782,9 +773,9 @@ function registerRoutes(Router $router): void
     $router->get('/feeds', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/feeds/manage', $bundleRedirect, AUTH_MIDDLEWARE);
     // Feed new/edit form (Job B, D3d): the GET forms 302 into the bundled Svelte
-    // FeedFormPage island; the POST /feeds/new + POST /feeds/{id}/edit handlers
-    // (and the /feeds/new/config + /feeds/{id}/edit/config data routes) above keep
-    // their controllers so native submits + the island's config fetch still work.
+    // FeedFormPage island, which fetches its config from /api/v1/feeds/*/config
+    // and saves via /api/v1/feeds (Phase R). The old cookie-authed config GET +
+    // native-submit POST routes are gone.
     $router->get('/feeds/new', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/feeds/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/tags/text/new', $bundleRedirect, AUTH_MIDDLEWARE);

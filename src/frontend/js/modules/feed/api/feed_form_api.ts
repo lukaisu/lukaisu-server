@@ -3,18 +3,18 @@
  *
  * The `FeedFormPage` island needs the server's language list (for the language
  * select) and, in edit mode, the feed record to prefill. The server exposes them
- * at `GET /feeds/new/config` and `GET /feeds/{id}/edit/config`
- * (FeedController@configNew / @configEdit).
+ * at `GET /api/v1/feeds/new/config` and `GET /api/v1/feeds/{id}/edit/config`
+ * (FeedApiHandler dispatches both to FeedController@configNew / @configEdit),
+ * fetched through the api client so a connected remote server authenticates them
+ * by bearer token.
  *
- * Those routes are NOT under `/api/v1`, so this uses a base-path-aware raw fetch
- * (mirroring `starter_vocab_api.ts`) rather than the api client. They are only
- * reachable in same-origin server mode: the page is server-gated (the
- * `/api/v1/feeds` endpoints have no local-first arm), so offline the island is
- * never mounted and this is never called.
+ * The page is server-gated (the `/api/v1/feeds` endpoints have no local-first
+ * arm), so offline the island is never mounted and this is never called.
  *
  * @license Unlicense <http://unlicense.org/>
  */
 
+import { apiGet } from '@shared/api/client';
 import type { Feed, Language } from './feeds_api';
 
 /** Bootstrap config the FeedFormPage island reads on mount. */
@@ -27,12 +27,6 @@ export interface FeedFormConfig {
   feed: Feed | null;
 }
 
-/** The server's base path (`<meta name="lukaisu-base-path">`), '' at the root. */
-function basePath(): string {
-  const meta = document.querySelector('meta[name="lukaisu-base-path"]');
-  return meta?.getAttribute('content') ?? '';
-}
-
 /**
  * Fetch the feed-form bootstrap config. `feedId > 0` fetches the edit config
  * (with the feed prefill); otherwise the create config. Returns `null` when the
@@ -41,15 +35,9 @@ function basePath(): string {
 export async function fetchFeedFormConfig(feedId: number): Promise<FeedFormConfig | null> {
   const path = feedId > 0 ? `/feeds/${feedId}/edit/config` : '/feeds/new/config';
   try {
-    const response = await fetch(`${basePath()}${path}`, {
-      headers: { Accept: 'application/json' },
-      credentials: 'same-origin'
-    });
-    if (!response.ok) {
-      return null;
-    }
-    const data = (await response.json()) as Partial<FeedFormConfig>;
-    if (!Array.isArray(data.languages)) {
+    const response = await apiGet<FeedFormConfig>(path);
+    const data = response.data;
+    if (!data || !Array.isArray(data.languages)) {
       return null;
     }
     return {

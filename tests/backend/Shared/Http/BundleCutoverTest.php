@@ -101,10 +101,6 @@ class BundleCutoverTest extends TestCase
             'save bulk-translate' => ['POST', '/word/bulk-translate', 'TermImportController@bulkTranslate'],
             'create text' => ['POST', '/texts/new', 'TextController@new'],
             'edit text POST' => ['POST', '/texts/5/edit', 'TextController@editSingle'],
-            // Feed forms: GET 302s into the bundle, but the native-submit POST
-            // handlers stay (coexistence).
-            'create feed POST' => ['POST', '/feeds/new', 'FeedController@newFeed'],
-            'edit feed POST' => ['POST', '/feeds/5/edit', 'FeedController@editFeed'],
             'save preferences' => ['POST', '/profile/preferences', 'UserController@savePreferences'],
             'term status' => ['PUT', '/vocabulary/term/5/status', 'TermStatusController'],
             'delete text' => ['DELETE', '/texts/5', 'TextController@delete'],
@@ -132,10 +128,6 @@ class BundleCutoverTest extends TestCase
     {
         return [
             'word show (not bundled)' => ['/word/5', 'TermDisplayController@showWord'],
-            // The feed new/edit pages 302 into the bundle, but their JSON config
-            // data routes keep the controller (the island fetches them server-backed).
-            'feed new config' => ['/feeds/new/config', 'FeedController@configNew'],
-            'feed edit config' => ['/feeds/5/edit/config', 'FeedController@configEdit'],
             // The starter-vocab page 302s into the bundle, but its JSON config
             // data route keeps the controller (the island fetches it server-backed).
             // Likewise, the bulk-translate page 302s into the bundle, but its JSON
@@ -188,6 +180,10 @@ class BundleCutoverTest extends TestCase
             // TermImportController.
             'word-upload config' => ['GET', 'terms/upload/config'],
             'word-upload file' => ['POST', 'terms/upload'],
+            // Feed-form bootstrap config moved off its cookie routes (Phase R);
+            // FeedApiHandler dispatches both to FeedController.
+            'feed new config' => ['GET', 'feeds/new/config'],
+            'feed edit config' => ['GET', 'feeds/5/edit/config'],
         ];
     }
 

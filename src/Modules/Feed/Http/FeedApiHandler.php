@@ -25,6 +25,7 @@ use Lukaisu\Api\V1\Response;
 use Lukaisu\Shared\Http\ApiRoutableInterface;
 use Lukaisu\Shared\Http\ApiRoutableTrait;
 use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
+use Lukaisu\Shared\Infrastructure\Container\Container;
 use Lukaisu\Modules\Feed\Application\FeedFacade;
 
 /**
@@ -440,12 +441,26 @@ class FeedApiHandler implements ApiRoutableInterface
     public function routeGet(array $fragments, array $params): JsonResponse
     {
         $frag1 = $this->frag($fragments, 1);
+        $frag2 = $this->frag($fragments, 2);
 
         if ($frag1 === 'list') {
             return Response::success($this->crud->formatGetFeedList($params));
         }
         if ($frag1 === 'articles') {
             return Response::success($this->article->formatGetArticles($params));
+        }
+        // Feed-form bootstrap config moved off the cookie-authed /feeds/new/config
+        // and /feeds/{id}/edit/config routes onto /api/v1 under the headless cut
+        // (Phase R). FeedController already returns a JsonResponse; resolve it at
+        // dispatch to avoid churning this handler's constructor.
+        if ($frag1 === 'new' && $frag2 === 'config') {
+            return Container::getInstance()->getTyped(FeedController::class)->configNew($params);
+        }
+        if (
+            $frag1 !== '' && ctype_digit($frag1)
+            && $frag2 === 'edit' && $this->frag($fragments, 3) === 'config'
+        ) {
+            return Container::getInstance()->getTyped(FeedController::class)->configEdit((int) $frag1);
         }
         if ($frag1 !== '' && ctype_digit($frag1)) {
             return Response::success($this->crud->formatGetFeed((int) $frag1));
