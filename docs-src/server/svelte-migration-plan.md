@@ -554,3 +554,67 @@ Python-bound PHP.
 **Remaining (C order):** D5 = **the `main.ts` Alpine split** (client entry Alpine-free; legacy entry keeps
 Alpine for the deferred server views) · coexistence-view + `searchableSelect` retirement (with those views) ·
 admin/annotated (defer→Python). D3f/D3g stay deferred.
+
+---
+
+## D5 plan — the `main.ts` Alpine split (drafted + verified 2026-07-01; READY TO EXECUTE, pending go-ahead)
+
+**Goal:** make the local-first **client bundle Alpine-free**; keep `main.ts` Alpine-ful as the **server** entry
+(searchableSelect, coexistence tag_form/login/edit_form, admin, annotated, text_list/suggestions/wizard —
+all deferred→Python). Full `@alpinejs/csp` package removal is NOT part of D5 (gated on those server views).
+
+**The leverage point (verified):** the client's entire dependency on Alpine funnels through **one line** —
+`src/frontend/app/boot.ts:170` `await import('@/main')`. Every packaged `app/*.html` → its `app/<page>.ts`
+→ `bootAppPage()` (`boot.ts`) → that single dynamic import of `main.ts` (which imports Alpine, registers the
+`$t`/`$markdown` magics, reads the `lukaisu-modules` meta, lazy-loads the Alpine-registering module barrels,
+and calls `Alpine.start()`). The `app/*.ts` files themselves import only module **subpaths**
+(`@modules/*/pages/*.svelte`, `@modules/*/api/*`) — never the barrels — so nothing an island loads pulls
+Alpine transitively (verified: zero `alpinejs` in any `.svelte` or `modules/*/api/*`; no `$t(`/live `x-data`
+in `app/*.html`). So re-pointing that one line flips the whole client at once.
+
+**Chosen approach: Option A — two entries** (NOT a conditional/dynamic Alpine load). Option B
+(`import('alpinejs')` guarded by `[x-data]`) fails here: the client shells still carry a `lukaisu-modules`
+meta, and `main.ts` reads it and lazy-loads barrels that `import Alpine` at top-level — so Alpine bundles into
+the client regardless of a `start()` guard. Option A is also natural (one chokepoint) and lets us remove the
+`vite.app.config.ts` alpine alias for a **build-time hard guarantee** (a stray Alpine import into the client
+graph then fails to resolve, since plain `alpinejs` isn't in `package.json`).
+
+**Change set (~5 files · 0 PHP · 0 package.json):**
+1. **NEW `src/frontend/js/shared/boot/frontend_shell.ts`** — extract the Alpine-free shared init from `main.ts`
+   into `runSharedInit({serverAuthRedirect?})` (CSS/infra side-effect imports `main.ts:18-22,30-70`; async-CSS
+   switch `78-80`; `maybeRefreshAuthToken` `121`; server-only `auth-expired→/connect` handler `123-125`),
+   `bootI18nAria()` (`bootI18n()` `131` + `initAriaLive()` `134`), and `mountNavbar()` (the navbar IIFE
+   `166-181` + the `NavBar.svelte`/`NavbarData` import `51-52`).
+2. **EDIT `src/frontend/js/main.ts`** (server entry) — consume `frontend_shell`; KEEP `import Alpine` (12),
+   `window.Alpine` (137), magics (140-156), `Alpine.start()` (159), the `moduleMap`/meta/loader path (98-116);
+   call `runSharedInit({serverAuthRedirect:true})` + `bootI18nAria()` + `mountNavbar()`. Behavior-identical.
+3. **NEW `src/frontend/js/client.ts`** (Alpine-free client entry) — `runSharedInit()` → `await bootI18nAria()`
+   → `mountNavbar()` → `window.LUKAISU_VITE_LOADED = true`. NO Alpine import, NO magics, NO meta/moduleMap.
+4. **EDIT `src/frontend/app/boot.ts:170`** — `await import('@/client')` instead of `@/main` (+ fix the
+   "starts Alpine" comments at 8-11/167-169). `client.ts` needs no explicit Vite input — it's reached
+   dynamically from every `app/*.html`, so Rollup emits the chunk automatically.
+5. **EDIT `vite.app.config.ts:61`** — remove the `'alpinejs': '@alpinejs/csp'` alias (cleanup + build-time
+   guarantee). `vite.config.ts` (server) is UNTOUCHED — its `main` input, `alpine` manualChunk, and `[x-cloak]`
+   PurgeCSS safelist all stay. `package.json` `@alpinejs/csp` + `@types/alpinejs` STAY (server needs them).
+
+**Biggest risks (this re-points EVERY page's boot at once):**
+- **Silent icon loss on the client:** `shared/icons/lucide_icons.ts:459` re-runs `initIcons()` on
+  `alpine:initialized`, which never fires without Alpine. Icons *should* still render via the module-load
+  `init()` (`:492`) + each island's own `initIcons()`, but verify — any static icon that only got its final
+  pass from the Alpine hook could vanish.
+- **Init ordering in `client.ts`:** `bootI18n()` MUST be awaited before `mountNavbar()`/island labels, or every
+  packaged page ships missing translations uniformly.
+- **Auth-expired handler:** `boot.ts` already owns `lukaisu:auth-expired` on the client (stopImmediatePropagation
+  `155-162`); `runSharedInit()` must default `serverAuthRedirect` OFF so `client.ts` doesn't register a
+  competing server-relative redirect.
+
+**Verification (no headless e2e — Cypress needs live server+DB):**
+- Static: `grep -rli "alpine\|_x_dataStack\|__x" dist-app/` after `npm run build:app` → must be EMPTY (with the
+  alias gone, a leak fails the build); compare `dist-app/` size (~15-40 KB Alpine payload should disappear).
+- Manual QA matrix — **client** (serve `dist-app/` or Capacitor webview): connect/first-run seed, library,
+  reader (popover/edit/multiword/audio + **icons**), words (**action-card icons**), review, auth pages, offline
+  reload. **Server** (`php -S`/docker + DB): `edit_form`/`archived_form` searchableSelect, `tag_form`, `login`
+  (+`$t` labels), admin (`settings_form`/`backup`/`user_management`), `print_alpine`, and a text/language list
+  page (barrels still lazy-load, `Alpine.start()` hydrates, navbar mounts).
+- **First step:** build `frontend_shell.ts` and verify the SERVER world still boots (main.ts behavior-identical)
+  BEFORE re-pointing the client — de-risks the extraction independently of the client cutover.
