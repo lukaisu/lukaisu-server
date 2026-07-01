@@ -526,7 +526,7 @@ class UserApiHandler implements ApiRoutableInterface
     /**
      * Route the `auth/password/*` recovery POSTs (guest, no auth).
      *
-     * @param list<string>         $fragments Endpoint path segments.
+     * @param array<int, string>   $fragments Endpoint path segments.
      * @param array<string, mixed> $params    Request parameters.
      *
      * @return JsonResponse

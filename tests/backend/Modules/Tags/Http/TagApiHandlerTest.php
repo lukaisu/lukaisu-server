@@ -161,18 +161,20 @@ class TagApiHandlerTest extends TestCase
     }
 
     // =========================================================================
-    // routePost is unsupported (405); routePut/routeDelete handle tag rename /
-    // delete and 404 when the /tags/{term|text}/{id} sub-path is missing.
+    // routePost creates a tag (POST /tags/{term|text}); it 404s without a
+    // term/text sub-path. routePut/routeDelete handle tag rename / delete and
+    // 404 when the /tags/{term|text}/{id} sub-path is missing.
     // =========================================================================
 
     #[Test]
-    public function routePostReturns405(): void
+    public function routePostWithoutTagTypeReturns404(): void
     {
+        // No "term"/"text" sub-path → not a recognised create target.
         $response = $this->handler->routePost([], []);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertSame(405, $response->getStatusCode());
-        $this->assertSame(['error' => 'Method Not Allowed'], $response->getData());
+        $this->assertSame(404, $response->getStatusCode());
+        $this->assertSame(['error' => 'Expected /tags/term or /tags/text'], $response->getData());
     }
 
     #[Test]
