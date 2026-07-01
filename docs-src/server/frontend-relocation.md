@@ -204,12 +204,14 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 >
 > Families: **[x] statistics** · **[x] starter-vocab** (config GET `18f6e51` +
 > import/enrich POST — the import/enrich endpoints are shared with word-upload's
-> Frequency tab, both islands repointed to `apiPostForm`) · [ ] word-upload
-> (its OWN `GET /word/upload/config` + multipart `POST /word/upload` still on
-> `basePath()`) · [ ] bulk-translate · [ ] feeds (config + native POST) ·
-> [ ] dict-import (multipart) · [ ] terms-export (native form `POST /words` →
-> fetch + blob download) · [ ] books (needs bundle book pages or link-router
-> handling) · [ ] admin (navbar links + `app/settings.ts`'s `settings_api`).
+> Frequency tab, both islands repointed to `apiPostForm`) · **[x] word-upload**
+> (`GET /api/v1/terms/upload/config` via `apiGet` + multipart `POST
+> /api/v1/terms/upload` via the new `apiPostMultipart` client helper) ·
+> [ ] bulk-translate · [ ] feeds (config + native POST) · [ ] dict-import
+> (multipart — can now reuse `apiPostMultipart`) · [ ] terms-export (native form
+> `POST /words` → fetch + blob download) · [ ] books (needs bundle book pages or
+> link-router handling) · [ ] admin (navbar links + `app/settings.ts`'s
+> `settings_api`).
 
 ---
 
