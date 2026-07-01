@@ -191,6 +191,23 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > touching `src/frontend/js`. **Deletion track stops here; R5 is the coordination
 > boundary.** R3/R4 fold into R5's per-module parity-then-delete.
 
+> **R5 RECIPE (per family) + status.** Template landed: **R5a statistics**
+> (`53eb5ff`) → `GET /api/v1/activity/statistics`. Each family: (1) add the
+> `/api/v1` endpoint (`Endpoints.php` + handler method; a POST handler for
+> multipart), (2) repoint the frontend api file from `basePath()` fetch →
+> `apiGet`/`apiPost` (so a remote server authenticates by **bearer token** — the
+> old same-origin **cookie** routes can't work cross-origin in the app), (3)
+> delete the top-level route + controller method, (4) fix tests (controller test,
+> `RoutesTest` row, `BundleCutoverTest::newApiEndpointsProvider`), (5) gate
+> **including vitest** — R2 skipped vitest and a deleted-module test import
+> slipped through (`c60aed9`); always run vitest when touching `src/frontend`.
+>
+> Families: **[x] statistics** · [ ] word-upload (multipart) · [ ] bulk-translate
+> · [ ] starter-vocab · [ ] feeds (config + native POST) · [ ] dict-import
+> (multipart) · [ ] terms-export (native form `POST /words` → fetch + blob
+> download) · [ ] books (needs bundle book pages or link-router handling) ·
+> [ ] admin (navbar links + `app/settings.ts`'s `settings_api`).
+
 ---
 
 ## 3. Phase M — move the frontend into the app
