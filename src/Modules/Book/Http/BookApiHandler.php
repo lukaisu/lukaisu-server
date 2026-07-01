@@ -205,10 +205,11 @@ class BookApiHandler implements ApiRoutableInterface
         $title = trim((string) ($params['title'] ?? ''));
         $author = isset($params['author']) && $params['author'] !== '' ? (string) $params['author'] : null;
 
-        /** @var list<array<string, mixed>> $chaptersRaw */
-        $chaptersRaw = is_array($params['chapters'] ?? null)
-            ? array_values(array_filter($params['chapters'], 'is_array'))
-            : [];
+        $chaptersRaw = [];
+        if (isset($params['chapters']) && is_array($params['chapters'])) {
+            /** @var list<array<string, mixed>> $chaptersRaw */
+            $chaptersRaw = array_values(array_filter($params['chapters'], 'is_array'));
+        }
         /** @var list<array{textId: int, title: string}> $chapters */
         $chapters = [];
         foreach ($chaptersRaw as $chapter) {
