@@ -228,12 +228,11 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > reader book-nav link resolves in-bundle; Endpoints registry `books` gains
 > PUT/DELETE, /texts/{id}/book-context already served the chapter nav. Cookie
 > BookController + its 4 HTML views + native routes deleted → GET bundle
-> redirects. NB: /book/import (server EPUB → book entity) deleted too; EPUB import
-> is on-device (tag-grouped texts, no server entity), and CreateBookFromTexts is
-> unwired, so there is now no bundle path that CREATES a server book entity —
-> existing ones are viewable/manageable, a future on-device→server bridge is a
-> separate decision) · [ ] admin (navbar links + `app/settings.ts`'s
-> `settings_api`).
+> redirects. Bridge wired (`f3ae14d`): the on-device EPUB import now registers a
+> server book over its just-created chapter texts when server-connected — new
+> RegisterBookFromChapters use case + POST /api/v1/books (ownership-checked), so
+> the bundle both creates and manages server books; offline the texts stay
+> tag-grouped) · [ ] admin (navbar links + `app/settings.ts`'s `settings_api`).
 
 ---
 
