@@ -255,6 +255,10 @@ here (a git submodule for the F-Droid catalog build) is the correct interim.
 Coordinate the move with the `lukaisu` agent; never fork the frontend into two
 diverging copies.
 
+**Concrete sequencing plan:** `docs-src/server/frontend-relocation.md` — the
+retire-then-move phases (R/M/C), the exact command before/after on both repos,
+and the one governing decision (what happens to admin in a headless world).
+
 ## What to reuse / where things are
 
 - **API surface to mirror:** `src/backend/Api/V1/Endpoints.php` (the registry)
