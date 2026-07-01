@@ -13,10 +13,7 @@ export * from './stores/review_state';
 // Utils
 export * from './utils/elapsed_timer';
 
-// Shared utilities needed by review pages
-import '@shared/components/sorttable';
-
-// Side-effect imports (pages)
-import './pages/review_header';
-import './pages/review_table';
-import './pages/review_ajax';
+// The Alpine review pages (review_header/table/ajax) were retired: /review is
+// served by the bundled Svelte ReviewPage island, so this barrel has no Alpine
+// side effects left. The API/stores above are re-exported for consumers that
+// still import the barrel.

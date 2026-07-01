@@ -47,12 +47,14 @@ declare global {
 const moduleMap: Record<string, () => Promise<unknown>> = {
   vocabulary: () => import('@modules/vocabulary'),
   text: () => import('@modules/text'),
-  review: () => import('@modules/review'),
   feed: () => import('@modules/feed'),
   language: () => import('@modules/language'),
   admin: () => import('@modules/admin'),
   tags: () => import('@modules/tags/pages/tag_list'),
-  auth: () => import('@modules/auth'),
+  // `review` and `auth` were removed: every review + auth screen is now a bundled
+  // Svelte island (no server-rendered page requests those modules), so their only
+  // Alpine registrations were dead. A server page that still lists them in its
+  // `lukaisu-modules` meta is simply filtered out below (`m in moduleMap`).
 };
 
 // Read which modules the current page needs from the server-emitted meta tag
