@@ -76,6 +76,7 @@ class Endpoints
         'terms/new' => ['POST'],
         'terms/quick' => ['POST'],
         'terms/full' => ['POST'],
+        'terms/standalone' => ['POST'],
         'terms/for-edit' => ['GET'],
         'terms/bulk-status' => ['PUT'],
         'terms/list' => ['GET'],

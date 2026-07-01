@@ -7,6 +7,7 @@ namespace Lukaisu\Tests\Modules\Vocabulary\Http;
 use Lukaisu\Modules\Vocabulary\Http\TermCrudApiHandler;
 use Lukaisu\Modules\Vocabulary\Application\VocabularyFacade;
 use Lukaisu\Modules\Vocabulary\Application\UseCases\FindSimilarTerms;
+use Lukaisu\Modules\Vocabulary\Application\UseCases\CreateStandaloneTerm;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordContextService;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordDiscoveryService;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordLinkingService;
@@ -41,6 +42,9 @@ class TermCrudApiHandlerTest extends TestCase
     /** @var WordLinkingService&MockObject */
     private WordLinkingService $linkingService;
 
+    /** @var CreateStandaloneTerm&MockObject */
+    private CreateStandaloneTerm $createStandaloneTerm;
+
     private TermCrudApiHandler $handler;
 
     protected function setUp(): void
@@ -50,14 +54,60 @@ class TermCrudApiHandlerTest extends TestCase
         $this->contextService = $this->createMock(WordContextService::class);
         $this->discoveryService = $this->createMock(WordDiscoveryService::class);
         $this->linkingService = $this->createMock(WordLinkingService::class);
+        $this->createStandaloneTerm = $this->createMock(CreateStandaloneTerm::class);
 
         $this->handler = new TermCrudApiHandler(
             $this->facade,
             $this->findSimilarTerms,
             $this->contextService,
             $this->discoveryService,
-            $this->linkingService
+            $this->linkingService,
+            $this->createStandaloneTerm
         );
+    }
+
+    // =========================================================================
+    // createTermStandalone tests
+    // =========================================================================
+
+    public function testCreateTermStandaloneParsesParamsAndDelegates(): void
+    {
+        $this->createStandaloneTerm->expects($this->once())
+            ->method('execute')
+            ->with(7, 'hola', 1, 'hello', 'roman', 'sent', 'note', 'lem', ['tagA', 'tagB'])
+            ->willReturn(['success' => true, 'term' => ['id' => 42]]);
+
+        $result = $this->handler->createTermStandalone([
+            'langId' => '7',
+            'text' => '  hola  ',
+            'status' => '1',
+            'translation' => 'hello',
+            'romanization' => 'roman',
+            'sentence' => 'sent',
+            'notes' => 'note',
+            'lemma' => 'lem',
+            'tags' => ['tagA', 'tagB'],
+        ]);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(42, $result['term']['id']);
+    }
+
+    public function testCreateTermStandaloneAppliesDefaultsAndLanguageIdFallback(): void
+    {
+        // language_id fallback, status defaults to 1, absent lemma is null,
+        // absent tags is an empty list.
+        $this->createStandaloneTerm->expects($this->once())
+            ->method('execute')
+            ->with(3, 'x', 1, '', '', '', '', null, [])
+            ->willReturn(['success' => true, 'term' => ['id' => 1]]);
+
+        $result = $this->handler->createTermStandalone([
+            'language_id' => 3,
+            'text' => 'x',
+        ]);
+
+        $this->assertTrue($result['success']);
     }
 
     // =========================================================================

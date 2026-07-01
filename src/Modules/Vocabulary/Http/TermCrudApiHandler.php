@@ -25,6 +25,7 @@ use Lukaisu\Shared\Infrastructure\Database\QueryBuilder;
 use Lukaisu\Shared\Infrastructure\Database\UserScopedQuery;
 use Lukaisu\Modules\Vocabulary\Application\VocabularyFacade;
 use Lukaisu\Modules\Vocabulary\Application\UseCases\FindSimilarTerms;
+use Lukaisu\Modules\Vocabulary\Application\UseCases\CreateStandaloneTerm;
 use Lukaisu\Modules\Vocabulary\Application\Services\TermStatusService;
 use Lukaisu\Modules\Tags\Application\TagsFacade;
 use Lukaisu\Modules\Vocabulary\Application\Services\WordContextService;
@@ -48,28 +49,32 @@ class TermCrudApiHandler
     private WordContextService $contextService;
     private WordDiscoveryService $discoveryService;
     private WordLinkingService $linkingService;
+    private CreateStandaloneTerm $createStandaloneTerm;
 
     /**
      * Constructor.
      *
-     * @param VocabularyFacade|null     $facade           Vocabulary facade
-     * @param FindSimilarTerms|null     $findSimilarTerms Find similar terms use case
-     * @param WordContextService|null   $contextService   Context service
-     * @param WordDiscoveryService|null $discoveryService Discovery service
-     * @param WordLinkingService|null   $linkingService   Linking service
+     * @param VocabularyFacade|null     $facade               Vocabulary facade
+     * @param FindSimilarTerms|null     $findSimilarTerms     Find similar terms use case
+     * @param WordContextService|null   $contextService       Context service
+     * @param WordDiscoveryService|null $discoveryService     Discovery service
+     * @param WordLinkingService|null   $linkingService       Linking service
+     * @param CreateStandaloneTerm|null $createStandaloneTerm Standalone term create use case
      */
     public function __construct(
         ?VocabularyFacade $facade = null,
         ?FindSimilarTerms $findSimilarTerms = null,
         ?WordContextService $contextService = null,
         ?WordDiscoveryService $discoveryService = null,
-        ?WordLinkingService $linkingService = null
+        ?WordLinkingService $linkingService = null,
+        ?CreateStandaloneTerm $createStandaloneTerm = null
     ) {
         $this->facade = $facade ?? new VocabularyFacade();
         $this->findSimilarTerms = $findSimilarTerms ?? new FindSimilarTerms();
         $this->contextService = $contextService ?? new WordContextService();
         $this->discoveryService = $discoveryService ?? new WordDiscoveryService();
         $this->linkingService = $linkingService ?? new WordLinkingService();
+        $this->createStandaloneTerm = $createStandaloneTerm ?? new CreateStandaloneTerm();
     }
 
     // =========================================================================
@@ -869,5 +874,63 @@ class TermCrudApiHandler
     public function formatUpdateTermFull(int $termId, array $data): array
     {
         return $this->updateTermFull($termId, $data);
+    }
+
+    /**
+     * Create a term outside of any text (the standalone "new term" form).
+     *
+     * Unlike createTermFull, this takes the language + text directly instead of
+     * deriving them from a text occurrence, so a term can be created with no
+     * text context. Delegates to the CreateStandaloneTerm use case, which also
+     * links the new term into existing texts (single-word or multi-word).
+     *
+     * @param array $data Term data: langId, text, status, translation,
+     *                    romanization, sentence, notes, lemma, tags[]
+     *
+     * @return array{success: bool, term?: array<string, mixed>, error?: string}
+     */
+    public function createTermStandalone(array $data): array
+    {
+        $langId = (int) ($data['langId'] ?? $data['language_id'] ?? 0);
+        $text = trim((string) ($data['text'] ?? ''));
+        $status = (int) ($data['status'] ?? 1);
+        $translation = trim((string) ($data['translation'] ?? ''));
+        $romanization = trim((string) ($data['romanization'] ?? ''));
+        $sentence = trim((string) ($data['sentence'] ?? ''));
+        $notes = trim((string) ($data['notes'] ?? ''));
+        $lemma = isset($data['lemma']) && $data['lemma'] !== '' ? trim((string) $data['lemma']) : null;
+
+        $tags = [];
+        if (isset($data['tags']) && is_array($data['tags'])) {
+            /** @var list<string> $tags */
+            $tags = array_values(array_map(
+                static fn($tag): string => is_scalar($tag) ? (string) $tag : '',
+                $data['tags']
+            ));
+        }
+
+        return $this->createStandaloneTerm->execute(
+            $langId,
+            $text,
+            $status,
+            $translation,
+            $romanization,
+            $sentence,
+            $notes,
+            $lemma,
+            $tags
+        );
+    }
+
+    /**
+     * Format response for creating a standalone term.
+     *
+     * @param array $data Term data
+     *
+     * @return array
+     */
+    public function formatCreateTermStandalone(array $data): array
+    {
+        return $this->createTermStandalone($data);
     }
 }

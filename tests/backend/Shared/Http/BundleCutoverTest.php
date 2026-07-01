@@ -185,6 +185,10 @@ class BundleCutoverTest extends TestCase
             // Terms export moved off the native POST /words form (Phase R);
             // VocabularyApiRouter dispatches it to WordListApiHandler@exportMarkedTerms.
             'terms export' => ['POST', 'terms/export'],
+            // Standalone term create (headless sweep): the bundled new-term page
+            // posts here; VocabularyApiRouter dispatches it to
+            // TermCrudApiHandler@formatCreateTermStandalone (no text occurrence).
+            'standalone term create' => ['POST', 'terms/standalone'],
             // Books moved into the bundle (Phase R): the list/detail pages read
             // /api/v1/books and delete/progress hit books/{id}. All resolve via
             // the first-segment 'books' fallback, so 'books' must allow every

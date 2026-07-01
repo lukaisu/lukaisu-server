@@ -217,11 +217,13 @@ class VocabularyApiRouter implements ApiRoutableInterface
             ));
         } elseif ($frag1 === 'full') {
             return Response::success($this->termHandler->formatCreateTermFull($params));
+        } elseif ($frag1 === 'standalone') {
+            return Response::success($this->termHandler->formatCreateTermStandalone($params));
         } elseif ($frag1 === 'multi') {
             return Response::success($this->multiWordHandler->createMultiWordTerm($params));
         }
 
-        return Response::error('Term ID (Integer), "new", "quick", or "multi" Expected', 404);
+        return Response::error('Term ID (Integer), "new", "quick", "standalone", or "multi" Expected', 404);
     }
 
     public function routePut(array $fragments, array $params): JsonResponse
