@@ -56,6 +56,52 @@ class BookApiHandlerTest extends TestCase
     }
 
     // =========================================================================
+    // createBook tests (POST /api/v1/books — on-device EPUB import bridge)
+    // =========================================================================
+
+    #[Test]
+    public function createBookParsesChaptersAndWrapsResult(): void
+    {
+        $this->bookFacade->expects($this->once())
+            ->method('registerBookFromChapters')
+            ->with(
+                5,
+                'My Book',
+                null,
+                [['textId' => 10, 'title' => 'Ch 1'], ['textId' => 11, 'title' => 'Ch 2']],
+                $this->anything()
+            )
+            ->willReturn(['success' => true, 'message' => 'ok', 'bookId' => 7, 'chapterCount' => 2]);
+
+        $result = $this->handler->createBook([
+            'languageId' => 5,
+            'title' => 'My Book',
+            'chapters' => [
+                ['textId' => 10, 'title' => 'Ch 1'],
+                ['textId' => 11, 'title' => 'Ch 2'],
+            ],
+        ]);
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(7, $result['data']['bookId']);
+        $this->assertSame(2, $result['data']['chapterCount']);
+    }
+
+    #[Test]
+    public function routePostDispatchesToCreateBook(): void
+    {
+        $this->bookFacade->method('registerBookFromChapters')
+            ->willReturn(['success' => true, 'message' => 'ok', 'bookId' => 1, 'chapterCount' => 1]);
+
+        $response = $this->handler->routePost(
+            ['books'],
+            ['languageId' => 1, 'title' => 'X', 'chapters' => [['textId' => 2, 'title' => 'A']]]
+        );
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+    }
+
+    // =========================================================================
     // listBooks tests
     // =========================================================================
 
@@ -634,17 +680,8 @@ class BookApiHandlerTest extends TestCase
         $this->assertStringContainsString('Book ID', $data['error']);
     }
 
-    // =========================================================================
-    // routePost tests (uses trait default - 405)
-    // =========================================================================
-
-    #[Test]
-    public function routePostReturnsMethodNotAllowed(): void
-    {
-        $response = $this->handler->routePost([], []);
-
-        $this->assertSame(405, $response->getStatusCode());
-    }
+    // routePost now creates a book (the on-device EPUB import bridge); see the
+    // createBook tests near the top. It no longer falls through to the trait's 405.
 
     // =========================================================================
     // frag helper tests via route methods

@@ -30,6 +30,7 @@ use Lukaisu\Modules\Book\Application\Services\TextSplitterService;
 // Use Cases
 use Lukaisu\Modules\Book\Application\UseCases\ImportEpub;
 use Lukaisu\Modules\Book\Application\UseCases\CreateBookFromTexts;
+use Lukaisu\Modules\Book\Application\UseCases\RegisterBookFromChapters;
 use Lukaisu\Modules\Book\Application\UseCases\GetBookList;
 use Lukaisu\Modules\Book\Application\UseCases\GetBookById;
 use Lukaisu\Modules\Book\Application\UseCases\DeleteBook;
@@ -116,6 +117,13 @@ class BookServiceProvider implements ServiceProviderInterface
                 $c->getTyped(BookRepositoryInterface::class),
                 $c->getTyped(TextRepositoryInterface::class),
                 $c->getTyped(TextSplitterService::class)
+            );
+        });
+
+        // RegisterBookFromChapters use case (bundled on-device EPUB import bridge)
+        $container->singleton(RegisterBookFromChapters::class, function (Container $c) {
+            return new RegisterBookFromChapters(
+                $c->getTyped(BookRepositoryInterface::class)
             );
         });
 

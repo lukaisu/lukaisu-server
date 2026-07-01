@@ -30,7 +30,14 @@ import { pageUrl } from './router';
 import { apiGet, apiPost } from '@shared/api/client';
 import { LanguagesApi } from '@modules/language/api/languages_api';
 import { TextsApi } from '@modules/text/api/texts_api';
+import { BooksApi } from '@modules/book/api/books_api';
 import { parseEpub, epubChapterTexts } from '@shared/offline/local/content/epub';
+
+// Whether a server is connected (resolved in start()). EPUB import always creates
+// the chapter texts on-device; when server-connected it additionally registers a
+// server book over them (chapter nav + progress). Offline the texts stay
+// tag-grouped — their local ids mean nothing to a server.
+let serverConnected = false;
 
 interface LanguageOption {
   id: number;
@@ -148,6 +155,7 @@ async function importEpubFile(file: File): Promise<void> {
   const chapters = epubChapterTexts(bookTitle, parsed.chapters);
   setStatus(status, `Importing "${bookTitle}" (${chapters.length} chapter(s))…`);
   let firstId: number | undefined;
+  const createdChapters: Array<{ textId: number; title: string }> = [];
   for (const chapter of chapters) {
     const res = await TextsApi.create({
       langId,
@@ -159,10 +167,21 @@ async function importEpubFile(file: File): Promise<void> {
       setStatus(status, res.error || 'Could not import the book.', true);
       return;
     }
+    createdChapters.push({ textId: res.data.id, title: chapter.title });
     if (firstId === undefined) {
       firstId = res.data.id;
     }
   }
+
+  // Server-connected: register a server book over the chapter texts (the ids are
+  // now real server ids), so the book appears in the list and the reader gains
+  // chapter navigation. Offline the texts stay tag-grouped (their local ids mean
+  // nothing to a server). A failure here is non-fatal — the chapters imported.
+  if (serverConnected && createdChapters.length > 0) {
+    setStatus(status, `Registering “${bookTitle}”…`);
+    await BooksApi.createFromChapters(langId, bookTitle, createdChapters);
+  }
+
   if (firstId !== undefined) {
     window.location.assign(pageUrl.read(firstId, langId));
   }
@@ -352,6 +371,7 @@ async function start(): Promise<void> {
   // POSTing, so the core paste/save path is served on-device. The return flag
   // gates the server-only importers.
   const localFirst = await initDataMode();
+  serverConnected = !localFirst;
   const res = await LanguagesApi.list();
   const languages = (res.data?.languages ?? []).map((l) => ({ id: l.id, name: l.name }));
   setupForm(languages);

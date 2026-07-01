@@ -186,6 +186,55 @@ class BookApiHandler implements ApiRoutableInterface
         ];
     }
 
+    /**
+     * Handle POST /api/v1/books request — register a book over chapter texts.
+     *
+     * Backs the bundled on-device EPUB import bridge: the client parses the EPUB
+     * and creates one text per chapter, then (server-connected) POSTs the ordered
+     * chapter text ids here to fold them into a book. Ownership of each chapter
+     * text is enforced in the use case.
+     *
+     * @param array $params Request body: languageId, title, author?, chapters[]
+     *
+     * @return array Response data
+     */
+    public function createBook(array $params): array
+    {
+        $userId = Globals::getCurrentUserId();
+        $languageId = (int) ($params['languageId'] ?? 0);
+        $title = trim((string) ($params['title'] ?? ''));
+        $author = isset($params['author']) && $params['author'] !== '' ? (string) $params['author'] : null;
+
+        /** @var list<array<string, mixed>> $chaptersRaw */
+        $chaptersRaw = is_array($params['chapters'] ?? null)
+            ? array_values(array_filter($params['chapters'], 'is_array'))
+            : [];
+        /** @var list<array{textId: int, title: string}> $chapters */
+        $chapters = [];
+        foreach ($chaptersRaw as $chapter) {
+            $chapters[] = [
+                'textId' => (int) ($chapter['textId'] ?? 0),
+                'title' => (string) ($chapter['title'] ?? ''),
+            ];
+        }
+
+        $result = $this->bookFacade->registerBookFromChapters($languageId, $title, $author, $chapters, $userId);
+
+        return [
+            'success' => $result['success'],
+            'data' => [
+                'bookId' => $result['bookId'],
+                'chapterCount' => $result['chapterCount'],
+            ],
+            'message' => $result['message'],
+        ];
+    }
+
+    public function routePost(array $fragments, array $params): JsonResponse
+    {
+        return Response::success($this->createBook($params));
+    }
+
     public function routeGet(array $fragments, array $params): JsonResponse
     {
         $frag1 = $this->frag($fragments, 1);

@@ -15,7 +15,13 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import { apiGet, apiDelete, apiPut, type ApiResponse } from '@shared/api/client';
+import { apiGet, apiPost, apiDelete, apiPut, type ApiResponse } from '@shared/api/client';
+
+/** One chapter to register: an already-created text id + its title, in order. */
+export interface NewBookChapter {
+  textId: number;
+  title: string;
+}
 
 /** One chapter row (a text belonging to the book). */
 export interface BookChapter {
@@ -117,6 +123,36 @@ export const BooksApi = {
         chapters: Array.isArray(body.data.chapters) ? body.data.chapters : []
       }
     };
+  },
+
+  /**
+   * Register a server book over chapter texts the client already created.
+   *
+   * The bundled on-device EPUB import creates one text per chapter (offline-
+   * capable); when a server is connected it calls this to fold those texts into a
+   * book so it appears in the book list and the reader gains chapter nav. Server-
+   * only: only call this when server-connected (offline text ids are local).
+   */
+  async createFromChapters(
+    languageId: number,
+    title: string,
+    chapters: NewBookChapter[],
+    author?: string
+  ): Promise<ApiResponse<{ bookId: number | null; chapterCount: number }>> {
+    const res = await apiPost<BooksEnvelope<{ bookId: number | null; chapterCount: number }>>('/books', {
+      languageId,
+      title,
+      author: author ?? null,
+      chapters
+    });
+    if (res.error) {
+      return { error: res.error };
+    }
+    const body = res.data;
+    if (!body || body.success === false || !body.data) {
+      return { error: body?.error || body?.message || 'Could not register the book.' };
+    }
+    return { data: { bookId: body.data.bookId ?? null, chapterCount: body.data.chapterCount ?? 0 } };
   },
 
   /**

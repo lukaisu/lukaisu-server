@@ -191,6 +191,9 @@ class BundleCutoverTest extends TestCase
             'book detail' => ['GET', 'books/5'],
             'book delete' => ['DELETE', 'books/5'],
             'book progress' => ['PUT', 'books/5/progress'],
+            // POST books registers a book over on-device-imported chapter texts
+            // (the EPUB import bridge) → BookApiHandler@createBook.
+            'book create' => ['POST', 'books'],
         ];
     }
 

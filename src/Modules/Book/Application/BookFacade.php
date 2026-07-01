@@ -20,6 +20,7 @@ use Lukaisu\Shared\Infrastructure\Container\Container;
 use Lukaisu\Modules\Book\Domain\BookRepositoryInterface;
 use Lukaisu\Modules\Book\Application\UseCases\ImportEpub;
 use Lukaisu\Modules\Book\Application\UseCases\CreateBookFromTexts;
+use Lukaisu\Modules\Book\Application\UseCases\RegisterBookFromChapters;
 use Lukaisu\Modules\Book\Application\UseCases\GetBookList;
 use Lukaisu\Modules\Book\Application\UseCases\GetBookById;
 use Lukaisu\Modules\Book\Application\UseCases\DeleteBook;
@@ -38,6 +39,7 @@ class BookFacade
     // Lazy-loaded use cases
     private ?ImportEpub $importEpub = null;
     private ?CreateBookFromTexts $createBookFromTexts = null;
+    private ?RegisterBookFromChapters $registerBookFromChapters = null;
     private ?GetBookList $getBookList = null;
     private ?GetBookById $getBookById = null;
     private ?DeleteBook $deleteBook = null;
@@ -124,6 +126,38 @@ class BookFacade
             $audioUri,
             $sourceUri,
             $tagIds,
+            $userId
+        );
+    }
+
+    /**
+     * Register a book over chapter texts the client already created.
+     *
+     * Used by the bundled on-device EPUB import: the client parses the EPUB and
+     * creates one text per chapter, then (when server-connected) calls this to
+     * link them into a book. Each chapter text id is verified against the current
+     * user's own texts before linking.
+     *
+     * @param int                                    $languageId Language id
+     * @param string                                 $title      Book title
+     * @param string|null                            $author     Author (optional)
+     * @param list<array{textId: int, title: string}> $chapters  Chapters, in order
+     * @param int|null                               $userId     Current user id
+     *
+     * @return array{success: bool, message: string, bookId: int|null, chapterCount: int}
+     */
+    public function registerBookFromChapters(
+        int $languageId,
+        string $title,
+        ?string $author,
+        array $chapters,
+        ?int $userId = null
+    ): array {
+        return $this->getRegisterBookFromChapters()->execute(
+            $languageId,
+            $title,
+            $author,
+            $chapters,
             $userId
         );
     }
@@ -294,6 +328,14 @@ class BookFacade
             $this->createBookFromTexts = Container::getInstance()->getTyped(CreateBookFromTexts::class);
         }
         return $this->createBookFromTexts;
+    }
+
+    private function getRegisterBookFromChapters(): RegisterBookFromChapters
+    {
+        if ($this->registerBookFromChapters === null) {
+            $this->registerBookFromChapters = Container::getInstance()->getTyped(RegisterBookFromChapters::class);
+        }
+        return $this->registerBookFromChapters;
     }
 
     private function getGetBookList(): GetBookList
