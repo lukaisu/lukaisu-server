@@ -614,9 +614,13 @@ function registerRoutes(Router $router): void
     $router->post('/profile', 'Lukaisu\\Modules\\User\\Http\\UserController@updateProfile', AUTH_MIDDLEWARE);
     $router->post('/profile/password', 'Lukaisu\\Modules\\User\\Http\\UserController@changePassword', AUTH_MIDDLEWARE);
     $router->post('/profile/preferences', 'Lukaisu\\Modules\\User\\Http\\UserController@savePreferences', AUTH_MIDDLEWARE);
+    // The GET /profile/statistics page is served by the bundled client (Svelte
+    // StatisticsPage island); see the /app redirect below. This JSON config
+    // route feeds that island the server-computed intensity + frequency chart
+    // data (the streak + calendar it fetches from /api/v1/activity/*).
     $router->get(
-        '/profile/statistics',
-        'Lukaisu\\Modules\\User\\Http\\StatisticsController@show',
+        '/profile/statistics/config',
+        'Lukaisu\\Modules\\User\\Http\\StatisticsController@config',
         AUTH_MIDDLEWARE
     );
 
@@ -806,6 +810,7 @@ function registerRoutes(Router $router): void
     $router->get('/feeds/manage', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/review', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/profile/preferences', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/profile/statistics', $bundleRedirect, AUTH_MIDDLEWARE);
 
     // ==================== DEPRECATED ROUTES ====================
     // These legacy routes still work but emit Deprecation headers.

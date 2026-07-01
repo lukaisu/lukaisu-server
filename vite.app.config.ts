@@ -93,6 +93,7 @@ export default defineConfig({
         'text-check': resolve(__dirname, 'src/frontend/app/text-check.html'),
         tags: resolve(__dirname, 'src/frontend/app/tags.html'),
         feeds: resolve(__dirname, 'src/frontend/app/feeds.html'),
+        statistics: resolve(__dirname, 'src/frontend/app/statistics.html'),
         dictionaries: resolve(__dirname, 'src/frontend/app/dictionaries.html'),
         texts: resolve(__dirname, 'src/frontend/app/texts.html'),
         settings: resolve(__dirname, 'src/frontend/app/settings.html'),

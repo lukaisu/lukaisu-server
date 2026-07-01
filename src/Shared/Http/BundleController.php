@@ -154,6 +154,8 @@ final class BundleController
                 return 'feeds.html';
             case $path === '/profile/preferences':
                 return 'settings.html';
+            case $path === '/profile/statistics':
+                return 'statistics.html';
             case $path === '/words' || $path === '/words/edit':
                 return $withQuery('words.html');
             case $path === '/word/bulk-translate':

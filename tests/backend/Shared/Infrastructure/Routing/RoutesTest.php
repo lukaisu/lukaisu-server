@@ -304,9 +304,15 @@ class RoutesTest extends TestCase
             'admin install-demo' => ['/admin/install-demo', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@installDemo'],
             'admin settings' => ['/admin/settings', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@settings'],
             'admin server-data' => ['/admin/server-data', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@serverData'],
+            // GET /profile/statistics now 302s into the bundled Svelte
+            // StatisticsPage island; the JSON config data route keeps the controller.
             'profile statistics' => [
                 '/profile/statistics',
-                'Lukaisu\\Modules\\User\\Http\\StatisticsController@show'
+                'Lukaisu\\Shared\\Http\\BundleController@redirect'
+            ],
+            'profile statistics config' => [
+                '/profile/statistics/config',
+                'Lukaisu\\Modules\\User\\Http\\StatisticsController@config'
             ],
         ];
     }

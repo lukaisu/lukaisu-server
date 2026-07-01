@@ -7,6 +7,7 @@ namespace Lukaisu\Tests\Modules\User\Http;
 use Lukaisu\Modules\User\Application\UseCases\Statistics\GetFrequencyStatistics;
 use Lukaisu\Modules\User\Application\UseCases\Statistics\GetIntensityStatistics;
 use Lukaisu\Modules\User\Http\StatisticsController;
+use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -36,34 +37,52 @@ class StatisticsControllerTest extends TestCase
         $this->assertInstanceOf(StatisticsController::class, $this->controller);
     }
 
-    public function testShowCallsBothUseCases(): void
+    public function testConfigCallsBothUseCasesAndShapesChartData(): void
     {
         $this->intensity->expects($this->once())
             ->method('execute')
-            ->willReturn(['languages' => [], 'totals' => []]);
+            ->willReturn([
+                'languages' => [
+                    [
+                        'name' => 'English',
+                        's1' => 10, 's2' => 20, 's3' => 30,
+                        's4' => 15, 's5' => 25, 's99' => 100,
+                    ],
+                ],
+                'totals' => [],
+            ]);
 
         $this->frequency->expects($this->once())
             ->method('execute')
             ->willReturn([
                 'languages' => [],
                 'totals' => [
-                    'ct' => 0, 'at' => 0, 'kt' => 0,
-                    'cy' => 0, 'ay' => 0, 'ky' => 0,
-                    'cw' => 0, 'aw' => 0, 'kw' => 0,
-                    'cm' => 0, 'am' => 0, 'km' => 0,
-                    'ca' => 0, 'aa' => 0, 'ka' => 0,
+                    'ct' => 5, 'at' => 10, 'kt' => 2,
+                    'cy' => 3, 'ay' => 8, 'ky' => 1,
+                    'cw' => 20, 'aw' => 50, 'kw' => 10,
+                    'cm' => 100, 'am' => 200, 'km' => 50,
+                    'ca' => 500, 'aa' => 1000, 'ka' => 300,
                 ],
             ]);
 
-        ob_start();
-        try {
-            $this->controller->show([]);
-        } catch (\Throwable $e) {
-            // The view include may fail in unit-test environment without
-            // the full PageLayoutHelper/render chain; we just care that
-            // the use cases were invoked.
-        }
-        ob_end_clean();
+        $response = $this->controller->config([]);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertSame(200, $response->getStatusCode());
+
+        $data = $response->getData();
+        $this->assertIsArray($data);
+
+        $this->assertSame([
+            [
+                'name' => 'English',
+                's1' => 10, 's2' => 20, 's3' => 30,
+                's4' => 15, 's5' => 25, 's99' => 100,
+            ],
+        ], $data['intensity']);
+
+        $this->assertSame(5, $data['frequency']['ct']);
+        $this->assertSame(300, $data['frequency']['ka']);
     }
 
     public function testRedirectFromAdminReturns301ToProfileStatistics(): void

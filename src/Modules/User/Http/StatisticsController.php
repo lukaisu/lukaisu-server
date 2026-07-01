@@ -19,13 +19,16 @@ namespace Lukaisu\Modules\User\Http;
 use Lukaisu\Modules\User\Application\UseCases\Statistics\GetFrequencyStatistics;
 use Lukaisu\Modules\User\Application\UseCases\Statistics\GetIntensityStatistics;
 use Lukaisu\Shared\Http\BaseController;
+use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 
 /**
  * Controller for per-user learning statistics.
  *
- * Displays reading intensity and frequency statistics scoped to the
- * current user at /profile/statistics.
+ * The statistics page (/profile/statistics) is now a Svelte island shipped in
+ * the bundle (`dist-app/statistics.html`); the GET page route 302s there. This
+ * controller exposes the server-computed chart data the island fetches on
+ * mount, plus the legacy /admin/statistics redirect.
  */
 class StatisticsController extends BaseController
 {
@@ -40,11 +43,6 @@ class StatisticsController extends BaseController
     private GetFrequencyStatistics $getFrequencyStatistics;
 
     /**
-     * Path to view templates.
-     */
-    private string $viewPath;
-
-    /**
      * Constructor.
      *
      * @param GetIntensityStatistics|null $getIntensityStatistics Intensity use case
@@ -57,29 +55,64 @@ class StatisticsController extends BaseController
         parent::__construct();
         $this->getIntensityStatistics = $getIntensityStatistics ?? new GetIntensityStatistics();
         $this->getFrequencyStatistics = $getFrequencyStatistics ?? new GetFrequencyStatistics();
-        $this->viewPath = __DIR__ . '/../Views/';
     }
 
     /**
-     * Display the statistics page.
+     * Statistics bootstrap config (JSON).
      *
-     * GET /profile/statistics
+     * The statistics UI is now a Svelte island in the bundle
+     * (`dist-app/statistics.html`); the GET page route 302s there. The island
+     * cannot compute the chart data — per-language term-status counts
+     * (intensity) and the created/activity/known totals over time windows
+     * (frequency) — so it fetches them here on mount. This mirrors the two JSON
+     * blobs the retired `statistics.php` view used to inline. The streak +
+     * calendar heatmap the island fetches separately from /api/v1/activity/*.
      *
-     * @param array<string, string> $params Route parameters
+     * Route: GET /profile/statistics/config
      *
-     * @return void
+     * @param array<string, string> $params Route parameters (unused)
      *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
-     * @psalm-suppress UnresolvableInclude View path is constructed at runtime
+     * @return JsonResponse
      */
-    public function show(array $params = []): void
+    public function config(array $params = []): JsonResponse
     {
+        unset($params);
+
         $intensityStats = $this->getIntensityStatistics->execute();
         $frequencyStats = $this->getFrequencyStatistics->execute();
 
-        $this->render('Statistics', true);
-        include $this->viewPath . 'statistics.php';
-        $this->endRender();
+        $intensity = [];
+        /** @var mixed $lang */
+        foreach (($intensityStats['languages'] ?? []) as $lang) {
+            if (!is_array($lang)) {
+                continue;
+            }
+            $intensity[] = [
+                'name' => (string) ($lang['name'] ?? ''),
+                's1' => (int) ($lang['s1'] ?? 0),
+                's2' => (int) ($lang['s2'] ?? 0),
+                's3' => (int) ($lang['s3'] ?? 0),
+                's4' => (int) ($lang['s4'] ?? 0),
+                's5' => (int) ($lang['s5'] ?? 0),
+                's99' => (int) ($lang['s99'] ?? 0),
+            ];
+        }
+
+        $totals = is_array($frequencyStats['totals'] ?? null) ? $frequencyStats['totals'] : [];
+        $frequency = [];
+        foreach (
+            [
+                'ct', 'at', 'kt', 'cy', 'ay', 'ky', 'cw', 'aw', 'kw',
+                'cm', 'am', 'km', 'ca', 'aa', 'ka',
+            ] as $key
+        ) {
+            $frequency[$key] = (int) ($totals[$key] ?? 0);
+        }
+
+        return JsonResponse::success([
+            'intensity' => $intensity,
+            'frequency' => $frequency,
+        ]);
     }
 
     /**

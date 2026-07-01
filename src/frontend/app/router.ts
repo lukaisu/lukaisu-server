@@ -84,6 +84,9 @@ export const pageUrl = {
   settings(): string {
     return 'settings.html';
   },
+  statistics(): string {
+    return 'statistics.html';
+  },
   print(textId: number | string): string {
     return `text-print.html?text=${encodeURIComponent(String(textId))}`;
   },
@@ -229,6 +232,13 @@ export function bundledPageFor(path: string): string | null {
   // resolves locally instead of falling through to a remote server.
   if (pathname === '/profile/preferences') {
     return pageUrl.settings();
+  }
+  // Statistics — server-enhanced (Job B). Reached from the home dashboard and
+  // the profile menu; the bundle shows streaks, an activity heatmap and the
+  // intensity/frequency charts (gated to a connected server, which computes
+  // them). The query is dropped — the page has no parameters.
+  if (pathname === '/profile/statistics') {
+    return pageUrl.statistics();
   }
   // Plain print, reached from the reader's and library's printer links
   // (/text/{id}/print-plain). The bundled page is plain-print only; the
