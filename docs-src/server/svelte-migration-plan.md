@@ -166,3 +166,85 @@ Divisions (tasks #22–#32):
 
 Notes: **jQuery is already gone** (`hover_intent.ts` is vanilla TS, not jQuery — it
 stays). The `script-src 'self'` CSP stays (Svelte is CSP-clean too).
+
+### Phase 2 — progress & remaining work (approach: **C now → A eventually**)
+
+**Decision (2026-07-01):** proceed with **C (prioritized)** now and **eventually reach
+A (full retirement — no `x-data` anywhere, `@alpinejs` dropped)**. So nothing is
+permanently deleted for being a "deprecation candidate" (A wants it ported); C only
+**orders** the work: high-value user-facing screens first, the heavy/low-value ones
+(feed-wizard, admin) and the POST-result tails last, then D5.
+
+**Done (committed on `main`, gate-verified incl. full PHP suite; pushed through
+`757f3b7`, then Phase-2 commits `b0c5b1e`→`cc408c1` local):**
+- [x] **D1** — deleted 38 dead Job-A files (views + coexistence-kept Alpine renderers).
+- [x] **D2** — converged `/connect`→ConnectPage, `/feeds[/manage]`→FeedsPage.
+- [x] **D3a** — vocab cluster: `starter-vocab` + `bulk-translate` (Alpine fully gone);
+  `word-upload` **partial** (GET page → Svelte island; POST→result flow still
+  server-renders Alpine — see the tail note below).
+
+**The validated recipe (proven 3×) — per PWA-only screen:**
+1. `app/<page>.html` (thin shell + offline notice if server-gated + `<div id="<page>-root">`)
+   and `app/<page>.ts` (`initDataMode` → server-gate → `bootI18n` → fetch config → `mount`
+   → `bootAppPage`). Copy `app/starter-vocab.{html,ts}` as the template.
+2. Add the `vite.app.config.ts` input.
+3. Add the route to all 3 mirror maps (`routes.php` GET→`$bundleRedirect`,
+   `BundleController::mapPathToBundlePage`, `router.ts::bundledPageFor` + a `pageUrl.*`
+   helper). Id-carrying paths use a regex → `<page>.html?<param>={id}` (see starter-vocab).
+4. Verify-then-delete the PHP view + Alpine `.ts` + test + barrel + the overridden GET
+   route — **but KEEP anything a live non-GET (POST) route still renders** (flag it).
+
+**Two findings that shape every remaining port:**
+- **(config API)** PWA screens inject their config as a PHP `<script type="application/json">`
+  blob with no API. Port = island **+ a thin `GET …/config` endpoint** on the existing
+  controller returning `JsonResponse::success([...])` (template: `StarterVocabController::config()`).
+- **(POST→Alpine-result tail)** Some screens POST to a server-rendered **result page** that
+  itself uses Alpine (`word-upload`'s manual result; likely admin/feed-wizard). The GET-form
+  port does NOT remove that Alpine. **Fully retiring it (needed for A/D5) means rebuilding the
+  POST flow client-side** — the POST returns JSON (or an API endpoint is added) and the island
+  renders the result. Track these as their own sub-tasks; they gate D5.
+
+**Remaining work, in C order:**
+1. **D3e — user auth views + statistics** (do FIRST; highest-value, user-facing).
+   `login/register/forgot_password/reset_password/recover_password.php` (`registerForm`
+   ~155, `resetPasswordForm` ~122 + mostly-static forms hydrated by `form_validation`/
+   `form_initialization`) and `statistics.php` (`statisticsApp`/`streakDisplay`/
+   `calendar_heatmap`, Chart.js ~644). Watch for auth POST→re-render tails (login/register
+   error re-render). Note: ConnectPage already covers `/connect`; these are the distinct
+   `/login`,`/register`,`/password/*`,`/profile/statistics` routes.
+2. **D3b — tags forms** (`tag_form.php`: term + text tag new/edit). Small; needs a select
+   widget — build a minimal Svelte searchable-select or use a native `<select>` (the full
+   `searchableSelect` port is D4).
+3. **D3c — dictionary import** (`import.php`; `dictionary_import` ~71, `local_dictionary_panel`
+   ~277, `curated_dictionaries` ~599). **Reuse the committed `CuratedDictBrowser.svelte`**
+   (built during D3a).
+4. **D3a-tail — word-upload POST result** — rebuild the manual-upload result client-side so
+   `upload_result.php`/`upload_form.php` + `word_upload.ts`/`wordUpload*App` can be deleted.
+5. **D3d — feed wizard/browse cluster** (~3100 LOC, heaviest): `new/edit/multi_load/
+   edit_text_form/browse/wizard_step1-4.php` + `feed_wizard_store`. Split into sub-screens.
+   Do after FeedsPage is the sole feeds SPA (done in D2). NOTE `Feed/Views/index.php` is
+   rendered by `/feeds/edit` (kept in D2) — it dies with this cluster.
+6. **D3f — admin cluster** (~1360 LOC): `backup/install_demo/server_data/settings_form/
+   users/wizard.php` (backupManager/userManagement/settingsFormApp/serverDataApp/
+   tableManagementApp/ttsSettingsApp/wizardModal). Deferred under C; **ported (not deleted)
+   under A**.
+7. **D3g — annotated print**: `print_alpine.php` annotated mode (`/text/{id}/print` +
+   `/print/edit`) + `text_print_app.ts`'s annotated branch (plain-print already → TextPrintApp).
+   Deferred under C; ported under A.
+8. **D4 — shared chrome**: `searchable_select`, `footer`, `offline-button/indicator`,
+   `BaseController::message()`'s inline `x-data` notification, `PageLayoutHelper` chrome →
+   Svelte (NavBar/ThemeToggle/NavbarStreak already done). Only after no reachable PHP page
+   renders the chrome. High risk (every shell).
+9. **D5 — final `@alpinejs` deletion** (= reaching A): strip Alpine from `main.ts` (import,
+   `window.Alpine`, `$t`/`$markdown` magics, `Alpine.start()`; keep the navbar mount + i18n);
+   remove the `'alpinejs'→'@alpinejs/csp'` alias from **both** vite configs; drop the `alpine`
+   manualChunk + `[x-cloak]` safelist; remove `@alpinejs/csp` + `@types/alpinejs` from
+   `package.json`; update the `SecurityHeaders.php` comment. Gated on **zero** reachable
+   `x-data` remaining (grep `src` for `x-data` + `Alpine.data(` = empty). Highest blast radius.
+
+**Verification reality:** the static gate (typecheck/svelte-check · lint · build:app · build
+(PWA) · vitest · psalm · `composer test:no-coverage`) is strong but **cannot exercise live
+routing** (Cypress `e2e`/`e2e:app` need a browser+server). Every redirect + server-gated island
+needs a **manual pass on a running server** before deploy. Outstanding QA from D1–D3a:
+`/connect` first-visit login (multi-user `AuthMiddleware` bounces unauth → `/login`),
+`/feeds[/manage]`, and the three vocab screens (server flow + offline "connect a server" notice).
