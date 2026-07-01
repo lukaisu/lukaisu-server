@@ -106,7 +106,10 @@ class DictionaryControllerTest extends TestCase
     public function classHasRequiredPublicMethods(): void
     {
         $reflection = new ReflectionClass(DictionaryController::class);
-        $expectedPublic = ['index', 'import', 'processImport', 'delete', 'preview'];
+        // GET /dictionaries/import is served by the bundled Svelte island (D3c),
+        // so the `import()` view method was removed; only the POST handler
+        // (processImport) and the kept management methods remain.
+        $expectedPublic = ['index', 'processImport', 'delete', 'preview'];
 
         foreach ($expectedPublic as $methodName) {
             $this->assertTrue(
@@ -144,7 +147,7 @@ class DictionaryControllerTest extends TestCase
     public function allPublicMethodsAcceptArrayParams(): void
     {
         $reflection = new ReflectionClass(DictionaryController::class);
-        $publicMethods = ['index', 'import', 'processImport', 'delete', 'preview'];
+        $publicMethods = ['index', 'processImport', 'delete', 'preview'];
 
         foreach ($publicMethods as $methodName) {
             $method = $reflection->getMethod($methodName);
@@ -172,7 +175,7 @@ class DictionaryControllerTest extends TestCase
     public function allPublicMethodsReturnVoid(): void
     {
         $reflection = new ReflectionClass(DictionaryController::class);
-        $publicMethods = ['index', 'import', 'processImport', 'delete', 'preview'];
+        $publicMethods = ['index', 'processImport', 'delete', 'preview'];
 
         foreach ($publicMethods as $methodName) {
             $method = $reflection->getMethod($methodName);

@@ -85,6 +85,11 @@ export const pageUrl = {
       ? `dictionaries.html?lang=${encodeURIComponent(String(langId))}`
       : 'dictionaries.html';
   },
+  dictionaryImport(langId?: number | string): string {
+    return langId != null
+      ? `dictionary-import.html?lang=${encodeURIComponent(String(langId))}`
+      : 'dictionary-import.html';
+  },
   settings(): string {
     return 'settings.html';
   },
@@ -224,10 +229,20 @@ export function bundledPageFor(path: string): string | null {
   }
   // Local dictionaries — server-enhanced (Job B). Reached from /dictionaries?lang=
   // and the per-language /languages/{id}/dictionaries; the bundle shows the
-  // management + curated-import page (gated to a connected server). The exact
-  // matches below deliberately exclude the file-import form (/dictionaries/import,
-  // /languages/{id}/dictionaries/import), which is not bundled and falls through to
-  // the connected server's native multipart upload.
+  // management + curated-import page (gated to a connected server). The
+  // file-import form (/dictionaries/import, /languages/{id}/dictionaries/import)
+  // is now bundled too (D3c) — it carries ?lang= through to dictionary-import.html,
+  // which mounts the Svelte island and still posts the upload natively to the
+  // server's kept /dictionaries/import route. Match the import paths first so the
+  // bare-list matches below don't swallow them.
+  const dictLangImportMatch = pathname.match(/^\/languages\/(\d+)\/dictionaries\/import$/);
+  if (dictLangImportMatch) {
+    return pageUrl.dictionaryImport(dictLangImportMatch[1]);
+  }
+  if (pathname === '/dictionaries/import') {
+    const lang = new URLSearchParams(query).get('lang');
+    return pageUrl.dictionaryImport(lang ?? undefined);
+  }
   if (pathname === '/dictionaries') {
     const lang = new URLSearchParams(query).get('lang');
     return pageUrl.dictionaries(lang ?? undefined);

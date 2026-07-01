@@ -480,11 +480,9 @@ function registerRoutes(Router $router): void
         'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@index',
         AUTH_MIDDLEWARE
     );
-    $router->get(
-        '/languages/{id:int}/dictionaries/import',
-        'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@import',
-        AUTH_MIDDLEWARE
-    );
+    // GET /languages/{id}/dictionaries/import is served by the bundled Svelte
+    // dictionary-import island (see the Job-A/B cut-over block below); only the
+    // POST (native multipart upload) keeps its controller.
     $router->post(
         '/languages/{id:int}/dictionaries/import',
         'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@processImport',
@@ -498,13 +496,9 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Import wizard
-    $router->registerWithMiddleware(
-        '/dictionaries/import',
-        'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@import',
-        AUTH_MIDDLEWARE,
-        'GET'
-    );
+    // Import wizard: GET /dictionaries/import is served by the bundled Svelte
+    // dictionary-import island (cut-over block below); the POST keeps its
+    // controller (native multipart upload → server-side parse + store).
     $router->registerWithMiddleware(
         '/dictionaries/import',
         'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@processImport',
@@ -825,6 +819,11 @@ function registerRoutes(Router $router): void
     $router->get('/feeds', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/feeds/manage', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/review', $bundleRedirect, AUTH_MIDDLEWARE);
+    // Dictionary import (Job B, D3c): the GET form is served by the bundled
+    // Svelte island; the POST /dictionaries/import (processImport) below keeps
+    // its controller so the native multipart upload still works server-side.
+    $router->get('/dictionaries/import', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/languages/{id:int}/dictionaries/import', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/profile/preferences', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/profile/statistics', $bundleRedirect, AUTH_MIDDLEWARE);
 

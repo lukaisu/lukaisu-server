@@ -166,6 +166,14 @@ final class BundleController
                 return $withQuery('bulk-translate.html');
             case $path === '/word/upload':
                 return 'word-upload.html';
+            case $path === '/dictionaries/import':
+                // Server-enhanced (Job B, D3c). Carry the whole query so the
+                // processImport 302-back (?lang=&dict_id=&error=) is preserved.
+                return $withQuery('dictionary-import.html');
+        }
+
+        if (preg_match('#^/languages/(\d+)/dictionaries/import$#', $path, $m) === 1) {
+            return 'dictionary-import.html?lang=' . $m[1];
         }
 
         if (

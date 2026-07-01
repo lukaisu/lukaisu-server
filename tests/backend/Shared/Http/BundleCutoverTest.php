@@ -71,6 +71,8 @@ class BundleCutoverTest extends TestCase
             // Login is now cut over: GET /login 302s to the bundled LoginPage
             // island (token-API login), replacing the server-rendered form.
             ['/login'],
+            // Dictionary import GET (Job B, D3c) → bundled Svelte island.
+            ['/dictionaries/import'], ['/languages/5/dictionaries/import'],
         ];
     }
 
@@ -94,6 +96,14 @@ class BundleCutoverTest extends TestCase
             'save preferences' => ['POST', '/profile/preferences', 'UserController@savePreferences'],
             'term status' => ['PUT', '/vocabulary/term/5/status', 'TermStatusController'],
             'delete text' => ['DELETE', '/texts/5', 'TextController@delete'],
+            // The dictionary-import GET is bundled, but the multipart upload POST
+            // keeps its controller (the API can't ingest a raw file).
+            'import dictionary' => ['POST', '/dictionaries/import', 'DictionaryController@processImport'],
+            'import dictionary (rest)' => [
+                'POST',
+                '/languages/5/dictionaries/import',
+                'DictionaryController@processImport',
+            ],
         ];
     }
 

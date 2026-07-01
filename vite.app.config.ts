@@ -96,6 +96,7 @@ export default defineConfig({
         feeds: resolve(__dirname, 'src/frontend/app/feeds.html'),
         statistics: resolve(__dirname, 'src/frontend/app/statistics.html'),
         dictionaries: resolve(__dirname, 'src/frontend/app/dictionaries.html'),
+        'dictionary-import': resolve(__dirname, 'src/frontend/app/dictionary-import.html'),
         texts: resolve(__dirname, 'src/frontend/app/texts.html'),
         settings: resolve(__dirname, 'src/frontend/app/settings.html'),
         'text-print': resolve(__dirname, 'src/frontend/app/text-print.html'),

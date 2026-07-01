@@ -89,42 +89,6 @@ class DictionaryController extends BaseController
     }
 
     /**
-     * Import wizard - show import form or process upload.
-     *
-     * @param array $params Route parameters (may contain 'id' from RESTful route)
-     *
-     * @return void
-     */
-    public function import(array $params): void
-    {
-        // Support both /languages/{id}/dictionaries/import and /dictionaries/import?lang=
-        $langId = isset($params['id'])
-            ? (int)$params['id']
-            : (int)Validation::language(InputValidator::getStringWithDb('lang', 'currentlanguage'));
-        $dictId = $this->paramInt('dict_id');
-
-        $langName = $this->languageFacade->getLanguageName($langId);
-        PageLayoutHelper::renderPageStart($langName . ' - Import Dictionary', true);
-
-        // Get dictionary if specified
-        $dictionary = null;
-        if ($dictId !== null) {
-            $dictionary = $this->dictionaryFacade->getById($dictId);
-        }
-
-        // Get or create dictionaries for this language
-        $dictionaries = $this->dictionaryFacade->getAllForLanguage($langId);
-
-        // Extract flash error from query string
-        $error = $this->param('error');
-
-        // Include view
-        include __DIR__ . '/../Views/import.php';
-
-        PageLayoutHelper::renderPageEnd();
-    }
-
-    /**
      * Process import form submission.
      *
      * @param array $params Route parameters
