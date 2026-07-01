@@ -8,7 +8,6 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import Alpine from 'alpinejs';
 import type { MultiWordFormStoreState } from '@modules/vocabulary/stores/multi_word_form_store';
 import { getTextId as getTextIdFromConfig } from '@modules/text/stores/text_config';
 
@@ -219,8 +218,12 @@ export function handleTextSelection(
     return;
   }
 
-  // Open multi-word modal via Alpine.js store
-  const store = Alpine.store('multiWordForm') as MultiWordFormStoreState;
+  // Server (Alpine) path: open the multi-word modal via the global Alpine
+  // `multiWordForm` store. The Svelte reader never reaches here (it returns
+  // above through onMultiWord), so the client bundle needs no `alpinejs` import
+  // — read Alpine off the window global that the server entry (main.ts) sets.
+  const alpine = (window as unknown as { Alpine?: { store(name: string): unknown } }).Alpine;
+  const store = alpine?.store('multiWordForm') as MultiWordFormStoreState | undefined;
   if (store && typeof store.loadForEdit === 'function') {
     store.loadForEdit(textId, position, text, selectedWords.length);
   } else {

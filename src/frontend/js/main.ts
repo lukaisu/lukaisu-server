@@ -1,18 +1,15 @@
 /**
- * Vite entry point for the Lukaisu Server application.
+ * Server entry point for the Lukaisu Server application (Alpine-ful).
  *
- * This file serves as the main entry point for the Vite build system.
- * It statically imports shared infrastructure and small modules, then
- * dynamically imports feature modules based on the lukaisu-modules meta tag
- * emitted by the server. Alpine.js is started after all dynamic imports
- * have resolved.
+ * The always-on, Alpine-free bootstrap lives in
+ * `shared/boot/frontend_shell.ts` and is shared with the Alpine-free packaged
+ * client entry (`client.ts`). THIS entry adds what only the server-rendered PHP
+ * pages need: it reads the server-emitted `lukaisu-modules` meta tag and
+ * lazy-loads the feature modules (which register Alpine components/stores for
+ * those views), registers the `$t`/`$markdown` Alpine magics, and starts Alpine.
+ * Server-rendered pages boot this bundle; the local-first client boots
+ * `client.ts` instead (see `app/boot.ts`), which ships no Alpine.
  */
-
-// Import Alpine.js
-import Alpine from 'alpinejs';
-
-// Svelte mount for the global navbar island
-import { mount } from 'svelte';
 
 // Import Bulma CSS framework
 import 'bulma/css/bulma.min.css';
@@ -22,62 +19,14 @@ import '../css/base/styles.css';
 import '../css/base/html5_audio_player.css';
 import '../css/base/icons.css';
 
-// =============================================================================
-// SHARED INFRASTRUCTURE (always loaded)
-// =============================================================================
+// Import Alpine.js (server-rendered views still use it)
+import Alpine from 'alpinejs';
 
-// Shared utilities
-import '@shared/utils/html_utils';
-import '@shared/utils/cookies';
-import '@shared/utils/tts_storage';
-import '@shared/utils/ajax_utilities';
-import '@shared/utils/ui_utilities';
-import '@shared/utils/user_interactions';
-import '@shared/utils/simple_interactions';
-import '@shared/utils/inline_markdown';
+// i18n helper for the Alpine $t magic
+import { t } from '@shared/i18n/translator';
 
-// Shared stores
-import '@shared/stores/lukaisu_state';
-import '@shared/stores/app_data';
-
-// PWA support
-import '@shared/pwa/register';
-
-// Shared API client
-import '@shared/api/client';
-
-// Shared components (used on every page)
-import '@shared/components/modal';
-import NavBar from '@shared/components/NavBar.svelte';
-import type { NavbarData as NavbarChromeData } from '@shared/components/navbar_renderer';
-
-// Shared i18n
-import { bootI18n, t } from '@shared/i18n/translator';
-
-// Shared accessibility
-import { initAriaLive } from '@shared/accessibility/aria_live';
-
-// Token session management (packaged/cross-origin clients)
-import { maybeRefreshAuthToken, apiGet } from '@shared/api/client';
-import { url } from '@shared/utils/url';
-
-// Shared icons
-import '@shared/icons/lucide_icons';
-
-// Shared forms (used on most pages)
-import '@shared/forms/unloadformcheck';
-import '@shared/forms/form_validation';
-import '@shared/forms/form_initialization';
-
-// =============================================================================
-// ASYNC CSS LOADING (CSP-compliant)
-// =============================================================================
-
-// Convert async CSS links from print to all media
-// This enables non-render-blocking CSS loading without inline JS
-document.querySelectorAll<HTMLLinkElement>('link[data-async-css]').forEach((link) => {
-  link.media = 'all';
-});
+// Shared, Alpine-free bootstrap (infra side-effects, i18n, navbar, token upkeep)
+import { runSharedInit, bootI18nAria, mountNavbar } from '@shared/boot/frontend_shell';
 
 // =============================================================================
 // DYNAMIC MODULE LOADING + ALPINE.JS INITIALIZATION
@@ -115,23 +64,14 @@ const loaders = requestedModules
   .filter(m => m in moduleMap)
   .map(m => moduleMap[m]());
 
-// Token-session upkeep for packaged/cross-origin clients. Both are no-ops for
-// the same-origin web app (no bearer token), so cookie sessions are unaffected.
-// Roll a still-valid token forward if it is nearing expiry...
-void maybeRefreshAuthToken();
-// ...and when a token is rejected (expired/invalidated), route back to login.
-document.addEventListener('lukaisu:auth-expired', () => {
-  window.location.assign(url('/connect'));
-});
+// Early shared init: async CSS switch, token upkeep, and the server-relative
+// auth-expired → /connect redirect. Runs before the modules resolve.
+runSharedInit({ serverAuthRedirect: true });
 
-// Wait for all dynamic modules to load, then initialize Alpine
+// Wait for all dynamic modules to load, then boot i18n and start Alpine
 Promise.all(loaders).then(async () => {
-  // Initialize i18n: server-injected blob on SSR pages, or API + cache for a
-  // shell-free/bundled client (awaited so first paint has strings).
-  await bootI18n();
-
-  // Initialize ARIA live regions for screen reader announcements
-  initAriaLive();
+  // i18n first, so the navbar, magics, and first paint all have strings.
+  await bootI18nAria();
 
   // Initialize Alpine.js globally
   window.Alpine = Alpine;
@@ -158,27 +98,8 @@ Promise.all(loaders).then(async () => {
   // Start Alpine.js
   Alpine.start();
 
-  // Render the global navbar from GET /api/v1/navbar and mount the Svelte island
-  // into its placeholder. Fire-and-forget: the rest of the page is already
-  // interactive, and pages without a #navbar-root (login, print headers) just
-  // no-op. The previously-empty `<div id="navbar-root" data-current-page="…">`
-  // is mounted in place (mount appends; the placeholder has no children to clear).
-  void (async () => {
-    const root = document.getElementById('navbar-root');
-    if (!root) {
-      return;
-    }
-    const currentPage = root.getAttribute('data-current-page') ?? '';
-    try {
-      const res = await apiGet<NavbarChromeData>('/navbar');
-      if (!res.data) {
-        return;
-      }
-      mount(NavBar, { target: root, props: { data: res.data, currentPage } });
-    } catch (error) {
-      console.error('Failed to load navbar:', error);
-    }
-  })();
+  // Mount the global Svelte navbar island (fetches GET /api/v1/navbar).
+  mountNavbar();
 
   window.LUKAISU_VITE_LOADED = true;
 

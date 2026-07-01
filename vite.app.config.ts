@@ -55,10 +55,12 @@ export default defineConfig({
       '@': resolve(__dirname, 'src/frontend/js'),
       '@shared': resolve(__dirname, 'src/frontend/js/shared'),
       '@modules': resolve(__dirname, 'src/frontend/js/modules'),
-      '@css': resolve(__dirname, 'src/frontend/css'),
-      // CSP-compliant Alpine build (matches vite.config.ts; the CSP eval
-      // restriction is enforced the same way in the bundled client).
-      'alpinejs': '@alpinejs/csp'
+      '@css': resolve(__dirname, 'src/frontend/css')
+      // NB: no `alpinejs` alias here (unlike vite.config.ts). The packaged
+      // client entry (`client.ts`) is Alpine-free; omitting the alias makes any
+      // accidental `import 'alpinejs'` into the client graph fail to resolve at
+      // build time (plain `alpinejs` isn't a dependency — only `@alpinejs/csp`),
+      // so an Alpine leak into the client is caught by the build, not shipped.
     }
   },
 

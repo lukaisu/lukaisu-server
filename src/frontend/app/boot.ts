@@ -164,8 +164,9 @@ export async function bootAppPage(opts: BootOptions): Promise<void> {
   // 3. Rewrite in-app links.
   installLinkRouter();
 
-  // 4. Hand off to the shared app bundle (reads the static lukaisu-modules meta,
-  //    boots i18n from the API/cache, starts Alpine). Dynamic import so this
-  //    setup runs first.
-  await import('@/main');
+  // 4. Hand off to the Alpine-free client bundle (shared infra + i18n from the
+  //    API/cache + the Svelte navbar). Dynamic import so this setup runs first.
+  //    The islands are Svelte with no `x-data`, so the client ships no Alpine;
+  //    the Alpine-ful `main.ts` is booted only by server-rendered pages.
+  await import('@/client');
 }

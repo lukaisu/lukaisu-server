@@ -6,16 +6,13 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
-// Mock Alpine.js
+// The multi-word module reads the Alpine `multiWordForm` store off the
+// `window.Alpine` global (set by the server entry) rather than importing
+// `alpinejs` — the client bundle is Alpine-free. The server path is exercised
+// here by installing a stub `window.Alpine` in beforeEach.
 const mockStore = {
   loadForEdit: vi.fn()
 };
-
-vi.mock('alpinejs', () => ({
-  default: {
-    store: vi.fn(() => mockStore)
-  }
-}));
 
 // Mock frame management
 vi.mock('../../../src/frontend/js/modules/text/pages/reading/frame_management', () => ({
@@ -34,6 +31,10 @@ describe('text_multiword_selection.ts', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     document.body.innerHTML = '';
+    // Install the stub Alpine global the server path reads (window.Alpine.store).
+    (window as unknown as { Alpine?: { store: (name: string) => unknown } }).Alpine = {
+      store: vi.fn(() => mockStore)
+    };
     // Mock window.location
     Object.defineProperty(window, 'location', {
       value: {
