@@ -3,8 +3,8 @@
 /**
  * Text Controller (Facade)
  *
- * Thin facade delegating to TextReadController, TextCrudController,
- * and ArchivedTextController. Maintained for backward compatibility
+ * Thin facade delegating to TextCrudController and ArchivedTextController.
+ * Maintained for backward compatibility
  * with existing route registrations.
  *
  * PHP version 8.1
@@ -22,7 +22,6 @@ namespace Lukaisu\Modules\Text\Http;
 
 use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Modules\Text\Application\TextFacade;
-use Lukaisu\Modules\Text\Application\Services\TextDisplayService;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 
@@ -31,33 +30,19 @@ use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
  */
 class TextController extends BaseController
 {
-    private TextReadController $readController;
     private TextCrudController $crudController;
     private ArchivedTextController $archivedController;
 
     public function __construct(
         ?TextFacade $textService = null,
-        ?LanguageFacade $languageService = null,
-        ?TextDisplayService $displayService = null
+        ?LanguageFacade $languageService = null
     ) {
         parent::__construct();
         $textService = $textService ?? new TextFacade();
         $languageService = $languageService ?? new LanguageFacade();
-        $displayService = $displayService ?? new TextDisplayService();
 
-        $this->readController = new TextReadController($displayService);
         $this->crudController = new TextCrudController($textService, $languageService);
         $this->archivedController = new ArchivedTextController($textService, $languageService);
-    }
-
-    // =========================================================================
-    // Read/Display Delegation
-    // =========================================================================
-
-    /** @psalm-suppress UnusedVariable */
-    public function display(?int $text = null): ?RedirectResponse
-    {
-        return $this->readController->display($text);
     }
 
     // =========================================================================

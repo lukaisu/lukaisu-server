@@ -293,9 +293,7 @@ class VocabularyServiceProvider implements ServiceProviderInterface
 
         $container->singleton(TermDisplayController::class, function (Container $c) {
             return new TermDisplayController(
-                $c->getTyped(VocabularyFacade::class),
-                $c->getTyped(FindSimilarTerms::class),
-                $c->getTyped(LanguageFacade::class)
+                $c->getTyped(FindSimilarTerms::class)
             );
         });
 

@@ -6,9 +6,7 @@ namespace Lukaisu\Tests\Modules\Vocabulary\Http;
 
 use Lukaisu\Modules\Vocabulary\Http\TermDisplayController;
 use Lukaisu\Modules\Vocabulary\Http\VocabularyBaseController;
-use Lukaisu\Modules\Vocabulary\Application\VocabularyFacade;
 use Lukaisu\Modules\Vocabulary\Application\UseCases\FindSimilarTerms;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -16,32 +14,20 @@ use PHPUnit\Framework\MockObject\MockObject;
 /**
  * Unit tests for TermDisplayController.
  *
- * Tests constructor behavior, class structure, method signatures,
- * show-word/similar-terms logic, and edge cases.
+ * The read-only term detail page was dropped under the headless cut; this
+ * controller now only serves the similar-terms lookup (AJAX).
  */
 class TermDisplayControllerTest extends TestCase
 {
-    /** @var VocabularyFacade&MockObject */
-    private VocabularyFacade $facade;
-
     /** @var FindSimilarTerms&MockObject */
     private FindSimilarTerms $findSimilarTerms;
-
-    /** @var LanguageFacade&MockObject */
-    private LanguageFacade $languageFacade;
 
     private TermDisplayController $controller;
 
     protected function setUp(): void
     {
-        $this->facade = $this->createMock(VocabularyFacade::class);
         $this->findSimilarTerms = $this->createMock(FindSimilarTerms::class);
-        $this->languageFacade = $this->createMock(LanguageFacade::class);
-        $this->controller = new TermDisplayController(
-            $this->facade,
-            $this->findSimilarTerms,
-            $this->languageFacade
-        );
+        $this->controller = new TermDisplayController($this->findSimilarTerms);
     }
 
     // =========================================================================
@@ -55,18 +41,10 @@ class TermDisplayControllerTest extends TestCase
     }
 
     #[Test]
-    public function constructorAcceptsAllNullParameters(): void
+    public function constructorAcceptsNullParameter(): void
     {
-        $controller = new TermDisplayController(null, null, null);
+        $controller = new TermDisplayController(null);
         $this->assertInstanceOf(TermDisplayController::class, $controller);
-    }
-
-    #[Test]
-    public function constructorSetsFacadeProperty(): void
-    {
-        $reflection = new \ReflectionProperty(TermDisplayController::class, 'facade');
-
-        $this->assertSame($this->facade, $reflection->getValue($this->controller));
     }
 
     #[Test]
@@ -75,14 +53,6 @@ class TermDisplayControllerTest extends TestCase
         $reflection = new \ReflectionProperty(TermDisplayController::class, 'findSimilarTerms');
 
         $this->assertSame($this->findSimilarTerms, $reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function constructorSetsLanguageFacadeProperty(): void
-    {
-        $reflection = new \ReflectionProperty(TermDisplayController::class, 'languageFacade');
-
-        $this->assertSame($this->languageFacade, $reflection->getValue($this->controller));
     }
 
     // =========================================================================
@@ -105,40 +75,19 @@ class TermDisplayControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass(TermDisplayController::class);
 
-        $expectedMethods = [
-            'showWord',
-            'similarTerms',
-        ];
-
-        foreach ($expectedMethods as $methodName) {
-            $this->assertTrue(
-                $reflection->hasMethod($methodName),
-                "TermDisplayController should have method: $methodName"
-            );
-            $method = $reflection->getMethod($methodName);
-            $this->assertTrue(
-                $method->isPublic(),
-                "Method $methodName should be public"
-            );
-        }
+        $this->assertTrue(
+            $reflection->hasMethod('similarTerms'),
+            'TermDisplayController should have method: similarTerms'
+        );
+        $this->assertTrue(
+            $reflection->getMethod('similarTerms')->isPublic(),
+            'Method similarTerms should be public'
+        );
     }
 
     // =========================================================================
     // Method signature tests
     // =========================================================================
-
-    #[Test]
-    public function showWordAcceptsNullableIntParameter(): void
-    {
-        $method = new \ReflectionMethod(TermDisplayController::class, 'showWord');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('wid', $params[0]->getName());
-        $this->assertTrue($params[0]->allowsNull());
-        $this->assertTrue($params[0]->isDefaultValueAvailable());
-        $this->assertNull($params[0]->getDefaultValue());
-    }
 
     #[Test]
     public function similarTermsAcceptsArrayParameter(): void
@@ -205,35 +154,6 @@ class TermDisplayControllerTest extends TestCase
         ob_start();
         $this->controller->similarTerms([]);
         ob_get_clean();
-    }
-
-    // =========================================================================
-    // showWord tests
-    // =========================================================================
-
-    #[Test]
-    public function showWordWithNullWidAndNoQueryParamOutputsError(): void
-    {
-        ob_start();
-        $this->controller->showWord(null);
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('Word ID is required', $output);
-    }
-
-    #[Test]
-    public function showWordWithNonexistentTermOutputsNotFound(): void
-    {
-        $this->facade->expects($this->once())
-            ->method('getTerm')
-            ->with(42)
-            ->willReturn(null);
-
-        ob_start();
-        $this->controller->showWord(42);
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('Word not found', $output);
     }
 
     // =========================================================================

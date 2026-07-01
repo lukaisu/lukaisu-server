@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace Lukaisu\Tests\Modules\Text\Http;
 
 use Lukaisu\Modules\Text\Http\TextController;
-use Lukaisu\Modules\Text\Http\TextReadController;
 use Lukaisu\Modules\Text\Http\TextCrudController;
 use Lukaisu\Modules\Text\Http\ArchivedTextController;
 use Lukaisu\Modules\Text\Application\TextFacade;
-use Lukaisu\Modules\Text\Application\Services\TextDisplayService;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 use PHPUnit\Framework\TestCase;
@@ -32,9 +30,6 @@ class TextControllerTest extends TestCase
     /** @var LanguageFacade&MockObject */
     private LanguageFacade $languageService;
 
-    /** @var TextDisplayService&MockObject */
-    private TextDisplayService $displayService;
-
     private TextController $controller;
     private TextCrudController $crudController;
     private ArchivedTextController $archivedController;
@@ -46,12 +41,10 @@ class TextControllerTest extends TestCase
         }
         $this->textService = $this->createMock(TextFacade::class);
         $this->languageService = $this->createMock(LanguageFacade::class);
-        $this->displayService = $this->createMock(TextDisplayService::class);
 
         $this->controller = new TextController(
             $this->textService,
-            $this->languageService,
-            $this->displayService
+            $this->languageService
         );
 
         $this->crudController = new TextCrudController(
@@ -78,30 +71,18 @@ class TextControllerTest extends TestCase
     #[Test]
     public function constructorAcceptsNullParameters(): void
     {
-        $controller = new TextController(null, null, null);
+        $controller = new TextController(null, null);
         $this->assertInstanceOf(TextController::class, $controller);
     }
 
     #[Test]
     public function constructorCreatesSubControllers(): void
     {
-        $reflection = new \ReflectionProperty(TextController::class, 'readController');
-        $this->assertInstanceOf(TextReadController::class, $reflection->getValue($this->controller));
-
         $reflection = new \ReflectionProperty(TextController::class, 'crudController');
         $this->assertInstanceOf(TextCrudController::class, $reflection->getValue($this->controller));
 
         $reflection = new \ReflectionProperty(TextController::class, 'archivedController');
         $this->assertInstanceOf(ArchivedTextController::class, $reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function constructorWithNullCreatesDefaultSubControllers(): void
-    {
-        $controller = new TextController(null, null, null);
-        $reflection = new \ReflectionProperty(TextController::class, 'readController');
-
-        $this->assertInstanceOf(TextReadController::class, $reflection->getValue($controller));
     }
 
     // =========================================================================
@@ -125,7 +106,7 @@ class TextControllerTest extends TestCase
 
         $expectedMethods = [
             'new', 'editSingle', 'delete', 'archive',
-            'unarchive', 'edit', 'display',
+            'unarchive', 'edit',
             'archived', 'archivedEdit', 'deleteArchived',
         ];
 
@@ -145,13 +126,6 @@ class TextControllerTest extends TestCase
     #[Test]
     public function subControllersHaveExpectedMethods(): void
     {
-        // TextReadController
-        $readMethods = ['display'];
-        $readReflection = new \ReflectionClass(TextReadController::class);
-        foreach ($readMethods as $method) {
-            $this->assertTrue($readReflection->hasMethod($method), "TextReadController should have: $method");
-        }
-
         // TextCrudController
         $crudMethods = ['new', 'editSingle', 'delete', 'archive', 'unarchive', 'edit',
             'handleMarkAction', 'handleTextOperation', 'showNewTextForm', 'showEditTextForm', 'showTextsList'];
@@ -171,7 +145,7 @@ class TextControllerTest extends TestCase
     #[Test]
     public function subControllersHaveViewsConstants(): void
     {
-        foreach ([TextReadController::class, TextCrudController::class, ArchivedTextController::class] as $class) {
+        foreach ([TextCrudController::class, ArchivedTextController::class] as $class) {
             $reflection = new \ReflectionClassConstant($class, 'MODULE_VIEWS');
             $this->assertStringEndsWith('/Views', $reflection->getValue());
         }
@@ -464,69 +438,6 @@ class TextControllerTest extends TestCase
     }
 
     // =========================================================================
-    // display() method tests
-    // =========================================================================
-
-    #[Test]
-    public function displayRedirectsWhenTextIdIsZero(): void
-    {
-        $result = $this->controller->display(0);
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-    }
-
-    #[Test]
-    public function displayRedirectsWhenAnnotatedTextEmpty(): void
-    {
-        $this->displayService->expects($this->once())
-            ->method('getAnnotatedText')
-            ->with(42)
-            ->willReturn('');
-
-        $result = $this->controller->display(42);
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-    }
-
-    #[Test]
-    public function displayRedirectsWhenSettingsNull(): void
-    {
-        $this->displayService->method('getAnnotatedText')
-            ->willReturn('some annotation text');
-        $this->displayService->method('getTextDisplaySettings')
-            ->with(42)
-            ->willReturn(null);
-
-        $result = $this->controller->display(42);
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-    }
-
-    #[Test]
-    public function displayRedirectsWhenHeaderDataNull(): void
-    {
-        $this->displayService->method('getAnnotatedText')
-            ->willReturn('some annotation text');
-        $this->displayService->method('getTextDisplaySettings')
-            ->willReturn(['textSize' => 100, 'rtlScript' => false]);
-        $this->displayService->method('getHeaderData')
-            ->with(42)
-            ->willReturn(null);
-
-        $result = $this->controller->display(42);
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-    }
-
-    #[Test]
-    public function displayRedirectsWhenNullPassedAndNoQueryParam(): void
-    {
-        $result = $this->controller->display(null);
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-    }
-
-    // =========================================================================
     // Method signature tests
     // =========================================================================
 
@@ -589,16 +500,6 @@ class TextControllerTest extends TestCase
 
         $this->assertNotNull($returnType);
         $this->assertSame(RedirectResponse::class, $returnType->getName());
-    }
-
-    #[Test]
-    public function displayReturnsNullableRedirectResponse(): void
-    {
-        $method = new \ReflectionMethod(TextController::class, 'display');
-        $returnType = $method->getReturnType();
-
-        $this->assertNotNull($returnType);
-        $this->assertTrue($returnType->allowsNull());
     }
 
     #[Test]

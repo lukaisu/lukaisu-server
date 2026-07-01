@@ -135,7 +135,6 @@ class RoutesTest extends TestCase
             'text read' => ['/text/read', $redirect],
             'text edit' => ['/text/edit', "{$textController}@edit"],
             'texts list' => ['/texts', $redirect],
-            'text display' => ['/text/display', "{$textController}@display"],
             'text print-plain' => ['/text/print-plain', $redirect],
             'text check' => ['/text/check', $redirect],
             'text archived' => ['/text/archived', $redirect],
@@ -166,7 +165,6 @@ class RoutesTest extends TestCase
             'words list' => ['/words', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
             'words new' => ['/words/new', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
             'word new' => ['/word/new', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            'word show' => ['/word/show', "{$termDisplayController}@showWord"],
             'word inline-edit' => ['/word/inline-edit', "{$termEditController}@inlineEdit"],
             // GET 302s into the bundled Svelte BulkTranslate island. Its bootstrap
             // config + save POST moved to /api/v1/terms/bulk-translate{,/config}

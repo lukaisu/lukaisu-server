@@ -32,7 +32,6 @@ use Lukaisu\Modules\Text\Http\TextController;
 // Note: HomeService moved to Modules/Home as HomeFacade
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 // Note: TestService now primarily used via ReviewFacade in Review module
-use Lukaisu\Modules\Text\Application\Services\TextDisplayService;
 // Note: TextPrintService now primarily used via TextPrintController in Text module
 use Lukaisu\Modules\Text\Application\TextFacade;
 
@@ -86,8 +85,7 @@ class ControllerServiceProvider implements ServiceProviderInterface
         $container->bind(TextController::class, function (Container $c) {
             return new TextController(
                 $c->getTyped(TextFacade::class),
-                $c->getTyped(LanguageFacade::class),
-                $c->getTyped(TextDisplayService::class)
+                $c->getTyped(LanguageFacade::class)
             );
         });
 

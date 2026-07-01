@@ -124,7 +124,6 @@ class BundleCutoverTest extends TestCase
     public static function notRedirectedProvider(): array
     {
         return [
-            'word show (not bundled)' => ['/word/5', 'TermDisplayController@showWord'],
             'api prefix' => ['/api/v1/languages', 'ApiController@v1'],
             'bundle shell' => ['/app/read.html', 'BundleController@serve'],
         ];

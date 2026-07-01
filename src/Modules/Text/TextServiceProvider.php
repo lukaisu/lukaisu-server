@@ -107,8 +107,7 @@ class TextServiceProvider implements ServiceProviderInterface
             function (Container $c) {
                 return new TextController(
                     $c->getTyped(TextFacade::class),
-                    $c->getTyped(LanguageFacade::class),
-                    $c->getTyped(TextDisplayService::class)
+                    $c->getTyped(LanguageFacade::class)
                 );
             }
         );

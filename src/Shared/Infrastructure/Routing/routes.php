@@ -108,11 +108,9 @@ function registerRoutes(Router $router): void
     $router->registerWithMiddleware('/text/edit', 'Lukaisu\\Modules\\Text\\Http\\TextController@edit', AUTH_MIDDLEWARE);
     $router->registerWithMiddleware('/texts', 'Lukaisu\\Modules\\Text\\Http\\TextController@edit', AUTH_MIDDLEWARE);
 
-    // Display improved text
-    // New RESTful route: /text/123/display
-    $router->get('/text/{text:int}/display', 'Lukaisu\\Modules\\Text\\Http\\TextController@display', AUTH_MIDDLEWARE);
-    // Legacy route: /text/display?text=123
-    $router->get('/text/display', 'Lukaisu\\Modules\\Text\\Http\\TextController@display', AUTH_MIDDLEWARE);
+    // The "improved annotated text" display (GET /text/{id}/display, /text/display)
+    // was dropped under the headless cut (Option A) — a server-only browser
+    // feature the bundled reader never used.
 
     // Text print (plain) is served by the bundled client: GET /text/{id}/print-plain
     // and /text/print-plain 302 to /app/text-print.html (see the /app redirects
@@ -182,10 +180,9 @@ function registerRoutes(Router $router): void
     // that moved to POST /api/v1/terms/export (Phase R), so no native POST /words
     // handler remains.
 
-    // Show word - new RESTful route with typed parameter (TermDisplayController)
-    $router->get('/word/{wid:int}', 'Lukaisu\\Modules\\Vocabulary\\Http\\TermDisplayController@showWord', AUTH_MIDDLEWARE);
-    // Legacy route for backward compatibility
-    $router->get('/word/show', 'Lukaisu\\Modules\\Vocabulary\\Http\\TermDisplayController@showWord', AUTH_MIDDLEWARE);
+    // The read-only word detail page (GET /word/{wid}, /word/show) was dropped
+    // under the headless cut; the bundled client reads term details from
+    // GET /api/v1/terms/{id}/details.
 
     // Inline edit (TermEditController)
     $router->registerWithMiddleware(
@@ -703,11 +700,9 @@ function registerRoutes(Router $router): void
     // They will be removed in the next major version.
 
     $router->deprecate('/text/read', '/text/{text}/read');
-    $router->deprecate('/text/display', '/text/{text}/display');
     $router->deprecate('/text/print-plain', '/text/{text}/print-plain');
     $router->deprecate('/text/edit', '/texts');
     $router->deprecate('/word/new', '/words/new');
-    $router->deprecate('/word/show', '/word/{wid}');
     $router->deprecate('/vocabulary/term/status', '/vocabulary/term/{wid}/status');
     $router->deprecate('/dictionaries', '/languages/{id}/dictionaries');
     $router->deprecate('/dictionaries/import', '/languages/{id}/dictionaries/import');
