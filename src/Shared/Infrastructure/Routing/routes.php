@@ -330,8 +330,8 @@ function registerRoutes(Router $router): void
     // Upload words (TermImportController). The GET page is served by the bundled
     // client (Svelte WordUpload island); see the /app redirects below. The file
     // POST (importing a term/dictionary file) keeps this controller — the bundle
-    // island posts to it natively (multipart), and the browser navigates to its
-    // server-rendered result (upload_result.php / dict-import form re-render).
+    // island fetch()-posts to it (multipart) and renders the returned JSON
+    // ({lastUpdate, rtl, recno}) as an imported-terms table client-side.
     $router->registerWithMiddleware(
         '/word/upload',
         'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController@upload',

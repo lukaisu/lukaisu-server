@@ -37,7 +37,6 @@ import '@shared/forms/bulk_actions';
 import '@shared/forms/word_form_auto';
 
 // Side-effect imports (pages)
-import './pages/word_upload';
 import './pages/expression_interactable';
 import './pages/word_result_init';
 import './pages/translation_page';

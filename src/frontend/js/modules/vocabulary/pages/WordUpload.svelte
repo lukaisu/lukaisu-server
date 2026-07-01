@@ -10,11 +10,12 @@
       enrichment loop (the same endpoints the StarterVocab island uses).
    2. Dictionaries — the reusable `CuratedDictBrowser` island (curated reference
       dictionaries, batch-imported via `/api/v1/local-dictionaries/import-curated`).
-   3. Manual Upload — a native multipart `<form>` that POSTs a CSV/TSV/pasted
+   3. Manual Upload — a multipart `<form>` that `fetch()`-POSTs a CSV/TSV/pasted
       term list, or a dictionary file, to the kept `/word/upload` endpoint
-      (`config.uploadUrl`). On submit the browser navigates to the server-rendered
-      result (`upload_result.php`) / re-rendered form (dictionary import), exactly
-      as the Alpine form did — the island owns the form, not the result page.
+      (`config.uploadUrl`). The POST now returns JSON ({lastUpdate, rtl, recno})
+      instead of a server-rendered page; on success we render the imported-terms
+      table in-place with `ResultDisplay` (the Svelte port of `upload_result.php`)
+      — the island owns both the form and its result.
 
   Server-gated (Job-B-style): every operation needs a connected server, so the
   page only mounts this island when one is connected (the gate lives in
@@ -37,6 +38,7 @@
   import { getCsrfToken } from '@shared/api/client';
   import { statuses } from '@shared/stores/app_data';
   import CuratedDictBrowser from '@modules/vocabulary/components/CuratedDictBrowser.svelte';
+  import ResultDisplay from '@modules/vocabulary/pages/ResultDisplay.svelte';
   import type { WordUploadConfig } from '@modules/vocabulary/api/word_upload_api';
 
   interface ImportResult {
@@ -250,11 +252,68 @@
     }
   }
 
+  // ===== Manual upload submit (replaces the native form navigation) =====
+  // The Alpine form did a browser POST to `/word/upload` and let the server
+  // render the result page (`upload_result.php`). It now returns JSON
+  // ({lastUpdate, rtl, recno}) and we render the result in-place with
+  // `ResultDisplay` — the island owns both the form and its result.
+  interface ManualResult {
+    lastUpdate: string;
+    rtl: boolean;
+    recno: number;
+  }
+  let manualSubmitting = $state(false);
+  let manualError = $state('');
+  let manualResult = $state<ManualResult | null>(null);
+
+  async function handleManualSubmit(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    // `new FormData(form)` omits the submit button, so carry its `op` explicitly
+    // (Import vs ImportDictionary — the two operations the manual tab offers).
+    const submitter = event.submitter as HTMLButtonElement | null;
+    const formData = new FormData(form);
+    formData.set('op', submitter?.value ?? 'Import');
+
+    manualSubmitting = true;
+    manualError = '';
+    try {
+      // FormData carries the hidden `_csrf_token` + `id` inputs, so CSRF is
+      // preserved exactly as the native form POST did.
+      const response = await fetch(config.uploadUrl, { method: 'POST', body: formData });
+      const data = await response.json();
+
+      if (!response.ok) {
+        manualError = data.error || 'Import failed.';
+        manualResult = null;
+        return;
+      }
+
+      manualResult = {
+        lastUpdate: String(data.lastUpdate ?? ''),
+        rtl: Boolean(data.rtl),
+        recno: Number(data.recno ?? 0)
+      };
+    } catch {
+      manualError = 'Network error. Please check your connection.';
+      manualResult = null;
+    } finally {
+      manualSubmitting = false;
+    }
+  }
+
+  function resetManual(): void {
+    manualResult = null;
+    manualError = '';
+  }
+
   // ===== Icon hydration =====
   $effect(() => {
     void activeTab;
     void freqStep;
     void manualMethod;
+    void manualResult;
+    void manualError;
     void tick().then(() => initIcons());
   });
 </script>
@@ -473,7 +532,27 @@
 
   <!-- ==================== TAB 3: MANUAL UPLOAD ==================== -->
   {#if activeTab === 'manual'}
-    <form enctype="multipart/form-data" action={config.uploadUrl} method="post">
+    {#if manualResult}
+      <ResultDisplay
+        lastUpdate={manualResult.lastUpdate}
+        rtl={manualResult.rtl}
+        recno={manualResult.recno}
+        onReset={resetManual}
+      />
+    {:else}
+      {#if manualError}
+        <div class="notification is-danger is-light">
+          <button class="delete" aria-label="close" onclick={() => (manualError = '')}></button>
+          <strong>{t('vocabulary.upload.import_failed')}</strong>
+          <span>{manualError}</span>
+        </div>
+      {/if}
+      <form
+        enctype="multipart/form-data"
+        action={config.uploadUrl}
+        method="post"
+        onsubmit={handleManualSubmit}
+      >
       <input type="hidden" name="_csrf_token" value={csrfToken} />
       <!-- Language ID from current language setting -->
       <input type="hidden" name="id" value={config.langId} />
@@ -919,28 +998,43 @@
       <div class="field is-grouped is-grouped-right">
         {#if !isDictFile}
           <div class="control">
-            <button type="submit" name="op" value="Import" class="button is-primary">
+            <button
+              type="submit"
+              name="op"
+              value="Import"
+              class="button is-primary"
+              class:is-loading={manualSubmitting}
+              disabled={manualSubmitting}
+            >
               <span class="icon is-small"><i data-lucide="upload"></i></span>
               <span>{t('vocabulary.upload.manual.import_terms')}</span>
             </button>
           </div>
         {:else}
           <div class="control">
-            <button type="submit" name="op" value="ImportDictionary" class="button is-primary">
+            <button
+              type="submit"
+              name="op"
+              value="ImportDictionary"
+              class="button is-primary"
+              class:is-loading={manualSubmitting}
+              disabled={manualSubmitting}
+            >
               <span class="icon is-small"><i data-lucide="upload"></i></span>
               <span>{t('vocabulary.upload.manual.import_dictionary')}</span>
             </button>
           </div>
         {/if}
       </div>
-    </form>
+      </form>
 
-    <!-- Help notes -->
-    <article class="message is-light mt-5">
-      <div class="message-body is-size-7">
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -- trusted i18n HTML (static anchor) -->
-        <p>{@html t('vocabulary.upload.manual.help_note_html')}</p>
-      </div>
-    </article>
+      <!-- Help notes -->
+      <article class="message is-light mt-5">
+        <div class="message-body is-size-7">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -- trusted i18n HTML (static anchor) -->
+          <p>{@html t('vocabulary.upload.manual.help_note_html')}</p>
+        </div>
+      </article>
+    {/if}
   {/if}
 </div>

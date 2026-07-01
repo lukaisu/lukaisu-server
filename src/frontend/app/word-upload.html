@@ -11,11 +11,11 @@
        Wiktionary enrichment, and curated-dictionary import all need a connected
        server, so word-upload.ts reveals the notice below and does NOT mount the
        island when local-first. No `lukaisu-modules` meta: the Svelte island is
-       the sole renderer of the form — the Alpine `wordUploadPageApp` /
-       `wordUploadFormApp` / `curatedDictBrowser` GET view was retired, and
-       /word/upload (GET) 302s here. The POST upload endpoint and its
-       server-rendered result pages (`upload_result.php` / dict-import form
-       re-render) are kept; the native form POST navigates to them. -->
+       the sole renderer of the form AND its result — the Alpine `wordUploadPageApp`
+       / `wordUploadFormApp` / `wordUploadResultApp` / `curatedDictBrowser` views
+       were retired, and /word/upload (GET) 302s here. The POST upload endpoint is
+       kept, but now returns JSON ({lastUpdate, rtl, recno}); the island
+       fetch()-posts to it and renders the imported-terms table client-side. -->
   <style>[x-cloak]{display:none !important}[hidden]{display:none !important}</style>
 </head>
 <body>

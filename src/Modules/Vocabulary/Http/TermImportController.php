@@ -27,7 +27,6 @@ use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Modules\Dictionary\Application\DictionaryFacade;
 use Lukaisu\Modules\Dictionary\Application\Services\DictionaryImportFileResolver;
 use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
-use Lukaisu\Shared\UI\Helpers\FormHelper;
 use RuntimeException;
 
 /**
@@ -219,26 +218,33 @@ class TermImportController extends VocabularyBaseController
     }
 
     /**
-     * Upload words from file.
+     * Upload words from file (POST): import terms or a dictionary file.
      *
-     * @param array<string, string> $params Route parameters
+     * The GET page is the bundled Svelte `WordUpload` island (the `/word/upload`
+     * GET route 302s into `dist-app/word-upload.html`); this method now only
+     * serves the island's manual-upload `fetch()` POST and always answers with
+     * JSON. The Svelte manual tab submits exactly two operations, keyed by the
+     * clicked submit button's `op` value: `ImportDictionary` (upload a dictionary
+     * file → {@see handleDictionaryImport}) or `Import` (a CSV/TSV/pasted term
+     * list → {@see handleUploadImport}); anything else falls through to the term
+     * import. Both return {lastUpdate, rtl, recno} so the island can render the
+     * imported-terms table client-side (the retired `upload_result.php` view's
+     * job), or {error} on failure.
      *
-     * @return void
+     * @param array<string, string> $params Route parameters (unused).
+     *
+     * @return JsonResponse
      */
-    public function upload(array $params): void
+    public function upload(array $params): JsonResponse
     {
-        PageLayoutHelper::renderPageStart('Import Terms', true);
+        unset($params);
 
         $op = InputValidator::getString('op');
-        if ($op === 'Import') {
-            $this->handleUploadImport();
-        } elseif ($op === 'ImportDictionary') {
-            $this->handleDictionaryImport();
-        } else {
-            $this->displayUploadForm();
+        if ($op === 'ImportDictionary') {
+            return $this->handleDictionaryImport();
         }
 
-        PageLayoutHelper::renderPageEnd();
+        return $this->handleUploadImport();
     }
 
     /**
@@ -287,37 +293,6 @@ class TermImportController extends VocabularyBaseController
     }
 
     /**
-     * Display the word upload form.
-     *
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
-     *
-     * @return void
-     */
-    private function displayUploadForm(): void
-    {
-        $currentLanguage = Settings::get('currentlanguage');
-        $currentLanguageName = '';
-        $isFrequencyAvailable = false;
-        $langId = 0;
-        if ($currentLanguage !== '') {
-            $langId = (int) $currentLanguage;
-            $currentLanguageName = $this->languageFacade->getLanguageName($langId);
-            $isFrequencyAvailable = FrequencyLanguageMap::isSupported($currentLanguageName);
-        }
-        $languages = $this->languageFacade->getLanguagesForSelect();
-        $activeTab = InputValidator::getString('tab') ?: 'frequency';
-        // Map legacy tab values
-        if ($activeTab === 'file' || $activeTab === 'text' || $activeTab === 'paste') {
-            $activeTab = 'manual';
-        }
-        $curatedDictionaries = $this->loadCuratedDictionaries();
-        $csrfToken = FormHelper::csrfToken();
-        $importUrl = $langId > 0 ? '/languages/' . $langId . '/starter-vocab/import' : '';
-        $enrichUrl = $langId > 0 ? '/languages/' . $langId . '/starter-vocab/enrich' : '';
-        include $this->viewPath . 'upload_form.php';
-    }
-
-    /**
      * Load curated dictionaries from the JSON registry.
      *
      * @return list<array<string, mixed>>
@@ -342,13 +317,17 @@ class TermImportController extends VocabularyBaseController
     }
 
     /**
-     * Handle the word import operation.
+     * Handle the word import operation (op=Import).
      *
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
+     * Imports a CSV/TSV/pasted term list and answers with the JSON the Svelte
+     * island needs to render the imported-terms table client-side:
+     * `{lastUpdate, rtl, recno}` — the pre-import high-water mark, the language's
+     * text direction, and the count of terms this import added (the island then
+     * pages them from `GET /api/v1/terms/imported`). Errors return `{error}`.
      *
-     * @return void
+     * @return JsonResponse
      */
-    private function handleUploadImport(): void
+    private function handleUploadImport(): JsonResponse
     {
         $uploadService = $this->getUploadService();
         $tabType = InputValidator::getString("Tab");
@@ -358,18 +337,12 @@ class TermImportController extends VocabularyBaseController
         $langId = InputValidator::getInt("id", 0) ?? 0;
 
         if ($langId === 0) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: No language selected</div>';
-            return;
+            return JsonResponse::error('No language selected');
         }
 
         $langData = $uploadService->getLanguageData($langId);
         if ($langData === null) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: Invalid language</div>';
-            return;
+            return JsonResponse::error('Invalid language');
         }
 
         $removeSpaces = (bool) $langData['remove_spaces'];
@@ -400,10 +373,7 @@ class TermImportController extends VocabularyBaseController
             $fileName = $uploadedFile["tmp_name"];
         } else {
             if ($uploadText === '') {
-                echo '<div class="notification is-danger">' .
-                    '<button class="delete" aria-label="close"></button>' .
-                    'Error: No data to import</div>';
-                return;
+                return JsonResponse::error('No data to import');
             }
             $fileName = $uploadService->createTempFile($uploadText);
             $createdTempFile = true;
@@ -434,19 +404,22 @@ class TermImportController extends VocabularyBaseController
                     $lastUpdate
                 );
 
-                // Display results
-                $rtl = $uploadService->isRightToLeft($langId) ? 1 : 0;
-                $recno = $uploadService->countImportedTerms($lastUpdate);
-                include $this->viewPath . 'upload_result.php';
+                return JsonResponse::success([
+                    'lastUpdate' => $lastUpdate,
+                    'rtl' => $uploadService->isRightToLeft($langId),
+                    'recno' => $uploadService->countImportedTerms($lastUpdate),
+                ]);
             } elseif ($fields["tl"] > 0) {
-                // Import tags only
+                // Import tags only (no term column): nothing to page, recno = 0.
                 $uploadService->importTagsOnly(['tl' => $fields['tl']], $tabType, $fileName, $ignoreFirst);
-                echo '<p>Tags imported successfully.</p>';
-            } else {
-                echo '<div class="notification is-danger">' .
-                    '<button class="delete" aria-label="close"></button>' .
-                    'Error: No term column specified</div>';
+                return JsonResponse::success([
+                    'lastUpdate' => $lastUpdate,
+                    'rtl' => $uploadService->isRightToLeft($langId),
+                    'recno' => 0,
+                ]);
             }
+
+            return JsonResponse::error('No term column specified');
         } finally {
             // Clean up temp file if we created it
             if ($createdTempFile && file_exists($fileName)) {
@@ -456,20 +429,22 @@ class TermImportController extends VocabularyBaseController
     }
 
     /**
-     * Handle dictionary file import.
+     * Handle dictionary file import (op=ImportDictionary).
      *
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
+     * Imports an uploaded dictionary file (CSV/JSON/StarDict) as a reference
+     * dictionary and materialises status-1 vocabulary terms from its entries.
+     * Answers with the same `{lastUpdate, rtl, recno}` shape as the term import
+     * so the island renders the newly created terms in its table: `lastUpdate` is
+     * snapshotted before the vocabulary is created and `recno` counts the terms
+     * added past it. Errors return `{error}`.
      *
-     * @return void
+     * @return JsonResponse
      */
-    private function handleDictionaryImport(): void
+    private function handleDictionaryImport(): JsonResponse
     {
         $langId = InputValidator::getInt("id", 0) ?? 0;
         if ($langId === 0) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: No language selected</div>';
-            return;
+            return JsonResponse::error('No language selected');
         }
 
         $format = InputValidator::getString('dict_format') ?: 'csv';
@@ -477,15 +452,17 @@ class TermImportController extends VocabularyBaseController
 
         $uploadedFile = InputValidator::getUploadedFile('dict_file');
         if ($uploadedFile === null) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: No file uploaded</div>';
-            return;
+            return JsonResponse::error('No file uploaded');
         }
 
         if (empty($dictName)) {
             $dictName = pathinfo($uploadedFile['name'], PATHINFO_FILENAME) ?: 'Imported Dictionary';
         }
+
+        $uploadService = $this->getUploadService();
+        // Snapshot the high-water mark before creating vocabulary so we can count
+        // (and page) exactly the terms this import adds.
+        $lastUpdate = $uploadService->getLastWordUpdate() ?? '';
 
         $resolver = new DictionaryImportFileResolver();
 
@@ -497,10 +474,7 @@ class TermImportController extends VocabularyBaseController
             $importer = $this->dictionaryFacade->getImporter($format, $importName);
 
             if (!$importer->canImport($importPath, $importName)) {
-                echo '<div class="notification is-danger">' .
-                    '<button class="delete" aria-label="close"></button>' .
-                    'Error: Invalid file format</div>';
-                return;
+                return JsonResponse::error('Invalid file format');
             }
 
             // Build import options
@@ -508,47 +482,24 @@ class TermImportController extends VocabularyBaseController
 
             $dictId = $this->dictionaryFacade->create($langId, $dictName, $format);
             $entries = $importer->parse($importPath, $options);
-            $count = $this->dictionaryFacade->addEntriesBatch($dictId, $entries);
+            $this->dictionaryFacade->addEntriesBatch($dictId, $entries);
 
             // Create vocabulary terms (status 1) from dictionary entries
-            $vocabCreated = $this->dictionaryFacade->createVocabularyFromEntries($dictId, $langId);
+            $this->dictionaryFacade->createVocabularyFromEntries($dictId, $langId);
 
             // Auto-enable local dict mode if currently online-only
             $this->dictionaryFacade->autoEnableLocalDictMode($langId);
-
-            $vocabMsg = $vocabCreated > 0
-                ? ' and ' . number_format($vocabCreated) . ' vocabulary terms'
-                : '';
-            echo '<div class="notification is-success">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Dictionary <strong>' . htmlspecialchars($dictName, ENT_QUOTES, 'UTF-8') .
-                '</strong> created with ' . number_format($count) . ' entries' .
-                $vocabMsg . '.</div>';
         } catch (RuntimeException $e) {
-            echo '<div class="notification is-danger">' .
-                '<button class="delete" aria-label="close"></button>' .
-                'Error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</div>';
-            return;
+            return JsonResponse::error($e->getMessage());
         } finally {
             $resolver->cleanup();
         }
 
-        // Re-display the form with manual tab active (dictionary file sub-tab)
-        // $langId is already set from InputValidator::getInt("id") above
-        $currentLanguage = Settings::get('currentlanguage');
-        $currentLanguageName = '';
-        $isFrequencyAvailable = false;
-        if ($currentLanguage !== '') {
-            $currentLanguageName = $this->languageFacade->getLanguageName((int) $currentLanguage);
-            $isFrequencyAvailable = FrequencyLanguageMap::isSupported($currentLanguageName);
-        }
-        $languages = $this->languageFacade->getLanguagesForSelect();
-        $activeTab = 'manual';
-        $curatedDictionaries = $this->loadCuratedDictionaries();
-        $csrfToken = FormHelper::csrfToken();
-        $importUrl = $langId > 0 ? '/languages/' . $langId . '/starter-vocab/import' : '';
-        $enrichUrl = $langId > 0 ? '/languages/' . $langId . '/starter-vocab/enrich' : '';
-        include $this->viewPath . 'upload_form.php';
+        return JsonResponse::success([
+            'lastUpdate' => $lastUpdate,
+            'rtl' => $uploadService->isRightToLeft($langId),
+            'recno' => $uploadService->countImportedTerms($lastUpdate),
+        ]);
     }
 
     /**
