@@ -17,11 +17,8 @@ declare(strict_types=1);
 namespace Lukaisu\Modules\Vocabulary\Http;
 
 use Lukaisu\Shared\Infrastructure\Http\InputValidator;
-use Lukaisu\Shared\Infrastructure\Database\Settings;
-use Lukaisu\Shared\Infrastructure\Database\Validation;
 use Lukaisu\Modules\Vocabulary\Application\VocabularyFacade;
 use Lukaisu\Modules\Vocabulary\Application\UseCases\FindSimilarTerms;
-use Lukaisu\Shared\Infrastructure\Dictionary\DictionaryAdapter;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Modules\Tags\Application\TagsFacade;
 use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
@@ -33,8 +30,6 @@ use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
  * - GET /word/{wid} - Show word details
  * - /word/show - Show word details (legacy)
  * - /vocabulary/similar-terms - Get similar terms
- * - /words - List/edit words (Alpine.js)
- * - /words/edit - Edit words list
  */
 class TermDisplayController extends VocabularyBaseController
 {
@@ -49,11 +44,6 @@ class TermDisplayController extends VocabularyBaseController
     private FindSimilarTerms $findSimilarTerms;
 
     /**
-     * Adapters.
-     */
-    private DictionaryAdapter $dictionaryAdapter;
-
-    /**
      * Services.
      */
     private LanguageFacade $languageFacade;
@@ -61,56 +51,19 @@ class TermDisplayController extends VocabularyBaseController
     /**
      * Constructor.
      *
-     * @param VocabularyFacade|null     $facade            Vocabulary facade
-     * @param FindSimilarTerms|null     $findSimilarTerms  Find similar terms use case
-     * @param DictionaryAdapter|null    $dictionaryAdapter Dictionary adapter
-     * @param LanguageFacade|null       $languageFacade    Language facade
+     * @param VocabularyFacade|null $facade           Vocabulary facade
+     * @param FindSimilarTerms|null $findSimilarTerms Find similar terms use case
+     * @param LanguageFacade|null   $languageFacade   Language facade
      */
     public function __construct(
         ?VocabularyFacade $facade = null,
         ?FindSimilarTerms $findSimilarTerms = null,
-        ?DictionaryAdapter $dictionaryAdapter = null,
         ?LanguageFacade $languageFacade = null
     ) {
         parent::__construct();
         $this->facade = $facade ?? new VocabularyFacade();
         $this->findSimilarTerms = $findSimilarTerms ?? new FindSimilarTerms();
-        $this->dictionaryAdapter = $dictionaryAdapter ?? new DictionaryAdapter();
         $this->languageFacade = $languageFacade ?? new LanguageFacade();
-    }
-
-    /**
-     * Show term details.
-     *
-     * @param array<string, string> $params Route parameters
-     *
-     * @return void
-     */
-    public function show(array $params): void
-    {
-        $termId = InputValidator::getInt('wid', 0) ?? 0;
-
-        if ($termId === 0) {
-            http_response_code(400);
-            echo 'Term ID required';
-            return;
-        }
-
-        $term = $this->facade->getTerm($termId);
-
-        if ($term === null) {
-            http_response_code(404);
-            echo 'Term not found';
-            return;
-        }
-
-        PageLayoutHelper::renderPageStart("Term: " . $term->text(), false);
-
-        $this->render('show', [
-            'term' => $term,
-        ]);
-
-        PageLayoutHelper::renderPageEnd();
     }
 
     /**
@@ -175,50 +128,6 @@ class TermDisplayController extends VocabularyBaseController
     }
 
     /**
-     * Show term edit form.
-     *
-     * @param array<string, string> $params Route parameters
-     *
-     * @return void
-     */
-    public function edit(array $params): void
-    {
-        $termId = InputValidator::getInt('wid', 0) ?? 0;
-
-        if ($termId === 0) {
-            http_response_code(400);
-            echo 'Term ID required';
-            return;
-        }
-
-        $term = $this->facade->getTerm($termId);
-
-        if ($term === null) {
-            http_response_code(404);
-            echo 'Term not found';
-            return;
-        }
-
-        PageLayoutHelper::renderPageStart("Edit Term: " . $term->text(), false);
-
-        $this->render('form_edit', [
-            'term' => $term,
-            'dictionaryLinks' => $this->getDictionaryLinks(
-                $term->languageId()->toInt(),
-                $term->text(),
-                'sentence_textarea',
-                true
-            ),
-            'similarTermsHtml' => $this->findSimilarTerms->getFormattedTerms(
-                $term->languageId()->toInt(),
-                $term->textLowercase()
-            ),
-        ]);
-
-        PageLayoutHelper::renderPageEnd();
-    }
-
-    /**
      * Get similar terms for a given term.
      *
      * @param array<string, string> $params Route parameters
@@ -233,60 +142,5 @@ class TermDisplayController extends VocabularyBaseController
         header('Content-Type: text/html; charset=utf-8');
         // Safe: getFormattedTerms() returns pre-escaped HTML
         echo $this->findSimilarTerms->getFormattedTerms($langId, $term);
-    }
-
-    /**
-     * Get dictionary links for editing.
-     *
-     * @param int    $langId    Language ID
-     * @param string $word      Word to look up
-     * @param string $sentctlid Sentence control ID
-     * @param bool   $openFirst Open first dictionary
-     *
-     * @return string HTML dictionary links
-     */
-    private function getDictionaryLinks(
-        int $langId,
-        string $word,
-        string $sentctlid,
-        bool $openFirst = false
-    ): string {
-        return $this->dictionaryAdapter->createDictLinksInEditWin(
-            $langId,
-            $word,
-            $sentctlid,
-            $openFirst
-        );
-    }
-
-    /**
-     * List/edit words - Alpine.js SPA version.
-     *
-     * @param array<string, string> $params Route parameters
-     *
-     * @psalm-suppress UnresolvableInclude Path computed from viewPath property
-     *
-     * @return void
-     */
-    public function listEditAlpine(array $params): void
-    {
-        $currentlang = Validation::language(
-            InputValidator::getStringWithDb("filterlang", 'currentlanguage')
-        );
-
-        $perPage = (int) Settings::getWithDefault('set-terms-per-page');
-        if ($perPage < 1) {
-            $perPage = 50;
-        }
-
-        // Use a placeholder title - Alpine.js will update it dynamically
-        PageLayoutHelper::renderPageStart('Terms', true);
-
-        // Cut-over: the terms list is served by the bundled client. GET /words
-        // (and /words/edit) redirect to /app/words.html (see routes.php), so
-        // this render path is unreachable; the PHP view (list_alpine.php) was
-        // removed.
-
-        PageLayoutHelper::renderPageEnd();
     }
 }

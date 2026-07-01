@@ -170,7 +170,6 @@ class RoutesTest extends TestCase
             // config + save POST moved to /api/v1/terms/bulk-translate{,/config}
             // (Phase R), so only the GET bundle redirect remains here.
             'word bulk-translate' => ['/word/bulk-translate', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            'word set-all-status' => ['/word/set-all-status', "{$termStatusController}@markAllWords"],
             // GET 302s into the bundled Svelte WordUpload island. Its bootstrap
             // config + file-upload POST moved to /api/v1/terms/upload{,/config}
             // (Phase R), so only the GET bundle redirect remains here.

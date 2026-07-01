@@ -8,11 +8,6 @@ use Lukaisu\Modules\Vocabulary\Http\TermDisplayController;
 use Lukaisu\Modules\Vocabulary\Http\VocabularyBaseController;
 use Lukaisu\Modules\Vocabulary\Application\VocabularyFacade;
 use Lukaisu\Modules\Vocabulary\Application\UseCases\FindSimilarTerms;
-use Lukaisu\Modules\Vocabulary\Domain\Term;
-use Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermId;
-use Lukaisu\Modules\Vocabulary\Domain\ValueObject\TermStatus;
-use Lukaisu\Modules\Language\Domain\ValueObject\LanguageId;
-use Lukaisu\Shared\Infrastructure\Dictionary\DictionaryAdapter;
 use Lukaisu\Modules\Language\Application\LanguageFacade;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -22,7 +17,7 @@ use PHPUnit\Framework\MockObject\MockObject;
  * Unit tests for TermDisplayController.
  *
  * Tests constructor behavior, class structure, method signatures,
- * show/edit/hover logic, and edge cases.
+ * show-word/similar-terms logic, and edge cases.
  */
 class TermDisplayControllerTest extends TestCase
 {
@@ -31,9 +26,6 @@ class TermDisplayControllerTest extends TestCase
 
     /** @var FindSimilarTerms&MockObject */
     private FindSimilarTerms $findSimilarTerms;
-
-    /** @var DictionaryAdapter&MockObject */
-    private DictionaryAdapter $dictionaryAdapter;
 
     /** @var LanguageFacade&MockObject */
     private LanguageFacade $languageFacade;
@@ -44,12 +36,10 @@ class TermDisplayControllerTest extends TestCase
     {
         $this->facade = $this->createMock(VocabularyFacade::class);
         $this->findSimilarTerms = $this->createMock(FindSimilarTerms::class);
-        $this->dictionaryAdapter = $this->createMock(DictionaryAdapter::class);
         $this->languageFacade = $this->createMock(LanguageFacade::class);
         $this->controller = new TermDisplayController(
             $this->facade,
             $this->findSimilarTerms,
-            $this->dictionaryAdapter,
             $this->languageFacade
         );
     }
@@ -67,7 +57,7 @@ class TermDisplayControllerTest extends TestCase
     #[Test]
     public function constructorAcceptsAllNullParameters(): void
     {
-        $controller = new TermDisplayController(null, null, null, null);
+        $controller = new TermDisplayController(null, null, null);
         $this->assertInstanceOf(TermDisplayController::class, $controller);
     }
 
@@ -85,14 +75,6 @@ class TermDisplayControllerTest extends TestCase
         $reflection = new \ReflectionProperty(TermDisplayController::class, 'findSimilarTerms');
 
         $this->assertSame($this->findSimilarTerms, $reflection->getValue($this->controller));
-    }
-
-    #[Test]
-    public function constructorSetsDictionaryAdapterProperty(): void
-    {
-        $reflection = new \ReflectionProperty(TermDisplayController::class, 'dictionaryAdapter');
-
-        $this->assertSame($this->dictionaryAdapter, $reflection->getValue($this->controller));
     }
 
     #[Test]
@@ -124,11 +106,8 @@ class TermDisplayControllerTest extends TestCase
         $reflection = new \ReflectionClass(TermDisplayController::class);
 
         $expectedMethods = [
-            'show',
             'showWord',
-            'edit',
             'similarTerms',
-            'listEditAlpine',
         ];
 
         foreach ($expectedMethods as $methodName) {
@@ -144,41 +123,9 @@ class TermDisplayControllerTest extends TestCase
         }
     }
 
-    #[Test]
-    public function classHasRequiredPrivateMethods(): void
-    {
-        $reflection = new \ReflectionClass(TermDisplayController::class);
-
-        $expectedMethods = [
-            'getDictionaryLinks',
-        ];
-
-        foreach ($expectedMethods as $methodName) {
-            $this->assertTrue(
-                $reflection->hasMethod($methodName),
-                "TermDisplayController should have private method: $methodName"
-            );
-            $method = $reflection->getMethod($methodName);
-            $this->assertTrue(
-                $method->isPrivate(),
-                "Method $methodName should be private"
-            );
-        }
-    }
-
     // =========================================================================
     // Method signature tests
     // =========================================================================
-
-    #[Test]
-    public function showAcceptsArrayParameter(): void
-    {
-        $method = new \ReflectionMethod(TermDisplayController::class, 'show');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('params', $params[0]->getName());
-    }
 
     #[Test]
     public function showWordAcceptsNullableIntParameter(): void
@@ -194,16 +141,6 @@ class TermDisplayControllerTest extends TestCase
     }
 
     #[Test]
-    public function editAcceptsArrayParameter(): void
-    {
-        $method = new \ReflectionMethod(TermDisplayController::class, 'edit');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('params', $params[0]->getName());
-    }
-
-    #[Test]
     public function similarTermsAcceptsArrayParameter(): void
     {
         $method = new \ReflectionMethod(TermDisplayController::class, 'similarTerms');
@@ -211,83 +148,6 @@ class TermDisplayControllerTest extends TestCase
 
         $this->assertCount(1, $params);
         $this->assertSame('params', $params[0]->getName());
-    }
-
-    #[Test]
-    public function listEditAlpineAcceptsArrayParameter(): void
-    {
-        $method = new \ReflectionMethod(TermDisplayController::class, 'listEditAlpine');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('params', $params[0]->getName());
-    }
-
-    // =========================================================================
-    // show tests
-    // =========================================================================
-
-    #[Test]
-    public function showWithZeroTermIdOutputsError(): void
-    {
-        // No GET params, termId defaults to 0
-        ob_start();
-        $this->controller->show([]);
-        $output = ob_get_clean();
-
-        $this->assertSame('Term ID required', $output);
-    }
-
-    #[Test]
-    public function showWithNonexistentTermOutputsNotFound(): void
-    {
-        $_REQUEST['wid'] = '42';
-
-        $this->facade->expects($this->once())
-            ->method('getTerm')
-            ->with(42)
-            ->willReturn(null);
-
-        ob_start();
-        $this->controller->show([]);
-        $output = ob_get_clean();
-
-        $this->assertSame('Term not found', $output);
-
-        unset($_REQUEST['wid']);
-    }
-
-    // =========================================================================
-    // edit tests
-    // =========================================================================
-
-    #[Test]
-    public function editWithZeroTermIdOutputsError(): void
-    {
-        ob_start();
-        $this->controller->edit([]);
-        $output = ob_get_clean();
-
-        $this->assertSame('Term ID required', $output);
-    }
-
-    #[Test]
-    public function editWithNonexistentTermOutputsNotFound(): void
-    {
-        $_REQUEST['wid'] = '99';
-
-        $this->facade->expects($this->once())
-            ->method('getTerm')
-            ->with(99)
-            ->willReturn(null);
-
-        ob_start();
-        $this->controller->edit([]);
-        $output = ob_get_clean();
-
-        $this->assertSame('Term not found', $output);
-
-        unset($_REQUEST['wid']);
     }
 
     // =========================================================================
@@ -345,36 +205,6 @@ class TermDisplayControllerTest extends TestCase
         ob_start();
         $this->controller->similarTerms([]);
         ob_get_clean();
-    }
-
-    // =========================================================================
-    // getDictionaryLinks tests via reflection
-    // =========================================================================
-
-    #[Test]
-    public function getDictionaryLinksCallsAdapter(): void
-    {
-        $method = new \ReflectionMethod(TermDisplayController::class, 'getDictionaryLinks');
-
-        $this->dictionaryAdapter->expects($this->once())
-            ->method('createDictLinksInEditWin')
-            ->with(1, 'test', 'sentctrl', true)
-            ->willReturn('<div>links</div>');
-
-        $result = $method->invoke($this->controller, 1, 'test', 'sentctrl', true);
-
-        $this->assertSame('<div>links</div>', $result);
-    }
-
-    #[Test]
-    public function getDictionaryLinksDefaultOpenFirstIsFalse(): void
-    {
-        $method = new \ReflectionMethod(TermDisplayController::class, 'getDictionaryLinks');
-
-        $params = $method->getParameters();
-        $this->assertSame('openFirst', $params[3]->getName());
-        $this->assertTrue($params[3]->isDefaultValueAvailable());
-        $this->assertFalse($params[3]->getDefaultValue());
     }
 
     // =========================================================================

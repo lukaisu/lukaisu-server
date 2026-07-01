@@ -297,7 +297,6 @@ class VocabularyServiceProvider implements ServiceProviderInterface
             return new TermDisplayController(
                 $c->getTyped(VocabularyFacade::class),
                 $c->getTyped(FindSimilarTerms::class),
-                $c->getTyped(DictionaryAdapter::class),
                 $c->getTyped(LanguageFacade::class)
             );
         });

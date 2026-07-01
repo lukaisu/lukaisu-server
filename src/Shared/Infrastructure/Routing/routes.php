@@ -189,13 +189,6 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Words list - Alpine.js SPA version (TermDisplayController)
-    $router->registerWithMiddleware(
-        '/words/edit',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermDisplayController@listEditAlpine',
-        AUTH_MIDDLEWARE
-    );
-
     // Multi-word create/edit is served by the bundled client's multi-word modal
     // via TermsApi.createMultiWord/updateMultiWord (/api/v1); the legacy
     // /word/edit-multi web form (MultiWordController) was retired.
@@ -285,13 +278,6 @@ function registerRoutes(Router $router): void
         'POST'
     );
 
-    // Set all words status (wellknown/ignore) (TermStatusController)
-    $router->registerWithMiddleware(
-        '/word/set-all-status',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermStatusController@markAllWords',
-        AUTH_MIDDLEWARE
-    );
-
     // Upload words (TermImportController). The GET page is served by the bundled
     // client (Svelte WordUpload island; see the /app redirects below). Under the
     // headless cut (Phase R) the file-upload POST and its bootstrap config moved
@@ -299,18 +285,6 @@ function registerRoutes(Router $router): void
     // TermImportController; the WordUpload island posts a bearer-authed multipart
     // body there. No cookie-authed top-level upload route remains — only the GET
     // bundle redirect for /word/upload (registered further below).
-
-    // Review status change during review (iframe/ajax view).
-    // NB: the dead text-reader frame routes (set-status, delete-term,
-    // delete-multi, insert-wellknown, insert-ignore) are unregistered here —
-    // the modern reader changes status via /api/v1/terms/* and never linked to
-    // them. Their now-unreachable controller methods + result views are retained
-    // pending the frontend dead-popup cleanup (needs in-browser E2E to verify).
-    $router->registerWithMiddleware(
-        '/word/set-review-status',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermStatusController@setReviewStatusView',
-        AUTH_MIDDLEWARE
-    );
 
     // ==================== LANGUAGE ROUTES (PROTECTED) ====================
 
