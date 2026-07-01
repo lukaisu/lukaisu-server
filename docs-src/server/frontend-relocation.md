@@ -207,11 +207,14 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > Frequency tab, both islands repointed to `apiPostForm`) · **[x] word-upload**
 > (`GET /api/v1/terms/upload/config` via `apiGet` + multipart `POST
 > /api/v1/terms/upload` via the new `apiPostMultipart` client helper) ·
-> [ ] bulk-translate · [ ] feeds (config + native POST) · [ ] dict-import
-> (multipart — can now reuse `apiPostMultipart`) · [ ] terms-export (native form
-> `POST /words` → fetch + blob download) · [ ] books (needs bundle book pages or
-> link-router handling) · [ ] admin (navbar links + `app/settings.ts`'s
-> `settings_api`).
+> **[x] feeds** (config GET → `/api/v1/feeds/*/config` via `apiGet`; the save was
+> already on `/api/v1/feeds`; dead native POST /feeds/new|edit routes dropped) ·
+> **[x] dict-import** (multipart `POST /api/v1/local-dictionaries/import` via
+> `apiPostMultipart`; `processImport` void→JSON) · [ ] bulk-translate (behavior
+> port: native full-page form POST renders HTML → needs JSON + result UI) ·
+> [ ] terms-export (native form `POST /words` → fetch + blob download) · [ ] books
+> (needs bundle book pages or link-router handling) · [ ] admin (navbar links +
+> `app/settings.ts`'s `settings_api`).
 
 ---
 
