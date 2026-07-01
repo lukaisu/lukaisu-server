@@ -8,7 +8,6 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import type { MultiWordFormStoreState } from '@modules/vocabulary/stores/multi_word_form_store';
 import { getTextId as getTextIdFromConfig } from '@modules/text/stores/text_config';
 
 /**
@@ -158,10 +157,8 @@ function getSelectedText(words: HTMLElement[], container: HTMLElement): string {
 }
 
 /**
- * Optional sink for a completed multi-word selection. When supplied (the Svelte
- * reader passes one), it receives the selection instead of the Alpine
- * `multiWordForm` store — letting the same native-selection logic drive either
- * renderer. With no callback, the Alpine store path is used (the server PWA).
+ * Sink for a completed multi-word selection: the reader passes one to receive
+ * the selection and hand it to its runes multi-word store.
  */
 export type MultiWordSelectHandler = (
   textId: number,
@@ -175,12 +172,12 @@ export type MultiWordSelectHandler = (
  * Called on mouseup to check if user selected multiple words.
  *
  * @param container  The text container element (#thetext)
- * @param onMultiWord Optional callback to receive the selection (Svelte reader);
- *                    when omitted, the Alpine `multiWordForm` store is used.
+ * @param onMultiWord Callback that receives the selection (the reader's runes
+ *                    multi-word store).
  */
 export function handleTextSelection(
   container: HTMLElement,
-  onMultiWord?: MultiWordSelectHandler
+  onMultiWord: MultiWordSelectHandler
 ): void {
   const selectedWords = getSelectedWords(container);
 
@@ -207,35 +204,8 @@ export function handleTextSelection(
   const firstWord = selectedWords[0];
   const position = parseInt(firstWord.getAttribute('data_order') || '0', 10);
 
-  // Get text ID
-  const textId = getTextId();
-
-  // Svelte reader: hand the selection to the supplied callback (its runes
-  // multi-word store), bypassing Alpine entirely.
-  if (onMultiWord) {
-    onMultiWord(textId, position, text, selectedWords.length);
-    clearSelection();
-    return;
-  }
-
-  // Server (Alpine) path: open the multi-word modal via the global Alpine
-  // `multiWordForm` store. The Svelte reader never reaches here (it returns
-  // above through onMultiWord), so the client bundle needs no `alpinejs` import
-  // — read Alpine off the window global that the server entry (main.ts) sets.
-  const alpine = (window as unknown as { Alpine?: { store(name: string): unknown } }).Alpine;
-  const store = alpine?.store('multiWordForm') as MultiWordFormStoreState | undefined;
-  if (store && typeof store.loadForEdit === 'function') {
-    store.loadForEdit(textId, position, text, selectedWords.length);
-  } else {
-    // Fallback to page navigation
-    const params = new URLSearchParams({
-      tid: String(textId),
-      ord: String(position),
-      txt: text
-    });
-    window.location.href = '/word/edit?' + params.toString();
-  }
-
+  // Hand the selection to the reader's runes multi-word store.
+  onMultiWord(getTextId(), position, text, selectedWords.length);
   clearSelection();
 }
 
@@ -244,12 +214,12 @@ export function handleTextSelection(
  * Listens for mouseup and touchend events and checks for text selection.
  *
  * @param container  The text container element (#thetext)
- * @param onMultiWord Optional callback to receive the selection (Svelte reader);
- *                    when omitted, the Alpine `multiWordForm` store is used.
+ * @param onMultiWord Callback that receives the selection (the reader's runes
+ *                    multi-word store).
  */
 export function setupMultiWordSelection(
   container: HTMLElement,
-  onMultiWord?: MultiWordSelectHandler
+  onMultiWord: MultiWordSelectHandler
 ): void {
   const handler = () => {
     // Small delay to ensure selection is complete
@@ -261,19 +231,4 @@ export function setupMultiWordSelection(
 
   // Mobile: touchend fires after touch selection
   container.addEventListener('touchend', handler);
-}
-
-// Legacy exports for backwards compatibility
-// These are no longer used but kept to avoid breaking imports
-export const mwordDragNDrop = {
-  context: undefined as HTMLElement | undefined,
-  stopInteraction: () => {}
-};
-
-export function multiWordDragDropSelect(): void {
-  // No longer used - selection is handled via native text selection
-}
-
-export function multiWordTouchSelect(): void {
-  // No longer used - selection is handled via native text selection
 }

@@ -14,7 +14,6 @@ export * from './stores/text_config';
 // Reading pages
 export * from './pages/reading/text_renderer';
 export * from './pages/reading/text_display';
-export * from './pages/reading/text_keyboard';
 export * from './pages/reading/text_multiword_selection';
 export * from './pages/reading/text_reading_init';
 export * from './pages/reading/annotation_toggle';

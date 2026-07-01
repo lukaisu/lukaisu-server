@@ -6,35 +6,19 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
-// The multi-word module reads the Alpine `multiWordForm` store off the
-// `window.Alpine` global (set by the server entry) rather than importing
-// `alpinejs` — the client bundle is Alpine-free. The server path is exercised
-// here by installing a stub `window.Alpine` in beforeEach.
-const mockStore = {
-  loadForEdit: vi.fn()
-};
-
-// Mock frame management
-vi.mock('../../../src/frontend/js/modules/text/pages/reading/frame_management', () => ({
-  loadModalFrame: vi.fn()
-}));
-
 import {
   handleTextSelection,
-  setupMultiWordSelection,
-  mwordDragNDrop,
-  multiWordDragDropSelect,
-  multiWordTouchSelect
+  setupMultiWordSelection
 } from '../../../src/frontend/js/modules/text/pages/reading/text_multiword_selection';
 
 describe('text_multiword_selection.ts', () => {
+  // The reader hands each completed selection to this callback (its runes
+  // multi-word store); the module no longer touches Alpine.
+  const onMultiWord = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
     document.body.innerHTML = '';
-    // Install the stub Alpine global the server path reads (window.Alpine.store).
-    (window as unknown as { Alpine?: { store: (name: string) => unknown } }).Alpine = {
-      store: vi.fn(() => mockStore)
-    };
     // Mock window.location
     Object.defineProperty(window, 'location', {
       value: {
@@ -70,9 +54,9 @@ describe('text_multiword_selection.ts', () => {
       };
       vi.spyOn(window, 'getSelection').mockReturnValue(mockSelection as unknown as Selection);
 
-      handleTextSelection(container);
+      handleTextSelection(container, onMultiWord);
 
-      expect(mockStore.loadForEdit).not.toHaveBeenCalled();
+      expect(onMultiWord).not.toHaveBeenCalled();
     });
 
     it('does nothing when only one word is selected', () => {
@@ -100,12 +84,12 @@ describe('text_multiword_selection.ts', () => {
       };
       vi.spyOn(window, 'getSelection').mockReturnValue(mockSelection as unknown as Selection);
 
-      handleTextSelection(container);
+      handleTextSelection(container, onMultiWord);
 
-      expect(mockStore.loadForEdit).not.toHaveBeenCalled();
+      expect(onMultiWord).not.toHaveBeenCalled();
     });
 
-    it('opens modal when multiple words are selected', () => {
+    it('invokes the callback when multiple words are selected', () => {
       // In the real database, words are stored consecutively without space elements
       // The getSelectedText function adds spaces between consecutive word elements
       document.body.innerHTML = `
@@ -133,10 +117,9 @@ describe('text_multiword_selection.ts', () => {
       };
       vi.spyOn(window, 'getSelection').mockReturnValue(mockSelection as unknown as Selection);
 
-      handleTextSelection(container);
+      handleTextSelection(container, onMultiWord);
 
-      expect(mockStore.loadForEdit).toHaveBeenCalled();
-      expect(mockStore.loadForEdit).toHaveBeenCalledWith(
+      expect(onMultiWord).toHaveBeenCalledWith(
         1, // textId from URL
         1, // position (first word's data_order)
         'Hello World', // text extracted with space added between consecutive words
@@ -171,10 +154,10 @@ describe('text_multiword_selection.ts', () => {
       vi.spyOn(window, 'getSelection').mockReturnValue(mockSelection as unknown as Selection);
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
-      handleTextSelection(container);
+      handleTextSelection(container, onMultiWord);
 
       expect(alertSpy).toHaveBeenCalledWith('Selected text is too long!!!');
-      expect(mockStore.loadForEdit).not.toHaveBeenCalled();
+      expect(onMultiWord).not.toHaveBeenCalled();
     });
   });
 
@@ -184,29 +167,9 @@ describe('text_multiword_selection.ts', () => {
       const container = document.getElementById('thetext')!;
       const addEventListenerSpy = vi.spyOn(container, 'addEventListener');
 
-      setupMultiWordSelection(container);
+      setupMultiWordSelection(container, onMultiWord);
 
       expect(addEventListenerSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
-    });
-  });
-
-  describe('legacy exports', () => {
-    it('exports mwordDragNDrop for backwards compatibility', () => {
-      expect(mwordDragNDrop).toBeDefined();
-      expect(mwordDragNDrop.context).toBeUndefined();
-      expect(typeof mwordDragNDrop.stopInteraction).toBe('function');
-    });
-
-    it('exports multiWordDragDropSelect function', () => {
-      expect(typeof multiWordDragDropSelect).toBe('function');
-      // Should be a no-op
-      multiWordDragDropSelect();
-    });
-
-    it('exports multiWordTouchSelect function', () => {
-      expect(typeof multiWordTouchSelect).toBe('function');
-      // Should be a no-op
-      multiWordTouchSelect();
     });
   });
 
@@ -245,9 +208,9 @@ describe('text_multiword_selection.ts', () => {
       };
       vi.spyOn(window, 'getSelection').mockReturnValue(mockSelection as unknown as Selection);
 
-      handleTextSelection(container);
+      handleTextSelection(container, onMultiWord);
 
-      expect(mockStore.loadForEdit).toHaveBeenCalledWith(
+      expect(onMultiWord).toHaveBeenCalledWith(
         42, // textId extracted from URL
         1,
         'Hello World',

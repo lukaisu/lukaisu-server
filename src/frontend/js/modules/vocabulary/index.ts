@@ -34,7 +34,6 @@ export * from './services/word_status_ajax';
 
 // Shared utilities needed by vocabulary pages
 import '@shared/forms/bulk_actions';
-import '@shared/forms/word_form_auto';
 
 // Side-effect imports (pages)
 import './pages/expression_interactable';
