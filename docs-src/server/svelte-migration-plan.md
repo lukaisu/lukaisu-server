@@ -293,3 +293,53 @@ admin (defer→A) · D3g annotated print (defer→A) · D4 shared chrome · D5 f
 Note for D5: `grep x-data src/frontend/app/*.html` still hits the **earlier-tier** shells
 (read/words/home/texts/library/index/languages/text-print) — verify those are inert (islands own the
 DOM) or scrub them before dropping Alpine.
+
+### Progress update 2026-07-01 (batch 3 — word-upload tail + feed new/edit form)
+
+Landed on `main` (full central gate green: typecheck 0/0 · eslint · psalm 0 · phpcs 0-new ·
+build:app · build · vitest 3703 · **phpunit 8915, 0 failures**):
+- [x] **D3a-tail** (`b9622ca`) — word-upload POST result rebuilt client-side. `POST /word/upload`
+  now returns JSON `{lastUpdate, rtl, recno}` (or `{error}`) from BOTH `handleUploadImport`
+  (op=Import) and `handleDictionaryImport` (op=ImportDictionary) instead of `include`-ing a view;
+  `WordUpload.svelte`'s manual tab `fetch()`-posts (multipart FormData) and renders a new
+  `ResultDisplay.svelte` (paginates the imported terms via the existing `GET /api/v1/terms/imported`).
+  **Fully retired**: `word_upload.ts` (all Alpine — `wordUploadPageApp`/`wordUploadFormApp`/
+  `wordUploadResultApp`/`curatedDictBrowser`, all verified unreachable), `upload_form.php`,
+  `upload_result.php`, the dead `displayUploadForm()` private method, and the Alpine
+  `word_upload.test.ts`. Net −1,838 LOC. `POST /word/upload` route + `GET /word/upload/config` KEPT.
+- [x] **D3d-form** (`4c3051f`) — `/feeds/new` + `/feeds/{id}/edit` GET forms → one `FeedFormPage.svelte`
+  island (create/edit modes) on the existing `/api/v1/feeds` CRUD. Added authed JSON config routes
+  `GET /feeds/new/config` + `GET /feeds/{id}/edit/config` (`FeedController@configNew/configEdit`,
+  edit folds the `getFeed` prefill in); ported the options-string (de)serialization into
+  `feed_form_options.ts` with round-trip tests (canonical order, no trailing comma — matches the
+  server's `getNfOption` parse + `rtrim` on save). Edit prefill uses `?feed={id}`. Deleted `new.php`.
+- **Integration fix** (`be2fee0`) — the word-upload agent's self-gate **stalled before phpunit**, so
+  the central gate caught 2 stale reflection assertions in `TermImportControllerTest` (required
+  `displayUploadForm`; `upload()` returns `void`) — updated to the new JSON shape. (Lesson restated:
+  agents self-gate typecheck+lint; **only the central psalm/phpunit run exercises the backend** —
+  always run it, especially when an agent dies mid-gate.)
+
+**D3d is NOT complete — deliberate scope call.** The feed cluster (~3,100 LOC) is only *partly* a
+mechanical port. Ported: the new/edit **form** (existing CRUD API). NOT ported (task #27, `D3d-rest`):
+the **wizard** steps 1-4 (a PHP-`$_SESSION` 4-step flow needing **4-5 net-new `/api/v1/feeds/wizard/*`
+endpoints** — remote feed parse, article preview, XPath validate/apply, save), **feed-load progress**
+(`/feeds/{id}/load` streaming), **multi-load** (couples into load-progress: posts `load_feed=1` to
+`/feeds`), and the **browse/index** GET-orphans. That's net-new backend *design*, not a port — it wants
+its own focused pass (a Plan agent first), not a blind background worktree agent. Two coexistence files
+therefore stay on disk (verify-then-delete guard did its job): **`edit.php`** (still rendered by
+`showEditForm()` via the live legacy `/feeds/edit?edit_feed=1` route + 4 tests) and
+**`feed_form_component.ts`** (the wizard's `wizard_step1.php` manual-setup tab still binds
+`x-data="feedForm"`). So the Alpine `feedForm` component is NOT gone yet — it dies with the wizard.
+
+**⚠ Pre-existing security finding (surfaced, NOT introduced here).** `FeedCrudApiHandler::getFeed` →
+`FeedFacade::getFeedById` → `AbstractRepository::find()` uses `QueryBuilder::table()` with **no
+user-scoping** — so in `MULTI_USER_ENABLED=true` mode any user can read any feed by id. The new
+`configEdit` reuses this exact path, but it is the **same code already public at `GET /api/v1/feeds/{id}`**
+(no net-new exposure; inert in the default single-user mode). The `PUT`/`DELETE` write paths have a
+related gap: `updateFeed` fences the *new* `langId` via `languageBelongsToCurrentUser` but never checks
+the *existing* feed's owner, so a user could hijack another user's feed by reassigning it to their own
+language. **Recommended follow-up (own task, not this batch):** user-scope feed reads at the repository
+layer + add an existing-owner check to `updateFeed`/`deleteFeeds`.
+
+**Remaining (C order):** **D3d-rest** (feed wizard + load + multi-load + browse — net-new API) · D3f
+admin (defer→A) · D3g annotated print (defer→A) · D4 shared chrome · D5 final `@alpinejs` deletion.
