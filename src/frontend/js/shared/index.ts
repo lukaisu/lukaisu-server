@@ -28,8 +28,6 @@ export * from './utils/settings_config';
 
 // Components
 export * from './components/modal';
-export * from './components/navbar';
-export * from './components/footer';
 export * from './components/sorttable';
 export * from './components/inline_edit';
 export * from './components/tagify_tags';

@@ -43,10 +43,6 @@ import '@shared/stores/app_data';
 // PWA support
 import '@shared/pwa/register';
 
-// Offline support
-import '@shared/offline/offline-button';
-import '@shared/offline/offline-indicator';
-
 // Shared API client
 import '@shared/api/client';
 
@@ -54,7 +50,6 @@ import '@shared/api/client';
 import '@shared/components/modal';
 import NavBar from '@shared/components/NavBar.svelte';
 import type { NavbarData as NavbarChromeData } from '@shared/components/navbar_renderer';
-import '@shared/components/footer';
 
 // Shared i18n
 import { bootI18n, t } from '@shared/i18n/translator';

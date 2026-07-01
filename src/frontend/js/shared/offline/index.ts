@@ -41,19 +41,6 @@ export {
   type OfflineSummary,
 } from './text-service';
 
-// UI Components
-export {
-  offlineButton,
-  registerOfflineButton,
-  type OfflineButtonData,
-} from './offline-button';
-
-export {
-  offlineIndicator,
-  registerOfflineIndicator,
-  type OfflineIndicatorData,
-} from './offline-indicator';
-
 // Offline Text Reader
 export {
   getTextWordsOfflineFirst,
