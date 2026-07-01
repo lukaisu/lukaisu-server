@@ -3,9 +3,11 @@
  *
  * The word-upload island needs server-only data the bundle cannot compute
  * locally — the current language (name + id), whether FrequencyWords data exists
- * for it, the curated dictionaries registry, the base-path-correct POST endpoints
- * (frequency import / enrichment / the file-upload action), and the default
- * translation delimiter. The server exposes them at `GET /word/upload/config`
+ * for it, the curated dictionaries registry, the base-path-correct file-upload
+ * POST endpoint, and the default translation delimiter. The frequency import and
+ * Wiktionary enrichment run against the shared /api/v1 starter-vocab endpoints
+ * (built from `langId` in the island). The server exposes the rest at
+ * `GET /word/upload/config`
  * (TermImportController@uploadConfig).
  *
  * That route is NOT under `/api/v1`, so this uses a base-path-aware raw fetch
@@ -47,10 +49,6 @@ export interface WordUploadConfig {
   langName: string;
   /** FrequencyWords data exists for this language (Wiktionary source offered). */
   isFrequencyAvailable: boolean;
-  /** Base-path-correct POST endpoint for frequency-word import ('' when no lang). */
-  importUrl: string;
-  /** Base-path-correct POST endpoint for Wiktionary enrichment ('' when no lang). */
-  enrichUrl: string;
   /** Default translation-delimiter (for the merge/update import modes). */
   translationDelimiter: string;
   /** All curated dictionary groups (filtered/searched client-side). */
@@ -81,8 +79,6 @@ export async function fetchWordUploadConfig(): Promise<WordUploadConfig | null> 
       langId: data.langId ?? 0,
       langName: data.langName ?? '',
       isFrequencyAvailable: data.isFrequencyAvailable ?? false,
-      importUrl: data.importUrl ?? '',
-      enrichUrl: data.enrichUrl ?? '',
       translationDelimiter: data.translationDelimiter ?? '',
       curatedDictionaries: data.curatedDictionaries ?? []
     };

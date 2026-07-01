@@ -37,10 +37,6 @@ export interface CuratedDictGroup {
 
 /** Bootstrap config the StarterVocab island reads on mount. */
 export interface StarterVocabConfig {
-  /** Base-path-correct POST endpoint for frequency-word import. */
-  importUrl: string;
-  /** Base-path-correct POST endpoint for Wiktionary enrichment. */
-  enrichUrl: string;
   langId: number;
   langName: string;
   /** FrequencyWords data exists for this language (Wiktionary source offered). */
@@ -62,8 +58,6 @@ export async function fetchStarterVocabConfig(
       return null;
     }
     return {
-      importUrl: data.importUrl ?? '',
-      enrichUrl: data.enrichUrl ?? '',
       langId: data.langId ?? langId,
       langName: data.langName,
       isAvailable: data.isAvailable ?? false,

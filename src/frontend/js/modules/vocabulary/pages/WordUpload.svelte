@@ -6,8 +6,9 @@
   Three tabs:
    1. Frequency Words — import the most common words for the current language
       from frequency lists, with optional Wiktionary enrichment. Driven entirely
-      client-side: a fetch POST to the frequency-import endpoint, then a polled
-      enrichment loop (the same endpoints the StarterVocab island uses).
+      client-side: an /api/v1 form-POST to the shared starter-vocab frequency
+      import endpoint, then a polled enrichment loop (the same bearer-authed
+      endpoints the StarterVocab island uses).
    2. Dictionaries — the reusable `CuratedDictBrowser` island (curated reference
       dictionaries, batch-imported via `/api/v1/local-dictionaries/import-curated`).
    3. Manual Upload — a multipart `<form>` that `fetch()`-POSTs a CSV/TSV/pasted
@@ -35,7 +36,7 @@
   import { tick } from 'svelte';
   import { initIcons } from '@shared/icons/lucide_icons';
   import { t } from '@shared/i18n/translator';
-  import { getCsrfToken } from '@shared/api/client';
+  import { apiPostForm, getCsrfToken } from '@shared/api/client';
   import { statuses } from '@shared/stores/app_data';
   import CuratedDictBrowser from '@modules/vocabulary/components/CuratedDictBrowser.svelte';
   import ResultDisplay from '@modules/vocabulary/pages/ResultDisplay.svelte';
@@ -51,6 +52,15 @@
     done: number;
     failed: number;
     total: number;
+  }
+
+  /** The frequency-enrichment batch response from the starter-vocab endpoint. */
+  interface EnrichResponse {
+    enriched: number;
+    failed: number;
+    remaining: number;
+    total: number;
+    warning: string;
   }
 
   const { config }: { config: WordUploadConfig } = $props();
@@ -115,23 +125,21 @@
     freqError = '';
 
     try {
-      const formData = new FormData();
-      formData.append('count', String(freqSize));
-      formData.append('_csrf_token', csrfToken);
+      const response = await apiPostForm<ImportResult>(
+        `/languages/${config.langId}/starter-vocab/import`,
+        { count: freqSize }
+      );
 
-      const response = await fetch(config.importUrl, { method: 'POST', body: formData });
-      const data = await response.json();
-
-      if (!response.ok) {
-        freqError = data.error || 'Unknown error occurred.';
+      if (response.error || !response.data) {
+        freqError = response.error || 'Unknown error occurred.';
         freqStep = 'error';
         return;
       }
 
-      freqResult = data;
+      freqResult = response.data;
 
-      if (data.imported > 0) {
-        enrichStats = { done: 0, failed: 0, total: data.imported };
+      if (response.data.imported > 0) {
+        enrichStats = { done: 0, failed: 0, total: response.data.imported };
         stopEnrichmentFlag = false;
         freqStep = 'enriching';
         await enrichAll();
@@ -146,18 +154,17 @@
 
   async function enrichAll(): Promise<void> {
     while (!stopEnrichmentFlag) {
-      const formData = new FormData();
-      formData.append('mode', freqMode);
-      formData.append('_csrf_token', csrfToken);
+      const response = await apiPostForm<EnrichResponse>(
+        `/languages/${config.langId}/starter-vocab/enrich`,
+        { mode: freqMode }
+      );
 
-      const response = await fetch(config.enrichUrl, { method: 'POST', body: formData });
-      const data = await response.json();
-
-      if (!response.ok) {
-        enrichWarning = data.error || 'Enrichment encountered an error.';
+      if (response.error || !response.data) {
+        enrichWarning = response.error || 'Enrichment encountered an error.';
         return;
       }
 
+      const data = response.data;
       enrichStats.done = data.total - data.remaining;
       enrichStats.total = data.total;
       enrichStats.failed += data.failed;

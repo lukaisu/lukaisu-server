@@ -5,9 +5,9 @@
   Drives the post-language-creation import flow:
   choose sources -> import frequency words -> enrich -> import curated dicts -> done.
 
-  Server-gated (Job-B-style): the frequency-word import and Wiktionary enrichment
-  are PHP form-POST endpoints, and curated-dictionary import is `/api/v1`; none
-  run offline, so the page only mounts this island when a server is connected
+  Server-gated (Job-B-style): the frequency-word import, Wiktionary enrichment,
+  and curated-dictionary import are all `/api/v1` endpoints (bearer-token authed);
+  none run offline, so the page only mounts this island when a server is connected
   (the gate lives in `app/starter-vocab.ts`, mirroring feeds.ts). The server-only
   bootstrap data (language name, FrequencyWords availability, curated dictionaries)
   is fetched once by the entry and passed in as `config`.
@@ -22,7 +22,7 @@
   import { tick } from 'svelte';
   import { initIcons } from '@shared/icons/lucide_icons';
   import { t } from '@shared/i18n/translator';
-  import { apiPost, getCsrfToken } from '@shared/api/client';
+  import { apiPost, apiPostForm } from '@shared/api/client';
   import type {
     CuratedDictSource,
     StarterVocabConfig
@@ -38,6 +38,15 @@
     done: number;
     failed: number;
     total: number;
+  }
+
+  /** The frequency-enrichment batch response from the starter-vocab endpoint. */
+  interface EnrichResponse {
+    enriched: number;
+    failed: number;
+    remaining: number;
+    total: number;
+    warning: string;
   }
 
   interface CuratedImportResponse {
@@ -156,23 +165,21 @@
       if (useWiktionary) {
         step = 'importing';
 
-        const formData = new FormData();
-        formData.append('count', String(size));
-        formData.append('_csrf_token', getCsrfToken());
+        const response = await apiPostForm<ImportResult>(
+          `/languages/${config.langId}/starter-vocab/import`,
+          { count: size }
+        );
 
-        const response = await fetch(config.importUrl, { method: 'POST', body: formData });
-        const data = await response.json();
-
-        if (!response.ok) {
-          errorMessage = data.error || 'Unknown error occurred.';
+        if (response.error || !response.data) {
+          errorMessage = response.error || 'Unknown error occurred.';
           step = 'error';
           return;
         }
 
-        wiktResult = data;
+        wiktResult = response.data;
 
-        if (data.imported > 0) {
-          enrichStats = { done: 0, failed: 0, total: data.imported };
+        if (response.data.imported > 0) {
+          enrichStats = { done: 0, failed: 0, total: response.data.imported };
           stopEnrichmentFlag = false;
           step = 'enriching';
           await enrichAll();
@@ -193,18 +200,17 @@
 
   async function enrichAll(): Promise<void> {
     while (!stopEnrichmentFlag) {
-      const formData = new FormData();
-      formData.append('mode', mode);
-      formData.append('_csrf_token', getCsrfToken());
+      const response = await apiPostForm<EnrichResponse>(
+        `/languages/${config.langId}/starter-vocab/enrich`,
+        { mode }
+      );
 
-      const response = await fetch(config.enrichUrl, { method: 'POST', body: formData });
-      const data = await response.json();
-
-      if (!response.ok) {
-        enrichWarning = data.error || 'Enrichment encountered an error.';
+      if (response.error || !response.data) {
+        enrichWarning = response.error || 'Enrichment encountered an error.';
         return;
       }
 
+      const data = response.data;
       enrichStats.done = data.total - data.remaining;
       enrichStats.total = data.total;
       enrichStats.failed += data.failed;

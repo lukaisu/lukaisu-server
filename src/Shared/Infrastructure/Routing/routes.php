@@ -341,20 +341,13 @@ function registerRoutes(Router $router): void
 
     // Starter vocabulary (shown after language creation). The GET page route is
     // served by the bundled client (Svelte StarterVocab island; see the /app
-    // redirects below). The bootstrap config moved to GET
-    // /api/v1/languages/{id}/starter-vocab/config (LanguageApiHandler dispatches
-    // it to StarterVocabController@config) under the headless cut (Phase R). The
-    // import/enrich POST handlers below still process the island's native submits.
-    $router->post(
-        '/languages/{id:int}/starter-vocab/import',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\StarterVocabController@import',
-        AUTH_MIDDLEWARE
-    );
-    $router->post(
-        '/languages/{id:int}/starter-vocab/enrich',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\StarterVocabController@enrich',
-        AUTH_MIDDLEWARE
-    );
+    // redirects below). Under the headless cut (Phase R) the whole flow moved to
+    // /api/v1/languages/{id}/starter-vocab/{config,import,enrich}, all dispatched
+    // by LanguageApiHandler to StarterVocabController — the config GET on routeGet,
+    // the import/enrich POSTs on routePost. Both the StarterVocab and WordUpload
+    // islands use those bearer-authed endpoints; no cookie-authed top-level route
+    // remains. The skip redirect below is the last server-rendered starter-vocab
+    // route (a Location bounce to /texts/new).
     $router->get(
         '/languages/{id:int}/starter-vocab/skip',
         'Lukaisu\\Modules\\Vocabulary\\Http\\StarterVocabController@skip',

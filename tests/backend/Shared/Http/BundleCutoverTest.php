@@ -181,8 +181,12 @@ class BundleCutoverTest extends TestCase
             'load single text tag' => ['GET', 'tags/text/5'],
             // Statistics chart data moved off /profile/statistics/config (Phase R).
             'statistics chart data' => ['GET', 'activity/statistics'],
-            // Starter-vocab config moved off its cookie route (Phase R).
+            // Starter-vocab config + import/enrich moved off their cookie routes
+            // (Phase R); LanguageApiHandler dispatches all three to
+            // StarterVocabController. Shared by the StarterVocab + WordUpload islands.
             'starter-vocab config' => ['GET', 'languages/5/starter-vocab/config'],
+            'starter-vocab import' => ['POST', 'languages/5/starter-vocab/import'],
+            'starter-vocab enrich' => ['POST', 'languages/5/starter-vocab/enrich'],
         ];
     }
 

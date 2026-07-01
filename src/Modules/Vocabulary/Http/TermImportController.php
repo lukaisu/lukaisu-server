@@ -285,8 +285,6 @@ class TermImportController extends VocabularyBaseController
             'langId' => $langId,
             'langName' => $langName,
             'isFrequencyAvailable' => $isFrequencyAvailable,
-            'importUrl' => $langId > 0 ? url('/languages/' . $langId . '/starter-vocab/import') : '',
-            'enrichUrl' => $langId > 0 ? url('/languages/' . $langId . '/starter-vocab/enrich') : '',
             'translationDelimiter' => Settings::getWithDefault('set-term-translation-delimiters'),
             'curatedDictionaries' => $this->loadCuratedDictionaries(),
         ]);

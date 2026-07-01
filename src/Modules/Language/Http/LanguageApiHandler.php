@@ -558,8 +558,25 @@ class LanguageApiHandler implements ApiRoutableInterface
             if (($fragments[2] ?? '') === 'set-default') {
                 return Response::success($this->formatSetDefault($langId));
             }
+            if (($fragments[2] ?? '') === 'starter-vocab') {
+                // The starter-vocab frequency-word import + Wiktionary enrichment
+                // POSTs moved off their cookie-authed top-level routes onto
+                // /api/v1 under the headless cut (Phase R). Both the StarterVocab
+                // and WordUpload islands post a urlencoded body, so $_POST is
+                // populated and the controller reads count/mode exactly as it did
+                // for the native form submit.
+                $controller = Container::getInstance()->getTyped(StarterVocabController::class);
+                $action = $fragments[3] ?? '';
+                if ($action === 'import') {
+                    return $controller->import($langId);
+                }
+                if ($action === 'enrich') {
+                    return $controller->enrich($langId);
+                }
+                return Response::error('Expected "import" or "enrich" sub-path', 404);
+            }
 
-            return Response::error('Expected "refresh" or "set-default"', 404);
+            return Response::error('Expected "refresh", "set-default", or "starter-vocab"', 404);
         }
 
         return Response::error('Language ID (Integer) Expected', 404);

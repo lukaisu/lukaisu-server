@@ -49,7 +49,8 @@ class StarterVocabController extends BaseController
      * retired `starter_vocab.php` view used to inline (minus the CSRF token, which
      * the island reads from `<meta name="csrf-token">`).
      *
-     * Route: GET /languages/{id}/starter-vocab/config
+     * Route: GET /api/v1/languages/{id}/starter-vocab/config
+     * (dispatched by LanguageApiHandler@routeGet)
      *
      * @return JsonResponse
      */
@@ -63,8 +64,6 @@ class StarterVocabController extends BaseController
         $langName = $language->name();
 
         return JsonResponse::success([
-            'importUrl' => url('/languages/' . $id . '/starter-vocab/import'),
-            'enrichUrl' => url('/languages/' . $id . '/starter-vocab/enrich'),
             'langId' => $id,
             'langName' => $langName,
             'isAvailable' => FrequencyLanguageMap::isSupported($langName),
@@ -75,7 +74,8 @@ class StarterVocabController extends BaseController
     /**
      * Import frequency words (AJAX).
      *
-     * Route: POST /languages/{id}/starter-vocab/import
+     * Route: POST /api/v1/languages/{id}/starter-vocab/import
+     * (dispatched by LanguageApiHandler@routePost)
      *
      * @return JsonResponse
      */
@@ -115,7 +115,8 @@ class StarterVocabController extends BaseController
     /**
      * Enrich next batch of words (AJAX, called repeatedly).
      *
-     * Route: POST /languages/{id}/starter-vocab/enrich
+     * Route: POST /api/v1/languages/{id}/starter-vocab/enrich
+     * (dispatched by LanguageApiHandler@routePost)
      *
      * Each call processes ~20 words. The client polls until
      * remaining === 0 or the user stops manually.
