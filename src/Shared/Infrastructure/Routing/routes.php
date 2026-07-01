@@ -200,12 +200,11 @@ function registerRoutes(Router $router): void
     // via TermsApi.createMultiWord/updateMultiWord (/api/v1); the legacy
     // /word/edit-multi web form (MultiWordController) was retired.
 
-    // All words (list view) - Alpine.js SPA version (TermDisplayController)
-    $router->registerWithMiddleware(
-        '/words',
-        'Lukaisu\\Modules\\Vocabulary\\Http\\TermDisplayController@listEditAlpine',
-        AUTH_MIDDLEWARE
-    );
+    // All words (list view). The GET page is served by the bundled Svelte
+    // WordList island (GET /words 302s into the bundle, see below). The list's
+    // "Export" actions used to POST the marked ids here to stream a download;
+    // that moved to POST /api/v1/terms/export (Phase R), so no native POST /words
+    // handler remains.
 
     // New word (TermEditController)
     // RESTful route: /words/new

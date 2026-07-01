@@ -40,15 +40,55 @@ class WordListService
     private WordListFilterBuilder $filterBuilder;
     private WordListQueryService $queryService;
     private WordListExportBuilder $exportBuilder;
+    private ExportService $exportService;
 
     public function __construct(
         ?WordListFilterBuilder $filterBuilder = null,
         ?WordListQueryService $queryService = null,
-        ?WordListExportBuilder $exportBuilder = null
+        ?WordListExportBuilder $exportBuilder = null,
+        ?ExportService $exportService = null
     ) {
         $this->filterBuilder = $filterBuilder ?? new WordListFilterBuilder();
         $this->queryService = $queryService ?? new WordListQueryService();
         $this->exportBuilder = $exportBuilder ?? new WordListExportBuilder();
+        $this->exportService = $exportService ?? new ExportService();
+    }
+
+    /**
+     * Build the export file content for a set of marked term ids.
+     *
+     * The words list "Export" actions used to POST the marked ids to the native
+     * /words page, which streamed a download. Under the headless cut (Phase R)
+     * the export moved to POST /api/v1/terms/export, which returns the file body
+     * so the bundled client can trigger a Blob download; this method produces that
+     * body. The requested ids are first narrowed to the ones the current user
+     * actually owns (see {@see filterOwnedWordIds}) so a caller cannot export
+     * another user's terms; the raw export SQL then only ever sees owned ids.
+     *
+     * @param int[]  $ids    Marked term ids from the request
+     * @param string $format Export format: 'anki', 'tsv' or 'flexible'
+     *
+     * @return string The export file content ('' when nothing is exportable)
+     */
+    public function exportMarkedTerms(array $ids, string $format): string
+    {
+        $ownedIds = $this->filterOwnedWordIds($ids);
+        if (empty($ownedIds)) {
+            return '';
+        }
+
+        switch ($format) {
+            case 'tsv':
+                $query = $this->exportBuilder->getTsvExportSql($ownedIds, '', '', '', '', '', []);
+                return $this->exportService->generateTsvContent($query['sql'], $query['params']);
+            case 'flexible':
+                $query = $this->exportBuilder->getFlexibleExportSql($ownedIds, '', '', '', '', '', []);
+                return $this->exportService->generateFlexibleContent($query['sql'], $query['params']);
+            case 'anki':
+            default:
+                $query = $this->exportBuilder->getAnkiExportSql($ownedIds, '', '', '', '', '', []);
+                return $this->exportService->generateAnkiContent($query['sql'], $query['params']);
+        }
     }
 
     // =========================================================================

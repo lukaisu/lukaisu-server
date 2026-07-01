@@ -45,6 +45,36 @@ class WordListApiHandlerTest extends TestCase
     }
 
     // =========================================================================
+    // exportMarkedTerms tests (POST /api/v1/terms/export)
+    // =========================================================================
+
+    public function testExportMarkedTermsReturnsBodyFilenameAndFormat(): void
+    {
+        $this->listService->method('exportMarkedTerms')->willReturn("term\ttranslation\r\n");
+
+        $result = $this->handler->exportMarkedTerms([1, 2, 3], 'tsv');
+
+        $this->assertSame("term\ttranslation\r\n", $result['content']);
+        $this->assertSame('tsv', $result['format']);
+        $this->assertStringStartsWith('lukaisu_tsv_export_', $result['filename']);
+        $this->assertStringEndsWith('.txt', $result['filename']);
+    }
+
+    public function testExportMarkedTermsFallsBackToAnkiForUnknownFormat(): void
+    {
+        // An unrecognized format is coerced to 'anki' before hitting the service.
+        $this->listService->expects($this->once())
+            ->method('exportMarkedTerms')
+            ->with([1], 'anki')
+            ->willReturn('');
+
+        $result = $this->handler->exportMarkedTerms([1], 'bogus');
+
+        $this->assertSame('anki', $result['format']);
+        $this->assertSame('', $result['content']);
+    }
+
+    // =========================================================================
     // getWordList tests
     // =========================================================================
 

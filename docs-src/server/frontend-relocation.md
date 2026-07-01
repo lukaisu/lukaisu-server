@@ -216,7 +216,13 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > via `apiPostForm` on the serialized marked rows; the native full-page form POST
 > + server result page are gone — the entry's `onSaved` re-enters the island for
 > the next batch or returns to the reader; orphaned `bulk_save_result.php` view
-> deleted) · [ ] terms-export (native form `POST /words` → fetch + blob download) · [ ] books
+> deleted) · **[x] terms-export** (built `POST /api/v1/terms/export` →
+> WordListApiHandler@exportMarkedTerms → WordListService@exportMarkedTerms, reusing
+> the `filterOwnedWordIds` ownership gate so it's IDOR-safe; the export was in fact
+> dead server-side — `listEditAlpine` is a stub and the word ExportService HTTP
+> methods were orphaned — so this rebuilt it. Frontend: `WordsApi.exportTerms` + a
+> new `downloadTextFile` Blob helper replace the native `POST /words` form; the
+> native POST /words route was dropped) · [ ] books
 > (needs bundle book pages or link-router handling) · [ ] admin (navbar links +
 > `app/settings.ts`'s `settings_api`).
 

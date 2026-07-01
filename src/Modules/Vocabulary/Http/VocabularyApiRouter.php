@@ -179,6 +179,18 @@ class VocabularyApiRouter implements ApiRoutableInterface
                 ->bulkTranslate($params);
         }
 
+        if ($frag1 === 'export') {
+            // The words-list "Export" actions moved off the native POST /words
+            // form (which streamed a download) onto POST /api/v1/terms/export
+            // (Phase R). The handler returns the file body + filename so the
+            // bundled client triggers a Blob download; ownership is enforced in
+            // the service, so a caller only ever exports its own terms.
+            /** @var array<int> $ids */
+            $ids = is_array($params['ids'] ?? null) ? $params['ids'] : [];
+            $format = (string) ($params['format'] ?? 'anki');
+            return Response::success($this->wordListHandler->exportMarkedTerms($ids, $format));
+        }
+
         if ($frag1 !== '' && ctype_digit($frag1)) {
             $termId = (int) $frag1;
 

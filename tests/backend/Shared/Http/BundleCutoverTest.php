@@ -97,7 +97,6 @@ class BundleCutoverTest extends TestCase
     public static function preservedDataRoutesProvider(): array
     {
         return [
-            'export terms' => ['POST', '/words', 'TermDisplayController'],
             'create text' => ['POST', '/texts/new', 'TextController@new'],
             'edit text POST' => ['POST', '/texts/5/edit', 'TextController@editSingle'],
             'save preferences' => ['POST', '/profile/preferences', 'UserController@savePreferences'],
@@ -178,6 +177,9 @@ class BundleCutoverTest extends TestCase
             // (@config and @bulkTranslate).
             'bulk-translate config' => ['GET', 'terms/bulk-translate/config'],
             'bulk-translate save' => ['POST', 'terms/bulk-translate'],
+            // Terms export moved off the native POST /words form (Phase R);
+            // VocabularyApiRouter dispatches it to WordListApiHandler@exportMarkedTerms.
+            'terms export' => ['POST', 'terms/export'],
         ];
     }
 

@@ -20,8 +20,8 @@
   import { onMount, tick } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
   import { t } from '@shared/i18n/translator';
-  import { getCsrfToken } from '@shared/api/client';
   import { initIcons } from '@shared/icons/lucide_icons';
+  import { downloadTextFile } from '@shared/utils/download';
   import {
     WordsApi,
     type WordItem,
@@ -325,7 +325,7 @@
     }
 
     if (action === 'exp' || action === 'expann' || action === 'exptsv') {
-      submitExportForm(action, ids);
+      await exportMarked(action, ids);
       select.value = '';
       return;
     }
@@ -370,36 +370,32 @@
     select.value = '';
   }
 
-  function submitExportForm(action: string, ids: number[]): void {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/words';
+  // Words-list export dropdown action -> server export format.
+  const EXPORT_FORMATS: Record<string, string> = {
+    exp: 'anki',
+    exptsv: 'tsv',
+    expann: 'flexible'
+  };
 
-    // CsrfMiddleware rejects POST without an _csrf_token field; inject it from
-    // the meta tag (PageLayoutHelper), the same way the Alpine version does.
-    const csrf = getCsrfToken();
-    if (csrf) {
-      const csrfField = document.createElement('input');
-      csrfField.type = 'hidden';
-      csrfField.name = '_csrf_token';
-      csrfField.value = csrf;
-      form.appendChild(csrfField);
+  // Replaces the native form POST to /words: fetch the export body from the
+  // bearer-authed /api/v1/terms/export endpoint, then trigger a Blob download.
+  // A bearer-authed download can't be a plain navigation (no auth header), so we
+  // materialize the returned body client-side. Ownership is enforced server-side.
+  async function exportMarked(action: string, ids: number[]): Promise<void> {
+    const format = EXPORT_FORMATS[action] ?? 'anki';
+    const res = await WordsApi.exportTerms(ids, format);
+    if (res.error || !res.data) {
+      alert(res.error || t('vocabulary.list.action_failed'));
+      return;
     }
-    ids.forEach((id) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'marked[]';
-      input.value = String(id);
-      form.appendChild(input);
-    });
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'markaction';
-    actionInput.value = action;
-    form.appendChild(actionInput);
-
-    document.body.appendChild(form);
-    form.submit();
+    if (!res.data.content) {
+      // Plain-English fallback (no new i18n key): the Anki export only includes
+      // terms that have both a translation and an example sentence, so a
+      // selection can legitimately yield nothing.
+      alert('No exportable terms in the selection.');
+      return;
+    }
+    downloadTextFile(res.data.filename || 'lukaisu_export.txt', res.data.content);
   }
 
   // --- Inline edit ------------------------------------------------------------

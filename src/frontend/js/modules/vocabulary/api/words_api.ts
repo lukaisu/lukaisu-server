@@ -4,7 +4,16 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import { apiGet, apiPut, type ApiResponse } from '@shared/api/client';
+import { apiGet, apiPut, apiPost, type ApiResponse } from '@shared/api/client';
+
+/**
+ * Terms-export response: the export file body plus a suggested filename.
+ */
+export interface ExportTermsResponse {
+  content: string;
+  filename: string;
+  format: string;
+}
 
 /**
  * Word item in the list.
@@ -233,6 +242,21 @@ export const WordsApi = {
     data?: string
   ): Promise<ApiResponse<BulkActionResponse>> {
     return apiPut<BulkActionResponse>('/terms/all-action', { filters, action, data });
+  },
+
+  /**
+   * Export selected terms to a downloadable file body.
+   *
+   * Backs the words-list "Export" actions (Anki / TSV). The server returns the
+   * file body plus a suggested filename; the caller materializes it into a Blob
+   * download (see `downloadTextFile`). Ownership is enforced server-side.
+   *
+   * @param ids    Array of term IDs to export
+   * @param format Export format ('anki', 'tsv' or 'flexible')
+   * @returns Promise with the export body + filename
+   */
+  async exportTerms(ids: number[], format: string): Promise<ApiResponse<ExportTermsResponse>> {
+    return apiPost<ExportTermsResponse>('/terms/export', { ids, format });
   },
 
   /**

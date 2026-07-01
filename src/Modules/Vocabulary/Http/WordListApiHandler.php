@@ -291,6 +291,31 @@ class WordListApiHandler
     }
 
     /**
+     * Build an export file for a set of marked term ids.
+     *
+     * Backs POST /api/v1/terms/export (the words-list "Export" actions, which
+     * used to POST the marked ids to the native /words page). Returns the file
+     * body plus a suggested filename so the bundled client can trigger a Blob
+     * download; ownership is enforced inside the service (only the current user's
+     * terms are exported). An unknown format falls back to Anki.
+     *
+     * @param int[]  $wordIds Marked term ids
+     * @param string $format  Export format: 'anki', 'tsv' or 'flexible'
+     *
+     * @return array{content: string, filename: string, format: string}
+     */
+    public function exportMarkedTerms(array $wordIds, string $format): array
+    {
+        $wordIds = array_values(array_filter(array_map('intval', $wordIds)));
+        $format = in_array($format, ['anki', 'tsv', 'flexible'], true) ? $format : 'anki';
+
+        $content = $this->getListService()->exportMarkedTerms($wordIds, $format);
+        $filename = 'lukaisu_' . $format . '_export_' . date('Y-m-d-H-i-s') . '.txt';
+
+        return ['content' => $content, 'filename' => $filename, 'format' => $format];
+    }
+
+    /**
      * Perform action on ALL words matching current filter.
      *
      * @param array       $filters Filter parameters
