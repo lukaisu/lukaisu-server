@@ -464,10 +464,13 @@ shared chrome · coexistence-view cleanup · D5 final `@alpinejs` deletion.
 
 ---
 
-## D3f / D3g port-or-defer call (drafted 2026-07-01, from read-only scouts; PROPOSED — pending confirmation)
+## D3f / D3g port-or-defer call — ✅ DECIDED 2026-07-01: DEFER BOTH, do D4 next
 
-**TL;DR recommendation: DEFER both (leave server-rendered). Delete 2 orphaned admin Alpine components now.
-Make D4 (shared chrome) the next real Alpine-retirement work — it's the actual blocker to a lean client.**
+**Decision (user-confirmed): DEFER both (leave server-rendered) → do D4 next.** Orphan cleanup **DONE**:
+deleted `admin/pages/table_management.ts` + `tts_settings.ts` + their specs + the `admin/index.ts` imports
+(gate green: typecheck 594/0/0, eslint, admin vitest 50, build). D3f/D3g get ported alongside the Python
+FastAPI edge (or if a specific client need appears) — not now. **Next unit: D4 shared chrome.** Rationale
+below.
 
 ### D3f — admin cluster → DEFER (leave server-rendered) + delete 2 orphans now
 9 live routes, all `ADMIN_MIDDLEWARE`-gated (admin role), none orphaned: `/admin` dashboard, `/admin/backup`
