@@ -87,13 +87,11 @@ function registerRoutes(Router $router): void
     // client — the render handler (TextController@read) was deleted under the
     // headless cut (Phase R); the /app redirects below own these GETs.
 
-    // New text form (RESTful route)
-    $router->get('/texts/new', 'Lukaisu\\Modules\\Text\\Http\\TextController@new', AUTH_MIDDLEWARE);
-    $router->post('/texts/new', 'Lukaisu\\Modules\\Text\\Http\\TextController@new', AUTH_MIDDLEWARE);
-
-    // Edit text form (RESTful route): /texts/123/edit
-    $router->get('/texts/{id:int}/edit', 'Lukaisu\\Modules\\Text\\Http\\TextController@editSingle', AUTH_MIDDLEWARE);
-    $router->post('/texts/{id:int}/edit', 'Lukaisu\\Modules\\Text\\Http\\TextController@editSingle', AUTH_MIDDLEWARE);
+    // New + edit text forms are served by the bundled client: GET /texts/new
+    // and GET /texts/{id}/edit 302 to the bundle (see the /app redirects
+    // below), which creates via POST /api/v1/texts and updates via PUT
+    // /api/v1/texts/{id}. The server-rendered forms (TextController@new /
+    // @editSingle + edit_form.php) were dropped under the headless cut.
 
     // Delete text (RESTful route): DELETE /texts/123
     $router->delete('/texts/{id:int}', 'Lukaisu\\Modules\\Text\\Http\\TextController@delete', AUTH_MIDDLEWARE);
@@ -131,17 +129,9 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Edit archived text (RESTful route): /text/archived/123/edit
-    $router->get(
-        '/text/archived/{id:int}/edit',
-        'Lukaisu\\Modules\\Text\\Http\\TextController@archivedEdit',
-        AUTH_MIDDLEWARE
-    );
-    $router->post(
-        '/text/archived/{id:int}/edit',
-        'Lukaisu\\Modules\\Text\\Http\\TextController@archivedEdit',
-        AUTH_MIDDLEWARE
-    );
+    // Edit archived text: GET /text/archived/{id}/edit 302s to the bundle (see
+    // the /app redirects below); the client updates via PUT /api/v1/texts/{id}.
+    // The server-rendered form (@archivedEdit + archived_form.php) was dropped.
 
     // Delete archived text (RESTful route): DELETE /text/archived/123
     $router->delete(

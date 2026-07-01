@@ -105,8 +105,10 @@ class BundleCutoverTest extends TestCase
     public static function preservedDataRoutesProvider(): array
     {
         return [
-            'create text' => ['POST', '/texts/new', 'TextController@new'],
-            'edit text POST' => ['POST', '/texts/5/edit', 'TextController@editSingle'],
+            // Text create/edit forms were dropped under the headless cut: their
+            // GETs redirect to the bundle (above) and the client creates/updates
+            // via POST /api/v1/texts + PUT /api/v1/texts/5 (see the API provider
+            // below). Only the delete data route stays server-side here.
             'term status' => ['PUT', '/vocabulary/term/5/status', 'TermStatusController'],
             'delete text' => ['DELETE', '/texts/5', 'TextController@delete'],
         ];
@@ -147,6 +149,9 @@ class BundleCutoverTest extends TestCase
         return [
             'single text load' => ['GET', 'texts/5'],
             'single text save' => ['PUT', 'texts/5'],
+            // Text create moved to the server-backed API (POST /api/v1/texts)
+            // when the server-rendered new-text form was dropped.
+            'create text' => ['POST', 'texts'],
             'parse check' => ['POST', 'texts/check'],
             'tag manage list' => ['GET', 'tags/manage'],
             'rename term tag' => ['PUT', 'tags/term/5'],

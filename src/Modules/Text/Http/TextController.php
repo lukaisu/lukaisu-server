@@ -22,43 +22,33 @@ namespace Lukaisu\Modules\Text\Http;
 
 use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Modules\Text\Application\TextFacade;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 
 /**
  * Facade controller delegating to specialized sub-controllers.
+ *
+ * The server-rendered create/edit forms (new/editSingle/archivedEdit +
+ * edit_form.php/archived_form.php) were dropped under the headless cut: the
+ * bundled client owns those screens and creates/updates via /api/v1/texts.
+ * What remains here are the list + delete/archive data routes.
  */
 class TextController extends BaseController
 {
     private TextCrudController $crudController;
     private ArchivedTextController $archivedController;
 
-    public function __construct(
-        ?TextFacade $textService = null,
-        ?LanguageFacade $languageService = null
-    ) {
+    public function __construct(?TextFacade $textService = null)
+    {
         parent::__construct();
         $textService = $textService ?? new TextFacade();
-        $languageService = $languageService ?? new LanguageFacade();
 
-        $this->crudController = new TextCrudController($textService, $languageService);
-        $this->archivedController = new ArchivedTextController($textService, $languageService);
+        $this->crudController = new TextCrudController($textService);
+        $this->archivedController = new ArchivedTextController($textService);
     }
 
     // =========================================================================
     // CRUD Delegation
     // =========================================================================
-
-    /** @psalm-suppress UnusedVariable */
-    public function new(array $params): ?RedirectResponse
-    {
-        return $this->crudController->new($params);
-    }
-
-    public function editSingle(int $id): ?RedirectResponse
-    {
-        return $this->crudController->editSingle($id);
-    }
 
     public function delete(int $id): RedirectResponse
     {
@@ -89,11 +79,6 @@ class TextController extends BaseController
     public function archived(array $params): ?RedirectResponse
     {
         return $this->archivedController->archived($params);
-    }
-
-    public function archivedEdit(int $id): ?RedirectResponse
-    {
-        return $this->archivedController->archivedEdit($id);
     }
 
     public function deleteArchived(int $id): RedirectResponse

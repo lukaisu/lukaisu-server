@@ -8,7 +8,6 @@ use Lukaisu\Modules\Text\Http\TextController;
 use Lukaisu\Modules\Text\Http\TextCrudController;
 use Lukaisu\Modules\Text\Http\ArchivedTextController;
 use Lukaisu\Modules\Text\Application\TextFacade;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -27,9 +26,6 @@ class TextControllerTest extends TestCase
     /** @var TextFacade&MockObject */
     private TextFacade $textService;
 
-    /** @var LanguageFacade&MockObject */
-    private LanguageFacade $languageService;
-
     private TextController $controller;
     private TextCrudController $crudController;
     private ArchivedTextController $archivedController;
@@ -40,22 +36,10 @@ class TextControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
         $this->textService = $this->createMock(TextFacade::class);
-        $this->languageService = $this->createMock(LanguageFacade::class);
 
-        $this->controller = new TextController(
-            $this->textService,
-            $this->languageService
-        );
-
-        $this->crudController = new TextCrudController(
-            $this->textService,
-            $this->languageService
-        );
-
-        $this->archivedController = new ArchivedTextController(
-            $this->textService,
-            $this->languageService
-        );
+        $this->controller = new TextController($this->textService);
+        $this->crudController = new TextCrudController($this->textService);
+        $this->archivedController = new ArchivedTextController($this->textService);
     }
 
     // =========================================================================
@@ -71,7 +55,7 @@ class TextControllerTest extends TestCase
     #[Test]
     public function constructorAcceptsNullParameters(): void
     {
-        $controller = new TextController(null, null);
+        $controller = new TextController(null);
         $this->assertInstanceOf(TextController::class, $controller);
     }
 
@@ -105,9 +89,9 @@ class TextControllerTest extends TestCase
         $reflection = new \ReflectionClass(TextController::class);
 
         $expectedMethods = [
-            'new', 'editSingle', 'delete', 'archive',
+            'delete', 'archive',
             'unarchive', 'edit',
-            'archived', 'archivedEdit', 'deleteArchived',
+            'archived', 'deleteArchived',
         ];
 
         foreach ($expectedMethods as $methodName) {
@@ -126,28 +110,21 @@ class TextControllerTest extends TestCase
     #[Test]
     public function subControllersHaveExpectedMethods(): void
     {
-        // TextCrudController
-        $crudMethods = ['new', 'editSingle', 'delete', 'archive', 'unarchive', 'edit',
-            'handleMarkAction', 'handleTextOperation', 'showNewTextForm', 'showEditTextForm', 'showTextsList'];
+        // TextCrudController — the new/edit form entry points (new, editSingle,
+        // showNewTextForm, showEditTextForm) were dropped under the headless cut.
+        $crudMethods = ['delete', 'archive', 'unarchive', 'edit',
+            'handleMarkAction', 'handleTextOperation', 'showTextsList'];
         $crudReflection = new \ReflectionClass(TextCrudController::class);
         foreach ($crudMethods as $method) {
             $this->assertTrue($crudReflection->hasMethod($method), "TextCrudController should have: $method");
         }
 
-        // ArchivedTextController
-        $archMethods = ['archived', 'archivedEdit', 'deleteArchived', 'handleArchivedMarkAction'];
+        // ArchivedTextController — archivedEdit (the archived edit form) was
+        // dropped under the headless cut.
+        $archMethods = ['archived', 'deleteArchived', 'handleArchivedMarkAction'];
         $archReflection = new \ReflectionClass(ArchivedTextController::class);
         foreach ($archMethods as $method) {
             $this->assertTrue($archReflection->hasMethod($method), "ArchivedTextController should have: $method");
-        }
-    }
-
-    #[Test]
-    public function subControllersHaveViewsConstants(): void
-    {
-        foreach ([TextCrudController::class, ArchivedTextController::class] as $class) {
-            $reflection = new \ReflectionClassConstant($class, 'MODULE_VIEWS');
-            $this->assertStringEndsWith('/Views', $reflection->getValue());
         }
     }
 

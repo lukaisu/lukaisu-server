@@ -19,42 +19,36 @@ namespace Lukaisu\Modules\Text\Http;
 use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Modules\Text\Application\TextFacade;
 use Lukaisu\Modules\Tags\Application\TagsFacade;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
-use Lukaisu\Shared\Infrastructure\Database\Settings;
 use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 
 /**
  * Controller for archived text management.
  *
- * Handles:
- * - Archived text list with bulk actions
- * - Archived text edit form
- * - Delete/unarchive operations
+ * The server-rendered archived edit form (archivedEdit + archived_form.php) was
+ * dropped under the headless cut: the bundled client owns that screen and
+ * updates via /api/v1/texts. What remains are the archived list's POST
+ * bulk-action + single delete/unarchive data paths.
  */
 class ArchivedTextController extends BaseController
 {
-    private const MODULE_VIEWS = __DIR__ . '/../Views';
     private TextFacade $textService;
-    private LanguageFacade $languageService;
 
-    public function __construct(
-        ?TextFacade $textService = null,
-        ?LanguageFacade $languageService = null
-    ) {
+    public function __construct(?TextFacade $textService = null)
+    {
         parent::__construct();
         $this->textService = $textService ?? new TextFacade();
-        $this->languageService = $languageService ?? new LanguageFacade();
     }
 
     /**
-     * Archived texts management.
+     * Archived texts management (bulk actions + single delete/unarchive).
      *
      * @param array $params Route parameters
      *
      * @return RedirectResponse|null Redirect response or null if rendered
      *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
+     * @psalm-suppress UnusedVariable $message/$params are vestigial now that the
+     *   archived list view is served by the bundled client.
      */
     public function archived(array $params): ?RedirectResponse
     {
@@ -80,7 +74,6 @@ class ArchivedTextController extends BaseController
 
         $delId = $this->paramInt('del');
         $unarchId = $this->paramInt('unarch');
-        $op = $this->param('op');
         if ($delId !== null) {
             $message = $this->textService->deleteArchivedText($delId);
         } elseif ($unarchId !== null) {
@@ -90,85 +83,12 @@ class ArchivedTextController extends BaseController
             } else {
                 $message = $result['error'] ?? 'Failed to unarchive text';
             }
-        } elseif ($op == 'Change') {
-            $txId = $this->paramInt('id', 0) ?? 0;
-            $affected = $this->textService->updateArchivedText(
-                $txId,
-                $this->paramInt('language_id', 0) ?? 0,
-                $this->param('title'),
-                $this->param('text'),
-                $this->param('audio_uri'),
-                $this->param('source_uri')
-            );
-            $message = "Updated: {$affected}";
-            TagsFacade::saveArchivedTextTagsFromForm($txId);
         }
-
-        $chgId = $this->paramInt('chg');
-        if ($chgId !== null) {
-            $textId = $chgId;
-            $record = $this->textService->getArchivedTextById($textId);
-            if ($record !== null) {
-                $languages = $this->languageService->getLanguagesForSelect();
-                $mediaPathSelectorHtml = (new \Lukaisu\Modules\Admin\Application\Services\MediaService())
-                    ->getMediaPathSelector('audio_uri');
-                $archivedTextTagsHtml = TagsFacade::getArchivedTextTagsHtml($textId);
-                include self::MODULE_VIEWS . '/archived_form.php';
-            }
-        }
-        // Cut-over: the archived texts list is served by the bundled client.
-        // GET /text/archived redirects to /app/texts.html (see routes.php), so
-        // the list path is unreachable; the PHP view (archived_list.php) was
-        // removed. (The archived_form.php branch above is still rendered by
-        // archivedEdit() for the ?chg= edit form.)
-
-        PageLayoutHelper::renderPageEnd();
-
-        return null;
-    }
-
-    /**
-     * Edit archived text form.
-     *
-     * @param int $id Archived text ID from route parameter
-     *
-     * @return RedirectResponse|null Redirect response or null if rendered
-     *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
-     */
-    public function archivedEdit(int $id): ?RedirectResponse
-    {
-        PageLayoutHelper::renderPageStart('Archived Texts', true);
-
-        $message = '';
-
-        $op = $this->param('op');
-        if ($op == 'Change') {
-            $txId = $this->paramInt('id', 0) ?? 0;
-            $affected = $this->textService->updateArchivedText(
-                $txId,
-                $this->paramInt('language_id', 0) ?? 0,
-                $this->param('title'),
-                $this->param('text'),
-                $this->param('audio_uri'),
-                $this->param('source_uri')
-            );
-            $message = "Updated: {$affected}";
-            TagsFacade::saveArchivedTextTagsFromForm($txId);
-            PageLayoutHelper::renderMessage($message, false);
-        }
-
-        $textId = $id;
-        $record = $this->textService->getArchivedTextById($textId);
-        if ($record !== null) {
-            $languages = $this->languageService->getLanguagesForSelect();
-            $mediaPathSelectorHtml = (new \Lukaisu\Modules\Admin\Application\Services\MediaService())
-                ->getMediaPathSelector('audio_uri');
-            $archivedTextTagsHtml = TagsFacade::getArchivedTextTagsHtml($textId);
-            include self::MODULE_VIEWS . '/archived_form.php';
-        } else {
-            echo '<p>Archived text not found.</p>';
-        }
+        // Cut-over: the archived texts list + edit form are served by the
+        // bundled client. GET /text/archived and /text/archived/{id}/edit 302
+        // to the bundle (see routes.php); this handler keeps only the POST
+        // bulk-action + single delete/unarchive data paths. The PHP views
+        // (archived_list.php, archived_form.php) were removed.
 
         PageLayoutHelper::renderPageEnd();
 

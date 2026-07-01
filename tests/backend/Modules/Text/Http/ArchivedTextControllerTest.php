@@ -6,7 +6,6 @@ namespace Lukaisu\Tests\Modules\Text\Http;
 
 use Lukaisu\Modules\Text\Http\ArchivedTextController;
 use Lukaisu\Modules\Text\Application\TextFacade;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 use Lukaisu\Shared\Infrastructure\Globals;
@@ -24,9 +23,6 @@ class ArchivedTextControllerTest extends TestCase
     /** @var TextFacade&MockObject */
     private TextFacade $textService;
 
-    /** @var LanguageFacade&MockObject */
-    private LanguageFacade $languageService;
-
     private ArchivedTextController $controller;
 
     protected function setUp(): void
@@ -35,12 +31,8 @@ class ArchivedTextControllerTest extends TestCase
             $this->markTestSkipped('Database connection required');
         }
         $this->textService = $this->createMock(TextFacade::class);
-        $this->languageService = $this->createMock(LanguageFacade::class);
 
-        $this->controller = new ArchivedTextController(
-            $this->textService,
-            $this->languageService
-        );
+        $this->controller = new ArchivedTextController($this->textService);
     }
 
     // =========================================================================

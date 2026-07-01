@@ -6,7 +6,6 @@ namespace Lukaisu\Tests\Modules\Text\Http;
 
 use Lukaisu\Modules\Text\Http\TextCrudController;
 use Lukaisu\Modules\Text\Application\TextFacade;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Http\RedirectResponse;
 use Lukaisu\Shared\Infrastructure\Globals;
 use PHPUnit\Framework\TestCase;
@@ -23,20 +22,13 @@ class TextCrudControllerTest extends TestCase
     /** @var TextFacade&MockObject */
     private TextFacade $textService;
 
-    /** @var LanguageFacade&MockObject */
-    private LanguageFacade $languageService;
-
     private TextCrudController $controller;
 
     protected function setUp(): void
     {
         $this->textService = $this->createMock(TextFacade::class);
-        $this->languageService = $this->createMock(LanguageFacade::class);
 
-        $this->controller = new TextCrudController(
-            $this->textService,
-            $this->languageService
-        );
+        $this->controller = new TextCrudController($this->textService);
     }
 
     // =========================================================================

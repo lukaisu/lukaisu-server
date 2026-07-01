@@ -42,7 +42,6 @@ use Lukaisu\Modules\Text\Http\TextController;
 use Lukaisu\Modules\Text\Http\TextApiHandler;
 use Lukaisu\Modules\Text\Http\WhisperApiHandler;
 use Lukaisu\Modules\Text\Http\YouTubeApiHandler;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 // Module services
 use Lukaisu\Modules\Text\Application\Services\TextPrintService;
 use Lukaisu\Modules\Text\Application\Services\TextScoringService;
@@ -105,8 +104,7 @@ class TextServiceProvider implements ServiceProviderInterface
             TextController::class,
             function (Container $c) {
                 return new TextController(
-                    $c->getTyped(TextFacade::class),
-                    $c->getTyped(LanguageFacade::class)
+                    $c->getTyped(TextFacade::class)
                 );
             }
         );

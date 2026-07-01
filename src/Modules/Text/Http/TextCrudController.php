@@ -19,7 +19,6 @@ namespace Lukaisu\Modules\Text\Http;
 use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Modules\Text\Application\TextFacade;
 use Lukaisu\Modules\Tags\Application\TagsFacade;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Infrastructure\Database\Settings;
 use Lukaisu\Shared\Infrastructure\Database\Validation;
 use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
@@ -41,112 +40,12 @@ use Lukaisu\Modules\Review\Infrastructure\SessionStateManager;
  */
 class TextCrudController extends BaseController
 {
-    private const MODULE_VIEWS = __DIR__ . '/../Views';
     private TextFacade $textService;
-    private LanguageFacade $languageService;
 
-    public function __construct(
-        ?TextFacade $textService = null,
-        ?LanguageFacade $languageService = null
-    ) {
+    public function __construct(?TextFacade $textService = null)
+    {
         parent::__construct();
         $this->textService = $textService ?? new TextFacade();
-        $this->languageService = $languageService ?? new LanguageFacade();
-    }
-
-    /**
-     * Show new text form.
-     *
-     * @param array $params Route parameters
-     *
-     * @return RedirectResponse|null Redirect response or null if rendered
-     *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
-     */
-    public function new(array $params): ?RedirectResponse
-    {
-        $currentLang = Validation::language(
-            InputValidator::getStringWithDb("filterlang", 'currentlanguage')
-        );
-
-        $op = $this->param('op');
-        if ($op !== '') {
-            $noPagestart = (substr($op, -8) == 'and Open');
-            if (!$noPagestart) {
-                PageLayoutHelper::renderPageStart('Texts', true);
-            }
-            $result = $this->handleTextOperation($op, $noPagestart, $currentLang);
-            if ($result instanceof RedirectResponse) {
-                return $result;
-            }
-            if ($result['redirect']) {
-                return null;
-            }
-            // Ensure page structure exists for error messages
-            if ($noPagestart) {
-                PageLayoutHelper::renderPageStart('Texts', true);
-            }
-            if (isset($result['message']) && $result['message'] !== '') {
-                echo '<p class="notification is-danger">'
-                    . htmlspecialchars($result['message'], ENT_QUOTES, 'UTF-8')
-                    . '</p>';
-            }
-            PageLayoutHelper::renderPageEnd();
-            return null;
-        }
-
-        PageLayoutHelper::renderPageStart('Texts', true);
-        $this->showNewTextForm((int) $currentLang);
-        PageLayoutHelper::renderPageEnd();
-
-        return null;
-    }
-
-    /**
-     * Edit single text form.
-     *
-     * @param int $id Text ID from route parameter
-     *
-     * @return RedirectResponse|null Redirect response or null if rendered
-     *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
-     */
-    public function editSingle(int $id): ?RedirectResponse
-    {
-        $currentLang = Validation::language(
-            InputValidator::getStringWithDb("filterlang", 'currentlanguage')
-        );
-
-        $op = $this->param('op');
-        if ($op !== '') {
-            $noPagestart = (substr($op, -8) == 'and Open');
-            if (!$noPagestart) {
-                PageLayoutHelper::renderPageStart('Texts', true);
-            }
-            $result = $this->handleTextOperation($op, $noPagestart, $currentLang);
-            if ($result instanceof RedirectResponse) {
-                return $result;
-            }
-            if ($result['redirect']) {
-                return null;
-            }
-            if ($noPagestart) {
-                PageLayoutHelper::renderPageStart('Texts', true);
-            }
-            if (isset($result['message']) && $result['message'] !== '') {
-                echo '<p class="notification is-danger">'
-                    . htmlspecialchars($result['message'], ENT_QUOTES, 'UTF-8')
-                    . '</p>';
-            }
-            PageLayoutHelper::renderPageEnd();
-            return null;
-        }
-
-        PageLayoutHelper::renderPageStart('Texts', true);
-        $this->showEditTextForm($id);
-        PageLayoutHelper::renderPageEnd();
-
-        return null;
     }
 
     /**
@@ -503,83 +402,6 @@ class TextCrudController extends BaseController
                 'redirect' => false,
             ];
         }
-    }
-
-    /**
-     * Show the new text form.
-     *
-     * @param int $langId Language ID
-     *
-     * @return void
-     *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
-     */
-    public function showNewTextForm(int $langId): void
-    {
-        $text = new \stdClass();
-        $text->id = 0;
-        $text->lgid = $langId;
-        $text->title = '';
-        $text->text = '';
-        $text->source = '';
-        $text->media_uri = '';
-
-        $textId = 0;
-        $annotated = false;
-        $isNew = true;
-        $languageData = $this->textService->getLanguageDataForForm();
-        $languages = $this->languageService->getLanguagesForSelect();
-        $scrdir = $this->languageService->getScriptDirectionTag($text->lgid);
-
-        $mediaService = new \Lukaisu\Modules\Admin\Application\Services\MediaService();
-        $mediaPaths = $mediaService->getMediaPaths();
-        $mediaPathSelectorHtml = $mediaService->getMediaPathSelector('audio_uri');
-        $youtubeConfigured = (new YouTubeApiHandler())->formatIsConfigured()['configured'];
-        $textTagsHtml = TagsFacade::getTextTagsHtml($textId);
-
-        include self::MODULE_VIEWS . '/edit_form.php';
-    }
-
-    /**
-     * Show the edit text form.
-     *
-     * @param int $txid Text ID
-     *
-     * @return void
-     *
-     * @psalm-suppress UnusedVariable Variables are used in included view files
-     */
-    public function showEditTextForm(int $txid): void
-    {
-        $record = $this->textService->getTextForEdit($txid);
-
-        if ($record === null) {
-            echo '<p>Text not found.</p>';
-            return;
-        }
-
-        $text = new \stdClass();
-        $text->id = $record['id'];
-        $text->lgid = $record['language_id'];
-        $text->title = $record['title'];
-        $text->text = $record['text'];
-        $text->source = $record['source_uri'] ?? '';
-        $text->media_uri = $record['audio_uri'] ?? '';
-
-        $textId = (int) $record['id'];
-        $annotated = (bool) $record['annot_exists'];
-        $isNew = false;
-        $languageData = $this->textService->getLanguageDataForForm();
-        $languages = $this->languageService->getLanguagesForSelect();
-        $scrdir = $this->languageService->getScriptDirectionTag((int)$text->lgid);
-
-        $mediaService = new \Lukaisu\Modules\Admin\Application\Services\MediaService();
-        $mediaPaths = $mediaService->getMediaPaths();
-        $mediaPathSelectorHtml = $mediaService->getMediaPathSelector('audio_uri');
-        $youtubeConfigured = (new YouTubeApiHandler())->formatIsConfigured()['configured'];
-        $textTagsHtml = TagsFacade::getTextTagsHtml($textId);
-
-        include self::MODULE_VIEWS . '/edit_form.php';
     }
 
     /**
