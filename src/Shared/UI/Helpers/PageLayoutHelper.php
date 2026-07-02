@@ -583,8 +583,11 @@ HTML;
         if (ViteHelper::shouldUse()) {
             echo '<!-- Critical CSS for fast first paint -->';
             echo ViteHelper::criticalCss();
-            echo '<!-- Vite assets (async CSS) -->';
-            echo ViteHelper::assets('js/main.ts');
+            // The last server-rendered pages (OAuth link-confirm) ship no JS;
+            // load the CSS-only bundle synchronously so it applies without an
+            // Alpine/main.ts pass to flip a media="print" link.
+            echo '<!-- Vite styles (synchronous CSS, no JS) -->';
+            echo ViteHelper::assets('js/styles.ts', false);
         } else {
             echo '<!-- Legacy assets -->';
             echo '<link rel="stylesheet" type="text/css" href="' . UrlUtilities::url('/dist/css/styles.css') . '" />';
@@ -651,8 +654,8 @@ HTML;
         if (ViteHelper::shouldUse()) {
             echo '<!-- Critical CSS for fast first paint -->';
             echo ViteHelper::criticalCss();
-            echo '<!-- Vite assets (async CSS) -->';
-            echo ViteHelper::assets('js/main.ts');
+            echo '<!-- Vite styles (synchronous CSS, no JS) -->';
+            echo ViteHelper::assets('js/styles.ts', false);
         } else {
             echo '<!-- Legacy assets -->';
             echo '<link rel="stylesheet" type="text/css" href="' . UrlUtilities::url('/dist/css/styles.css') . '" />';

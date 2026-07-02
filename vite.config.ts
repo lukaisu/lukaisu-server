@@ -122,14 +122,16 @@ export default defineConfig({
     target: 'es2022',
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'src/frontend/js/main.ts'),
+        // CSS-only entry for the last server-rendered pages (the OAuth
+        // link-confirm forms). The Alpine-ful `main.ts` server entry was
+        // deleted under the headless cut (R6d); see src/frontend/js/styles.ts.
+        styles: resolve(__dirname, 'src/frontend/js/styles.ts'),
       },
       output: {
         entryFileNames: 'js/vite/[name].[hash].js',
         chunkFileNames: 'js/vite/chunks/[name].[hash].js',
         assetFileNames: 'css/vite/[name].[hash][extname]',
         manualChunks(id) {
-          if (id.includes('@alpinejs/csp')) return 'alpine';
           if (id.includes('chart.js')) return 'chart';
           if (id.includes('@yaireo/tagify')) return 'tagify';
         },
@@ -139,8 +141,10 @@ export default defineConfig({
   },
 
   plugins: [
-    // Compile Svelte islands (the global navbar is mounted from main.ts).
-    // Preprocessor (TS) config lives in svelte.config.js, shared with svelte-check.
+    // Svelte preprocessor (TS) config lives in svelte.config.js, shared with
+    // svelte-check. The server (dist) build no longer bundles any island — the
+    // last server-rendered pages ship CSS only — but the plugin is harmless and
+    // kept so any future server-side island compiles without config churn.
     svelte(),
     // Clean stale hashed bundles from previous builds
     cleanViteOutput(),
@@ -225,8 +229,6 @@ export default defineConfig({
       '@shared': resolve(__dirname, 'src/frontend/js/shared'),
       '@modules': resolve(__dirname, 'src/frontend/js/modules'),
       '@css': resolve(__dirname, 'src/frontend/css'),
-      // Use CSP-compliant Alpine.js build (no unsafe-eval needed)
-      'alpinejs': '@alpinejs/csp',
     }
   }
 });

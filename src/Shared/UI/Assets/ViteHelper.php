@@ -93,12 +93,12 @@ class ViteHelper
      * In development mode, loads assets from Vite dev server with HMR.
      * In production mode, loads assets from the manifest file.
      *
-     * @param string $entry    The entry point path (e.g., 'js/main.ts')
+     * @param string $entry    The entry point path (e.g., 'js/styles.ts')
      * @param bool   $asyncCss Whether to load CSS asynchronously (non-render-blocking)
      *
      * @return string HTML script and link tags
      */
-    public static function assets(string $entry = 'js/main.ts', bool $asyncCss = true): string
+    public static function assets(string $entry = 'js/styles.ts', bool $asyncCss = true): string
     {
         if (self::isDevServerRunning()) {
             return <<<HTML
@@ -121,16 +121,18 @@ HTML;
 
         // Load CSS files
         // Note: Async CSS loading via onload requires inline JS which violates strict CSP.
-        // We use standard stylesheet loading with media="print" switching handled by
-        // external JS in main.ts for CSP compliance. For browsers without JS,
-        // the noscript fallback ensures styles load.
+        // The async path uses media="print" and relies on the shared frontend
+        // bootstrap (frontend_shell.ts) to switch it to media="all" on load. The
+        // server's remaining pages ship no JS, so they call this with
+        // $asyncCss=false (synchronous stylesheet). The noscript fallback covers
+        // JS-less browsers on the async path.
         if (isset($entryData['css']) && is_array($entryData['css'])) {
             /** @var mixed $cssFile */
             foreach ($entryData['css'] as $cssFile) {
                 $cssPath = UrlUtilities::url('/dist/' . htmlspecialchars((string) $cssFile));
                 if ($asyncCss) {
                     // CSP-compliant async CSS: use media="print" initially,
-                    // JS in main.ts will switch to media="all" on load
+                    // the shared bootstrap will switch to media="all" on load
                     $html .= '<link rel="stylesheet" href="' . $cssPath .
                         '" media="print" data-async-css>' . "\n";
                     $html .= '<noscript><link rel="stylesheet" href="' . $cssPath . '"></noscript>' . "\n";
