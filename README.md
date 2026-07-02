@@ -73,7 +73,9 @@ cd lukaisu-server
 docker compose up
 ```
 
-Then open <http://localhost:8010/> in your browser.
+The server is headless — it exposes `/api/v1` and nothing else. Connect to
+`http://localhost:8010/` from the [Lukaisu](https://github.com/lukaisu/lukaisu)
+app to start reading.
 
 ## How It Works
 
@@ -140,8 +142,9 @@ cp .env.example .env
 docker compose up
 ```
 
-Access at <http://localhost:8010/>. Configuration is done via the `.env` file
-(see `.env.example` for all options).
+The API is at <http://localhost:8010/api/v1> — connect the
+[Lukaisu](https://github.com/lukaisu/lukaisu) app to that address. Configuration
+is done via the `.env` file (see `.env.example` for all options).
 
 ### Manual Installation (Windows/macOS/Linux)
 

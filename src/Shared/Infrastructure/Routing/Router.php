@@ -536,24 +536,6 @@ class Router
      */
     private function resolveStaticAsset(string $path): ?array
     {
-        // The bundled client (dist-app/) is served under /app/. Its JS/CSS/sound
-        // assets are static and public; HTML pages instead flow through
-        // BundleController (it injects a per-session CSRF token + runtime config),
-        // so skip *.html here and let the /app route handler serve them.
-        if (str_starts_with($path, '/app/') && !str_contains($path, '..')) {
-            if (!str_ends_with($path, '.html')) {
-                $filePath = $this->basePath . '/dist-app/' . substr($path, strlen('/app/'));
-                if (is_file($filePath)) {
-                    return [
-                        'type' => 'static',
-                        'file' => $filePath,
-                        'mime' => $this->getMimeType($filePath)
-                    ];
-                }
-                return null;
-            }
-        }
-
         // Path mappings from legacy to new structure
         $mappings = [
             '/css/' => '/dist/css/',

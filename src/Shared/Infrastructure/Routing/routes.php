@@ -44,6 +44,14 @@ const ADMIN_MIDDLEWARE = [AdminMiddleware::class, CsrfMiddleware::class];
 /**
  * Register all application routes.
  *
+ * The server is headless (Option A of docs-src/server/frontend-relocation.md):
+ * it exposes `/api/v1` and nothing else renders a reading/learning UI. The
+ * bundled client (`dist-app/`, built by `npm run build:app`) is no longer
+ * served by this server — it ships in the Lukaisu mobile app and talks to a
+ * server's `/api/v1` remotely with a bearer token. The two remaining pieces of
+ * server-rendered HTML are inherently server-side: the OAuth account-link-
+ * confirm forms (Google/Microsoft) below.
+ *
  * Routes are organized into:
  * - Public routes: No authentication required (login, register, etc.)
  * - Protected routes: Require user authentication
@@ -54,44 +62,11 @@ const ADMIN_MIDDLEWARE = [AdminMiddleware::class, CsrfMiddleware::class];
  */
 function registerRoutes(Router $router): void
 {
-    // ==================== BUNDLED CLIENT (PROTECTED) ====================
-
-    // The reading/learning UI is served from dist-app/ (built by
-    // `npm run build:app`) under /app/. HTML pages flow through BundleController
-    // so it can inject a fresh CSRF token + same-origin runtime config; the
-    // bundle's static assets are served by Router::resolveStaticAsset
-    // (/app/* -> dist-app/*). AuthMiddleware gates the pages exactly like the
-    // PHP views did (single-user passes through; multi-user → /login). The
-    // legacy Job-A page routes below redirect into these bundle URLs.
-    $router->registerPrefixWithMiddleware(
-        '/app',
-        'Lukaisu\\Shared\\Http\\BundleController@serve',
-        AUTH_MIDDLEWARE
-    );
-    // The guest auth shells (login + register + the password flows) are the
-    // bundle pages a visitor must reach pre-auth. Each exact route overrides the
-    // /app prefix above (exact match wins in Router::resolve), so it is served
-    // WITHOUT AuthMiddleware — otherwise a guest hitting e.g. /login ->
-    // /app/login.html would bounce back to /login in an infinite loop. Serving
-    // them is guest-safe: BundleController only injects a per-session CSRF token
-    // + guest runtime config (no user data).
-    $router->get('/app/login.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
-    $router->get('/app/register.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
-    $router->get('/app/forgot-password.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
-    $router->get('/app/reset-password.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
-    $router->get('/app/recover-password.html', 'Lukaisu\\Shared\\Http\\BundleController@serve');
-
     // ==================== TEXT ROUTES (PROTECTED) ====================
-
-    // The reader (GET /text/{id}/read, /text/read) is served by the bundled
-    // client — the render handler (TextController@read) was deleted under the
-    // headless cut (Phase R); the /app redirects below own these GETs.
-
-    // New + edit text forms are served by the bundled client: GET /texts/new
-    // and GET /texts/{id}/edit 302 to the bundle (see the /app redirects
-    // below), which creates via POST /api/v1/texts and updates via PUT
-    // /api/v1/texts/{id}. The server-rendered forms (TextController@new /
-    // @editSingle + edit_form.php) were dropped under the headless cut.
+    // The reading/learning UI (reader, texts list, edit forms, print, parse
+    // preview, archived list) has no server route: it is served exclusively by
+    // a connected client (mobile app or any /api/v1 consumer) talking to the
+    // JSON API. Only the mutating, non-API routes below remain server-side.
 
     // Delete text (RESTful route): DELETE /texts/123
     $router->delete('/texts/{id:int}', 'Lukaisu\\Modules\\Text\\Http\\TextController@delete', AUTH_MIDDLEWARE);
@@ -100,38 +75,11 @@ function registerRoutes(Router $router): void
     $router->post('/texts/{id:int}/archive', 'Lukaisu\\Modules\\Text\\Http\\TextController@archive', AUTH_MIDDLEWARE);
 
     // Unarchive text (RESTful route): POST /texts/123/unarchive
-    $router->post('/texts/{id:int}/unarchive', 'Lukaisu\\Modules\\Text\\Http\\TextController@unarchive', AUTH_MIDDLEWARE);
-
-    // The texts list is served by the bundled client (GET /texts 302s to the
-    // bundle, below). Its bulk actions moved to PUT /api/v1/texts/bulk-action
-    // (TextList.svelte), so TextController@edit + the /text/edit + native
-    // POST /texts marked-action form handlers were dropped under the headless cut.
-
-    // The "improved annotated text" display (GET /text/{id}/display, /text/display)
-    // was dropped under the headless cut (Option A) — a server-only browser
-    // feature the bundled reader never used.
-
-    // Text print (plain) is served by the bundled client: GET /text/{id}/print-plain
-    // and /text/print-plain 302 to /app/text-print.html (see the /app redirects
-    // below), which renders from /api/v1/texts/{id}/print-items. The server-only
-    // annotated-print + edit-annotation browser feature (TextPrintController,
-    // print_alpine.php, text_print_app.ts) was dropped under the headless cut
-    // (Phase R, Option A) — the app never used it.
-
-    // Parse-preview (GET /text/check) is served by the bundled client; the
-    // preview itself posts to /api/v1/texts/check. The render handler
-    // (TextController@check) was deleted under the headless cut (Phase R); the
-    // /app redirect below owns this GET.
-
-    // The archived-texts list is served by the bundled client (GET /text/archived
-    // 302s to the bundle, below). Its bulk actions moved to PUT
-    // /api/v1/texts/bulk-action (archived scope, ArchivedTexts.svelte), so
-    // TextController@archived was dropped; DELETE /text/archived/{id}
-    // (deleteArchived) stays below.
-
-    // Edit archived text: GET /text/archived/{id}/edit 302s to the bundle (see
-    // the /app redirects below); the client updates via PUT /api/v1/texts/{id}.
-    // The server-rendered form (@archivedEdit + archived_form.php) was dropped.
+    $router->post(
+        '/texts/{id:int}/unarchive',
+        'Lukaisu\\Modules\\Text\\Http\\TextController@unarchive',
+        AUTH_MIDDLEWARE
+    );
 
     // Delete archived text (RESTful route): DELETE /text/archived/123
     $router->delete(
@@ -142,16 +90,8 @@ function registerRoutes(Router $router): void
 
     // ==================== WORD/TERM ROUTES (PROTECTED) ====================
     // Split into focused controllers: TermEditController, TermDisplayController,
-    // TermStatusController, TermApiController, TermImportController
-
-    // Create / edit term forms are served by the bundled client under the
-    // headless cut: the reader edits inline via /api/v1/terms, review's "edit
-    // term" opens the bundled term editor (/words/{id}/edit -> word.html), and
-    // the standalone new-term page (/words/new -> word-new.html) creates via
-    // POST /api/v1/terms/standalone. GET /words/{id}/edit + /words/new + /word/new
-    // 302 into the bundle (see the /app redirects below); the old
-    // TermEditController render methods + form_edit_* / form_new / *_result views
-    // were deleted.
+    // TermStatusController, TermApiController, TermImportController. Term
+    // create/edit/list forms have no server route (client-side, via /api/v1).
 
     // Delete word (RESTful route): DELETE /words/123
     $router->delete(
@@ -160,36 +100,12 @@ function registerRoutes(Router $router): void
         AUTH_MIDDLEWARE
     );
 
-    // Multi-word create/edit is served by the bundled client's multi-word modal
-    // via TermsApi.createMultiWord/updateMultiWord (/api/v1); the legacy
-    // /word/edit-multi web form (MultiWordController) was retired.
-
-    // All words (list view). The GET page is served by the bundled Svelte
-    // WordList island (GET /words 302s into the bundle, see below). The list's
-    // "Export" actions used to POST the marked ids here to stream a download;
-    // that moved to POST /api/v1/terms/export (Phase R), so no native POST /words
-    // handler remains.
-
-    // The read-only word detail page (GET /word/{wid}, /word/show) was dropped
-    // under the headless cut; the bundled client reads term details from
-    // GET /api/v1/terms/{id}/details.
-
     // Inline edit (TermEditController)
     $router->registerWithMiddleware(
         '/word/inline-edit',
         'Lukaisu\\Modules\\Vocabulary\\Http\\TermEditController@inlineEdit',
         AUTH_MIDDLEWARE
     );
-
-    // Bulk translate (reader's "Lookup New Words" flow). The GET page is served
-    // by the bundled Svelte BulkTranslate island (see the /app redirects below),
-    // which fetches its config from GET /api/v1/terms/bulk-translate/config and
-    // saves via POST /api/v1/terms/bulk-translate (Phase R). The old cookie-authed
-    // config GET + native-submit POST routes are gone.
-
-    // Term creation from the reader is served by the bundled client via
-    // /api/v1/terms (createJson); the legacy /vocabulary/term-hover web route
-    // (TermDisplayController::hoverCreate) was retired.
 
     // Similar terms lookup (TermDisplayController)
     $router->registerWithMiddleware(
@@ -238,30 +154,14 @@ function registerRoutes(Router $router): void
         'POST'
     );
 
-    // Upload words (TermImportController). The GET page is served by the bundled
-    // client (Svelte WordUpload island; see the /app redirects below). Under the
-    // headless cut (Phase R) the file-upload POST and its bootstrap config moved
-    // onto /api/v1/terms/upload{,/config}, dispatched by VocabularyApiRouter to
-    // TermImportController; the WordUpload island posts a bearer-authed multipart
-    // body there. No cookie-authed top-level upload route remains — only the GET
-    // bundle redirect for /word/upload (registered further below).
-
     // ==================== LANGUAGE ROUTES (PROTECTED) ====================
+    // Language create/edit/delete/refresh and the language list have no server
+    // route: they are served client-side through /api/v1/languages
+    // (LanguageApiHandler).
 
-    // Language create / edit / delete / refresh are served by the bundled client
-    // through the /api/v1/languages REST API (LanguageApiHandler); the legacy web
-    // form routes (LanguageController) were retired. GET /languages, /languages/new
-    // and /languages/{id}/edit are redirected to the bundle (see /app redirects).
-
-    // Starter vocabulary (shown after language creation). The GET page route is
-    // served by the bundled client (Svelte StarterVocab island; see the /app
-    // redirects below). Under the headless cut (Phase R) the whole flow moved to
-    // /api/v1/languages/{id}/starter-vocab/{config,import,enrich}, all dispatched
-    // by LanguageApiHandler to StarterVocabController — the config GET on routeGet,
-    // the import/enrich POSTs on routePost. Both the StarterVocab and WordUpload
-    // islands use those bearer-authed endpoints; no cookie-authed top-level route
-    // remains. The skip redirect below is the last server-rendered starter-vocab
-    // route (a Location bounce to /texts/new).
+    // Starter vocabulary (shown after language creation) is client-side too
+    // (/api/v1/languages/{id}/starter-vocab/{config,import,enrich}), except this
+    // one server-side skip redirect (a Location bounce to /texts/new).
     $router->get(
         '/languages/{id:int}/starter-vocab/skip',
         'Lukaisu\\Modules\\Vocabulary\\Http\\StarterVocabController@skip',
@@ -269,65 +169,33 @@ function registerRoutes(Router $router): void
     );
 
     // ==================== TAG ROUTES (PROTECTED) ====================
-
-    // Tag management is served entirely by the bundled client under the headless
-    // cut: the list/new/edit GET pages 302 into the bundled Svelte Tags / TagForm
-    // islands (see the /app redirects below), which create / rename / delete via
-    // the /api/v1/tags/{term,text} REST API (TagApiHandler). The old cookie-authed
-    // web forms (TermTagController / TextTagController + tag_form.php + their
-    // native POST/DELETE routes) were deleted.
+    // Tag management (list/create/rename/delete) has no server route: it is
+    // served client-side through /api/v1/tags/{term,text} (TagApiHandler).
 
     // ==================== FEED ROUTES (PROTECTED) ====================
-
-    // GET /feeds and GET /feeds/manage are served by the bundled client (Svelte
-    // FeedsPage); see the /app redirects below. The old Alpine `spa.php` view +
-    // FeedController@spa handler, the visual feed wizard, the legacy feed
-    // browse/index/edit pages, the feed-load progress page and multi-load were
-    // all retired — those surfaces are the shipped Svelte islands + the existing
-    // /api/v1/feeds* API (articles/import replaces the marked-items text creation).
-
-    // The GET new/edit *forms* are served by the bundled client (Svelte
-    // FeedFormPage island, which creates/edits via /api/v1/feeds); see the /app
-    // redirects below. Under the headless cut (Phase R) the island's bootstrap
-    // config moved to GET /api/v1/feeds/new/config + /api/v1/feeds/{id}/edit/config
-    // (FeedApiHandler dispatches both to FeedController). The native-submit POST
-    // handlers (FeedController@newFeed/@editFeed) are dead here — the island saves
-    // via /api/v1/feeds — so their cookie-authed routes are gone; the controller
-    // methods stay (FeedEditControllerTest exercises them directly) pending a
-    // dedicated orphan cleanup.
+    // The feed list and new/edit forms have no server route: they are served
+    // client-side through /api/v1/feeds* (FeedApiHandler).
 
     // Delete feed (RESTful route): DELETE /feeds/123
     $router->delete('/feeds/{id:int}', 'Lukaisu\\Modules\\Feed\\Http\\FeedController@deleteFeed', AUTH_MIDDLEWARE);
 
     // ==================== BOOK ROUTES (PROTECTED) ====================
-    // Book management is served by the bundled client (Phase R): the list
-    // (/books) and detail (/book/{id}) 302 into the bundled Svelte BooksListPage /
-    // BookDetailPage islands (see the /app redirects below), which read + delete
-    // via /api/v1/books (BookApiHandler). EPUB import is done on-device
-    // (app/text.ts, tag-grouped texts). The old cookie-authed BookController HTML
-    // routes (index/show/import + native delete POST) are gone.
+    // Book management (list/detail) has no server route: it is served
+    // client-side through /api/v1/books (BookApiHandler).
 
     // ==================== LOCAL DICTIONARY ROUTES (PROTECTED) ====================
-    // All dictionary routes use DictionaryController from the Dictionary module
-
-    // Local dictionaries are served by the bundled client: GET /dictionaries and
-    // /languages/{id}/dictionaries 302 to the bundle (see the /app redirects
-    // below), which lists/deletes/imports via the local-dictionaries REST API.
-    // The multipart file import stays as POST /api/v1/local-dictionaries/import
-    // (DictionaryApiHandler -> DictionaryController@processImport). The server-
-    // rendered list + import wizard (index/delete/preview + Views/index.php) and
-    // the cookie-authed native routes were dropped under the headless cut.
+    // The local-dictionaries list has no server route: it is served client-side
+    // through the local-dictionaries REST API. The multipart file import stays
+    // as POST /api/v1/local-dictionaries/import (DictionaryApiHandler ->
+    // DictionaryController@processImport).
 
     // ==================== ADMIN ROUTES (ADMIN ONLY) ====================
     // The server admin browser UI was dropped under the headless cut (Option A):
-    // dashboard, backup/restore, the DB wizard, install-demo, server-data, and
-    // user management are managed via /api/v1 / CLI / the future Python edge, not
-    // server-rendered pages. AdminController + UserManagementController + their
-    // views are gone. Admin settings stay: GET /admin/settings 302s into the
-    // bundled Svelte AdminSettingsPage island (see the /app redirects below),
-    // which reads/writes server-wide feed limits + multi-user flags via
-    // admin-scoped /api/v1/settings*. AdminApiHandler + the admin/user-management
-    // use cases are kept for that API/CLI path.
+    // dashboard, backup/restore, the DB wizard, install-demo, server-data, user
+    // management, and settings are managed via /api/v1 / CLI / the future Python
+    // edge, not server-rendered or client-served pages. AdminController +
+    // UserManagementController + their views are gone. AdminApiHandler + the
+    // admin/user-management use cases are kept for that API/CLI path.
 
     // Statistics (User module) - legacy /admin/statistics redirects to /profile/statistics
     $router->registerWithMiddleware(
@@ -338,57 +206,17 @@ function registerRoutes(Router $router): void
 
     // ==================== USER PROFILE (AUTH REQUIRED) ====================
     // The profile page (name / email / password) was dropped under the headless
-    // cut (Option A): profile is managed via /api/v1 / CLI, not a server-rendered
-    // form. /profile/preferences + /profile/statistics remain (bundled islands).
-    // POST /profile/preferences (UserController@savePreferences) removed (Phase R):
-    // it was the retired native preferences form's target and was never called by
-    // the bundled client, which saves preferences via POST /api/v1/settings. The
-    // GET /profile/preferences 302 into the bundled settings page stays (below).
-    // The GET /profile/statistics page is served by the bundled client (Svelte
-    // StatisticsPage island); see the /app redirect below. Its chart data
-    // (intensity + frequency) moved to GET /api/v1/activity/statistics under the
-    // headless cut (Phase R) — the island fetches it via the api client alongside
-    // the streak + calendar from /api/v1/activity/*.
+    // cut (Option A): profile is managed via /api/v1 / CLI. Preferences and
+    // statistics have no server route either — served client-side through
+    // /api/v1/settings and /api/v1/activity/* (intensity, frequency, streak,
+    // calendar).
 
     // ==================== AUTHENTICATION ROUTES (PUBLIC) ====================
-    // All auth routes use UserController from the User module
-
-    // Login - no auth required, rate limited and CSRF-protected on POST.
-    // CSRF on a pre-login form blocks login-CSRF: an attacker cannot force a
-    // victim to log in as the attacker's account (and then have the victim's
-    // reading/vocabulary land there) without first stealing the pre-login
-    // session token, which is HttpOnly+SameSite.
-    //
-    // GET /login now 302s into the bundled client: the Svelte `LoginPage` island
-    // (login.html) logs in via the token API (POST /api/v1/auth/login), which
-    // both sets the PHP session AND returns a bearer token. NO AuthMiddleware —
-    // guests must reach it (and gating it would loop, since AuthMiddleware
-    // bounces the unauthenticated to /login). The `/app/login.html` shell is
-    // exempted from the /app auth gate just below. The old `login.php` session
-    // form). The server-rendered login form (loginForm + login.php) and the
-    // native POST /login handler were dropped under the headless cut: the bundle
-    // logs in via POST /api/v1/auth/login (UserApiHandler -> UserFacade), which is
-    // independent of the retired cookie-session web flow.
-    $router->get('/login', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
-
-    // Packaged-client entry: the client-rendered "choose server + log in" flow
-    // (token auth; the login POST goes to /api/v1/auth/login) is served by the
-    // bundled client — GET /connect 302s to the Svelte ConnectPage (index.html);
-    // see the /app redirects below. The old Alpine `client_auth.php` view was retired.
-
-    // Registration - no auth required, rate limited and CSRF-protected on POST.
-    //
-    // GET /register now 302s into the bundled client: the Svelte `RegisterPage`
-    // island (register.html) signs up via the token API (POST /api/v1/auth/register),
-    // which both sets the PHP session AND returns a bearer token. NO AuthMiddleware
-    // — guests must reach it. The `/app/register.html` shell is exempted from the
-    // /app auth gate above. The email-less recovery code is now shown INLINE by
-    // the island (from the register response), so the old server-rendered
-    // `register.php` + `GET /register/recovery-code` page were retired. The POST
-    // registers via POST /api/v1/auth/register (UserApiHandler -> UserFacade).
-    // The server-rendered register form + the native POST /register handler
-    // (registerForm/register) were dropped under the headless cut.
-    $router->get('/register', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
+    // All auth routes use UserController from the User module. There is no
+    // server-rendered or server-served login/register/password UI: a connected
+    // client authenticates entirely through the token API
+    // (POST /api/v1/auth/{login,register,password/forgot,password/reset,
+    // password/recover}), independent of the cookie-session routes below.
 
     // Logout - POST-only with CSRF so cross-site `<img src=/logout>` cannot
     // log the victim out. The controller handles a missing session gracefully.
@@ -406,29 +234,19 @@ function registerRoutes(Router $router): void
     );
 
     // Password Reset - no auth required, rate limited and CSRF-protected on POST.
-    //
-    // The GET pages now 302 into the bundled client: the Svelte
-    // ForgotPasswordPage / ResetPasswordPage / RecoverPasswordPage islands post
-    // to the token API (POST /api/v1/auth/password/{forgot,reset,recover}). NO
-    // AuthMiddleware — guests must reach them; the `/app/*-password.html` shells
-    // are exempted from the /app auth gate above. The old server-rendered
-    // forgot_password.php / reset_password.php / recover_password.php views were
-    // retired; the POST handlers are retained (forgot/reset are covered by tests)
-    // but are no longer reached by any UI. See the report.
-    $router->get('/password/forgot', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
+    // These cookie-session POST handlers are independent of the token-API
+    // password routes a connected client actually uses (see above).
     $router->post(
         '/password/forgot',
         'Lukaisu\\Modules\\User\\Http\\UserController@forgotPassword',
         [AuthRateLimitMiddleware::class, CsrfMiddleware::class]
     );
-    $router->get('/password/reset', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
     $router->post(
         '/password/reset',
         'Lukaisu\\Modules\\User\\Http\\UserController@resetPassword',
         [AuthRateLimitMiddleware::class, CsrfMiddleware::class]
     );
     // Recovery-code reset (for accounts created without an email).
-    $router->get('/password/recover', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
     $router->post(
         '/password/recover',
         'Lukaisu\\Modules\\User\\Http\\UserController@recoverWithCode',
@@ -444,9 +262,12 @@ function registerRoutes(Router $router): void
     // ==================== GOOGLE OAUTH INTEGRATION (PUBLIC) ====================
 
     // Google OAuth routes are public - they handle their own auth via OAuth tokens.
-    // The link-confirm POST writes to the session and changes account linkage,
-    // so it must validate CSRF to block cross-site form submissions even though
-    // it does not require AuthMiddleware (controller checks the pending-link session state).
+    // The link-confirm GET/POST is the last server-rendered HTML in the app:
+    // shown mid-login when the Google email already has an account, it renders a
+    // password form (google_link_confirm.php) to link the two. The POST writes
+    // to the session and changes account linkage, so it must validate CSRF to
+    // block cross-site form submissions even though it does not require
+    // AuthMiddleware (controller checks the pending-link session state).
     $router->register('/google/start', 'Lukaisu\\Modules\\User\\Http\\GoogleController@start');
     $router->register('/google/callback', 'Lukaisu\\Modules\\User\\Http\\GoogleController@callback');
     $router->register('/google/link-confirm', 'Lukaisu\\Modules\\User\\Http\\GoogleController@linkConfirm', 'GET');
@@ -458,11 +279,17 @@ function registerRoutes(Router $router): void
 
     // ==================== MICROSOFT OAUTH INTEGRATION (PUBLIC) ====================
 
-    // Microsoft OAuth routes are public - they handle their own auth via OAuth tokens.
-    // See the Google block above for why link-confirm POST needs CsrfMiddleware.
+    // Microsoft OAuth routes are public - they handle their own auth via OAuth
+    // tokens. The link-confirm GET/POST is the other server-rendered page
+    // (microsoft_link_confirm.php); see the Google block above for why the POST
+    // needs CsrfMiddleware.
     $router->register('/microsoft/start', 'Lukaisu\\Modules\\User\\Http\\MicrosoftController@start');
     $router->register('/microsoft/callback', 'Lukaisu\\Modules\\User\\Http\\MicrosoftController@callback');
-    $router->register('/microsoft/link-confirm', 'Lukaisu\\Modules\\User\\Http\\MicrosoftController@linkConfirm', 'GET');
+    $router->register(
+        '/microsoft/link-confirm',
+        'Lukaisu\\Modules\\User\\Http\\MicrosoftController@linkConfirm',
+        'GET'
+    );
     $router->post(
         '/microsoft/link-confirm',
         'Lukaisu\\Modules\\User\\Http\\MicrosoftController@processLinkConfirm',
@@ -495,89 +322,13 @@ function registerRoutes(Router $router): void
 
     // The server-rendered translate popups (/api/translate, /api/google,
     // /api/glosbe -> TranslationController) were dropped under the headless cut:
-    // the bundled reader does dictionary lookup + translation on-device (glosbe /
+    // the client does dictionary lookup + translation on-device (glosbe /
     // LibreTranslate directly + /api/v1/local-dictionaries/lookup).
-
-    // ==================== JOB-A CUT-OVER: PAGES -> BUNDLED CLIENT ====================
-    // The reading/learning UI is no longer rendered by PHP views: these GET page
-    // routes 302 to the equivalent bundle page under /app/ (BundleController
-    // serves dist-app/, which talks to this server's /api/v1). Registered last so
-    // they OVERRIDE the page-render handlers above for GET; the POST/JSON/DELETE
-    // data routes on the same paths keep their controllers. Mirrors
-    // src/frontend/app/router.ts bundledPageFor(). Removing a line here restores
-    // the PHP page for that route (the views still exist until Job B/C land).
-    $bundleRedirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
-    $router->get('/', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/index.php', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/connect', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/texts', $bundleRedirect, AUTH_MIDDLEWARE);
-    // Book list + detail 302 into the bundled Svelte BooksListPage /
-    // BookDetailPage islands (Phase R); they read + delete via /api/v1/books.
-    $router->get('/books', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/book/{id:int}', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/text/{text:int}/read', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/text/read', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/texts/new', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/texts/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/text/archived', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/text/archived/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/text/check', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/text/{text:int}/print-plain', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/text/print-plain', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/words', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/words/edit', $bundleRedirect, AUTH_MIDDLEWARE);
-    // New-term form: /words/new (and the legacy /word/new alias) 302 into the
-    // bundled Svelte new-term island, which creates via POST /api/v1/terms/standalone.
-    $router->get('/words/new', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/word/new', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/word/bulk-translate', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/word/upload', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/words/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/languages', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/languages/new', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/languages/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/languages/{id:int}/starter-vocab', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/tags', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/tags/new', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/tags/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/tags/text', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/feeds', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/feeds/manage', $bundleRedirect, AUTH_MIDDLEWARE);
-    // Feed new/edit form (Job B, D3d): the GET forms 302 into the bundled Svelte
-    // FeedFormPage island, which fetches its config from /api/v1/feeds/*/config
-    // and saves via /api/v1/feeds (Phase R). The old cookie-authed config GET +
-    // native-submit POST routes are gone.
-    $router->get('/feeds/new', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/feeds/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/tags/text/new', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/tags/text/{id:int}/edit', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/review', $bundleRedirect, AUTH_MIDDLEWARE);
-    // Dictionary import (Job B, D3c): the GET form is served by the bundled
-    // Svelte island, which uploads via POST /api/v1/local-dictionaries/import
-    // (Phase R). The old cookie-authed native POST route is gone.
-    $router->get('/dictionaries/import', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/languages/{id:int}/dictionaries/import', $bundleRedirect, AUTH_MIDDLEWARE);
-    // Local-dictionaries list + per-language management (Phase R): 302 into the
-    // bundled dictionaries.html island (local-dictionaries REST API).
-    $router->get('/dictionaries', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/languages/{id:int}/dictionaries', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/profile/preferences', $bundleRedirect, AUTH_MIDDLEWARE);
-    $router->get('/profile/statistics', $bundleRedirect, AUTH_MIDDLEWARE);
-    // Admin settings 302 into the bundled Svelte AdminSettingsPage island (Phase
-    // R). Admin-gated, so a non-admin can't even reach the redirect; the /api/v1
-    // reads/writes are admin-scoped too.
-    $router->get('/admin/settings', $bundleRedirect, ADMIN_MIDDLEWARE);
 
     // ==================== DEPRECATED ROUTES ====================
     // These legacy routes still work but emit Deprecation headers.
     // They will be removed in the next major version.
 
-    $router->deprecate('/text/read', '/text/{text}/read');
-    $router->deprecate('/text/print-plain', '/text/{text}/print-plain');
-    $router->deprecate('/text/edit', '/texts');
-    $router->deprecate('/word/new', '/words/new');
     $router->deprecate('/vocabulary/term/status', '/vocabulary/term/{wid}/status');
-    $router->deprecate('/dictionaries', '/languages/{id}/dictionaries');
-    $router->deprecate('/dictionaries/import', '/languages/{id}/dictionaries/import');
     $router->deprecatePrefix('/api.php/v1', '/api/v1');
 }

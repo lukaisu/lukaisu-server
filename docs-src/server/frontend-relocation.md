@@ -9,10 +9,40 @@
 > (per-view Job A/B/C triage), `svelte-migration-plan.md` (the Alpine→Svelte
 > work that unblocked this), `../../../lukaisu/FDROID.md` (why the app wants it).
 >
-> **Status:** DRAFT (2026-07-01). Not started. **Governing decision (§0) is
-> made: Option A — the headless server drops its browser UI entirely.** Not
-> release-critical (the own-repo F-Droid build works today with both repos
-> present); execute when the server-UI retirement is worth doing.
+> **Status:** DRAFT (2026-07-01). **Governing decision (§0) is made: Option A —
+> the headless server drops its browser UI entirely.** Not release-critical
+> (the own-repo F-Droid build works today with both repos present); execute
+> when the server-UI retirement is worth doing.
+>
+> **PHASE R COMPLETE (2026-07-02).** Every remaining server-side consumer of
+> `src/frontend/` has been severed:
+> - **R6 gate met:** `grep -rln "lukaisu-modules" src --include=*.php` is empty;
+>   `@alpinejs` is gone from `package.json`; `main.ts` is deleted; the server's
+>   own `vite.config.ts` build is CSS-only (`styles.ts`) + the service worker.
+> - **R7 done:** the vestigial cookie-session login/register web handlers were
+>   retired (the bundle authenticates via `/api/v1/auth`, independent of them).
+> - **R6f done:** `BundleController` + the `/app` bundle-serving + every Job-A
+>   cut-over redirect were deleted (`routes.php` rewritten). **The server no
+>   longer serves its own browser UI at all** — GET `/`, `/texts`, `/words`, …
+>   all 404. The only server-rendered HTML left is the two OAuth
+>   account-link-confirm forms (inherently server-side; see §2.1).
+>
+> **§0's "exactly one consumer" premise is now true.** Until R6f, `dist-app/`
+> had two real deployments — the mobile app *and* this server's own `/app/`
+> bundle-serving (self-hosted browser access, `BundleController`'s
+> "same-origin, session-cookie" mode) — so the frontend wasn't actually down to
+> one consumer despite `main.ts`/Alpine being gone. R6f drops the second one:
+> the mobile app is now the **sole** consumer (`vite.app.config.ts` →
+> `dist-app/`, pulled by `lukaisu/scripts/pull-webapp.mjs`). Phase M is
+> unblocked at the architecture level. `vite.app.config.ts` and
+> `npm run build:app` **stay in this repo** until Phase M's actual `git mv` —
+> the mobile app's pull script still needs `dist-app/` to exist here until then.
+>
+> **Known follow-up (not blocking):** client-side dead code from dropping
+> BundleController — `src/frontend/app/boot.ts`'s `sameOriginServer` runtime-
+> config branch and `bundledPageFor()` in `app/router.ts` assumed a server could
+> serve the bundle same-origin; nothing ever sets that config now. Cleanup is
+> optional (unreachable, not broken) and separate from Phase M.
 
 ---
 
@@ -232,13 +262,20 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 > server book over its just-created chapter texts when server-connected — new
 > RegisterBookFromChapters use case + POST /api/v1/books (ownership-checked), so
 > the bundle both creates and manages server books; offline the texts stay
-> tag-grouped) · **[x] admin** (scoped: user-facing prefs were already bundled on
-> POST /api/v1/settings; the rest — backup/wizard/demo/server-data/users/profile —
-> is genuinely server-bound and stays server-rendered. Cut: /admin/settings
-> (server-wide feed limits + multi-user flags) bundled as a Svelte
+> tag-grouped) · **[x] admin** (at the time: scoped — user-facing prefs bundled on
+> POST /api/v1/settings; backup/wizard/demo/server-data/users/profile judged
+> "genuinely server-bound." **Superseded (2026-07-02, R6c/R6f):** the §0 decision
+> hardened to dropping the browser UI outright — AdminController +
+> UserManagementController + all their views are deleted, managed via
+> /api/v1 / CLI only, no server-rendered fallback. /admin/settings itself (the
+> bundled AdminSettingsPage cut described below) was later also un-bundled: R6f
+> deleted its GET redirect along with the rest of the Job-A cut-over, so it now
+> 404s like everything else — reachable only via a connected client's
+> /api/v1/settings* calls, not a server page at all. Historical detail: /admin/settings
+> (server-wide feed limits + multi-user flags) was bundled as a Svelte
 > AdminSettingsPage on new admin-scoped GET /api/v1/settings/admin + existing POST
 > /api/v1/settings; AdminController@settings + settings_form.php deleted → GET
-> bundle redirect. Orphaned POST /profile/preferences (savePreferences) deleted).
+> bundle redirect (since removed). Orphaned POST /profile/preferences (savePreferences) deleted).
 >
 > **R5 complete** — all app-facing families are on /api/v1 with the bundle
 > repointed and the cookie routes deleted (or, for server-bound admin, explicitly

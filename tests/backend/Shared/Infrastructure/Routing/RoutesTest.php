@@ -86,15 +86,13 @@ class RoutesTest extends TestCase
     public function testHomePageRoute(): void
     {
         $result = $this->simulateRequest('/');
-        $this->assertEquals('handler', $result['type']);
-        $this->assertEquals('Lukaisu\\Shared\\Http\\BundleController@redirect', $result['handler']);
+        $this->assertEquals('not_found', $result['type']);
     }
 
     public function testIndexPhpRoute(): void
     {
         $result = $this->simulateRequest('/index.php');
-        $this->assertEquals('handler', $result['type']);
-        $this->assertEquals('Lukaisu\\Shared\\Http\\BundleController@redirect', $result['handler']);
+        $this->assertEquals('not_found', $result['type']);
     }
     #[DataProvider('indexPhpWithPathInfoProvider')]
     public function testIndexPhpWithPathInfoRedirect(string $path, string $expectedRedirect): void
@@ -116,185 +114,76 @@ class RoutesTest extends TestCase
         ];
     }
 
-    // ==================== TEXT ROUTES TESTS ====================
-    #[DataProvider('textRoutesProvider')]
-    public function testTextRoutes(string $path, string $expectedHandler): void
-    {
-        $result = $this->simulateRequest($path);
-        $this->assertEquals('handler', $result['type'], "Route {$path} should resolve to handler");
-        $this->assertEquals($expectedHandler, $result['handler']);
-        $this->assertHandlerFileExists($result['handler']);
-    }
-
-    public static function textRoutesProvider(): array
-    {
-        $textController = 'Lukaisu\\Modules\\Text\\Http\\TextController';
-        // Job-A page GET routes now 302 into the bundled client (the cut-over).
-        $redirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
-        return [
-            'text read' => ['/text/read', $redirect],
-            'texts list' => ['/texts', $redirect],
-            'text print-plain' => ['/text/print-plain', $redirect],
-            'text check' => ['/text/check', $redirect],
-            'text archived' => ['/text/archived', $redirect],
-        ];
-    }
-
     // ==================== WORD ROUTES TESTS ====================
-    #[DataProvider('wordRoutesProvider')]
-    public function testWordRoutes(string $path, string $expectedHandler): void
+    // The word/term list + create/edit forms have no server route (headless
+    // cut, R6f): they are served exclusively by a connected client through
+    // /api/v1. Only this one data route remains here.
+    public function testWordInlineEditRoute(): void
     {
-        $result = $this->simulateRequest($path);
-        $this->assertEquals('handler', $result['type'], "Route {$path} should resolve to handler");
-        $this->assertEquals($expectedHandler, $result['handler']);
-        $this->assertHandlerFileExists($result['handler']);
-    }
-
-    public static function wordRoutesProvider(): array
-    {
-        $termEditController = 'Lukaisu\\Modules\\Vocabulary\\Http\\TermEditController';
-        $termDisplayController = 'Lukaisu\\Modules\\Vocabulary\\Http\\TermDisplayController';
-        $termStatusController = 'Lukaisu\\Modules\\Vocabulary\\Http\\TermStatusController';
-        $termImportController = 'Lukaisu\\Modules\\Vocabulary\\Http\\TermImportController';
-        return [
-            // Create/edit term forms are bundled (headless cut): /word/edit and
-            // /word/edit-term were deleted; /words/new + /word/new 302 into the
-            // bundled new-term island (create via POST /api/v1/terms/standalone).
-            'words edit list' => ['/words/edit', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            'words list' => ['/words', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            'words new' => ['/words/new', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            'word new' => ['/word/new', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            'word inline-edit' => ['/word/inline-edit', "{$termEditController}@inlineEdit"],
-            // GET 302s into the bundled Svelte BulkTranslate island. Its bootstrap
-            // config + save POST moved to /api/v1/terms/bulk-translate{,/config}
-            // (Phase R), so only the GET bundle redirect remains here.
-            'word bulk-translate' => ['/word/bulk-translate', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            // GET 302s into the bundled Svelte WordUpload island. Its bootstrap
-            // config + file-upload POST moved to /api/v1/terms/upload{,/config}
-            // (Phase R), so only the GET bundle redirect remains here.
-            'word upload' => ['/word/upload', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-        ];
-    }
-
-    // ==================== TEST ROUTES TESTS ====================
-    #[DataProvider('reviewTestRoutesProvider')]
-    public function testReviewTestRoutes(string $path, string $expectedHandler): void
-    {
-        $result = $this->simulateRequest($path);
-        $this->assertEquals('handler', $result['type'], "Route {$path} should resolve to handler");
-        $this->assertEquals($expectedHandler, $result['handler']);
-        $this->assertHandlerFileExists($result['handler']);
-    }
-
-    public static function reviewTestRoutesProvider(): array
-    {
-        return [
-            'review index' => ['/review', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-        ];
-    }
-
-    // ==================== LANGUAGE ROUTES TESTS ====================
-    #[DataProvider('languageRoutesProvider')]
-    public function testLanguageRoutes(string $path, string $expectedHandler): void
-    {
-        $result = $this->simulateRequest($path);
-        $this->assertEquals('handler', $result['type'], "Route {$path} should resolve to handler");
-        $this->assertEquals($expectedHandler, $result['handler']);
-        $this->assertHandlerFileExists($result['handler']);
-    }
-
-    public static function languageRoutesProvider(): array
-    {
-        return [
-            'languages list' => ['/languages', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-        ];
-    }
-
-    // ==================== TAG ROUTES TESTS ====================
-    #[DataProvider('tagRoutesProvider')]
-    public function testTagRoutes(string $path, string $expectedHandler): void
-    {
-        $result = $this->simulateRequest($path);
-        $this->assertEquals('handler', $result['type'], "Route {$path} should resolve to handler");
-        $this->assertEquals($expectedHandler, $result['handler']);
-        $this->assertHandlerFileExists($result['handler']);
-    }
-
-    public static function tagRoutesProvider(): array
-    {
-        return [
-            'tags list' => ['/tags', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            'tags text' => ['/tags/text', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-        ];
-    }
-
-    // ==================== FEED ROUTES TESTS ====================
-    #[DataProvider('feedRoutesProvider')]
-    public function testFeedRoutes(string $path, string $expectedHandler): void
-    {
-        $result = $this->simulateRequest($path);
-        $this->assertEquals('handler', $result['type'], "Route {$path} should resolve to handler");
-        $this->assertEquals($expectedHandler, $result['handler']);
-        $this->assertHandlerFileExists($result['handler']);
-    }
-
-    public static function feedRoutesProvider(): array
-    {
-        // GET /feeds and /feeds/manage now 302 into the bundled client (Svelte
-        // FeedsPage). The legacy Alpine wizard/browse/index/edit + feed-load
-        // progress + multi-load routes were deleted; only the create/edit form
-        // POST coexistence + JSON config data routes + delete remain (covered by
-        // BundleCutoverTest).
-        $redirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
-        return [
-            'feeds index' => ['/feeds', $redirect],
-            'feeds manage' => ['/feeds/manage', $redirect],
-        ];
-    }
-
-    /**
-     * GET /connect (the packaged-client "choose server + log in" flow) now 302s
-     * into the bundled client (Svelte ConnectPage / index.html); the old Alpine
-     * clientAuthForm handler + client_auth.php view were retired.
-     */
-    public function testConnectRouteRedirectsToBundle(): void
-    {
-        $result = $this->simulateRequest('/connect');
-        $this->assertEquals('handler', $result['type'], 'Route /connect should resolve to handler');
-        $this->assertEquals('Lukaisu\\Shared\\Http\\BundleController@redirect', $result['handler']);
+        $result = $this->simulateRequest('/word/inline-edit');
+        $this->assertEquals('handler', $result['type']);
+        $this->assertEquals(
+            'Lukaisu\\Modules\\Vocabulary\\Http\\TermEditController@inlineEdit',
+            $result['handler']
+        );
         $this->assertHandlerFileExists($result['handler']);
     }
 
     // ==================== ADMIN ROUTES TESTS ====================
-    #[DataProvider('adminRoutesProvider')]
-    public function testAdminRoutes(string $path, string $expectedHandler): void
+    // The admin browser UI was dropped under the headless cut (Option A); admin
+    // settings has no server route either (R6f, headless client only) — only
+    // this legacy redirect remains.
+    public function testAdminStatisticsRedirectsToProfileStatistics(): void
     {
-        $result = $this->simulateRequest($path);
-        $this->assertEquals('handler', $result['type'], "Route {$path} should resolve to handler");
-        $this->assertEquals($expectedHandler, $result['handler']);
+        $result = $this->simulateRequest('/admin/statistics');
+        $this->assertEquals('handler', $result['type']);
+        $this->assertEquals(
+            'Lukaisu\\Modules\\User\\Http\\StatisticsController@redirectFromAdmin',
+            $result['handler']
+        );
         $this->assertHandlerFileExists($result['handler']);
     }
 
-    public static function adminRoutesProvider(): array
+    // ==================== DROPPED BROWSER ROUTES ====================
+    /**
+     * R6f (headless cut, Option A): the server no longer serves a browser UI.
+     * BundleController + the /app bundle-serving + the Job-A cut-over redirects
+     * are gone, so every reading/learning page GET now 404s — a connected
+     * client (mobile app or any /api/v1 consumer) is the only way to reach
+     * these surfaces. Representative sample across every former category.
+     */
+    #[DataProvider('droppedBrowserRoutesProvider')]
+    public function testDroppedBrowserRoutesReturn404(string $path): void
+    {
+        $result = $this->simulateRequest($path);
+        $this->assertEquals('not_found', $result['type'], "Route {$path} should no longer resolve");
+    }
+
+    public static function droppedBrowserRoutesProvider(): array
     {
         return [
-            // The admin browser UI was dropped under the headless cut (Option A);
-            // only /admin/statistics (a User-module redirect) and /admin/settings
-            // (302 to the bundled AdminSettingsPage island) remain.
-            'admin statistics (redirect)' => [
-                '/admin/statistics',
-                'Lukaisu\\Modules\\User\\Http\\StatisticsController@redirectFromAdmin'
-            ],
-            // GET /admin/settings 302s into the bundled Svelte AdminSettingsPage
-            // island (Phase R); it reads/writes via admin-scoped /api/v1/settings*.
-            'admin settings' => ['/admin/settings', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            // GET /profile/statistics 302s into the bundled Svelte StatisticsPage
-            // island; its chart data moved to GET /api/v1/activity/statistics
-            // (see BundleCutoverTest::newApiEndpointsProvider) under the headless cut.
-            'profile statistics' => [
-                '/profile/statistics',
-                'Lukaisu\\Shared\\Http\\BundleController@redirect'
-            ],
+            'connect' => ['/connect'],
+            'texts list' => ['/texts'],
+            'text read' => ['/text/read'],
+            'text print-plain' => ['/text/print-plain'],
+            'text check' => ['/text/check'],
+            'text archived' => ['/text/archived'],
+            'words list' => ['/words'],
+            'words edit list' => ['/words/edit'],
+            'words new' => ['/words/new'],
+            'word new' => ['/word/new'],
+            'word bulk-translate' => ['/word/bulk-translate'],
+            'word upload' => ['/word/upload'],
+            'review index' => ['/review'],
+            'languages list' => ['/languages'],
+            'tags list' => ['/tags'],
+            'tags text' => ['/tags/text'],
+            'feeds index' => ['/feeds'],
+            'feeds manage' => ['/feeds/manage'],
+            'admin settings' => ['/admin/settings'],
+            'profile statistics' => ['/profile/statistics'],
+            'app shell' => ['/app'],
+            'app page' => ['/app/read.html'],
         ];
     }
 
@@ -423,7 +312,6 @@ class RoutesTest extends TestCase
         $routes = [
             // New routes should use hyphens for word separation
             '/word/inline-edit' => 'should use hyphens',
-            '/word/bulk-translate' => 'should use hyphens',
         ];
 
         foreach ($routes as $route => $message) {

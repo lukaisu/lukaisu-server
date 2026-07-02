@@ -12,15 +12,15 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Guards the Job-A "cut-over": the reading/learning page routes 302 into the
- * bundled client (BundleController@redirect), the data routes on those paths keep
- * their controllers, and the new /api/v1 endpoints that let the bundle work
- * server-backed (single-text edit, tag management, parse-check) are routable.
+ * Guards the headless cut (R6f, Option A): the reading/learning page GET
+ * routes have no server route at all (BundleController + the /app bundle
+ * serving + the Job-A cut-over redirects were deleted), the mutating data
+ * routes on those paths keep their controllers, and the /api/v1 endpoints a
+ * connected client needs (single-text edit, tag management, parse-check, …)
+ * are routable.
  */
 class BundleCutoverTest extends TestCase
 {
-    private const REDIRECT = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
-
     private Router $router;
     private array $originalServer;
 
@@ -52,13 +52,13 @@ class BundleCutoverTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('redirectedGetRoutesProvider')]
-    public function jobAGetRoutesRedirectIntoTheBundle(string $uri): void
+    #[DataProvider('droppedGetRoutesProvider')]
+    public function jobAGetRoutesHaveNoServerRoute(string $uri): void
     {
-        $this->assertSame(self::REDIRECT, $this->resolveHandler('GET', $uri), "GET {$uri} should redirect");
+        $this->assertSame('[not_found]', $this->resolveHandler('GET', $uri), "GET {$uri} should 404");
     }
 
-    public static function redirectedGetRoutesProvider(): array
+    public static function droppedGetRoutesProvider(): array
     {
         return [
             ['/'], ['/index.php'], ['/texts'], ['/text/5/read'], ['/text/5/print-plain'],
@@ -101,7 +101,6 @@ class BundleCutoverTest extends TestCase
     {
         $handler = $this->resolveHandler($method, $uri);
         $this->assertStringContainsString($expectedFragment, $handler, "{$method} {$uri} must keep its controller");
-        $this->assertNotSame(self::REDIRECT, $handler);
     }
 
     public static function preservedDataRoutesProvider(): array
@@ -117,20 +116,12 @@ class BundleCutoverTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('notRedirectedProvider')]
-    public function nonJobAGetRoutesAreNotRedirected(string $uri, string $expectedFragment): void
+    public function apiPrefixStillResolvesToApiController(): void
     {
-        $handler = $this->resolveHandler('GET', $uri);
-        $this->assertStringContainsString($expectedFragment, $handler);
-        $this->assertNotSame(self::REDIRECT, $handler);
-    }
-
-    public static function notRedirectedProvider(): array
-    {
-        return [
-            'api prefix' => ['/api/v1/languages', 'ApiController@v1'],
-            'bundle shell' => ['/app/read.html', 'BundleController@serve'],
-        ];
+        $this->assertStringContainsString(
+            'ApiController@v1',
+            $this->resolveHandler('GET', '/api/v1/languages')
+        );
     }
 
     /**

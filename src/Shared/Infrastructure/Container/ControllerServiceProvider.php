@@ -17,7 +17,6 @@ declare(strict_types=1);
 namespace Lukaisu\Shared\Infrastructure\Container;
 
 use Lukaisu\Controllers\ApiController;
-use Lukaisu\Shared\Http\BundleController;
 // Note: AuthController moved to Modules/User as UserController - registered by UserServiceProvider
 // Note: FeedsController moved to Modules/Feed as FeedController - registered by FeedServiceProvider
 // Note: HomeController moved to Modules/Home - registered by HomeServiceProvider
@@ -57,11 +56,6 @@ class ControllerServiceProvider implements ServiceProviderInterface
         // Controllers with service dependencies
         $container->bind(ApiController::class, function (Container $_c) {
             return new ApiController();
-        });
-
-        // Serves the bundled client (dist-app/) as the web UI under /app/.
-        $container->bind(BundleController::class, function (Container $_c) {
-            return new BundleController();
         });
 
         // Note: AuthController removed - UserController is now registered by UserServiceProvider
