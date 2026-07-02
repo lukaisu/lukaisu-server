@@ -365,14 +365,11 @@ function registerRoutes(Router $router): void
     // guests must reach it (and gating it would loop, since AuthMiddleware
     // bounces the unauthenticated to /login). The `/app/login.html` shell is
     // exempted from the /app auth gate just below. The old `login.php` session
-    // form + UserController@loginForm/login are retained (still covered by tests)
-    // but are no longer reached by GET; see the report.
+    // form). The server-rendered login form (loginForm + login.php) and the
+    // native POST /login handler were dropped under the headless cut: the bundle
+    // logs in via POST /api/v1/auth/login (UserApiHandler -> UserFacade), which is
+    // independent of the retired cookie-session web flow.
     $router->get('/login', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
-    $router->post(
-        '/login',
-        'Lukaisu\\Modules\\User\\Http\\UserController@login',
-        [AuthRateLimitMiddleware::class, CsrfMiddleware::class]
-    );
 
     // Packaged-client entry: the client-rendered "choose server + log in" flow
     // (token auth; the login POST goes to /api/v1/auth/login) is served by the
@@ -388,14 +385,10 @@ function registerRoutes(Router $router): void
     // /app auth gate above. The email-less recovery code is now shown INLINE by
     // the island (from the register response), so the old server-rendered
     // `register.php` + `GET /register/recovery-code` page were retired. The POST
-    // handler UserController@register is retained (still covered by tests) but is
-    // no longer reached by any UI; see the report.
+    // registers via POST /api/v1/auth/register (UserApiHandler -> UserFacade).
+    // The server-rendered register form + the native POST /register handler
+    // (registerForm/register) were dropped under the headless cut.
     $router->get('/register', 'Lukaisu\\Shared\\Http\\BundleController@redirect');
-    $router->post(
-        '/register',
-        'Lukaisu\\Modules\\User\\Http\\UserController@register',
-        [AuthRateLimitMiddleware::class, CsrfMiddleware::class]
-    );
 
     // Logout - POST-only with CSRF so cross-site `<img src=/logout>` cannot
     // log the victim out. The controller handles a missing session gracefully.

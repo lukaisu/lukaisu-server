@@ -465,8 +465,6 @@ class RoutesTest extends TestCase
     public static function authPostRoutesProvider(): array
     {
         return [
-            'login'                => ['/login'],
-            'register'             => ['/register'],
             'logout'               => ['/logout'],
             'resend verification'  => ['/email/resend-verification'],
             'forgot password'      => ['/password/forgot'],
