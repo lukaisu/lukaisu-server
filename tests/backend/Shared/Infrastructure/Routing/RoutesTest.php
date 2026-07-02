@@ -330,9 +330,6 @@ class RoutesTest extends TestCase
     {
         return [
             'api v1' => ['/api/v1', 'ApiController@v1'],
-            'api translate' => ['/api/translate', 'Lukaisu\\Modules\\Dictionary\\Http\\TranslationController@translate'],
-            'api google' => ['/api/google', 'Lukaisu\\Modules\\Dictionary\\Http\\TranslationController@google'],
-            'api glosbe' => ['/api/glosbe', 'Lukaisu\\Modules\\Dictionary\\Http\\TranslationController@glosbe'],
         ];
     }
 

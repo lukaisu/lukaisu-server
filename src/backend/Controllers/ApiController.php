@@ -27,8 +27,9 @@ use Lukaisu\Shared\Infrastructure\Routing\Middleware\RateLimitMiddleware;
  * Handles:
  * - Main REST API (v1)
  *
- * Note: Translation APIs (/api/translate, /api/google, /api/glosbe) are now
- * handled directly by Lukaisu\Modules\Dictionary\Http\TranslationController.
+ * Note: the legacy server-rendered translate popups (/api/translate,
+ * /api/google, /api/glosbe) were dropped under the headless cut — the bundled
+ * reader translates on-device (glosbe / LibreTranslate + local dictionaries).
  *
  * @category Lukaisu
  * @package  Lukaisu

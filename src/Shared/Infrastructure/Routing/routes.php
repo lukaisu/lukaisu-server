@@ -500,22 +500,10 @@ function registerRoutes(Router $router): void
         [RateLimitMiddleware::class, CsrfMiddleware::class]
     );
 
-    // Translation APIs (PROTECTED) - used by authenticated users
-    $router->registerWithMiddleware(
-        '/api/translate',
-        'Lukaisu\\Modules\\Dictionary\\Http\\TranslationController@translate',
-        AUTH_MIDDLEWARE
-    );
-    $router->registerWithMiddleware(
-        '/api/google',
-        'Lukaisu\\Modules\\Dictionary\\Http\\TranslationController@google',
-        AUTH_MIDDLEWARE
-    );
-    $router->registerWithMiddleware(
-        '/api/glosbe',
-        'Lukaisu\\Modules\\Dictionary\\Http\\TranslationController@glosbe',
-        AUTH_MIDDLEWARE
-    );
+    // The server-rendered translate popups (/api/translate, /api/google,
+    // /api/glosbe -> TranslationController) were dropped under the headless cut:
+    // the bundled reader does dictionary lookup + translation on-device (glosbe /
+    // LibreTranslate directly + /api/v1/local-dictionaries/lookup).
 
     // ==================== JOB-A CUT-OVER: PAGES -> BUNDLED CLIENT ====================
     // The reading/learning UI is no longer rendered by PHP views: these GET page
