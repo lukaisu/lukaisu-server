@@ -406,9 +406,9 @@ function registerRoutes(Router $router): void
     );
 
     // ==================== USER PROFILE (AUTH REQUIRED) ====================
-    $router->get('/profile', 'Lukaisu\\Modules\\User\\Http\\UserController@profileForm', AUTH_MIDDLEWARE);
-    $router->post('/profile', 'Lukaisu\\Modules\\User\\Http\\UserController@updateProfile', AUTH_MIDDLEWARE);
-    $router->post('/profile/password', 'Lukaisu\\Modules\\User\\Http\\UserController@changePassword', AUTH_MIDDLEWARE);
+    // The profile page (name / email / password) was dropped under the headless
+    // cut (Option A): profile is managed via /api/v1 / CLI, not a server-rendered
+    // form. /profile/preferences + /profile/statistics remain (bundled islands).
     // POST /profile/preferences (UserController@savePreferences) removed (Phase R):
     // it was the retired native preferences form's target and was never called by
     // the bundled client, which saves preferences via POST /api/v1/settings. The

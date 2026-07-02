@@ -82,11 +82,12 @@ describe('renderNavbar', () => {
     expect(html).toContain('href="/admin/settings"');
   });
 
-  it('shows profile/logout for a multi-user install and hides admin items for non-admins', () => {
+  it('shows logout for a multi-user install and hides admin items for non-admins', () => {
     const html = renderNavbar(data({ isMultiUser: true, showAdminItems: false }));
     expect(html).toContain('href="/logout"');
     expect(html).toContain('@click.prevent="logout()"');
-    expect(html).toContain('href="/profile"');
+    // The profile page was dropped under the headless cut (Option A).
+    expect(html).not.toContain('href="/profile"');
     expect(html).not.toContain('href="/admin/backup"');
   });
 

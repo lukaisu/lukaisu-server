@@ -127,10 +127,6 @@ function userDropdown(data: NavbarData, currentPage: string): string {
     ? ' is-active'
     : '';
 
-  const profile = data.isMultiUser
-    ? `<a class="navbar-item" href="${base}/profile">${t('navbar.profile')}</a>`
-    : '';
-
   const adminItems = data.showAdminItems
     ? '<hr class="navbar-divider">'
       + `<a class="navbar-item" href="${base}/admin/backup">${t('navbar.database_operations')}</a>`
@@ -152,7 +148,6 @@ function userDropdown(data: NavbarData, currentPage: string): string {
     + `${icon('user')}<span class="ml-1">${t('navbar.user')}</span></a>`
     + '<div class="navbar-dropdown is-right">'
     + `<a class="navbar-item" href="${base}/profile/preferences">${t('navbar.preferences')}</a>`
-    + profile
     + adminItems
     + '<hr class="navbar-divider">'
     + `<a class="navbar-item" href="${base}/docs/info.html" target="_blank">${t('navbar.help')}</a>`
