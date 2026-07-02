@@ -129,10 +129,7 @@ function userDropdown(data: NavbarData, currentPage: string): string {
 
   const adminItems = data.showAdminItems
     ? '<hr class="navbar-divider">'
-      + `<a class="navbar-item" href="${base}/admin/backup">${t('navbar.database_operations')}</a>`
       + `<a class="navbar-item" href="${base}/admin/settings">${t('navbar.admin_settings')}</a>`
-      + `<a class="navbar-item" href="${base}/admin/users">${t('navbar.users')}</a>`
-      + `<a class="navbar-item" href="${base}/admin/server-data">${t('navbar.server_data')}</a>`
     : '';
 
   // Logout POSTs with a CSRF token via the navbar component's logout() method;

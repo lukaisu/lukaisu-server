@@ -44,17 +44,13 @@ declare global {
  * Each key corresponds to a module name that the server can request
  * via the <meta name="lukaisu-modules"> tag.
  */
-const moduleMap: Record<string, () => Promise<unknown>> = {
-  admin: () => import('@modules/admin'),
-  // Only `admin` still has server-rendered pages that need Alpine (the
-  // dashboard / backup / wizard / install-demo / server-data / users tools).
-  // Everything else — reader/library/review, vocabulary/text/feed/tags, and
-  // `language` (its dictionary-management page is now the bundled dictionaries
-  // island) — joined `review` and `auth` in the graveyard: each is a bundled
-  // Svelte island or a redirected page and its server Views were deleted. A
-  // server page that still lists a removed module in its `lukaisu-modules` meta
-  // is simply filtered out below (`m in moduleMap`).
-};
+// No server-rendered page needs Alpine anymore: the entire browser UI is a
+// bundled Svelte island (served from dist-app via BundleController) or a
+// redirected page. The admin cluster was the last holdout and was dropped under
+// the headless cut (Option A). This map is intentionally empty — any server page
+// that still lists a module in its `lukaisu-modules` meta is filtered out below
+// (`m in moduleMap`), so nothing loads. main.ts itself is next to go (R6d).
+const moduleMap: Record<string, () => Promise<unknown>> = {};
 
 // Read which modules the current page needs from the server-emitted meta tag
 const meta = document.querySelector<HTMLMetaElement>('meta[name="lukaisu-modules"]');

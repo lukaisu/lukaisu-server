@@ -279,17 +279,16 @@ class RoutesTest extends TestCase
     public static function adminRoutesProvider(): array
     {
         return [
-            'admin backup' => ['/admin/backup', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@backup'],
-            'admin wizard' => ['/admin/wizard', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@wizard'],
+            // The admin browser UI was dropped under the headless cut (Option A);
+            // only /admin/statistics (a User-module redirect) and /admin/settings
+            // (302 to the bundled AdminSettingsPage island) remain.
             'admin statistics (redirect)' => [
                 '/admin/statistics',
                 'Lukaisu\\Modules\\User\\Http\\StatisticsController@redirectFromAdmin'
             ],
-            'admin install-demo' => ['/admin/install-demo', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@installDemo'],
             // GET /admin/settings 302s into the bundled Svelte AdminSettingsPage
             // island (Phase R); it reads/writes via admin-scoped /api/v1/settings*.
             'admin settings' => ['/admin/settings', 'Lukaisu\\Shared\\Http\\BundleController@redirect'],
-            'admin server-data' => ['/admin/server-data', 'Lukaisu\\Modules\\Admin\\Http\\AdminController@serverData'],
             // GET /profile/statistics 302s into the bundled Svelte StatisticsPage
             // island; its chart data moved to GET /api/v1/activity/statistics
             // (see BundleCutoverTest::newApiEndpointsProvider) under the headless cut.
@@ -429,8 +428,6 @@ class RoutesTest extends TestCase
             // New routes should use hyphens for word separation
             '/word/inline-edit' => 'should use hyphens',
             '/word/bulk-translate' => 'should use hyphens',
-            '/admin/install-demo' => 'should use hyphens',
-            '/admin/server-data' => 'should use hyphens',
         ];
 
         foreach ($routes as $route => $message) {

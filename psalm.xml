@@ -47,18 +47,9 @@
             Views use PHP's include pattern where variables set in controllers
             become available in the included view file. Psalm cannot trace this.
         -->
-        <UndefinedGlobalVariable>
-            <errorLevel type="suppress">
-                <directory name="src/Modules/Admin/Views" />
-                <directory name="src/Modules/User/Views" />
-                <directory name="src/Modules/Vocabulary/Views" />
-            </errorLevel>
-        </UndefinedGlobalVariable>
-
         <!-- Type checks for safety with dynamic data -->
         <RedundantCondition>
             <errorLevel type="suppress">
-                <directory name="src/Modules/Admin/Views" />
                 <directory name="src/Modules/Book/Application" />
                 <directory name="src/Modules/Feed/Http" />
                 <directory name="src/Modules/Text/Http" />
@@ -69,7 +60,6 @@
 
         <RedundantConditionGivenDocblockType>
             <errorLevel type="suppress">
-                <directory name="src/Modules/Admin/Views" />
                 <directory name="src/Modules/Dictionary/Infrastructure" />
                 <directory name="src/Modules/Feed/Application" />
                 <directory name="src/Modules/User/Views" />
@@ -79,7 +69,6 @@
 
         <TypeDoesNotContainType>
             <errorLevel type="suppress">
-                <directory name="src/Modules/Admin/Views" />
                 <directory name="src/Modules/Feed/Http" />
                 <directory name="src/Modules/Review/Infrastructure" />
                 <directory name="src/Modules/User/Views" />

@@ -74,11 +74,12 @@ describe('renderNavbar', () => {
     expect(dark).toContain('data-auto-theme="false"');
   });
 
-  it('hides profile/logout and shows admin items for a single-user install', () => {
+  it('hides profile/logout and shows the admin settings item for a single-user install', () => {
     const html = renderNavbar(data({ isMultiUser: false, showAdminItems: true }));
     expect(html).not.toContain('href="/logout"');
     expect(html).not.toContain('href="/profile"');
-    expect(html).toContain('href="/admin/backup"');
+    // Only admin settings remains; backup/users/server-data were dropped (Option A).
+    expect(html).not.toContain('href="/admin/backup"');
     expect(html).toContain('href="/admin/settings"');
   });
 

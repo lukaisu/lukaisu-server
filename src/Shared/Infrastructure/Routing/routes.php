@@ -319,90 +319,21 @@ function registerRoutes(Router $router): void
     // the cookie-authed native routes were dropped under the headless cut.
 
     // ==================== ADMIN ROUTES (ADMIN ONLY) ====================
-    // These routes require admin role, not just authentication
-
-    // Admin dashboard
-    $router->registerWithMiddleware(
-        '/admin',
-        'Lukaisu\\Modules\\Admin\\Http\\AdminController@dashboard',
-        ADMIN_MIDDLEWARE
-    );
-
-    // Backup & Restore (Admin module)
-    $router->registerWithMiddleware(
-        '/admin/backup',
-        'Lukaisu\\Modules\\Admin\\Http\\AdminController@backup',
-        ADMIN_MIDDLEWARE
-    );
-
-    // Database Wizard (Admin module)
-    $router->registerWithMiddleware(
-        '/admin/wizard',
-        'Lukaisu\\Modules\\Admin\\Http\\AdminController@wizard',
-        ADMIN_MIDDLEWARE
-    );
+    // The server admin browser UI was dropped under the headless cut (Option A):
+    // dashboard, backup/restore, the DB wizard, install-demo, server-data, and
+    // user management are managed via /api/v1 / CLI / the future Python edge, not
+    // server-rendered pages. AdminController + UserManagementController + their
+    // views are gone. Admin settings stay: GET /admin/settings 302s into the
+    // bundled Svelte AdminSettingsPage island (see the /app redirects below),
+    // which reads/writes server-wide feed limits + multi-user flags via
+    // admin-scoped /api/v1/settings*. AdminApiHandler + the admin/user-management
+    // use cases are kept for that API/CLI path.
 
     // Statistics (User module) - legacy /admin/statistics redirects to /profile/statistics
     $router->registerWithMiddleware(
         '/admin/statistics',
         'Lukaisu\\Modules\\User\\Http\\StatisticsController@redirectFromAdmin',
         AUTH_MIDDLEWARE
-    );
-
-    // Install Demo (Admin module)
-    $router->registerWithMiddleware(
-        '/admin/install-demo',
-        'Lukaisu\\Modules\\Admin\\Http\\AdminController@installDemo',
-        ADMIN_MIDDLEWARE
-    );
-
-    // Admin settings are served by the bundled Svelte AdminSettingsPage island
-    // (Phase R): GET /admin/settings 302s into the bundle (see the admin redirect
-    // below), which reads/writes the server-wide feed limits + multi-user flags
-    // via admin-scoped /api/v1/settings*. The old cookie-authed form + native
-    // POST are gone.
-
-    // Server data (Admin module)
-    $router->registerWithMiddleware(
-        '/admin/server-data',
-        'Lukaisu\\Modules\\Admin\\Http\\AdminController@serverData',
-        ADMIN_MIDDLEWARE
-    );
-
-    // User Management (Admin module)
-    $router->get('/admin/users', 'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@index', ADMIN_MIDDLEWARE);
-    $router->post('/admin/users', 'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@index', ADMIN_MIDDLEWARE);
-    $router->get('/admin/users/new', 'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@create', ADMIN_MIDDLEWARE);
-    $router->post('/admin/users/new', 'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@create', ADMIN_MIDDLEWARE);
-    $router->get(
-        '/admin/users/{id:int}/edit',
-        'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@edit',
-        ADMIN_MIDDLEWARE
-    );
-    $router->post(
-        '/admin/users/{id:int}/edit',
-        'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@edit',
-        ADMIN_MIDDLEWARE
-    );
-    $router->post(
-        '/admin/users/{id:int}/delete',
-        'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@delete',
-        ADMIN_MIDDLEWARE
-    );
-    $router->post(
-        '/admin/users/{id:int}/activate',
-        'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@activate',
-        ADMIN_MIDDLEWARE
-    );
-    $router->post(
-        '/admin/users/{id:int}/deactivate',
-        'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@deactivate',
-        ADMIN_MIDDLEWARE
-    );
-    $router->post(
-        '/admin/users/{id:int}/role',
-        'Lukaisu\\Modules\\Admin\\Http\\UserManagementController@setRole',
-        ADMIN_MIDDLEWARE
     );
 
     // ==================== USER PROFILE (AUTH REQUIRED) ====================

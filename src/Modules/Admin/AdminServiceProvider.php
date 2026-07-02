@@ -32,9 +32,7 @@ use Lukaisu\Modules\Admin\Infrastructure\FileSystemEnvRepository;
 use Lukaisu\Modules\Admin\Application\AdminFacade;
 use Lukaisu\Modules\Admin\Application\Services\SessionCleaner;
 // Http
-use Lukaisu\Modules\Admin\Http\AdminController;
 use Lukaisu\Modules\Admin\Http\AdminApiHandler;
-use Lukaisu\Modules\Admin\Http\UserManagementController;
 // Application Services
 use Lukaisu\Modules\Admin\Application\Services\TtsService;
 // User Management Use Cases
@@ -73,14 +71,6 @@ class AdminServiceProvider implements ServiceProviderInterface
             return new AdminFacade(
                 $c->getTyped(SettingsRepositoryInterface::class),
                 $c->getTyped(BackupRepositoryInterface::class)
-            );
-        });
-
-        // Register Controller (optional dependencies for BC)
-        $container->bind(AdminController::class, function (Container $c) {
-            return new AdminController(
-                $c->getTyped(AdminFacade::class),
-                $c->getTyped(TtsService::class)
             );
         });
 
@@ -139,18 +129,6 @@ class AdminServiceProvider implements ServiceProviderInterface
         $container->singleton(ToggleUserRole::class, function (Container $c) {
             return new ToggleUserRole(
                 $c->getTyped(MySqlUserRepository::class)
-            );
-        });
-
-        $container->bind(UserManagementController::class, function (Container $c) {
-            return new UserManagementController(
-                $c->getTyped(ListUsers::class),
-                $c->getTyped(CreateUser::class),
-                $c->getTyped(UpdateUser::class),
-                $c->getTyped(DeleteUser::class),
-                $c->getTyped(ToggleUserStatus::class),
-                $c->getTyped(ToggleUserRole::class),
-                $c->getTyped(UserRepositoryInterface::class)
             );
         });
     }
