@@ -1,5 +1,4 @@
 import { defineConfig, type PluginOption, build } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { PurgeCSS, type UserDefinedOptions } from 'purgecss';
 import { resolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -111,10 +110,13 @@ export default defineConfig({
   // the Location header.
   base: '/dist/',
 
-  esbuild: {
-    drop: ['console', 'debugger'],
-  },
-
+  // This config builds two things: the CSS-only `styles` entry (Bulma + base,
+  // for the last server-rendered pages — the OAuth link-confirm forms) and the
+  // service worker (see buildServiceWorker below), which /sw.js serves to the
+  // bundled Svelte client when a browser hits the server. No application JS or
+  // Svelte islands are bundled here — that's the packaged client's job
+  // (vite.app.config.ts). The Alpine-ful `main.ts` server entry was deleted
+  // under the headless cut (R6d); see src/frontend/js/styles.ts.
   build: {
     outDir: resolve(__dirname, 'dist'),
     emptyOutDir: false,
@@ -122,30 +124,16 @@ export default defineConfig({
     target: 'es2022',
     rollupOptions: {
       input: {
-        // CSS-only entry for the last server-rendered pages (the OAuth
-        // link-confirm forms). The Alpine-ful `main.ts` server entry was
-        // deleted under the headless cut (R6d); see src/frontend/js/styles.ts.
         styles: resolve(__dirname, 'src/frontend/js/styles.ts'),
       },
       output: {
         entryFileNames: 'js/vite/[name].[hash].js',
-        chunkFileNames: 'js/vite/chunks/[name].[hash].js',
         assetFileNames: 'css/vite/[name].[hash][extname]',
-        manualChunks(id) {
-          if (id.includes('chart.js')) return 'chart';
-          if (id.includes('@yaireo/tagify')) return 'tagify';
-        },
       },
     },
-    chunkSizeWarningLimit: 400,
   },
 
   plugins: [
-    // Svelte preprocessor (TS) config lives in svelte.config.js, shared with
-    // svelte-check. The server (dist) build no longer bundles any island — the
-    // last server-rendered pages ship CSS only — but the plugin is harmless and
-    // kept so any future server-side island compiles without config churn.
-    svelte(),
     // Clean stale hashed bundles from previous builds
     cleanViteOutput(),
     // Build service worker for PWA support
