@@ -103,8 +103,8 @@ class PageLayoutHelper
     /**
      * Assemble the navbar's dynamic, per-user data.
      *
-     * The navbar markup itself is now rendered client-side (see
-     * `navbar_renderer.ts`) so the same chrome can render in the bundled,
+     * The navbar markup itself is now rendered client-side (the Svelte
+     * `NavBar.svelte` island) so the same chrome can render in the bundled,
      * shell-free client against a remote `/api/v1`. This method is the single
      * server-side source of the data that markup needs — language list, current
      * language, theme state and user/admin flags — and is exposed verbatim by
@@ -167,10 +167,11 @@ class PageLayoutHelper
     /**
      * Render the navbar mount point.
      *
-     * The client (`mountNavbar()` in `navbar.ts`) fetches `GET /api/v1/navbar`,
-     * builds the markup with `navbar_renderer.ts` and hydrates this element. The
-     * `data-current-page` attribute carries the active-page hint that used to be
-     * a PHP parameter, so highlighting still works without server-rendered HTML.
+     * The client (`mountNavbar()` in `frontend_shell.ts`) fetches
+     * `GET /api/v1/navbar` and mounts the Svelte `NavBar.svelte` island into
+     * this element. The `data-current-page` attribute carries the active-page
+     * hint that used to be a PHP parameter, so highlighting still works without
+     * server-rendered HTML.
      *
      * @param string $currentPage Optional identifier for the current page to highlight
      *

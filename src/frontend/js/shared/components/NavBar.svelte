@@ -1,23 +1,21 @@
 <!--
-  NavBar — Svelte 5 port of the Alpine global navbar (`navbar.ts` +
-  `navbar_renderer.ts`), hosting the nested streak flame (`NavbarStreak.svelte`)
-  and the theme toggle (`ThemeToggle.svelte`).
+  NavBar — the global navigation bar (Svelte 5). Originally a port of the Alpine
+  navbar; it is now the sole renderer — Alpine was retired under the headless cut
+  (the old `navbar.ts` component and `navbar_renderer.ts` HTML builder are gone;
+  `navbar_renderer.ts` survives only as the shared `NavbarData` types). Hosts the
+  nested streak flame (`NavbarStreak.svelte`) and the theme toggle
+  (`ThemeToggle.svelte`).
 
-  main.ts fetches `GET /api/v1/navbar` and mounts this island into the
-  `#navbar-root` placeholder on EVERY page of both the bundled app and the PHP
-  server PWA, so behaviour must match the Alpine version exactly:
+  `mountNavbar()` (frontend_shell.ts) fetches `GET /api/v1/navbar` and mounts
+  this island into the `#navbar-root` placeholder. Behaviour:
     - active top-level highlight from `currentPage`,
     - the three primary button groups (texts / vocabulary / languages, each with
       a "+" sibling),
     - the language `<select>` switcher (setLangAsync → strip `filterlang` or
-      reload — the Alpine navbar does NOT dispatch `lukaisu:languageChanged`; it
-      reloads, which re-mounts every island fresh),
+      reload; reloading re-mounts every island fresh),
     - the user dropdown (open/close, click-outside, ESC),
     - the mobile drawer (burger toggle, overlay click, ESC, Back/popstate close),
     - logout as a CSRF-protected POST.
-
-  The Alpine `navbar.ts` / `navbar_renderer.ts` stay on disk (unused) until the
-  Alpine-retirement division.
 
   @license Unlicense <http://unlicense.org/>
 -->
