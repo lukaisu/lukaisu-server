@@ -615,9 +615,6 @@ class TextApiHandler implements ApiRoutableInterface
     private function handleBulkAction(array $params): JsonResponse
     {
         $action = (string) ($params['action'] ?? '');
-        if ($action !== 'archive' && $action !== 'delete') {
-            return Response::error('Expected action "archive" or "delete"', 400);
-        }
 
         $rawIds = $params['ids'] ?? [];
         if (!is_array($rawIds)) {
@@ -631,11 +628,57 @@ class TextApiHandler implements ApiRoutableInterface
             return Response::error('No text IDs provided', 400);
         }
 
+        // `archived` scopes the action to archived texts (the ArchivedTexts
+        // island); `tag` is required by the tag actions. This mirrors the marked-
+        // action set the retired native /texts + /text/archived form handlers
+        // served (TextCrudController::handleMarkAction / handleArchivedMarkAction).
+        $archived = (bool) ($params['archived'] ?? false);
+        $tag = trim((string) ($params['tag'] ?? ''));
+
+        // Validate the action + tag up front, before resolving any facade, so
+        // these branches stay DB-free (unit-tested without a database).
+        $allowed = $archived
+            ? ['delete', 'unarchive', 'add-tag', 'remove-tag']
+            : ['archive', 'delete', 'rebuild', 'set-sentences', 'set-active-sentences', 'add-tag', 'remove-tag'];
+        if (!in_array($action, $allowed, true)) {
+            return Response::error('Expected one of: ' . implode(', ', $allowed), 400);
+        }
+        if (($action === 'add-tag' || $action === 'remove-tag') && $tag === '') {
+            return Response::error('tag is required for tag actions', 400);
+        }
+
+        // Tag actions apply to both scopes; route to the matching tag facade.
+        if ($action === 'add-tag') {
+            return Response::success(
+                $archived
+                    ? TagsFacade::addTagToArchivedTexts($tag, $ids)
+                    : TagsFacade::addTagToTexts($tag, $ids)
+            );
+        }
+        if ($action === 'remove-tag') {
+            if ($archived) {
+                TagsFacade::removeTagFromArchivedTexts($tag, $ids);
+            } else {
+                TagsFacade::removeTagFromTexts($tag, $ids);
+            }
+            return Response::success(['count' => count($ids)]);
+        }
+
         $facade = Container::getInstance()->getTyped(TextFacade::class);
 
-        return $action === 'archive'
-            ? Response::success($facade->archiveTexts($ids))
-            : Response::success($facade->deleteTexts($ids));
+        if ($archived) {
+            return $action === 'delete'
+                ? Response::success($facade->deleteArchivedTexts($ids))
+                : Response::success($facade->unarchiveTexts($ids));
+        }
+
+        return match ($action) {
+            'archive' => Response::success($facade->archiveTexts($ids)),
+            'delete' => Response::success($facade->deleteTexts($ids)),
+            'rebuild' => Response::success(['count' => $facade->rebuildTexts($ids)]),
+            'set-sentences' => Response::success(['count' => $facade->setTermSentences($ids, false)]),
+            default => Response::success(['count' => $facade->setTermSentences($ids, true)]),
+        };
     }
 
     /**

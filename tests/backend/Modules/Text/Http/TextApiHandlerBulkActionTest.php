@@ -39,7 +39,8 @@ class TextApiHandlerBulkActionTest extends TestCase
 
         $this->assertSame(400, $res->getStatusCode());
         $this->assertSame(
-            ['error' => 'Expected action "archive" or "delete"'],
+            ['error' => 'Expected one of: archive, delete, rebuild, '
+                . 'set-sentences, set-active-sentences, add-tag, remove-tag'],
             $res->getData()
         );
     }
@@ -81,5 +82,26 @@ class TextApiHandlerBulkActionTest extends TestCase
 
         $this->assertSame(400, $res->getStatusCode());
         $this->assertSame(['error' => 'No text IDs provided'], $res->getData());
+    }
+
+    public function testTagActionRequiresTag(): void
+    {
+        // add-tag / remove-tag need a non-empty tag; validated before any facade.
+        $res = $this->bulk(['action' => 'add-tag', 'ids' => [1, 2]]);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(['error' => 'tag is required for tag actions'], $res->getData());
+    }
+
+    public function testArchivedScopeRejectsActiveOnlyAction(): void
+    {
+        // rebuild / set-sentences are active-only; the archived scope rejects them.
+        $res = $this->bulk(['action' => 'rebuild', 'ids' => [1], 'archived' => true]);
+
+        $this->assertSame(400, $res->getStatusCode());
+        $this->assertSame(
+            ['error' => 'Expected one of: delete, unarchive, add-tag, remove-tag'],
+            $res->getData()
+        );
     }
 }

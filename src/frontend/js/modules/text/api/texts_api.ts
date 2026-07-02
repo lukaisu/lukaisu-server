@@ -474,10 +474,17 @@ export const TextsApi = {
    * @returns Promise with the number of texts affected
    */
   async bulkAction(
-    action: 'archive' | 'delete',
-    ids: number[]
+    action: 'archive' | 'delete' | 'unarchive' | 'rebuild'
+      | 'set-sentences' | 'set-active-sentences' | 'add-tag' | 'remove-tag',
+    ids: number[],
+    opts?: { archived?: boolean; tag?: string }
   ): Promise<ApiResponse<{ count: number }>> {
-    return apiPut<{ count: number }>('/texts/bulk-action', { action, ids });
+    return apiPut<{ count: number }>('/texts/bulk-action', {
+      action,
+      ids,
+      ...(opts?.archived ? { archived: true } : {}),
+      ...(opts?.tag !== undefined && opts.tag !== '' ? { tag: opts.tag } : {})
+    });
   },
 
   /**
