@@ -18,13 +18,39 @@ import {
   type TermCreateFullRequest,
   type TermUpdateFullRequest
 } from '@modules/vocabulary/api/terms_api';
-import type {
-  WordFormData,
-  ValidationErrors,
-  SaveResult
-} from '@modules/vocabulary/stores/word_form_store';
+/**
+ * Form data for the single-word editor. Ported from the retired Alpine
+ * `word_form_store.ts` (deleted under R6e); canonical here now.
+ */
+export interface WordFormData {
+  text: string;
+  textLc: string;
+  lemma: string;
+  translation: string;
+  romanization: string;
+  sentence: string;
+  notes: string;
+  status: number;
+  tags: string[];
+}
 
-export type { WordFormData, ValidationErrors, SaveResult };
+/** Validation errors keyed by field name. */
+export interface ValidationErrors {
+  lemma: string | null;
+  translation: string | null;
+  romanization: string | null;
+  sentence: string | null;
+  notes: string | null;
+  general: string | null;
+}
+
+/** Result of a save operation. */
+export interface SaveResult {
+  success: boolean;
+  hex?: string;
+  wordId?: number;
+  error?: string;
+}
 
 /** Create initial empty form data. */
 function createEmptyFormData(): WordFormData {

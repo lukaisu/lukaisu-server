@@ -7,7 +7,7 @@
  * @license Unlicense <http://unlicense.org/>
  */
 
-import type { WordData } from '@modules/vocabulary/stores/word_store';
+import type { WordData } from '@modules/vocabulary/stores/word_store.svelte';
 import type { MultiWordRef } from '@modules/text/api/texts_api';
 import { parseInlineMarkdown } from '@shared/utils/inline_markdown';
 

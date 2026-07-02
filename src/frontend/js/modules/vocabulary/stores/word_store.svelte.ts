@@ -40,9 +40,29 @@ import {
   updateWordTranslationInDOM,
   type RenderSettings
 } from '@modules/text/pages/reading/text_renderer';
-import type { WordData } from '@modules/vocabulary/stores/word_store';
+/**
+ * Word data stored in the word store. Ported from the retired Alpine
+ * `word_store.ts` (deleted under R6e); this is now the canonical definition.
+ */
+export interface WordData {
+  position: number;
+  sentenceId: number;
+  text: string;
+  textLc: string;
+  hex: string;
+  isNotWord: boolean;
+  wordCount: number;
+  hidden: boolean;
+  wordId: number | null;
+  status: number;
+  translation: string;
+  romanization: string;
+  notes?: string;
+  tags?: string;
+  // Multiword references (mw2, mw3, etc.) - full expression details
+  [key: `mw${number}`]: MultiWordRef | undefined;
+}
 
-export type { WordData };
 export type { MultiWordRef };
 
 const DEFAULT_DICT_LINKS: DictLinks = { dict1: '', dict2: '', translator: '' };

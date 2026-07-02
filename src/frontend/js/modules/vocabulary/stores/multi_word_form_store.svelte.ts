@@ -16,13 +16,35 @@
 
 import { TermsApi, type MultiWordData, type MultiWordInput } from '@modules/vocabulary/api/terms_api';
 import { updateWordStatusInDOM } from '@modules/text/pages/reading/text_renderer';
-import type {
-  MultiWordFormData,
-  ValidationErrors,
-  SaveResult
-} from '@modules/vocabulary/stores/multi_word_form_store';
+/**
+ * Form data for the multi-word (expression) editor. Ported from the retired
+ * Alpine `multi_word_form_store.ts` (deleted under R6e); canonical here now.
+ */
+export interface MultiWordFormData {
+  text: string;
+  textLc: string;
+  translation: string;
+  romanization: string;
+  sentence: string;
+  status: number;
+  wordCount: number;
+}
 
-export type { MultiWordFormData, ValidationErrors, SaveResult };
+/** Validation errors keyed by field name. */
+export interface ValidationErrors {
+  translation: string | null;
+  romanization: string | null;
+  sentence: string | null;
+  general: string | null;
+}
+
+/** Result of a save operation. */
+export interface SaveResult {
+  success: boolean;
+  hex?: string;
+  wordId?: number;
+  error?: string;
+}
 
 /** Create initial empty form data. */
 function createEmptyFormData(): MultiWordFormData {
