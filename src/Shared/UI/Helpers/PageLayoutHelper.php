@@ -588,7 +588,7 @@ HTML;
             // load the CSS-only bundle synchronously so it applies without an
             // Alpine/main.ts pass to flip a media="print" link.
             echo '<!-- Vite styles (synchronous CSS, no JS) -->';
-            echo ViteHelper::assets('js/styles.ts', false);
+            echo ViteHelper::assets('styles.ts', false);
         } else {
             echo '<!-- Legacy assets -->';
             echo '<link rel="stylesheet" type="text/css" href="' . UrlUtilities::url('/dist/css/styles.css') . '" />';
@@ -656,7 +656,7 @@ HTML;
             echo '<!-- Critical CSS for fast first paint -->';
             echo ViteHelper::criticalCss();
             echo '<!-- Vite styles (synchronous CSS, no JS) -->';
-            echo ViteHelper::assets('js/styles.ts', false);
+            echo ViteHelper::assets('styles.ts', false);
         } else {
             echo '<!-- Legacy assets -->';
             echo '<link rel="stylesheet" type="text/css" href="' . UrlUtilities::url('/dist/css/styles.css') . '" />';

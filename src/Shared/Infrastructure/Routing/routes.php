@@ -46,11 +46,12 @@ const ADMIN_MIDDLEWARE = [AdminMiddleware::class, CsrfMiddleware::class];
  *
  * The server is headless (Option A of docs-src/server/frontend-relocation.md):
  * it exposes `/api/v1` and nothing else renders a reading/learning UI. The
- * bundled client (`dist-app/`, built by `npm run build:app`) is no longer
- * served by this server — it ships in the Lukaisu mobile app and talks to a
- * server's `/api/v1` remotely with a bearer token. The two remaining pieces of
- * server-rendered HTML are inherently server-side: the OAuth account-link-
- * confirm forms (Google/Microsoft) below.
+ * bundled client is built in the sibling `lukaisu` repo (Phase M moved the
+ * frontend there) and ships in the Lukaisu mobile app, talking to a server's
+ * `/api/v1` remotely with a bearer token — this server never served it
+ * directly (R6f). The two remaining pieces of server-rendered HTML are
+ * inherently server-side: the OAuth account-link-confirm forms
+ * (Google/Microsoft) below.
  *
  * Routes are organized into:
  * - Public routes: No authentication required (login, register, etc.)

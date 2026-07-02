@@ -74,7 +74,7 @@
             "./node_modules/.bin/typedoc",
             "./vendor/bin/phpdoc"
         ],
-        "build": "npm run build:all",
+        "build": "npm run build",
         "clean-doc": [
             "rm -rf docs/guide docs/reference docs/developer docs/legal docs/assets docs/hashmap.json",
             "rm -f docs/changelog.html docs/index.html docs/404.html",
@@ -94,7 +94,7 @@
         "phpcs": "Check PHP code style (PSR-12)",
         "phpcbf": "Auto-fix PHP code style issues",
         "doc": "Regenerate all documentation (VitePress + TypeDoc + phpDoc)",
-        "build": "Build frontend assets (Vite + themes)",
+        "build": "Build the server's CSS + service worker (Vite)",
         "clean-doc": "Clear generated documentation"
     },
     "config": {

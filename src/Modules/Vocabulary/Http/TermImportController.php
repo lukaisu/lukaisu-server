@@ -67,10 +67,11 @@ class TermImportController extends VocabularyBaseController
     /**
      * Bulk translate words (POST: save the chosen terms) — JSON.
      *
-     * The GET page is the bundled Svelte `BulkTranslate` island (the
-     * `/word/bulk-translate` GET route 302s into `dist-app/bulk-translate.html`);
-     * the island fetches its data from {@see config()} and posts the chosen terms
-     * back here at POST /api/v1/terms/bulk-translate (dispatched by
+     * The GET page is the bundled Svelte `BulkTranslate` island (`/word/
+     * bulk-translate` has no server route — reached exclusively through a
+     * connected client); the island fetches its data from {@see config()} and
+     * posts the chosen terms back here at POST /api/v1/terms/bulk-translate
+     * (dispatched by
      * VocabularyApiRouter@routePost), always answering with JSON. It saves the
      * marked terms and reports how many were saved plus whether this was the last
      * batch (`cleanUp`, i.e. no pagination `offset` carried). The island then
@@ -106,9 +107,9 @@ class TermImportController extends VocabularyBaseController
     /**
      * Bulk-translate bootstrap config (JSON) for the Svelte island.
      *
-     * The bulk-translate UI is now a Svelte island shipped in the bundle
-     * (`dist-app/bulk-translate.html`); the GET page route 302s there. The island
-     * cannot compute the server-only bits — the text's dictionaries and the page
+     * The bulk-translate UI is a Svelte island shipped in the bundled client
+     * (no server route — reached exclusively through a connected client). The
+     * island cannot compute the server-only bits — the text's dictionaries and the page
      * of still-unknown words — so it fetches them here on mount. This mirrors the
      * JSON blob the retired `bulk_translate_form.php` view used to inline, plus
      * the term rows it rendered server-side. The chosen terms are posted back to
@@ -200,9 +201,9 @@ class TermImportController extends VocabularyBaseController
     /**
      * Upload words from file (POST): import terms or a dictionary file.
      *
-     * The GET page is the bundled Svelte `WordUpload` island (the `/word/upload`
-     * GET route 302s into `dist-app/word-upload.html`); this method now only
-     * serves the island's manual-upload multipart POST (at POST
+     * The GET page is the bundled Svelte `WordUpload` island (`/word/upload`
+     * has no server route — reached exclusively through a connected client);
+     * this method serves the island's manual-upload multipart POST (at POST
      * /api/v1/terms/upload, dispatched by VocabularyApiRouter@routePost) and
      * always answers with
      * JSON. The Svelte manual tab submits exactly two operations, keyed by the
@@ -232,9 +233,9 @@ class TermImportController extends VocabularyBaseController
     /**
      * Word-upload bootstrap config (JSON) for the Svelte island.
      *
-     * The word-upload UI is now a Svelte island shipped in the bundle
-     * (`dist-app/word-upload.html`); the GET page route 302s there. The island
-     * cannot compute the server-only bits — the current language (id + name),
+     * The word-upload UI is a Svelte island shipped in the bundled client (no
+     * server route — reached exclusively through a connected client). The
+     * island cannot compute the server-only bits — the current language (id + name),
      * whether FrequencyWords data exists for it, the curated dictionaries
      * registry, and the base-path-correct import endpoints — so it fetches them
      * here on mount. This mirrors the JSON blobs the retired `upload_form.php`

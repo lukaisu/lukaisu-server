@@ -4,37 +4,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## About This Project
 
-Lukaisu Server is a self-hosted web application for language learning by reading. This is a third-party community-maintained fork that improves upon the official SourceForge version with modern PHP support (8.2-8.5), smaller database size, better mobile support, and active development.
+Lukaisu Server is the **headless backend** for Lukaisu, a language-learning-by-reading
+app. This is a third-party community-maintained fork of the original SourceForge
+LWT project. It exposes `/api/v1` (and, still server-rendered, the two OAuth
+account-link-confirm pages) — nothing else. The reading/learning UI is a
+connected client: the [`lukaisu`](https://github.com/lukaisu/lukaisu) mobile
+app, or any other `/api/v1` consumer.
 
 **Tech Stack (today):**
 
 - Backend: PHP 8.2+ with MySQLi
-- Frontend: TypeScript, Alpine.js, Bulma CSS, jQuery (legacy)
 - Database: MySQL/MariaDB with InnoDB engine
-- Build Tools: Composer (PHP), NPM with Vite (JS/CSS)
+- Build Tools: Composer (PHP); a small NPM/Vite build for the server's own CSS
+  + service worker (`server-src/`) — see [Asset Building](#asset-building)
 
 **Direction (target architecture).** Lukaisu is a local-first app with an
-*optional* server, and the stack is deliberately shifting. Build to the target,
-not the legacy:
+*optional* server, and the PHP backend is **frozen** and being hollowed out
+further: what stays server-side becomes an optional **Python (FastAPI)** edge
+for sync + NLP. See `BRIEFING.md` and `docs-src/server/local-first.md`.
 
-- **PHP → Python.** The PHP backend is **frozen** and being hollowed out:
-  rendering and data move to the client; what stays server-side becomes an
-  optional **Python (FastAPI)** edge for sync + NLP. See `BRIEFING.md` and
-  `docs-src/server/local-first.md`.
-- **Alpine.js → Svelte 5.** The client is now a real local-first SPA, past
-  Alpine's islands model. Migrate **incrementally** — Svelte islands coexist with
-  Alpine on the same page (Alpine owns only `x-data` nodes). Svelte is CSP-clean
-  (no `unsafe-eval`). Toolchain is wired in: `npm run typecheck` also runs
-  `svelte-check`, and `eslint-plugin-svelte` lints `*.svelte`. **First screen
-  migrated:** the app's `words.html` mounts `WordList.svelte` (the Alpine
-  `word_list_app.ts` stays as the PWA renderer until cut-over). Write new screens
-  as Svelte islands, port `.svelte` from the matching Alpine page.
-- **Server DB → on-device.** Client data lives in IndexedDB (Dexie); the server
-  DB only matters for the (not-yet-built) sync path.
-- **jQuery is removed** as screens migrate; **Bulma (CSS) stays.**
+The **frontend migration is done** (Phase M of
+[frontend-relocation.md](docs-src/server/frontend-relocation.md)): all
+reading/learning UI (Alpine → Svelte 5, IndexedDB/Dexie client data, the whole
+`src/frontend/` tree) moved to the `lukaisu` app repo. This repo no longer owns
+or builds any of it.
 
-So: **don't add new PHP features or net-new Alpine screens** — build the Python
-edge or a Svelte island instead.
+So: **don't add new PHP rendering or client UI here** — build the Python edge
+(this repo) or a Svelte island (the `lukaisu` repo) instead.
 
 ## Development Setup
 
@@ -96,10 +92,9 @@ composer test:db-status          # Show test database status
 composer test:reset-db           # Drop and recreate test database
 composer test:integration        # Run integration tests (sets up DB automatically)
 
-# Frontend tests (Vitest)
-npm test                         # Run all frontend tests
-npm run test:watch               # Watch mode for frontend tests
-npm run test:coverage            # Run with coverage
+# Live-server API smoke test (Vitest): tests/api.test.ts. Needs a running
+# instance and is excluded from `npm test` (see vitest.config.ts) — run it by
+# temporarily removing it from that exclude list.
 
 # E2E tests (requires server on localhost:8000)
 npm run e2e                      # Run Cypress E2E tests
@@ -148,17 +143,16 @@ npm run typecheck                                    # TypeScript type checking
 
 ```bash
 npm run dev                      # Start Vite dev server with HMR
-npm run build                    # Build Vite JS/CSS bundles
-npm run build:themes             # Build theme CSS files
-npm run build:all                # Build everything (Vite + themes)
-composer build                   # Alias for npm run build:all
+npm run build                    # Build the server's CSS + service worker
+composer build                   # Alias for npm run build
 ```
 
-**Frontend Development Workflow:**
-
-1. Run `npm run dev` for development with Hot Module Replacement
-2. Run `npm run typecheck` to check TypeScript errors
-3. Run `npm run build:all` for production build before committing
+This builds only what the server itself ships: a CSS-only bundle for the two
+OAuth account-link pages (`server-src/styles.ts`) and the service worker
+(`server-src/sw.ts`). The reading/learning frontend moved to the `lukaisu` app
+repo (Phase M) — see
+[frontend-relocation.md](docs-src/server/frontend-relocation.md) and that
+repo's own `npm run build` / `npm run build:themes`.
 
 ### Documentation Generation
 
@@ -235,15 +229,13 @@ src/backend/                         # Legacy MVC (being migrated to src/Modules
 │   └── Endpoints.php                # Endpoint registry
 └── View/Helper/                     # StatusHelper (business logic dependency)
 
-src/frontend/
-├── js/                              # TypeScript source (built with Vite)
-│   ├── main.ts                      # Entry point
-│   ├── types/                       # TypeScript declarations
-│   └── *.ts                         # Feature modules
-└── css/
-    ├── base/                        # Core styles
-    └── themes/                      # Theme overrides
+server-src/                          # The server's own tiny Vite build
+├── styles.ts                        # CSS-only entry (Bulma + assets/css/styles.css)
+└── sw.ts                            # Service worker (offline cache for the bundled client)
 ```
+
+The reading/learning frontend (TypeScript, Svelte, CSS themes) lives in the
+[`lukaisu`](https://github.com/lukaisu/lukaisu) repo's `webapp/`, not here.
 
 ### Database Architecture
 
@@ -318,48 +310,12 @@ Key endpoint groups (see `src/backend/Api/V1/Endpoints.php` for full list):
 
 ### Modifying TypeScript
 
-1. Edit files in `src/frontend/js/*.ts`
-2. Run `npm run dev` for HMR during development
-3. Run `npm run typecheck` before committing
-4. Run `npm run build` to generate production bundles
-
-Key modules:
-
-- `pgm.ts` - Main program logic and utilities
-- `text_events.ts` - Text reading interface
-- `audio_controller.ts` - Audio playback
-- `translation_api.ts` - Translation integration
-
-### Alpine.js (CSP Build)
-
-> **Direction:** the rendering framework is migrating to **Svelte 5** (see
-> *Direction* above). The rules below apply to **existing Alpine code** and any
-> Alpine you must still touch — **don't build net-new screens in Alpine**, add a
-> Svelte island instead. Svelte is CSP-clean by construction and needs none of
-> these workarounds.
-
-This project uses `@alpinejs/csp` (aliased in `vite.config.ts`), which **cannot evaluate inline expressions**. The CSP header (`script-src 'self'` in `SecurityHeaders.php`) enforces this.
-
-**Never do:**
-- `x-data="{ foo: 'bar', count: 0 }"` — inline object literals
-- `@click="count++"` or `@change="show = ['a','b'].includes($event.target.value)"` — complex inline expressions
-- `@change="setPerPage(parseInt(value))"` — calls to JS globals (`parseInt`, `Number`, `JSON`, etc.) are undefined in CSP eval scope; do the conversion inside the component method instead
-- `x-text="obj?.prop"` or `x-text="foo?.bar || 'default'"` — optional chaining (`?.`) and other JS syntax beyond simple property access causes CSP parser errors; wrap in a component method instead
-- `x-data="componentName()"` with parentheses — function call syntax
-
-**Instead:**
-- Register components via `Alpine.data('name', () => ({ ... }))` in TypeScript
-- Use `x-data="name"` (no parentheses) in HTML
-- Move all logic into component methods: `@click="increment()"`, `@change="updateMode($event)"`
-- Pass config from PHP via `<script type="application/json" id="config-id">` and read it in the component's `init()` method
-
-**Known violations:** Some older views (e.g., `edit_form.php`) still use inline `x-data` object literals and simple inline assignments like `@click="importMode = 'file'"`. These work at runtime because `@alpinejs/csp` actually supports simple property assignments and ternaries — it only breaks on complex expressions like function calls or array methods. New code should still follow the strict pattern above (registered components), but be aware that existing inline patterns may not cause errors.
-
-### Creating/Editing Themes
-
-1. Create folder `src/frontend/css/themes/your-theme/`
-2. Add CSS files (missing files fall back to `base/` defaults)
-3. Run `npm run build:themes` to generate minified themes
+`server-src/` is the entire TS surface here — `styles.ts` (CSS imports only)
+and `sw.ts` (the service worker). Both are self-contained; there's no
+component/module system, Alpine, or Svelte to reach for. For anything beyond
+these two files (reader UI, vocabulary, forms, themes, …), that's the
+[`lukaisu`](https://github.com/lukaisu/lukaisu) repo's `webapp/`, a separate
+checkout with its own `npm run dev` / `typecheck` / `build`.
 
 ## Important Conventions
 
@@ -396,4 +352,4 @@ Before committing:
 
 1. Run `composer test` and `./vendor/bin/psalm`
 2. Run `npm run typecheck` and `npm run lint`
-3. If you modified frontend assets, run `npm run build:all`
+3. If you modified `server-src/`, run `npm run build`

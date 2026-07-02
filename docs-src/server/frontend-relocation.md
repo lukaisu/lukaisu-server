@@ -285,6 +285,45 @@ dies and `main.ts` goes. R7 is auth-sensitive and can defer. **After R6, Phase M
 
 ## 3. Phase M — move the frontend into the app
 
+> **DONE (2026-07-02).** Executed as a plain copy + delete, not a history-
+> preserving move (`git subtree` wasn't available; `git filter-repo` was, but
+> the call was made not to bother — see the note below). Landed at
+> `lukaisu/webapp/` as proposed. Deviations from the plan below, discovered at
+> execution:
+> - **5 hidden couplings**, not the 0 assumed by "self-contained": `assets/
+>   sounds/*.mp3` (outside `src/frontend/`, read by `copyReviewSounds()`) now
+>   lives at `lukaisu/assets/sounds/`; `locale/en/*.json` (PHP-shared, stays in
+>   `lukaisu-server`) is `import.meta.glob`'d at build time by the app's
+>   offline i18n fallback (`webapp/js/shared/offline/local/i18n.ts`) — a
+>   deliberate duplicate now lives at `lukaisu/locale/en/`; the server's own
+>   `styles.ts` (kept from R6d, still needed for the 2 OAuth pages) imported
+>   `src/frontend/css/base/{styles,html5_audio_player,icons}.css` — `styles.css`
+>   is now duplicated (frozen) at `lukaisu-server/assets/css/`, the other two
+>   dropped as unneeded; `scripts/build-themes.js` reads `css/themes` +
+>   `css/base` directly — moved to `lukaisu` with its paths rewritten;
+>   `ViteHelper::criticalCss()` reads `css/critical.css` directly — same
+>   duplicate-into-`assets/css/` treatment as styles.css.
+> - **The `src/frontend` → `webapp` directory collapse shifted every relative
+>   `../` import that crossed the boundary by one level** (166 occurrences
+>   across 53 files, mostly in tests using raw relative paths instead of the
+>   `@shared`/`@modules` aliases) — caught by grep + a scripted fix, not by
+>   hand.
+> - **`server-src/`** (not `src/frontend/js`) is the new home for the 2 files
+>   that didn't move (`styles.ts`, `sw.ts`) — `src/` is this repo's PSR-4 PHP
+>   root, so TS files didn't belong there once the rest of `src/frontend/` was
+>   gone. `vite.config.ts` (the server's own CSS+SW build, kept from R6d/R6f)
+>   was rewritten accordingly, including dropping its now-pointless `@/
+>   @shared/@modules/@css` aliases (nothing in 2 standalone files needs them).
+> - **History was dropped**, not preserved — a deliberate simplification
+>   requested at execution over the subtree-split approach below.
+> - Full verification matched the exit criterion: `lukaisu`'s `npm run
+>   typecheck`/`lint`/`test` (2139, matching the pre-move count exactly)/
+>   `build`/`sync` all green, **and `cd android && ./gradlew assembleDebug`
+>   produced a real signed debug APK** — the strongest available proof the app
+>   now builds with zero `lukaisu-server` involvement.
+>
+> Original plan (kept for context; superseded by the above where they differ):
+
 `src/frontend/` is **self-contained** (verified: no import escapes it), so the
 move is mechanical. Target lands in the app repo (proposed `lukaisu/webapp/`;
 keeps it distinct from the legacy connect shell in `lukaisu/src/`).

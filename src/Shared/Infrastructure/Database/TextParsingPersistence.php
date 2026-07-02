@@ -215,7 +215,7 @@ class TextParsingPersistence
                 );
             }
         }
-        // JavaScript moved to src/frontend/js/texts/text_check_display.ts
+        // JavaScript now lives in the lukaisu repo (webapp/app/text-check.ts)
         echo '<script type="application/json" id="text-check-words-config">';
         echo json_encode(['words' => $wo, 'nonWords' => $nw], JSON_HEX_TAG | JSON_HEX_AMP);
         echo '</script>';
@@ -373,7 +373,7 @@ class TextParsingPersistence
                 );
             }
         }
-        // JavaScript moved to src/frontend/js/texts/text_check_display.ts
+        // JavaScript now lives in the lukaisu repo (webapp/app/text-check.ts)
         echo '<script type="application/json" id="text-check-config">';
         echo json_encode([
             'words' => [], // Will be populated from text-check-words-config

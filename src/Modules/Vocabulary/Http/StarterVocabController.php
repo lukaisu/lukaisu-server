@@ -41,9 +41,9 @@ class StarterVocabController extends BaseController
     /**
      * Starter vocabulary bootstrap config (JSON).
      *
-     * The starter-vocab UI is now a Svelte island shipped in the bundle
-     * (`dist-app/starter-vocab.html`); the GET page route 302s there. The island
-     * cannot compute the server-only bits — the language name, whether
+     * The starter-vocab UI is a Svelte island shipped in the bundled client
+     * (no server route — reached exclusively through a connected client). The
+     * island cannot compute the server-only bits — the language name, whether
      * FrequencyWords data exists, and the curated dictionaries filtered for the
      * language — so it fetches them here on mount. This mirrors the JSON blob the
      * retired `starter_vocab.php` view used to inline (minus the CSRF token, which

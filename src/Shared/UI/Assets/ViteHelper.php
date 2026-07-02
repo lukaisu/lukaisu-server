@@ -93,12 +93,12 @@ class ViteHelper
      * In development mode, loads assets from Vite dev server with HMR.
      * In production mode, loads assets from the manifest file.
      *
-     * @param string $entry    The entry point path (e.g., 'js/styles.ts')
+     * @param string $entry    The entry point path (e.g., 'styles.ts')
      * @param bool   $asyncCss Whether to load CSS asynchronously (non-render-blocking)
      *
      * @return string HTML script and link tags
      */
-    public static function assets(string $entry = 'js/styles.ts', bool $asyncCss = true): string
+    public static function assets(string $entry = 'styles.ts', bool $asyncCss = true): string
     {
         if (self::isDevServerRunning()) {
             return <<<HTML
@@ -187,7 +187,10 @@ HTML;
      */
     public static function criticalCss(): string
     {
-        $criticalPath = __DIR__ . '/../../../../src/frontend/css/critical.css';
+        // Frozen snapshot in assets/css/ (Phase M — the frontend, including the
+        // evolving copy of this file, moved to the sibling `lukaisu` app repo;
+        // these 2 static server pages keep their own copy, see styles.ts).
+        $criticalPath = __DIR__ . '/../../../../assets/css/critical.css';
         if (!file_exists($criticalPath)) {
             return '';
         }

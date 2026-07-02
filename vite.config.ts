@@ -73,20 +73,13 @@ function buildServiceWorker(): PluginOption {
           outDir: resolve(__dirname, 'sw-dist'),
           emptyOutDir: true,
           lib: {
-            entry: resolve(__dirname, 'src/frontend/js/sw.ts'),
+            entry: resolve(__dirname, 'server-src/sw.ts'),
             formats: ['iife'],
             name: 'sw',
             fileName: () => 'sw.js',
           },
           minify: 'esbuild',
           target: 'es2022',
-        },
-        resolve: {
-          alias: {
-            '@': resolve(__dirname, 'src/frontend/js'),
-            '@shared': resolve(__dirname, 'src/frontend/js/shared'),
-            '@modules': resolve(__dirname, 'src/frontend/js/modules'),
-          },
         },
       });
       // Move built SW to project root (required for service worker scope)
@@ -99,7 +92,7 @@ function buildServiceWorker(): PluginOption {
 }
 
 export default defineConfig({
-  root: resolve(__dirname, 'src/frontend'),
+  root: resolve(__dirname, 'server-src'),
   publicDir: false,
 
   // Built assets are served from /dist/ via index.php + .htaccess. Vite's
@@ -110,13 +103,14 @@ export default defineConfig({
   // the Location header.
   base: '/dist/',
 
-  // This config builds two things: the CSS-only `styles` entry (Bulma + base,
-  // for the last server-rendered pages — the OAuth link-confirm forms) and the
-  // service worker (see buildServiceWorker below), which /sw.js serves to the
-  // bundled Svelte client when a browser hits the server. No application JS or
-  // Svelte islands are bundled here — that's the packaged client's job
-  // (vite.app.config.ts). The Alpine-ful `main.ts` server entry was deleted
-  // under the headless cut (R6d); see src/frontend/js/styles.ts.
+  // This config builds two things: the CSS-only `styles` entry (Bulma + a
+  // frozen base-theme snapshot from assets/css/, for the last server-rendered
+  // pages — the OAuth link-confirm forms) and the service worker (see
+  // buildServiceWorker below), which /sw.js serves to the bundled Svelte
+  // client when a browser hits the server. No application JS or Svelte
+  // islands are bundled here — that's the packaged mobile app's job, built
+  // from the `lukaisu` repo since Phase M (the frontend moved there; this
+  // server no longer owns or builds it).
   build: {
     outDir: resolve(__dirname, 'dist'),
     emptyOutDir: false,
@@ -124,7 +118,7 @@ export default defineConfig({
     target: 'es2022',
     rollupOptions: {
       input: {
-        styles: resolve(__dirname, 'src/frontend/js/styles.ts'),
+        styles: resolve(__dirname, 'server-src/styles.ts'),
       },
       output: {
         entryFileNames: 'js/vite/[name].[hash].js',
@@ -144,12 +138,10 @@ export default defineConfig({
         // PHP views and templates
         resolve(__dirname, 'src/**/*.php'),
         resolve(__dirname, 'index.php'),
-        // TypeScript files (for dynamic class names)
-        resolve(__dirname, 'src/frontend/js/**/*.ts'),
-        // Svelte islands (e.g. the global navbar) bundled into the PWA build
-        resolve(__dirname, 'src/frontend/js/**/*.svelte'),
+        // The CSS-only server entry (no logic, but scanned for consistency)
+        resolve(__dirname, 'server-src/**/*.ts'),
         // CSS files (for @apply directives)
-        resolve(__dirname, 'src/frontend/css/**/*.css'),
+        resolve(__dirname, 'assets/css/**/*.css'),
       ],
       // Safelist patterns that are dynamically generated
       safelist: {
@@ -210,13 +202,4 @@ export default defineConfig({
       }
     }
   },
-
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src/frontend/js'),
-      '@shared': resolve(__dirname, 'src/frontend/js/shared'),
-      '@modules': resolve(__dirname, 'src/frontend/js/modules'),
-      '@css': resolve(__dirname, 'src/frontend/css'),
-    }
-  }
 });

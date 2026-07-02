@@ -161,7 +161,7 @@ is done via the `.env` file (see `.env.example` for all options).
 
    ```bash
    composer install
-   npm install && npm run build:all
+   npm install && npm run build
    ```
 
 See the [`docs-src/`](docs-src/) guides for detailed instructions.
@@ -201,7 +201,6 @@ npm install
 ```bash
 # Run tests
 composer test              # PHP tests with coverage
-npm test                   # Frontend tests
 
 # Code quality
 ./vendor/bin/psalm         # Static analysis
@@ -210,8 +209,13 @@ npm run typecheck          # TypeScript checking
 
 # Build assets
 npm run dev                # Development server with HMR
-npm run build:all          # Production build
+npm run build               # Production build (server CSS + service worker)
 ```
+
+The reading/learning frontend lives in the [`lukaisu`](https://github.com/lukaisu/lukaisu)
+app repo, not here — this server is headless (`/api/v1` only, plus two OAuth
+account-link pages). See
+[frontend-relocation.md](docs-src/server/frontend-relocation.md).
 
 ## Alternatives
 

@@ -67,7 +67,8 @@ class TermStatusService
     /**
      * SQL expressions that seed FSRS scheduling state from `status` +
      * `status_changed_at` (issue #238). Mirrors the client `fsrsForStatus`
-     * (`src/frontend/js/shared/offline/local/fsrs.ts`): status 1 => a fresh New
+     * (`webapp/js/shared/offline/local/fsrs.ts` in the `lukaisu` repo):
+     * status 1 => a fresh New
      * card due now; 2-5 => a Review card seeded so the *derived* status matches
      * (`statusFromStability`); 98/99 => unscheduled. Referencing the row's own
      * columns means these only work in `INSERT ... SELECT` / `UPDATE` contexts —

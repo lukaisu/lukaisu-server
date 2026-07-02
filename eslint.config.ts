@@ -3,7 +3,6 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import markdown from "@eslint/markdown";
 import css from "@eslint/css";
-import svelte from "eslint-plugin-svelte";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
@@ -17,56 +16,26 @@ export default defineConfig([
       "coverage/**",
       "coverage-report/**",
       "docs/generated/**",
-      "src/frontend/js/third_party/**",
     ],
   },
 
-  // JavaScript/TypeScript source files
+  // Server-side TS source (server-src/: the CSS-only build entry + the
+  // service worker). No Svelte, no app modules — those moved to the sibling
+  // `lukaisu` app repo (Phase M).
   {
-    files: ["src/frontend/{js,app}/**/*.{js,mjs,cjs,ts,mts,cts}"],
+    files: ["server-src/**/*.{js,mjs,cjs,ts,mts,cts}"],
     plugins: { js },
     extends: ["js/recommended"],
     languageOptions: {
       globals: globals.browser,
     },
   },
-
-  // TypeScript-specific configuration
   {
-    files: ["src/frontend/{js,app}/**/*.{ts,mts,cts}"],
+    files: ["server-src/**/*.{ts,mts,cts}"],
     extends: [tseslint.configs.recommended],
   },
 
-  // Svelte components (the rendering framework the client is migrating to).
-  // `eslint-plugin-svelte`'s flat "recommended" wires the Svelte parser and
-  // rules. Two of its entries ship with no `files` filter, so they'd apply
-  // globally — and `svelte/comment-directive` then crashes on non-Svelte files
-  // (no Svelte parser services). Constrain those unscoped entries to *.svelte
-  // so the Svelte rules only run on Svelte files.
-  ...svelte.configs.recommended.map((config) =>
-    config.files
-      ? config
-      : { ...config, files: ["**/*.svelte", "**/*.svelte.ts", "**/*.svelte.js"] }
-  ),
-  // Point the embedded `<script lang="ts">` (and `*.svelte.ts` / `*.svelte.js`
-  // rune modules) at the TypeScript parser and supply browser globals. Without
-  // the TS sub-parser the Svelte parser can't read TypeScript syntax (e.g.
-  // `import { type Foo }`) in `*.svelte.ts` modules.
-  {
-    files: [
-      "src/frontend/**/*.svelte",
-      "src/frontend/**/*.svelte.ts",
-      "src/frontend/**/*.svelte.js",
-    ],
-    languageOptions: {
-      parserOptions: {
-        parser: tseslint.parser,
-      },
-      globals: globals.browser,
-    },
-  },
-
-  // Test files (Cypress, Vitest, etc.)
+  // Test files (the tests/api.test.ts live-server smoke test, Cypress e2e)
   {
     files: ["tests/**/*.{js,ts}", "cypress/**/*.{js,ts}"],
     plugins: { js },
@@ -122,24 +91,22 @@ export default defineConfig([
     },
   },
 
-  // CSS files (base styles and themes)
+  // CSS files (the frozen base-theme snapshot the last 2 server pages use)
   {
-    files: ["src/frontend/css/**/*.css"],
+    files: ["assets/css/**/*.css"],
     plugins: { css },
     language: "css/css",
     extends: ["css/recommended"],
     rules: {
-      // Allow !important - this codebase legitimately uses !important for:
-      // - Alpine.js [x-cloak] pattern (required by Alpine)
-      // - Overriding Bulma framework defaults
-      // - State/utility classes (.is-loading, .lukaisu_selected_text, etc.)
-      // Refactoring to avoid !important would require major CSS architecture changes
+      // Allow !important - this codebase legitimately uses !important for
+      // overriding Bulma framework defaults and state/utility classes.
+      // Refactoring to avoid !important would require major CSS architecture changes.
       "css/no-important": "off",
       // The flagged properties (user-select, resize, accent-color) are well-supported
       // in all modern browsers since 2021-2022. Disabling to avoid false positives.
       "css/use-baseline": "off",
-      // Theme and chart CSS files reference custom properties defined in the base
-      // styles.css :root block. The linter can't resolve cross-file variables.
+      // Theme CSS references custom properties defined in styles.css's :root
+      // block. The linter can't resolve cross-file variables.
       "css/no-invalid-properties": ["error", { allowUnknownVariables: true }],
     },
   },
