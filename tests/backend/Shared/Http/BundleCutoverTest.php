@@ -84,6 +84,8 @@ class BundleCutoverTest extends TestCase
             ['/register'], ['/password/forgot'], ['/password/reset'], ['/password/recover'],
             // Dictionary import GET (Job B, D3c) → bundled Svelte island.
             ['/dictionaries/import'], ['/languages/5/dictionaries/import'],
+            // Local-dictionaries list + per-language management (R6a) → bundle.
+            ['/dictionaries'], ['/languages/5/dictionaries'],
             // Book list + detail (Phase R) → bundled Svelte BooksListPage /
             // BookDetailPage islands; they read + delete via /api/v1/books.
             ['/books'], ['/book/5'],

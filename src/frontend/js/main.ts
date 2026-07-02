@@ -45,17 +45,15 @@ declare global {
  * via the <meta name="lukaisu-modules"> tag.
  */
 const moduleMap: Record<string, () => Promise<unknown>> = {
-  language: () => import('@modules/language'),
   admin: () => import('@modules/admin'),
-  // Only two modules still have server-rendered pages that need Alpine:
-  // `language` (the /languages/{id}/dictionaries management page,
-  // DictionaryController@index) and `admin` (the dashboard / backup / wizard /
-  // install-demo / server-data / users tools). `vocabulary`, `text`, `feed`,
-  // and `tags` joined `review` and `auth` in the graveyard: every screen that
-  // once needed their Alpine registrations is now a bundled Svelte island or a
-  // redirected page, and their server Views were deleted. A server page that
-  // still lists a removed module in its `lukaisu-modules` meta is simply
-  // filtered out below (`m in moduleMap`).
+  // Only `admin` still has server-rendered pages that need Alpine (the
+  // dashboard / backup / wizard / install-demo / server-data / users tools).
+  // Everything else — reader/library/review, vocabulary/text/feed/tags, and
+  // `language` (its dictionary-management page is now the bundled dictionaries
+  // island) — joined `review` and `auth` in the graveyard: each is a bundled
+  // Svelte island or a redirected page and its server Views were deleted. A
+  // server page that still lists a removed module in its `lukaisu-modules` meta
+  // is simply filtered out below (`m in moduleMap`).
 };
 
 // Read which modules the current page needs from the server-emitted meta tag

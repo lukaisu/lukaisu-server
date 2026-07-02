@@ -19,74 +19,32 @@ namespace Lukaisu\Modules\Dictionary\Http;
 use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Modules\Dictionary\Application\DictionaryFacade;
 use Lukaisu\Modules\Dictionary\Application\Services\DictionaryImportFileResolver;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
-use Lukaisu\Shared\Infrastructure\Database\Validation;
 use Lukaisu\Shared\Infrastructure\Http\InputValidator;
 use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
-use Lukaisu\Shared\UI\Helpers\PageLayoutHelper;
 use RuntimeException;
 
 /**
- * Controller for local dictionary management.
+ * Controller for local dictionary import.
  *
- * Handles:
- * - Dictionary listing and browsing
- * - Dictionary creation and deletion
- * - Import wizard for dictionary files
+ * The server-rendered dictionary-list + import wizard (index/delete/preview +
+ * Views/index.php) were dropped under the headless cut: the bundled client owns
+ * those screens (dictionaries.html / dictionary-import.html) and manages
+ * dictionaries via the local-dictionaries REST API. What remains here is the
+ * multipart file import, dispatched by DictionaryApiHandler.
  */
 class DictionaryController extends BaseController
 {
     private DictionaryFacade $dictionaryFacade;
-    private LanguageFacade $languageFacade;
 
     /**
      * Create a new DictionaryController.
      *
      * @param DictionaryFacade $dictionaryFacade Dictionary facade
-     * @param LanguageFacade   $languageFacade   Language facade
      */
-    public function __construct(DictionaryFacade $dictionaryFacade, LanguageFacade $languageFacade)
+    public function __construct(DictionaryFacade $dictionaryFacade)
     {
         parent::__construct();
         $this->dictionaryFacade = $dictionaryFacade;
-        $this->languageFacade = $languageFacade;
-    }
-
-    /**
-     * Index page - list dictionaries for a language.
-     *
-     * @param array $params Route parameters (may contain 'id' from RESTful route)
-     *
-     * @return void
-     */
-    public function index(array $params): void
-    {
-        // Support both /languages/{id}/dictionaries and /dictionaries?lang=
-        $langId = isset($params['id'])
-            ? (int)$params['id']
-            : (int)Validation::language(InputValidator::getStringWithDb('lang', 'currentlanguage'));
-
-        $langName = $this->languageFacade->getLanguageName($langId);
-        PageLayoutHelper::renderPageStart($langName . ' - Local Dictionaries', true);
-
-        // Handle form submissions
-        $this->handleFormSubmissions($langId);
-
-        // Get dictionaries
-        $dictionaries = $this->dictionaryFacade->getAllForLanguage($langId);
-        $localDictMode = $this->dictionaryFacade->getLocalDictMode($langId);
-
-        // Get languages for dropdown
-        $languages = $this->languageFacade->getLanguagesForSelect();
-
-        // Extract flash messages from query string
-        $message = $this->param('message');
-        $error = $this->param('error');
-
-        // Include view
-        include __DIR__ . '/../Views/index.php';
-
-        PageLayoutHelper::renderPageEnd();
     }
 
     /**
@@ -167,120 +125,6 @@ class DictionaryController extends BaseController
             return JsonResponse::error($e->getMessage(), 500);
         } finally {
             $resolver->cleanup();
-        }
-    }
-
-    /**
-     * Delete a dictionary.
-     *
-     * @param array $params Route parameters
-     *
-     * @return void
-     */
-    public function delete(array $params): void
-    {
-        $dictId = $this->paramInt('dict_id');
-        $langId = $this->paramInt('lang_id') ?? 0;
-
-        if ($dictId !== null && $dictId > 0) {
-            $this->dictionaryFacade->delete($dictId);
-        }
-
-        $this->redirect("/dictionaries?lang=$langId&message=deleted");
-    }
-
-    /**
-     * Preview file contents via AJAX.
-     *
-     * @param array $params Route parameters
-     *
-     * @return void
-     */
-    public function preview(array $params): void
-    {
-        header('Content-Type: application/json');
-
-        $uploadedFile = InputValidator::getUploadedFile('file');
-        if ($uploadedFile === null) {
-            echo json_encode(['error' => 'No file uploaded']);
-            return;
-        }
-
-        $format = $this->param('format', 'csv');
-        $filePath = $uploadedFile['tmp_name'];
-        $originalName = $uploadedFile['name'];
-
-        try {
-            $importer = $this->dictionaryFacade->getImporter($format, $originalName);
-
-            if (!$importer->canImport($filePath, $originalName)) {
-                echo json_encode(['error' => 'Invalid file format']);
-                return;
-            }
-
-            $entries = $importer->preview($filePath, 10);
-
-            $result = ['success' => true, 'entries' => $entries];
-
-            // Add structure info for CSV
-            if ($format === 'csv') {
-                $csvImporter = $this->dictionaryFacade->getImporter('csv', '');
-                if ($csvImporter instanceof \Lukaisu\Modules\Dictionary\Infrastructure\Import\CsvImporter) {
-                    $delimiter = $csvImporter->detectDelimiter($filePath);
-                    $headers = $csvImporter->detectHeaders($filePath, $delimiter);
-                    $result['structure'] = [
-                        'delimiter' => $delimiter,
-                        'headers' => $headers,
-                        'suggested_mapping' => $csvImporter->suggestColumnMap($headers),
-                    ];
-                }
-            }
-
-            echo json_encode($result);
-        } catch (RuntimeException $e) {
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Handle form submissions on the index page.
-     *
-     * @param int $langId Language ID
-     *
-     * @return void
-     */
-    private function handleFormSubmissions(int $langId): void
-    {
-        // Handle quick create
-        if ($this->isPost() && $this->hasParam('create_dictionary')) {
-            $name = $this->param('dict_name');
-            if (!empty($name)) {
-                $this->dictionaryFacade->create($langId, $name, 'csv');
-            }
-        }
-
-        // Handle quick delete
-        if ($this->isPost() && $this->hasParam('delete_dictionary')) {
-            $dictId = $this->paramInt('dict_id');
-            if ($dictId !== null && $dictId > 0) {
-                $this->dictionaryFacade->delete($dictId);
-            }
-        }
-
-        // Handle enable/disable toggle
-        if ($this->isPost() && $this->hasParam('toggle_enabled')) {
-            $dictId = $this->paramInt('dict_id');
-            if ($dictId !== null) {
-                $dict = $this->dictionaryFacade->getById($dictId);
-                if ($dict !== null) {
-                    if ($dict->isEnabled()) {
-                        $dict->disable();
-                    } else {
-                        $dict->enable();
-                    }
-                    $this->dictionaryFacade->update($dict);
-                }
-            }
         }
     }
 

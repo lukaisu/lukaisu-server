@@ -310,46 +310,13 @@ function registerRoutes(Router $router): void
     // ==================== LOCAL DICTIONARY ROUTES (PROTECTED) ====================
     // All dictionary routes use DictionaryController from the Dictionary module
 
-    // RESTful routes: /languages/{id}/dictionaries
-    $router->get(
-        '/languages/{id:int}/dictionaries',
-        'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@index',
-        AUTH_MIDDLEWARE
-    );
-    $router->post(
-        '/languages/{id:int}/dictionaries',
-        'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@index',
-        AUTH_MIDDLEWARE
-    );
-    // Dictionary-file import: the GET pages are the bundled Svelte island. Under
-    // the headless cut (Phase R) the multipart upload moved to POST
-    // /api/v1/local-dictionaries/import (DictionaryApiHandler dispatches it to
-    // DictionaryController@processImport, now JSON), so the cookie-authed native
-    // POST routes (/dictionaries/import + /languages/{id}/dictionaries/import) are
-    // gone.
-
-    // Legacy routes (with ?lang= query parameter)
-    $router->registerWithMiddleware(
-        '/dictionaries',
-        'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@index',
-        AUTH_MIDDLEWARE
-    );
-
-    // Delete dictionary
-    $router->registerWithMiddleware(
-        '/dictionaries/delete',
-        'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@delete',
-        AUTH_MIDDLEWARE,
-        'POST'
-    );
-
-    // Preview (AJAX)
-    $router->registerWithMiddleware(
-        '/dictionaries/preview',
-        'Lukaisu\\Modules\\Dictionary\\Http\\DictionaryController@preview',
-        AUTH_MIDDLEWARE,
-        'POST'
-    );
+    // Local dictionaries are served by the bundled client: GET /dictionaries and
+    // /languages/{id}/dictionaries 302 to the bundle (see the /app redirects
+    // below), which lists/deletes/imports via the local-dictionaries REST API.
+    // The multipart file import stays as POST /api/v1/local-dictionaries/import
+    // (DictionaryApiHandler -> DictionaryController@processImport). The server-
+    // rendered list + import wizard (index/delete/preview + Views/index.php) and
+    // the cookie-authed native routes were dropped under the headless cut.
 
     // ==================== ADMIN ROUTES (ADMIN ONLY) ====================
     // These routes require admin role, not just authentication
@@ -678,6 +645,10 @@ function registerRoutes(Router $router): void
     // (Phase R). The old cookie-authed native POST route is gone.
     $router->get('/dictionaries/import', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/languages/{id:int}/dictionaries/import', $bundleRedirect, AUTH_MIDDLEWARE);
+    // Local-dictionaries list + per-language management (Phase R): 302 into the
+    // bundled dictionaries.html island (local-dictionaries REST API).
+    $router->get('/dictionaries', $bundleRedirect, AUTH_MIDDLEWARE);
+    $router->get('/languages/{id:int}/dictionaries', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/profile/preferences', $bundleRedirect, AUTH_MIDDLEWARE);
     $router->get('/profile/statistics', $bundleRedirect, AUTH_MIDDLEWARE);
     // Admin settings 302 into the bundled Svelte AdminSettingsPage island (Phase

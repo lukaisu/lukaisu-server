@@ -6,7 +6,6 @@ namespace Lukaisu\Tests\Modules\Dictionary\Http;
 
 use Lukaisu\Modules\Dictionary\Http\DictionaryController;
 use Lukaisu\Modules\Dictionary\Application\DictionaryFacade;
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 use Lukaisu\Shared\Http\BaseController;
 use Lukaisu\Shared\Infrastructure\Http\JsonResponse;
 use PHPUnit\Framework\TestCase;
@@ -27,9 +26,6 @@ class DictionaryControllerTest extends TestCase
     /** @var DictionaryFacade&MockObject */
     private DictionaryFacade $dictionaryFacade;
 
-    /** @var LanguageFacade&MockObject */
-    private LanguageFacade $languageFacade;
-
     private DictionaryController $controller;
 
     private array $originalRequest;
@@ -40,11 +36,7 @@ class DictionaryControllerTest extends TestCase
     protected function setUp(): void
     {
         $this->dictionaryFacade = $this->createMock(DictionaryFacade::class);
-        $this->languageFacade = $this->createMock(LanguageFacade::class);
-        $this->controller = new DictionaryController(
-            $this->dictionaryFacade,
-            $this->languageFacade
-        );
+        $this->controller = new DictionaryController($this->dictionaryFacade);
 
         // Save superglobals
         $this->originalRequest = $_REQUEST;
@@ -91,14 +83,6 @@ class DictionaryControllerTest extends TestCase
         $this->assertSame($this->dictionaryFacade, $prop->getValue($this->controller));
     }
 
-    #[Test]
-    public function constructorStoresLanguageFacade(): void
-    {
-        $prop = new ReflectionProperty(DictionaryController::class, 'languageFacade');
-
-        $this->assertSame($this->languageFacade, $prop->getValue($this->controller));
-    }
-
     // =========================================================================
     // Method signature tests
     // =========================================================================
@@ -107,10 +91,10 @@ class DictionaryControllerTest extends TestCase
     public function classHasRequiredPublicMethods(): void
     {
         $reflection = new ReflectionClass(DictionaryController::class);
-        // GET /dictionaries/import is served by the bundled Svelte island (D3c),
-        // so the `import()` view method was removed; only the POST handler
-        // (processImport) and the kept management methods remain.
-        $expectedPublic = ['index', 'processImport', 'delete', 'preview'];
+        // The server-rendered list + import wizard (index/delete/preview) were
+        // dropped under the headless cut; only the app-facing multipart import
+        // handler (POST /api/v1/local-dictionaries/import) remains.
+        $expectedPublic = ['processImport'];
 
         foreach ($expectedPublic as $methodName) {
             $this->assertTrue(
@@ -129,7 +113,7 @@ class DictionaryControllerTest extends TestCase
     public function classHasRequiredPrivateMethods(): void
     {
         $reflection = new ReflectionClass(DictionaryController::class);
-        $expectedPrivate = ['handleFormSubmissions', 'getImportOptions'];
+        $expectedPrivate = ['getImportOptions'];
 
         foreach ($expectedPrivate as $methodName) {
             $this->assertTrue(
@@ -148,7 +132,7 @@ class DictionaryControllerTest extends TestCase
     public function allPublicMethodsAcceptArrayParams(): void
     {
         $reflection = new ReflectionClass(DictionaryController::class);
-        $publicMethods = ['index', 'processImport', 'delete', 'preview'];
+        $publicMethods = ['processImport'];
 
         foreach ($publicMethods as $methodName) {
             $method = $reflection->getMethod($methodName);
@@ -173,30 +157,6 @@ class DictionaryControllerTest extends TestCase
     }
 
     #[Test]
-    public function allPublicMethodsReturnVoid(): void
-    {
-        $reflection = new ReflectionClass(DictionaryController::class);
-        // processImport now returns JsonResponse (Phase R: it moved onto
-        // /api/v1/local-dictionaries/import); the rest still render server-side.
-        $publicMethods = ['index', 'delete', 'preview'];
-
-        foreach ($publicMethods as $methodName) {
-            $method = $reflection->getMethod($methodName);
-            $returnType = $method->getReturnType();
-
-            $this->assertNotNull(
-                $returnType,
-                "Method $methodName should have a return type"
-            );
-            $this->assertSame(
-                'void',
-                $returnType->getName(),
-                "Method $methodName should return void"
-            );
-        }
-    }
-
-    #[Test]
     public function processImportReturnsJsonResponse(): void
     {
         $method = new ReflectionMethod(DictionaryController::class, 'processImport');
@@ -204,17 +164,6 @@ class DictionaryControllerTest extends TestCase
 
         $this->assertNotNull($returnType);
         $this->assertSame(JsonResponse::class, $returnType->getName());
-    }
-
-    #[Test]
-    public function handleFormSubmissionsAcceptsIntParameter(): void
-    {
-        $method = new ReflectionMethod(DictionaryController::class, 'handleFormSubmissions');
-        $params = $method->getParameters();
-
-        $this->assertCount(1, $params);
-        $this->assertSame('langId', $params[0]->getName());
-        $this->assertSame('int', $params[0]->getType()->getName());
     }
 
     #[Test]

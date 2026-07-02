@@ -36,7 +36,6 @@ use Lukaisu\Modules\Dictionary\Infrastructure\Import\CsvImporter;
 use Lukaisu\Modules\Dictionary\Infrastructure\Import\JsonImporter;
 use Lukaisu\Modules\Dictionary\Infrastructure\Import\StarDictImporter;
 // Language Module
-use Lukaisu\Modules\Language\Application\LanguageFacade;
 
 /**
  * Service provider for the Dictionary module.
@@ -81,8 +80,7 @@ class DictionaryServiceProvider implements ServiceProviderInterface
         // Register Controller
         $container->singleton(DictionaryController::class, function (Container $c) {
             return new DictionaryController(
-                $c->getTyped(DictionaryFacade::class),
-                $c->getTyped(LanguageFacade::class)
+                $c->getTyped(DictionaryFacade::class)
             );
         });
 
