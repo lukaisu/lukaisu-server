@@ -236,59 +236,45 @@
   }
 
   // --- Actions ----------------------------------------------------------------
-  function handleMultiAction(langId: number, event: Event): void {
+  // Marked-action select values → PUT /api/v1/texts/bulk-action (archived scope),
+  // replacing the retired native `POST /text/archived` form (which hit the page
+  // origin, not the connected server, so it was broken in the packaged app).
+  const ARCHIVED_ACTION_MAP: Record<string, 'add-tag' | 'remove-tag' | 'unarchive' | 'delete'> = {
+    addtag: 'add-tag',
+    deltag: 'remove-tag',
+    unarch: 'unarchive',
+    del: 'delete'
+  };
+
+  async function handleMultiAction(langId: number, event: Event): Promise<void> {
     const select = event.target as HTMLSelectElement;
     const action = select.value;
+    select.value = '';
     if (!action) return;
 
     const markedIds = getMarkedIds(langId);
-    if (markedIds.length === 0) {
-      select.value = '';
+    if (markedIds.length === 0) return;
+
+    const apiAction = ARCHIVED_ACTION_MAP[action];
+    if (apiAction === undefined) return;
+
+    if (apiAction === 'delete' && !confirmDelete()) return;
+
+    // Tag actions need a tag name (the retired native form never sent one).
+    let tag: string | undefined;
+    if (apiAction === 'add-tag' || apiAction === 'remove-tag') {
+      const entered = window.prompt(apiAction === 'add-tag' ? 'Tag to add:' : 'Tag to remove:');
+      if (entered === null) return;
+      tag = entered.trim();
+      if (tag === '') return;
+    }
+
+    const res = await TextsApi.bulkAction(apiAction, markedIds, { archived: true, tag });
+    if (res.error) {
+      alert('Action failed. Please try again.');
       return;
     }
-
-    // Archived bulk actions are a web-route form POST to `/text/archived` (the
-    // server's archived-texts controller), matching the Alpine version — even in
-    // local-first mode, where per-card unarchive/delete branch to the API seam.
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/text/archived';
-
-    // CsrfMiddleware rejects POST/PUT/DELETE/PATCH without an _csrf_token field
-    // or X-CSRF-TOKEN header.
-    const csrf = getCsrfToken();
-    if (csrf) {
-      const csrfField = document.createElement('input');
-      csrfField.type = 'hidden';
-      csrfField.name = '_csrf_token';
-      csrfField.value = csrf;
-      form.appendChild(csrfField);
-    }
-
-    markedIds.forEach((id) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'marked[]';
-      input.value = String(id);
-      form.appendChild(input);
-    });
-
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'markaction';
-    actionInput.value = action;
-    form.appendChild(actionInput);
-
-    // Destructive actions need confirmation before the form leaves the page.
-    if (action === 'del') {
-      if (!confirmDelete()) {
-        select.value = '';
-        return;
-      }
-    }
-
-    document.body.appendChild(form);
-    form.submit();
+    window.location.reload();
   }
 
   function handleRestDelete(event: Event, url: string): void {
@@ -580,7 +566,7 @@
                       <div class="select is-small">
                         <select
                           disabled={!hasMarkedInLanguage(lang.id)}
-                          onchange={(e) => handleMultiAction(lang.id, e)}
+                          onchange={(e) => void handleMultiAction(lang.id, e)}
                           aria-label="Bulk actions for selected texts"
                         >
                           <option value="">[Choose...]</option>

@@ -90,8 +90,7 @@ class TextControllerTest extends TestCase
 
         $expectedMethods = [
             'delete', 'archive',
-            'unarchive', 'edit',
-            'archived', 'deleteArchived',
+            'unarchive', 'deleteArchived',
         ];
 
         foreach ($expectedMethods as $methodName) {
@@ -110,18 +109,17 @@ class TextControllerTest extends TestCase
     #[Test]
     public function subControllersHaveExpectedMethods(): void
     {
-        // TextCrudController — the new/edit form entry points (new, editSingle,
-        // showNewTextForm, showEditTextForm) were dropped under the headless cut.
-        $crudMethods = ['delete', 'archive', 'unarchive', 'edit',
-            'handleMarkAction', 'handleTextOperation', 'showTextsList'];
+        // TextCrudController — the texts-list marked-action handler (edit +
+        // handleMarkAction / handleTextOperation / showTextsList) was dropped
+        // under the headless cut; bulk actions moved to /api/v1/texts/bulk-action.
+        $crudMethods = ['delete', 'archive', 'unarchive'];
         $crudReflection = new \ReflectionClass(TextCrudController::class);
         foreach ($crudMethods as $method) {
             $this->assertTrue($crudReflection->hasMethod($method), "TextCrudController should have: $method");
         }
 
-        // ArchivedTextController — archivedEdit (the archived edit form) was
-        // dropped under the headless cut.
-        $archMethods = ['archived', 'deleteArchived', 'handleArchivedMarkAction'];
+        // ArchivedTextController — archived + handleArchivedMarkAction dropped too.
+        $archMethods = ['deleteArchived'];
         $archReflection = new \ReflectionClass(ArchivedTextController::class);
         foreach ($archMethods as $method) {
             $this->assertTrue($archReflection->hasMethod($method), "ArchivedTextController should have: $method");
@@ -232,186 +230,6 @@ class TextControllerTest extends TestCase
         $result = $this->controller->deleteArchived(1);
 
         $this->assertSame('/text/archived', $result->getUrl());
-    }
-
-    // =========================================================================
-    // handleMarkAction() tests via TextCrudController
-    // =========================================================================
-
-    #[Test]
-    public function handleMarkActionReturnsDefaultForEmptyMarked(): void
-    {
-        $result = $this->crudController->handleMarkAction('del', [], '');
-
-        $this->assertSame('Multiple Actions: 0', $result);
-    }
-
-    #[Test]
-    public function handleMarkActionDeleteCallsService(): void
-    {
-        $this->textService->expects($this->once())
-            ->method('deleteTexts')
-            ->with([1, 2, 3])
-            ->willReturn(['count' => 3]);
-
-        $result = $this->crudController->handleMarkAction('del', ['1', '2', '3'], '');
-
-        $this->assertSame('Texts deleted: 3', $result);
-    }
-
-    #[Test]
-    public function handleMarkActionArchiveCallsService(): void
-    {
-        $this->textService->expects($this->once())
-            ->method('archiveTexts')
-            ->with([1, 2])
-            ->willReturn(['count' => 2]);
-
-        $result = $this->crudController->handleMarkAction('arch', ['1', '2'], '');
-
-        $this->assertSame('Archived Text(s): 2', $result);
-    }
-
-    #[Test]
-    public function handleMarkActionSetSentencesCallsService(): void
-    {
-        $this->textService->expects($this->once())
-            ->method('setTermSentences')
-            ->with([1], false)
-            ->willReturn(5);
-
-        $result = $this->crudController->handleMarkAction('setsent', ['1'], '');
-
-        $this->assertSame('Term sentences set: 5', $result);
-    }
-
-    #[Test]
-    public function handleMarkActionSetActiveSentencesCallsService(): void
-    {
-        $this->textService->expects($this->once())
-            ->method('setTermSentences')
-            ->with([1], true)
-            ->willReturn(3);
-
-        $result = $this->crudController->handleMarkAction('setactsent', ['1'], '');
-
-        $this->assertSame('Active term sentences set: 3', $result);
-    }
-
-    #[Test]
-    public function handleMarkActionRebuildCallsService(): void
-    {
-        $this->textService->expects($this->once())
-            ->method('rebuildTexts')
-            ->with([1, 2])
-            ->willReturn(2);
-
-        $result = $this->crudController->handleMarkAction('rebuild', ['1', '2'], '');
-
-        $this->assertSame('Rebuilt Text(s): 2', $result);
-    }
-
-    #[Test]
-    public function handleMarkActionReviewReturnsRedirect(): void
-    {
-        $result = $this->crudController->handleMarkAction('review', ['1', '2'], '');
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-    }
-
-    #[Test]
-    public function handleMarkActionReviewRedirectsToReview(): void
-    {
-        $result = $this->crudController->handleMarkAction('review', ['1'], '');
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-        $this->assertSame('/review?selection=3', $result->getUrl());
-    }
-
-    #[Test]
-    public function handleMarkActionDeltagReturnsRedirect(): void
-    {
-        $result = $this->crudController->handleMarkAction('deltag', ['1'], 'tag');
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-    }
-
-    #[Test]
-    public function handleMarkActionDeltagRedirectsToTexts(): void
-    {
-        $result = $this->crudController->handleMarkAction('deltag', ['1'], 'tag');
-
-        $this->assertSame('/texts', $result->getUrl());
-    }
-
-    #[Test]
-    public function handleMarkActionUnknownActionReturnsDefault(): void
-    {
-        $result = $this->crudController->handleMarkAction('unknownaction', ['1'], '');
-
-        $this->assertSame('Multiple Actions: 0', $result);
-    }
-
-    // =========================================================================
-    // handleArchivedMarkAction() tests via ArchivedTextController
-    // =========================================================================
-
-    #[Test]
-    public function handleArchivedMarkActionReturnsDefaultForEmptyMarked(): void
-    {
-        $result = $this->archivedController->handleArchivedMarkAction('del', [], '');
-
-        $this->assertSame('Multiple Actions: 0', $result);
-    }
-
-    #[Test]
-    public function handleArchivedMarkActionDeleteCallsService(): void
-    {
-        $this->textService->expects($this->once())
-            ->method('deleteArchivedTexts')
-            ->with([1, 2])
-            ->willReturn(['count' => 2]);
-
-        $result = $this->archivedController->handleArchivedMarkAction('del', ['1', '2'], '');
-
-        $this->assertSame('Archived Texts deleted: 2', $result);
-    }
-
-    #[Test]
-    public function handleArchivedMarkActionUnarchiveCallsService(): void
-    {
-        $this->textService->expects($this->once())
-            ->method('unarchiveTexts')
-            ->with([1])
-            ->willReturn(['count' => 1]);
-
-        $result = $this->archivedController->handleArchivedMarkAction('unarch', ['1'], '');
-
-        $this->assertSame('Unarchived Text(s): 1', $result);
-    }
-
-    #[Test]
-    public function handleArchivedMarkActionDeltagReturnsRedirect(): void
-    {
-        $result = $this->archivedController->handleArchivedMarkAction('deltag', ['1'], 'tag');
-
-        $this->assertInstanceOf(RedirectResponse::class, $result);
-    }
-
-    #[Test]
-    public function handleArchivedMarkActionDeltagRedirectsToArchived(): void
-    {
-        $result = $this->archivedController->handleArchivedMarkAction('deltag', ['1'], 'tag');
-
-        $this->assertSame('/text/archived', $result->getUrl());
-    }
-
-    #[Test]
-    public function handleArchivedMarkActionUnknownReturnsDefault(): void
-    {
-        $result = $this->archivedController->handleArchivedMarkAction('unknownaction', ['1'], '');
-
-        $this->assertSame('Multiple Actions: 0', $result);
     }
 
     // =========================================================================

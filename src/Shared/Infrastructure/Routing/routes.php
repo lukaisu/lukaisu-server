@@ -102,9 +102,10 @@ function registerRoutes(Router $router): void
     // Unarchive text (RESTful route): POST /texts/123/unarchive
     $router->post('/texts/{id:int}/unarchive', 'Lukaisu\\Modules\\Text\\Http\\TextController@unarchive', AUTH_MIDDLEWARE);
 
-    // Texts list and legacy edit routes
-    $router->registerWithMiddleware('/text/edit', 'Lukaisu\\Modules\\Text\\Http\\TextController@edit', AUTH_MIDDLEWARE);
-    $router->registerWithMiddleware('/texts', 'Lukaisu\\Modules\\Text\\Http\\TextController@edit', AUTH_MIDDLEWARE);
+    // The texts list is served by the bundled client (GET /texts 302s to the
+    // bundle, below). Its bulk actions moved to PUT /api/v1/texts/bulk-action
+    // (TextList.svelte), so TextController@edit + the /text/edit + native
+    // POST /texts marked-action form handlers were dropped under the headless cut.
 
     // The "improved annotated text" display (GET /text/{id}/display, /text/display)
     // was dropped under the headless cut (Option A) — a server-only browser
@@ -122,12 +123,11 @@ function registerRoutes(Router $router): void
     // (TextController@check) was deleted under the headless cut (Phase R); the
     // /app redirect below owns this GET.
 
-    // Archived texts
-    $router->registerWithMiddleware(
-        '/text/archived',
-        'Lukaisu\\Modules\\Text\\Http\\TextController@archived',
-        AUTH_MIDDLEWARE
-    );
+    // The archived-texts list is served by the bundled client (GET /text/archived
+    // 302s to the bundle, below). Its bulk actions moved to PUT
+    // /api/v1/texts/bulk-action (archived scope, ArchivedTexts.svelte), so
+    // TextController@archived was dropped; DELETE /text/archived/{id}
+    // (deleteArchived) stays below.
 
     // Edit archived text: GET /text/archived/{id}/edit 302s to the bundle (see
     // the /app redirects below); the client updates via PUT /api/v1/texts/{id}.

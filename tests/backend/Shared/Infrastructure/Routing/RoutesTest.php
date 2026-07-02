@@ -133,7 +133,6 @@ class RoutesTest extends TestCase
         $redirect = 'Lukaisu\\Shared\\Http\\BundleController@redirect';
         return [
             'text read' => ['/text/read', $redirect],
-            'text edit' => ['/text/edit', "{$textController}@edit"],
             'texts list' => ['/texts', $redirect],
             'text print-plain' => ['/text/print-plain', $redirect],
             'text check' => ['/text/check', $redirect],

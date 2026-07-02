@@ -341,23 +341,6 @@ class TextControllerEditTest extends TestCase
         $this->assertTrue($service->validateTextLength($limitText));
     }
 
-    // ===== handleMarkAction tests =====
-
-    public function testHandleMarkActionWithEmptyMarkedArray(): void
-    {
-        if (!self::$dbConnected) {
-            $this->markTestSkipped('Database connection required');
-        }
-
-        $controller = new TextCrudController(
-            new \Lukaisu\Modules\Text\Application\TextFacade(),
-            new \Lukaisu\Modules\Language\Application\LanguageFacade()
-        );
-
-        $result = $controller->handleMarkAction('del', [], '');
-
-        $this->assertEquals('Multiple Actions: 0', $result);
-    }
 
     // ===== buildTextQueryWhereClause tests =====
 

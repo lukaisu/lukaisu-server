@@ -65,21 +65,9 @@ class TextController extends BaseController
         return $this->crudController->unarchive($id);
     }
 
-    /** @psalm-suppress UnusedVariable */
-    public function edit(array $params): ?RedirectResponse
-    {
-        return $this->crudController->edit($params);
-    }
-
     // =========================================================================
     // Archived Text Delegation
     // =========================================================================
-
-    /** @psalm-suppress UnusedVariable */
-    public function archived(array $params): ?RedirectResponse
-    {
-        return $this->archivedController->archived($params);
-    }
 
     public function deleteArchived(int $id): RedirectResponse
     {

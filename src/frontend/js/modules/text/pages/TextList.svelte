@@ -152,73 +152,49 @@
   }
 
   // --- Bulk actions -----------------------------------------------------------
-  function handleMultiAction(event: Event): void {
+  // Marked-action select values → PUT /api/v1/texts/bulk-action. Replaces the
+  // retired native `POST /texts` form, which hit the page origin (not the
+  // connected server), so tag / reparse / set-sentences were broken in the
+  // packaged app. ("Review Marked Texts" was dropped: it was session-based on
+  // the server and never worked cross-origin — restoring it needs a headless
+  // review-backend redesign, tracked separately.)
+  const MULTI_ACTION_MAP: Record<
+    string,
+    'archive' | 'delete' | 'add-tag' | 'remove-tag' | 'rebuild' | 'set-sentences' | 'set-active-sentences'
+  > = {
+    arch: 'archive',
+    del: 'delete',
+    addtag: 'add-tag',
+    deltag: 'remove-tag',
+    rebuild: 'rebuild',
+    setsent: 'set-sentences',
+    setactsent: 'set-active-sentences'
+  };
+
+  async function handleMultiAction(event: Event): Promise<void> {
     const select = event.target as HTMLSelectElement;
     const action = select.value;
+    select.value = '';
     if (!action) return;
 
     const markedIds = Array.from(markedTexts);
-    if (markedIds.length === 0) {
-      select.value = '';
-      return;
+    if (markedIds.length === 0) return;
+
+    const apiAction = MULTI_ACTION_MAP[action];
+    if (apiAction === undefined) return;
+
+    if (apiAction === 'delete' && !confirmDelete()) return;
+
+    // Tag actions need a tag name (the retired native form never sent one).
+    let tag: string | undefined;
+    if (apiAction === 'add-tag' || apiAction === 'remove-tag') {
+      const entered = window.prompt(apiAction === 'add-tag' ? 'Tag to add:' : 'Tag to remove:');
+      if (entered === null) return;
+      tag = entered.trim();
+      if (tag === '') return;
     }
 
-    // Destructive bulk actions go through the JSON API so they work against a
-    // configurable server (a form POST would hit the page origin instead).
-    // Tag / review / reparse stay on the form path below.
-    if (action === 'arch' || action === 'del') {
-      if (action === 'del' && !confirmDelete()) {
-        select.value = '';
-        return;
-      }
-      void submitBulkApiAction(action === 'arch' ? 'archive' : 'delete', markedIds);
-      select.value = '';
-      return;
-    }
-
-    // Create a temporary form with the marked IDs.
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/texts';
-
-    // CsrfMiddleware rejects POST/PUT/DELETE/PATCH without an _csrf_token field
-    // or X-CSRF-TOKEN header.
-    const csrf = getCsrfToken();
-    if (csrf) {
-      const csrfField = document.createElement('input');
-      csrfField.type = 'hidden';
-      csrfField.name = '_csrf_token';
-      csrfField.value = csrf;
-      form.appendChild(csrfField);
-    }
-
-    markedIds.forEach((id) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'marked[]';
-      input.value = String(id);
-      form.appendChild(input);
-    });
-
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'markaction';
-    actionInput.value = action;
-    form.appendChild(actionInput);
-
-    document.body.appendChild(form);
-    form.submit();
-  }
-
-  /**
-   * Run a destructive bulk action (archive/delete) via the JSON API and refresh
-   * the list on success.
-   */
-  async function submitBulkApiAction(
-    action: 'archive' | 'delete',
-    ids: number[]
-  ): Promise<void> {
-    const res = await TextsApi.bulkAction(action, ids);
+    const res = await TextsApi.bulkAction(apiAction, markedIds, tag !== undefined ? { tag } : undefined);
     if (res.error) {
       alert('Action failed. Please try again.');
       return;
@@ -468,12 +444,10 @@
             <div class="select is-small">
               <select
                 disabled={markedTexts.size === 0}
-                onchange={handleMultiAction}
+                onchange={(e) => void handleMultiAction(e)}
                 aria-label="Bulk actions for selected texts"
               >
                 <option value="">[Choose...]</option>
-                <option disabled>------------</option>
-                <option value="review">Review Marked Texts</option>
                 <option disabled>------------</option>
                 <option value="addtag">Add Tag</option>
                 <option value="deltag">Remove Tag</option>
